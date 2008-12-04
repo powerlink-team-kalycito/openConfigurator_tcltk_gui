@@ -1,0 +1,146 @@
+################################################################################
+#									
+# Script:	TestSuite						
+#									
+# Author:	Kalycito Infotech Pvt Ltd		
+#									
+# Description:	Sources all required files and Initializes the TestSuite.
+#
+# Version:	Version - 1.2.
+# 
+# Version Change Log:
+# 		Version 1.2 includes interactive testing [between User and STB]
+################################################################################
+
+
+#!/bin/sh
+#\
+exec wish "$0" ${1+"$@"}
+
+set pwd [pwd]
+package require Tk 8.0
+
+global RootDir
+global search_var_string search_option_icase search_option_area search_option_match search_option_blink
+global EditorData
+global clock_var
+global textChanged
+global conWindow
+
+set RootDir [pwd]
+#set ASEDsRootDir [file dirname [info script]]
+# if { [file type $argv0] == "link" } {
+    # set ASEDsRootDir [file dirname [file readlink $argv0]]
+# } else {
+    # set ASEDsRootDir [file dirname $argv0]
+# }
+
+
+
+set path_to_BWidget [file join $RootDir BWidget-1.2.1]
+lappend auto_path $path_to_BWidget
+
+package require -exact BWidget 1.2.1
+Bitmap::get cut
+# this used for loading Bitmap namespace into the interpetator
+namespace eval Bitmap {
+    lappend path [file join $RootDir images]
+}
+source [file join $RootDir main.tcl]
+source [file join $RootDir editor.tcl]
+source [file join $RootDir find.tcl]
+source [file join $RootDir repl.tcl]
+source [file join $RootDir undo.tcl]
+source [file join $RootDir console.tcl]
+source [file join $RootDir manager.tcl]
+source [file join $RootDir tclparser.tcl]
+source [file join $RootDir fifDialog.tcl]
+source [file join $RootDir xmlread.tcl]
+source $RootDir/writexml.tcl
+proc initSTB_TSUITE {argc argv} {
+    global tcl_platform
+    global auto_path
+    global EditorData
+    global updatetree
+    global PjtDir
+    global PjtName
+    global RootDir
+    lappend auto_path ..
+
+     
+    option add *TitleFrame.font {helvetica 11 bold italic}
+    if {"$tcl_platform(platform)" != "windows"} {
+        option add *background grey userDefault
+    }
+    
+    wm withdraw .
+    wm title . "openCONFIGURATOR"
+    Editor::create
+    BWidget::place . 0 0 center
+    
+    update idletasks
+    if {[info exists EditorData(options,mainWinSize)]} {
+        wm geom . $EditorData(options,mainWinSize)
+        update
+    }
+    
+    after idle {
+        wm deiconify .
+        raise .
+        focus .
+        set Editor::initDone 1
+    }
+    if {$argc >= 1} {
+        set cursor [. cget -cursor]
+        . configure -cursor watch
+        update
+        foreach filename $argv {
+            if {[file exists $filename]} {
+                Editor::openFile $filename
+            } elseif {[file exists [file join $EditorData(options,workingDir) $filename]]} {
+                Editor::openFile [file join $EditorData(options,workingDir) $filename]
+            }
+        }
+        . configure -cursor $cursor
+        update
+    }
+	# Delete all the records
+	struct::record delete record recProjectDetail
+	struct::record delete record recTestGroup
+	struct::record delete record recTestCase
+	struct::record delete record recProfile
+	
+	# Delete the Tree
+	$updatetree delete end root TestSuite
+	
+	set pjtFolder $EditorData(options,History)
+
+	set tmpsplit [split $pjtFolder /]
+	set filename [lindex $tmpsplit [expr [llength $tmpsplit] - 1]]
+	set PjtName $filename.pjt
+	set tempFile $pjtFolder/$PjtName
+	if {![file exists $tempFile]} {
+		set pjtFolder $RootDir/Default
+		set PjtDir $pjtFolder
+	} elseif {$pjtFolder == "None" || $pjtFolder == ""} {
+		
+		set pjtFolder $RootDir/Default
+		set PjtDir $pjtFolder
+	} 
+		set tmpsplit [split $pjtFolder /]
+			set filename [lindex $tmpsplit [expr [llength $tmpsplit] - 1]]
+			set PjtName $filename.pjt
+	##################################################################
+  	### Reading Datas from XML File
+    	##################################################################
+	DeclareStructure
+   	readxml $pjtFolder/$PjtName
+    	##################################################################
+	instProject configure -memProjectName $PjtName
+	InsertTree
+	Editor::tselectObject "myboard_sshscp.exp"
+	#Initial status of the Pjt
+	conPuts "Initialized..."
+	conPuts "Project $filename opened"
+}
+initSTB_TSUITE $argc $argv

@@ -244,7 +244,7 @@ proc EditManager::create_treeWindow {nb } {
 	variable TxtWidget
 	global updatetree
 	set pagename objtree
-    	set frame [$nb insert end $pagename -text "Test Tree Browser"]
+    	set frame [$nb insert end $pagename -text "Tree Browser"]
    
    	set sw [ScrolledWindow::create $frame.sw -auto both]
    	set objTree [Tree $frame.sw.objTree \

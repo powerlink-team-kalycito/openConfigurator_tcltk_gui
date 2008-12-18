@@ -15,6 +15,19 @@ source $RootDir/record.tcl
 source $RootDir/xmlread.tcl
 source $RootDir/ReadResultXml.tcl
 
+##
+# For Tablelist Package
+##
+set path_to_Tablelist ./tablelist4.10
+lappend auto_path $path_to_Tablelist
+
+package require Tablelist
+
+set dir [file dirname [info script]]
+source [file join $dir option.tcl]
+##
+#
+##
 global PjtDir 
 global PjtName
 ##variable helpMessage
@@ -481,7 +494,7 @@ proc Editor::scanLine {} {
 
 proc Editor::updateOnIdle {range} {
     variable current
-    # if there´s a pending update only store new range
+    # if there?s a pending update only store new range
     if {$current(isUpdate)} {
         if {[$current(text) compare $current(updateStart) > [lindex $range 0]]} {
             set current(updateStart) [$current(text) index [lindex $range 0]]
@@ -701,7 +714,7 @@ proc Editor::tdelNode {node} {
     
     regsub -all " " $node \306 node
     regsub ":$" $node \327 node
-    regsub -all "\\\$" $node "²" node
+    regsub -all "\\\$" $node "?" node
     $treeWindow delete $node
 }
 
@@ -731,7 +744,7 @@ proc Editor::tnewNode {nodedata} {
     # mask ending single : in node name
     regsub ":$" $node \327 node
     # mask "$" in nodename
-    regsub -all "\\\$" $node "²" node
+    regsub -all "\\\$" $node "?" node
     # mask instance number
     regsub "\367.+\376$" $node "" node
     
@@ -742,7 +755,7 @@ proc Editor::tnewNode {nodedata} {
     if {$current(checkRootNode) != 0} {
         # if node doesn't present a qualified name,
         # which presents it's rootnode by itself (e.g. test::test)
-        # try to set it´s rootnode
+        # try to set it?s rootnode
         # use regsub to count qualifiers (# in nodes instead of ::)
         if {[regsub -all -- {#} $node "" dummy] > 1} {
             # do nothing
@@ -761,10 +774,10 @@ proc Editor::tnewNode {nodedata} {
     set rootnode [string range $node 0 [expr [string last \# $node] -1]]
     set name [string range $node [expr [string last \# $node]+1] end]
     
-    # get rid of the Æ in the node
+    # get rid of the ? in the node
     regsub -all \306 $name " " name
     regsub \327 $name ":" name
-    regsub -all "²" $name "\$" name
+    regsub -all "?" $name "\$" name
     if {$name == ""} {
         set name $node
     }
@@ -951,7 +964,7 @@ proc Editor::topen {path} {
     variable current
     regsub -all " " $current(file) \306 node
     regsub ":$" $node \327 node
-    regsub -all "\\\$" $node "²" node
+    regsub -all "\\\$" $node "?" node
 #    $treeWindow opentree $node
 	## commented for avoid opening all nodes and subnodes.
 	#$treeWindow opentree $path
@@ -970,7 +983,7 @@ proc Editor::tclose {} {
     set node $current(file)
     regsub -all " " $node \306 node
     regsub ":$" $node \327 node
-    regsub -all "\\\$" $node "²" node
+    regsub -all "\\\$" $node "?" node
     $treeWindow closetree $node
 }
 ################################################################################
@@ -1068,7 +1081,7 @@ proc Editor::tselectObject {node} {
 			set filename $node
 		}
 		
-		#get rid of the Æ (as a substitude for a space) in the filename
+		#get rid of the ? (as a substitude for a space) in the filename
 		regsub -all \306 $filename " " filename
 		set pagelist [array names ::Editor::text_win]
 		set found 0
@@ -1178,7 +1191,7 @@ proc Editor::torder {node} {
     
     regsub -all " " $node \306 node
     regsub ":$" $node \327 node
-    regsub -all "\\\$" $node "²" node
+    regsub -all "\\\$" $node "?" node
     
     proc sortTree {node} {
         variable treeWindow
@@ -1429,7 +1442,7 @@ proc Editor::chooseWish {} {
                 -type yesnocancel] {
                     yes {
                         foreach slaveInterp [interp slaves] {
-                            # don´t delete console interpreter
+                            # don?t delete console interpreter
                             if {$slaveInterp != "Console"} {
                                 Editor::exitSlave $slaveInterp
                             }
@@ -1936,7 +1949,7 @@ proc Editor::saveAll {} {
         set idx $Editor::index($textWin)
         if {$Editor::text_win($idx,writable) == 0} {
             set filename $Editor::text_win($idx,file)
-            tk_messageBox -message "File is write protected!\nCan´t save $filename !"
+            tk_messageBox -message "File is write protected!\nCan?t save $filename !"
             continue
         }
         set data [$textWin get 1.0 "end -1c"]
@@ -2054,7 +2067,7 @@ proc Editor::_saveFileas {filename data} {
                     close $fd
                     . configure -cursor $cursor
                     }]} {
-                tk_messageBox -message "Can´t save file $file\nMaybe no write permission!"
+                tk_messageBox -message "Can?t save file $file\nMaybe no write permission!"
                 set file ""
             }
         }
@@ -3263,7 +3276,7 @@ proc saveproject { } {
         	set idx $Editor::index($textWin)
         	if {$Editor::text_win($idx,writable) == 0} {
             		set filename $Editor::text_win($idx,file)
-            		tk_messageBox -message "File is write protected!\nCan´t save $filename !"
+            		tk_messageBox -message "File is write protected!\nCan?t save $filename !"
             		continue
         	}
         set data [$textWin get 1.0 "end -1c"]
@@ -3985,7 +3998,7 @@ proc Editor::create { } {
     variable helpmsgMenu
     variable groupconfic
     variable projectMenu
-    variable addMenu
+    variable IndexaddMenu
     
     
     set result [catch {source [file join $RootDir/STB_TSUITE.cfg]} info]
@@ -4057,6 +4070,10 @@ proc Editor::create { } {
             {command "Transfer CDC" {noFile} "Transfer CDC" {} -command YetToImplement }
             {command "Transfer XML" {noFile} "Transfer XML" {} -command YetToImplement }
 	    {separator}
+            {command "Start MN" {noFile} "Start the Managing Node" {} -command YetToImplement }
+            {command "Stop MN" {noFile} "Transfer CDC" {} -command YetToImplement }
+            {command "Reconfigure MN" {noFile} "Transfer XML" {} -command YetToImplement }
+	    {separator}
             {command "Configure SDO connection" {}  "Reserved" {} -command YetToImplement -state disabled}
             {command "Configure CDC Transfer" {}  "Reserved" {} -command YetToImplement -state disabled}
             {command "Configure XML Transfer" {}  "Reserved" {} -command YetToImplement -state disabled}
@@ -4095,15 +4112,21 @@ proc Editor::create { } {
 #############################################################################
 # Menu for the Test Group
 #############################################################################
-    set Editor::groupMenu [menu  .groupmenu -tearoff 0]	
+
+    set Editor::groupMenu [menu  .groupmenu -tearoff 0]
+    set Editor::IndexaddMenu .groupmenu.cascade
     $Editor::groupMenu add command -label "Rename" \
 	     -command {set cursor [. cget -cursor]
 			DoubleClickNode ""
 		      }
-    $Editor::groupMenu add command -label "Add Index" \
-	     -command {set cursor [. cget -cursor]
-			YetToImplement
-		      }
+    $Editor::groupMenu add cascade -label "Add" -menu $Editor::IndexaddMenu
+    menu $Editor::IndexaddMenu -tearoff 0
+    $Editor::IndexaddMenu add command -label "Add Index" -command {YetToImplement}
+    $Editor::IndexaddMenu add command -label "Add PDO Objects" -command {AddPDOProc}   
+
+#	     -command {set cursor [. cget -cursor]
+#			YetToImplement
+#		      } 
      $Editor::groupMenu add command -label "Replace XDC" \
             -command {set cursor [. cget -cursor]
 			#Call the procedure
@@ -4127,7 +4150,7 @@ proc Editor::create { } {
     set Editor::projectMenu [menu  .projectmenu -tearoff 0]
 #    set Editor::addMenu .projectmenu.cascade
 #    $Editor::projectMenu add cascade -label "Add" -menu $Editor::addMenu
-     $Editor::projectMenu add command -label "Add CN" -command {AddNewTestGroupWindow} 
+     $Editor::projectMenu add command -label "Add MN/CN" -command {AddNewTestGroupWindow} 
 #    menu $Editor::addMenu -tearoff 0
 #    $Editor::addMenu add command -label "Test Group" -command {AddNewTestGroupWindow}
 #    $Editor::addMenu add command -label "Profile" -command {AddProfileWindow}   
@@ -4516,6 +4539,101 @@ proc Editor::create { } {
 
 	label $pane4.disclaimer -width 75 -text "This window will be used for editing the parameters \n and yet to be designed" -relief ridge -background white -foreground red
 
+#
+# Create the font TkFixedFont if not yet present
+#
+	catch {font create TkFixedFont -family Courier -size -12 -weight bold}
+#
+# Create an image to be displayed in buttons embedded in a tablelist widget
+#
+	set openImg [image create photo -file [file join . open.gif]]
+
+#
+# Create a vertically scrolled tablelist widget with 5
+# dynamic-width columns and interactive sort capability
+#
+set tbl $pane4.tbl
+set vsb $pane4.vsb
+tablelist::tablelist $pane4.tbl \
+    -columns {0 "Label" left
+	      0 "Value" center
+	      0 "Format" center} \
+    -setgrid no -yscrollcommand [list $vsb set] -width 0 \
+    -stripebackground gray98 \
+    -showseparators 1 -spacing 10
+
+$tbl columnconfigure 0 -background #f9cf7e
+$tbl columnconfigure 1 -background #f9cf7e
+$tbl columnconfigure 2 -background #f9cf7e
+
+#$tbl columnconfigure 1 -formatcommand emptyStr -sortmode integer
+#$tbl columnconfigure 2 -name fileSize -sortmode integer
+#$tbl columnconfigure 4 -name seen
+scrollbar $vsb -orient vertical -command [list $tbl yview]
+
+proc emptyStr val { return "" }
+
+eval font create BoldFont [font actual [$tbl cget -font]] -weight bold
+
+#
+# Populate the tablelist widget for taking screen shots
+#
+#$tbl insert end [list 1 0010000000202106 2106 02 00 0000 0010]
+#$tbl insert end [list 2 0008001000202104 2104 02 00 0001 0008]
+#$tbl insert end [list 3 0010000000202106 2106 02 00 0000 0010]
+#$tbl insert end [list 4 0008001000202104 2104 02 00 0001 0008]
+#$tbl insert end [list 5 0010000000202106 2106 02 00 0000 0010]
+#$tbl insert end [list 6 0008001000202104 2104 02 00 0001 0008]
+#$tbl insert end [list 7 0010000000202106 2106 02 00 0000 0010]
+#$tbl insert end [list 8 0008001000202104 2104 02 00 0001 0008]
+#$tbl insert end [list 9 0010000000202106 2106 02 00 0000 0010]
+#$tbl insert end [list 10 0008001000202104 2104 02 00 0001 0008]
+#$tbl insert end [list 11 0010000000202106 2106 02 00 0000 0010]
+#$tbl insert end [list 12 0008001000202104 2104 02 00 0001 0008]
+#$tbl insert end [list 13 0010000000202106 2106 02 00 0000 0010]
+#$tbl insert end [list 14 0008001000202104 2104 02 00 0001 0008]
+#$tbl insert end [list 15 0010000000202106 2106 02 00 0000 0010]
+#$tbl insert end [list 16 0008001000202104 2104 02 00 0001 0008]
+#$tbl insert end [list 17 0010000000202106 2106 02 00 0000 0010]
+#$tbl insert end [list 18 0008001000202104 2104 02 00 0001 0008]
+#$tbl insert end [list 19 0010000000202106 2106 02 00 0000 0010]
+#$tbl insert end [list 20 0008001000202104 2104 02 00 0001 0008]
+#$tbl insert end [list 21 0010000000202106 2106 02 00 0000 0010]
+#$tbl insert end [list 22 0008001000202104 2104 02 00 0001 0008]
+#$tbl insert end [list 23 0010000000202106 2106 02 00 0000 0010]
+
+$tbl insert 0 [list Index: 1006 ""]
+$tbl insert 1 [list Name: NMT_CycleLen_U32 ""]
+$tbl cellconfigure 0,1 -editable yes
+$tbl insert 2 [list Object\ Type: VAR ""]
+$tbl insert 3 [list Data\ Type: Unsigned32 ""]
+$tbl insert 4 [list Access\ Type: rw ""]
+$tbl insert 5 [list Value: 0007 ""]
+$tbl cellconfigure 5,1 -editable yes
+$tbl insert 6 [list]
+$tbl cellconfigure 6,0 -window createSaveButton -bg gray98
+$tbl cellconfigure 6,1 -window createDiscardButton -bg gray98
+$tbl cellconfigure 5,2 -window createFormatButton -bg gray98
+
+$tbl cellconfigure 0,0 -editable yes
+$tbl cellconfigure 0,1 -editable yes
+$tbl cellconfigure 1,0 -editable yes
+$tbl cellconfigure 1,1 -editable yes
+$tbl cellconfigure 2,0 -editable yes
+$tbl cellconfigure 2,1 -editable yes
+$tbl cellconfigure 3,0 -editable yes
+$tbl cellconfigure 3,1 -editable yes
+$tbl cellconfigure 4,0 -editable yes
+$tbl cellconfigure 4,1 -editable yes
+$tbl cellconfigure 5,0 -editable yes
+$tbl cellconfigure 5,1 -editable yes
+
+
+
+$tbl columnconfigure 1 -font Courier
+
+# For packing the Tablelist in the right window
+pack $pane4.tbl -side left -fill both -expand yes -padx 4 -pady 4
 	# Pack the label and entry box 	
 	#grid columnconfigure $pane4 0 -minsize 100
 	#grid config $pane4.lab_1 -row 0 -column 0 -sticky "n" -padx 10 -pady 10
@@ -4532,8 +4650,10 @@ proc Editor::create { } {
 	#grid config $pane4.ent_6 -row 5 -column 1 -sticky "n" -padx 10 -pady 10
 	#grid config $pane4.but_1 -row 6 -column 0 -sticky "n" -padx 0 -pady 30
 	#grid config $pane4.but_2 -row 6 -column 1 -sticky "n" -padx 0 -pady 30
+	
+	
 
-	grid config $pane4.disclaimer -row 6 -column 1 -sticky "n" -padx 0 -pady 30
+	#grid config $pane4.disclaimer -row 6 -column 1 -sticky "n" -padx 0 -pady 30
 
     
     pack $pw2 -fill both -expand yes
@@ -6252,4 +6372,198 @@ proc FindChkPjt { tempPjtDir } {
 
 proc YetToImplement {} {
 tk_messageBox -message "Yet to be Implemented !" -title Info -icon info
+}
+
+proc AddPDOProc {} {
+	global testGroupName
+	global execCount
+	global mode_interactive
+	global mode_continuous
+	global mode_sequence
+	global titleInnerFrame1
+	global helpMsg
+	global disptext
+	set testGroupName ""
+	set execCount 1
+	set winAddPDO .addPDO
+	catch "destroy $winAddPDO"
+	toplevel     $winAddPDO
+	wm title     $winAddPDO "Add PDOs"
+	wm resizable $winAddPDO 0 0
+	wm transient $winAddPDO .
+	wm deiconify $winAddPDO
+	grab $winAddPDO
+
+	font create custom1 -weight bold
+	label $winAddPDO.l_empty1 -text ""	
+	label $winAddPDO.l_title -text "Add Process Data Object(s)" -font custom1
+	label $winAddPDO.l_empty2 -text ""
+	
+	grid config $winAddPDO.l_empty1 -row 0 -column 0 -sticky "news"
+	grid config $winAddPDO.l_title  -row 1 -column 0 -sticky "news" -ipadx 125
+	grid config $winAddPDO.l_empty2 -row 2 -column 0 -sticky "news"
+
+	set titleFrame1 [TitleFrame $winAddPDO.titleFrame1 -text "PDO" ]
+	grid config $titleFrame1 -row 3 -column 0 -ipadx 20 -sticky "news"
+	set titleInnerFrame1 [$titleFrame1 getframe]
+	
+	set titleFrame2 [TitleFrame $titleInnerFrame1.titleFrame2 -text "Configuration"]  
+	grid config $titleFrame2 -row 2 -column 0 -ipadx 0  -sticky "news"
+	set titleInnerFrame2 [$titleFrame2 getframe]
+	
+	####frame1 has six radio buttons to select excution mode 
+	set frame1 [frame $titleInnerFrame2.fram1]
+	#### frame2 has label TestGroupName and the entry box
+	set frame2 [frame $titleInnerFrame1.fram2]
+	#### frame3 has label Execution count and the entry box
+	set frame3 [frame $titleInnerFrame2.fram3]
+	#### frame 4 has ok and cancel button
+	set frame4 [frame $titleInnerFrame1.fram4]
+	set frame5 [frame $titleInnerFrame1.fram5]
+	
+#	label $frame2.l_name -text "CN Name :"
+#	entry $frame2.en_name -textvariable testGroupName -background white
+#	grid config $frame2.l_name  -row 0 -column 0 
+#	grid config $frame2.en_name -row 0 -column 1
+#	grid config $frame2 -row 0 -column 0
+
+#	label $titleInnerFrame1.l_empty3 -text ""
+#	grid config $titleInnerFrame1.l_empty3  -row 1 -column 0
+	
+#	label $titleInnerFrame2.l_empty4 -text ""
+#	grid config $titleInnerFrame2.l_empty4  -row 0 -column 0 
+	
+	label $frame3.l_pdostart -text "PDO Starting number \[1-255\] :"
+	entry $frame3.en_pdostart -textvariable pdostartValue -background white -validate key -vcmd {expr {[string len %P] <= 5} && {[string is int %P]}}
+
+	label $frame3.l_MapEnt -text "Mapping Entries \[1-254\] :"
+	entry $frame3.en_MapEnt -textvariable MapEntValue -background white -validate key -vcmd {expr {[string len %P] <= 5} && {[string is int %P]}}
+
+	label $frame3.l_NoPDO -text "Number of PDOs \[1-255\] :"
+	entry $frame3.en_NoPDO -textvariable NoPDOValue -background white -validate key -vcmd {expr {[string len %P] <= 5} && {[string is int %P]}}
+
+#button $frame3.bt_name -text Browse -command {
+#						set types {
+#						        {"All XDC Files"     {.XDC } }
+#							}
+#						set filename [tk_getOpenFile -title "Add TestCase" -filetypes $types -parent .]
+#					}
+	grid config $frame3.l_pdostart  -row 0 -column 0 
+	grid config $frame3.en_pdostart -row 0 -column 1
+	grid config $frame3.l_MapEnt  -row 1 -column 0 
+	grid config $frame3.en_MapEnt -row 1 -column 1
+	grid config $frame3.l_NoPDO  -row 2 -column 0 
+	grid config $frame3.en_NoPDO -row 2 -column 1
+
+#	grid config $frame3.bt_name -row 0 -column 2
+	grid config $frame3 -row 1 -column 0
+	
+	label $titleInnerFrame2.l_empty5 -text "Kind of PDO"
+	grid config $titleInnerFrame2.l_empty5  -row 2 -column 0
+	#label $titleInnerFrame2.l_mode -text "Type of CN"
+	#grid config $titleInnerFrame2.l_mode  -row 3 -column 0 
+	
+	#variables used for radio buttons
+	set mode_interactive on
+	set mode_continuous on
+	set mode_sequence on
+	radiobutton $frame1.ra_inter -text "Transmit PDO"   -variable mode_interactive   -value on 
+	radiobutton $frame1.ra_bat   -text "Receive PDO"         -variable mode_interactive   -value off 
+	label $frame1.ra_cont  -text ""
+	label $frame1.ra_disco -text "" 
+	label $frame1.ra_seq   -text "" 
+	label $frame1.ra_ran   -text "" 
+	grid config $frame1.ra_inter -row 0 -column 0 -sticky "w"
+	grid config $frame1.ra_bat   -row 0 -column 1 -sticky "w"
+	grid config $frame1.ra_cont  -row 1 -column 0 -sticky "w"
+	grid config $frame1.ra_disco -row 1 -column 1 -sticky "w"
+	grid config $frame1.ra_seq   -row 2 -column 0 -sticky "w"
+	grid config $frame1.ra_ran   -row 2 -column 1 -sticky "w"
+	grid config $frame1 -row 5 -column 0
+	
+#	scrollbar $titleInnerFrame1.h -orient horizontal -command "$titleInnerFrame1.t_help xview"
+#	scrollbar $titleInnerFrame1.v -command "$titleInnerFrame1.t_help yview"
+#	text $titleInnerFrame1.t_help -width 40 -height 10 -xscroll "$titleInnerFrame1.h set" -yscroll "$titleInnerFrame1.v set" -state disabled
+#	grid config $titleInnerFrame1.t_help -row 5 -column 0
+#	grid  $titleInnerFrame1.v -row 5 -column 2 -sticky "ns"
+#	grid  $titleInnerFrame1.h -row 6 -column 0 -columnspan 2 -sticky "we"
+#	set disptext 0
+#	label $titleInnerFrame1.l_empty6 -text ""
+#	grid config $titleInnerFrame1.l_empty6  -row 3 -column 0
+	####when check buton is selected text is enabled if it is unselected text is disabled
+#	checkbutton $titleInnerFrame1.ch_help -text "Add Help Messages" -variable disptext -onvalue 1 -offvalue 0 -command {
+#		global $titleInnerFrame1
+#		if {$disptext==1} {
+#			$titleInnerFrame1.t_help config -state normal -background white
+#		} else {
+#			$titleInnerFrame1.t_help config -state disabled -background lightgrey
+#		}
+#	}
+#	grid config $titleInnerFrame1.ch_help -row 4 -column 0
+#	label $titleInnerFrame1.l_empty7 -text ""
+#	grid config $titleInnerFrame1.l_empty7  -row 7 -column 0
+	button $frame4.b_ok -text "  Add  " -command { 
+							YetToImplement
+							font delete custom1
+							destroy .addPDO
+						    }
+	button $frame4.b_cancel -text "Cancel" -command {
+								destroy .addPDO
+								font delete custom1
+							}
+	grid config $frame4.b_ok  -row 0 -column 0 
+	grid config $frame4.b_cancel -row 0 -column 1
+	grid config $frame4 -row 8 -column 0 
+	bind $winAddPDO <KeyPress-Return> {  
+							set testGroupName [string trim $testGroupName]
+							if {$testGroupName==""} {
+								tk_messageBox -message "Enter TestGroup name" -icon error -parent .addTestGroup
+								return
+							}
+							set execCount [string trim $execCount]
+							if {$execCount==""} {
+								tk_messageBox -message "Enter value for Execution Count" -icon error -parent .addTestGroup
+								return
+							} elseif {$execCount>10000} {
+								tk_messageBox -message "Enter value less than 10000" -icon error -parent .addTestGroup
+								return
+							}
+#							if {$disptext==1} {
+#								set helpMsg [string trim [$titleInnerFrame1.t_help get @0,0 end]]
+#							} else {
+#								set helpMsg ""
+#							}
+							AddTestGroup
+							font delete custom1
+							destroy .addTestGroup
+						    }
+	label $winAddPDO.l_empty8 -text ""
+	grid config $winAddPDO.l_empty8 -row 4 -column 0 -sticky "news"
+	label $winAddPDO.l_empty9 -text ""
+	grid config $winAddPDO.l_empty9 -row 5 -column 0 -sticky "news"
+	wm protocol .addPDO WM_DELETE_WINDOW {
+							font delete custom1
+							destroy .addTestGroup
+						   }
+}
+
+proc createSaveButton {tbl row col w} {
+    set key [$tbl getkeys $row]
+#    button $w -image [Bitmap::get openfold] -highlightthickness 0 -takefocus 0 \
+#	      -command [list viewFile $tbl $key]
+    button $w -text "Save" -command "YetToImplement" -width 10 -height 1
+}
+
+proc createDiscardButton {tbl row col w} {
+    set key [$tbl getkeys $row]
+#    button $w -image [Bitmap::get openfold] -highlightthickness 0 -takefocus 0 \
+#	      -command [list viewFile $tbl $key]
+    button $w -text "Discard" -command "YetToImplement" -width 10 -height 1
+}
+
+proc createFormatButton {tbl row col w} {
+    set key [$tbl getkeys $row]
+#    button $w -image [Bitmap::get openfold] -highlightthickness 0 -takefocus 0 \
+#	      -command [list viewFile $tbl $key]
+    button $w -text "Dec" -command "YetToImplement" -width 1 -height 1
 }

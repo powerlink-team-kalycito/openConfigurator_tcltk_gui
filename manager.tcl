@@ -95,7 +95,6 @@ proc EditManager::create_text {nb file} {
     incr _newPageCounter
     set pageName "Page$_newPageCounter"
     set filename [file tail $file]
-
     set prjFile [file join [file dirname $file] [lindex [split $filename .] 0]].prj
     set frame [$nb insert end $pageName -text $filename \
         -raisecmd "EditManager::focus_text $nb $pageName" ]
@@ -129,6 +128,27 @@ proc EditManager::create_text {nb file} {
     }
     set Editor::current(initDone) 0
     return [list $frame $pageName $text]
+}
+
+#to create the tabs
+proc EditManager::create_tab {nb filename} {
+    global EditorData
+    variable TxtWidget
+    variable _newPageCounter
+    
+    incr _newPageCounter
+    set pageName "Page$_newPageCounter"
+    set frame [$nb insert end $pageName -text $filename ]
+
+set sw [ScrolledWindow $frame.sw]
+pack $sw -fill both -expand true
+set sf [ScrollableFrame $sw.sf]
+$sw setwidget $sf
+set uf [$sf getframe]
+
+    incr Editor::index_counter
+    #return [list $frame $pageName]
+    return [list $uf $pageName]
 }
 
 ###########################################################################							

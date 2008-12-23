@@ -4480,22 +4480,24 @@ proc Editor::create { } {
     set pw1 [PanedWindow::create $frame.pw -side left]
     set pane [PanedWindow::add $pw1 -minsize 200]
     set pw2 [PanedWindow::create $pane.pw -side top]
+    
 # TODO: Improper Way of implementation. Done to get screenshot of the GUI
     set pw3 [PanedWindow::create $pane.pw1 -side top]
     
     set pane1 [PanedWindow::add $pw2 -minsize 100]
-    set pane2 [PanedWindow::add $pw3 -minsize 100]
+    set pane2 [PanedWindow::add $pw2 -minsize 100]
     set pane3 [PanedWindow::add $pw1 -minsize 100]
-    set pane4 [PanedWindow::add $pw2 -minsize 100]
-    
+
+
     set list_notebook [NoteBook::create $pane1.nb]
     set notebook [NoteBook::create $pane2.nb]	
+
     set con_notebook [NoteBook::create $pane3.nb]
     #set myWin [NoteBook::create $pane4.nb]
     
     set pf1 [EditManager::create_treeWindow $list_notebook]
     set treeWindow $pf1.sw.objTree
-    
+   # Editor::openNewPage
     	# Binding on tree widget   
      	$treeWindow bindText <ButtonPress-1> selectobject
 	#$treeWindow bindText <Double-1> 
@@ -4512,15 +4514,31 @@ proc Editor::create { } {
     global PjtDir
     set PjtDir $EditorData(options,History)
     incr prgindic
-    set f0 [EditManager::create_text $notebook Untitled]
-    set Editor::text_win($Editor::index_counter,undo_id) [new textUndoer [lindex $f0 2]]
+
+    set f0 [EditManager::create_tab $notebook Tab]
+
+    #set Editor::text_win($Editor::index_counter,undo_id) [new textUndoer [lindex $f0 2]]
     
     NoteBook::compute_size $list_notebook
     pack $list_notebook -side left -fill both -expand yes -padx 2 -pady 4
 
     # Commented out to remove Editor window    
-    #NoteBook::compute_size $notebook
-    #pack $notebook -side left -fill both -expand yes -padx 4 -pady 4
+    NoteBook::compute_size $notebook
+
+    set cf0 [EditManager::create_conWindow $con_notebook]
+
+    NoteBook::compute_size $con_notebook
+
+    pack $con_notebook -side bottom -fill both -expand yes -padx 4 -pady 4
+
+    pack $pw1 -fill both -expand yes
+
+
+    pack $notebook -side left -fill both -expand yes -padx 4 -pady 4
+    
+    #alternate way of creating tab in right note book
+    #set pane4 [$notebook insert end Tab1 -text "Tab1"]
+     set pane4 [lindex $f0 0]
 
 	entry $pane4.ent_1 -width 35 -textvariable pjtToolBoxPath -relief ridge -background white
 	label $pane4.lab_1 -text "Object" -anchor w
@@ -4558,7 +4576,7 @@ tablelist::tablelist $pane4.tbl \
     -columns {0 "Label" left
 	      0 "Value" center
 	      0 "Format" center} \
-    -setgrid no -yscrollcommand [list $vsb set] -width 0 \
+    -setgrid no -width 0 \
     -stripebackground gray98 \
     -showseparators 1 -spacing 10
 
@@ -4633,47 +4651,83 @@ $tbl cellconfigure 5,1 -editable yes
 $tbl columnconfigure 1 -font Courier
 
 # For packing the Tablelist in the right window
-pack $pane4.tbl -side left -fill both -expand yes -padx 4 -pady 4
-	# Pack the label and entry box 	
-	#grid columnconfigure $pane4 0 -minsize 100
-	#grid config $pane4.lab_1 -row 0 -column 0 -sticky "n" -padx 10 -pady 10
-	#grid config $pane4.ent_1 -row 0 -column 1 -sticky "n" -padx 10 -pady 10
-	#grid config $pane4.lab_2 -row 1 -column 0 -sticky "n" -padx 10 -pady 10
-	#grid config $pane4.ent_2 -row 1 -column 1 -sticky "n" -padx 10 -pady 10
-	#grid config $pane4.lab_3 -row 2 -column 0 -sticky "n" -padx 10 -pady 10
-	#grid config $pane4.ent_3 -row 2 -column 1 -sticky "n" -padx 10 -pady 10
-	#grid config $pane4.lab_4 -row 3 -column 0 -sticky "n" -padx 10 -pady 10
-	#grid config $pane4.ent_4 -row 3 -column 1 -sticky "n" -padx 10 -pady 10
-	#grid config $pane4.lab_5 -row 4 -column 0 -sticky "n" -padx 10 -pady 10
-	#grid config $pane4.ent_5 -row 4 -column 1 -sticky "n" -padx 10 -pady 10
-	#grid config $pane4.lab_6 -row 5 -column 0 -sticky "n" -padx 10 -pady 10
-	#grid config $pane4.ent_6 -row 5 -column 1 -sticky "n" -padx 10 -pady 10
-	#grid config $pane4.but_1 -row 6 -column 0 -sticky "n" -padx 0 -pady 30
-	#grid config $pane4.but_2 -row 6 -column 1 -sticky "n" -padx 0 -pady 30
-	
-	
 
-	#grid config $pane4.disclaimer -row 6 -column 1 -sticky "n" -padx 0 -pady 30
+pack $pane4.tbl -fill both -expand yes -padx 4 -pady 4
+#scrollbar $pane4.yscroll -command {$tbl yview} -orient vertical
+#scrollbar $pane4.xscroll -command {$tbl xview} -orient horizontal
+#pack $pane4.yscroll -side right
+#pack $pane4.xscroll -side bottom
+
+
+#forcing the frist tab Tab to be disabled
+#Widget::configure $pane4 "-state disabled"
+
+
+
+set f1 [EditManager::create_tab $notebook Tab1]
+
+     set pane5 [lindex $f1 0]
+set tbl1 $pane5.tbl1
+set vsb1 $pane5.vsb1
+tablelist::tablelist $pane5.tbl1 \
+    -columns {0 "Label" left
+	      0 "Value" center
+	      0 "Format" center
+	      0 "4"
+	      0 "5"
+	      0 "6"
+	      0 "7"} \
+    -setgrid no -yscrollcommand [list $vsb set] -width 0 \
+    -stripebackground gray98 \
+    -showseparators 1 -spacing 10
+
+
+$tbl1 insert end [list 1 0010000000202106 2106 02 00 0000 0010]
+$tbl1 insert end [list 2 0008001000202104 2104 02 00 0001 0008]
+$tbl1 insert end [list 3 0010000000202106 2106 02 00 0000 0010]
+$tbl1 insert end [list 4 0008001000202104 2104 02 00 0001 0008]
+$tbl1 insert end [list 5 0010000000202106 2106 02 00 0000 0010]
+$tbl1 insert end [list 6 0008001000202104 2104 02 00 0001 0008]
+$tbl1 insert end [list 7 0010000000202106 2106 02 00 0000 0010]
+$tbl1 insert end [list 8 0008001000202104 2104 02 00 0001 0008]
+$tbl1 insert end [list 9 0010000000202106 2106 02 00 0000 0010]
+$tbl1 insert end [list 10 0008001000202104 2104 02 00 0001 0008]
+$tbl1 insert end [list 11 0010000000202106 2106 02 00 0000 0010]
+$tbl1 insert end [list 12 0008001000202104 2104 02 00 0001 0008]
+$tbl1 insert end [list 13 0010000000202106 2106 02 00 0000 0010]
+$tbl1 insert end [list 14 0008001000202104 2104 02 00 0001 0008]
+$tbl1 insert end [list 15 0010000000202106 2106 02 00 0000 0010]
+$tbl1 insert end [list 16 0008001000202104 2104 02 00 0001 0008]
+$tbl1 insert end [list 17 0010000000202106 2106 02 00 0000 0010]
+$tbl1 insert end [list 18 0008001000202104 2104 02 00 0001 0008]
+$tbl1 insert end [list 19 0010000000202106 2106 02 00 0000 0010]
+$tbl1 insert end [list 20 0008001000202104 2104 02 00 0001 0008]
+$tbl1 insert end [list 21 0010000000202106 2106 02 00 0000 0010]
+$tbl1 insert end [list 22 0008001000202104 2104 02 00 0001 0008]
+$tbl1 insert end [list 23 0010000000202106 2106 02 00 0000 0010]
+
+pack $pane5.tbl1 -fill both -expand yes -padx 4 -pady 4
+
 
     
     pack $pw2 -fill both -expand yes
-     incr prgindic
-    set cf0 [EditManager::create_conWindow $con_notebook]
-    NoteBook::compute_size $con_notebook
-    pack $con_notebook -side bottom -fill both -expand yes -padx 4 -pady 4
-    
-    pack $pw1 -fill both -expand yes
-    incr prgindic
+
+     #incr prgindic
+
+
+
+    #incr prgindic
     $list_notebook raise objtree
     $con_notebook raise Console
-    $notebook raise [lindex $f0 1]
+    #$notebook raise [lindex $f0 1]
     
     pack $mainframe -fill both -expand yes
-    
+
     update idletasks
     destroy .intro
     wm protocol . WM_DELETE_WINDOW Editor::exit_app
       	if {!$configError} {catch Editor::restoreWindowPositions}
+
 }
 
 proc Editor::changeFont {} {

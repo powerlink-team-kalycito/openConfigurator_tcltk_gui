@@ -3298,101 +3298,92 @@ proc saveproject { } {
 ########################################################################
 
 proc newprojectWindow {} {
-	global PjtDir
-	global PjtName	
-	global tmpPjtDir
-	global status_run
-	global tg_count
-	global profileName
-	global pjtToolBoxPath
-	global pjtTimeOut
-	global pjtUserInclPath
-	if { $status_run == 1 } {
-		Editor::RunStatusInfo
-		return
-	}
-	if {$PjtDir != "None"} {
+	#global PjtDir
+	#global PjtName	
+	#global tmpPjtDir
+	#global status_run
+	#global tg_count
+	#global profileName
+	#global pjtToolBoxPath
+	#global pjtTimeOut
+	#global pjtUserInclPath
+	#if { $status_run == 1 } {
+	#	Editor::RunStatusInfo
+	#}
+	#if {$PjtDir != "None"} {
 		#Prompt for Saving the Existing Project
-		set result [tk_messageBox -message "Save Project $PjtName ?" -type yesnocancel -icon question -title 			"Question"]
-			 switch -- $result {
-	 		     yes {			 
-	   		         saveproject
-	   		     }
-	   		     no  {conPuts "Project $PjtName not saved" info}
-	   		     cancel {
+		#set result [tk_messageBox -message "Save Project $PjtName ?" -type yesnocancel -icon question -title 			#"Question"]
+			 #switch -- $result {
+	 		   #  yes {			 
+	   		   #      saveproject
+	   		    # }
+	   		    # no  {conPuts "Project $PjtName not saved" info}
+	   		    # cancel {
 					#set PjtDir None
-					conPuts "Create New Project Canceled" info
-					return
-				}
-	   		}
-	}
+				#	conPuts "Create New Project Canceled" info
+				#	return
+				#}
+	   		#}
+	#}
+
 	set winNewProj .newprj
 	catch "destroy $winNewProj"
 	toplevel $winNewProj
-	wm title	 $winNewProj	"New Project"
+	wm title     $winNewProj	"Project Wizard"
 	wm resizable $winNewProj 0 0
 	wm transient $winNewProj .
 	wm deiconify $winNewProj
-	wm minsize $winNewProj 150 400
+	wm minsize   $winNewProj 50 200
 	grab $winNewProj
-	font create custom3 -weight bold
-	label $winNewProj.l_title -text "Add New Project" -font custom3
+
 	label $winNewProj.l_empty -text "               "
-	set titf1 [TitleFrame $winNewProj.titf1 -text "New Project"]
-	set tiff2 [$titf1 getframe]
-	label $tiff2.l_pjname -text "Project Name :" -justify left
+
+	set titleFrame1 [TitleFrame $winNewProj.titleFrame1 -text "Create New Project" ]
+	set titleInnerFrame1 [$titleFrame1 getframe]
+
+
+	
+	label $winNewProj.l_empty1 -text "               "
+	
+	label $titleInnerFrame1.l_empty2 -text "               "
+
+	label $titleInnerFrame1.l_pjname -text "Project Name :" -justify left
 	set PjtName ""
-	entry $tiff2.en_pjname -textvariable PjtName -background white -relief ridge
-	label $tiff2.l_pjpath -text "Project Path :" -justify left
-	set tmpPjtDir [pwd]
-	entry $tiff2.en_pjpath -textvariable tmpPjtDir -background white -relief ridge -width 35
-	button $tiff2.bt_pjpath -text Browse -command {
+	entry $titleInnerFrame1.en_pjname -textvariable PjtName -background white -relief ridge
+	
+	label $titleInnerFrame1.l_pjpath -text "Project Path :" -justify left
+	#set tmpPjtDir [pwd]
+	entry $titleInnerFrame1.en_pjpath -textvariable tmpPjtDir -background white -relief ridge -width 35
+	button $titleInnerFrame1.bt_pjpath -text Browse -command {
 							set tmpPjtDir [tk_chooseDirectory -title "New Project" -parent .newprj]
 							if {$tmpPjtDir == ""} {
-								set tmpPjtDir [pwd]			
-								focus .newprj
+							focus .newprj
 								return
 							}
 						       }
-	label $tiff2.l_empty4 -text "  " 
-	label $tiff2.l_empty2 -text "                         "
-	label $tiff2.l_pjconfig -text "Config Project:" -justify left -font custom3
-	label $tiff2.l_empty3 -text "                         "
-	label $tiff2.l_tmout -text "Time Out (Seconds) :"
-	set pjtTimeOut 1
-	entry $tiff2.en_tmout -textvariable pjtTimeOut -background white -relief ridge -validate key -vcmd {expr {[string len %P] <= 5} && {[string is int %P]}}	
-	label $tiff2.l_info -text "Max:10000"
-	label $tiff2.l_usrpath -text "User Include Path :" -justify left
-	entry $tiff2.en_usrpath -textvariable pjtUserInclPath -background white -relief ridge -width 35
-	set pjtUserInclPath [pwd]
-	button $tiff2.bt_usrpath -text Browse -command  {
-							  set pjtUserInclPath [tk_chooseDirectory -title "Choose User Include Path" -parent .newprj]
-							if {$pjtUserInclPath == ""} {
-								set pjtUserInclPath [pwd]			
-								focus .newprj
+
+	label $titleInnerFrame1.l_empty3 -text "               "
+
+
+	set titleFrame2 [TitleFrame $titleInnerFrame1.titleFrame2 -text "Node Config" ]
+	set titleInnerFrame2 [$titleFrame2 getframe]
+	checkbutton $titleInnerFrame2.ch_def -text "Default" -variable default -onvalue 1 -offvalue 0 -command { }
+	checkbutton $titleInnerFrame2.ch_imp -text "Import XDC/XD" -variable import -onvalue 1 -offvalue 0 -command { }
+	entry $titleInnerFrame2.en_imppath -textvariable tmpImpDir -background white -relief ridge -width 35
+	button $titleInnerFrame2.bt_imppath -text Browse -command {
+							set tmpImpDir [tk_chooseDirectory -title "Import XDC/XD" -parent .newprj]
+							if {$tmpImpDir == ""} {
+							focus .newprj
 								return
 							}
-							 }
-	label $tiff2.l_empty5 -text "  "
-	label $tiff2.l_empty7 -text "                         "
-	label $tiff2.l_toolpath -text "ToolBox Path :" -justify left
-	entry $tiff2.en_toolpath -textvariable pjtToolBoxPath -background white -relief ridge -width 35
-	set pjtToolBoxPath [pwd]
-	button $tiff2.bt_toolpath -text Browse -command {
-							  set pjtToolBoxPath [tk_chooseDirectory -title "Choose ToolBox Directory Path" -parent .newprj]
-							if {$pjtToolBoxPath == ""} {
-								set pjtToolBoxPath [pwd]			
-								focus .newprj
-								return
-							}
-							}
-	
-	label $tiff2.l_empty6 -text "  "
-	label $tiff2.l_prfname -text "Default Profile Name :" -justify left
-	set profileName "Default"
-	entry $tiff2.en_prfname -textvariable profileName -background white -relief ridge
-	label $tiff2.l_empty1 -text "                         "
-	button $tiff2.bt_ok -text Ok -command {
+						       }
+
+
+
+	label $titleInnerFrame1.l_empty4 -text "               "
+
+	set frame1 [frame $titleInnerFrame1.fram1]
+	button $frame1.bt_ok -text "  Ok  " -command {
 						set PjtName [string trim $PjtName]
 						if {$PjtName == "" } {
 							tk_messageBox -message "Enter Project Name" -title "Set Project Name error" -icon error
@@ -3400,154 +3391,54 @@ proc newprojectWindow {} {
 							return
 						}
 						if {![file isdirectory $tmpPjtDir]} {
-							tk_messageBox -message "Entered path for project is not a Dire directory" -icon error
-							focus .newprj
-							return
-						}
-						set pjtTimeOut [string trim $pjtTimeOut]
-						if {$pjtTimeOut > 10000} {
-							tk_messageBox -message "Enter value less than 10000" -title "Set Execution Count error" -icon error
-							focus .newprj
-						} elseif {$pjtTimeOut==""} {
-							tk_messageBox -message "Enter value for Timeout" -title "Set Execution Count error" -icon error
-							focus .newprj
-							return
-						}
-						if {$profileName==""} {
-							set profileName "Default"
-							tk_messageBox -message "ProfileName Cannot be empty" -title "Profile" -icon error
-							focus .newprj
-							return
-						}
-						if {$pjtUserInclPath==""} {
-							tk_messageBox -message "Select path for User Include File Directory" -icon error
+							tk_messageBox -message "Entered path for project is not a Directory" -icon error
 							focus .newprj
 							return
 						}
 						
-						if {![file isdirectory $pjtUserInclPath]} {
-							tk_messageBox -message "Entered User include path is not a directory" -icon error
-							focus .newprj
-							return
-						}
-
-						if {$pjtToolBoxPath==""} {
-							tk_messageBox -message "Select path for ToolBox File Directory" -icon error
-							focus .newprj
-							return
-						}
-						if {![file isdirectory $pjtToolBoxPath]} {
-							tk_messageBox -message "Entered Toolbox path is not a directory" -icon error
-							focus .newprj
-							return
-						}
-						set PjtDir $tmpPjtDir
-						# Proc NewProject is called to create new project and the new datas are drawn in treeview.
-						NewProject
-						#saveproject
-						#puts "Project saved"
-						font delete custom3
+						
+					
+						
 						destroy .newprj
 					}
 
-	button $tiff2.bt_cancel -text Cancel -command { 
-							font delete custom3
+	button $frame1.bt_cancel -text Cancel -command { 
+							
 							destroy .newprj
-							set PjtName [instProject  cget -memProjectName]
+							
 							
 						      }
 
-	grid config $winNewProj.l_title -row 0 -column 0 -columnspan 5 -sticky "news"
-	grid config $tiff2.l_pjname -row 0 -column 0 -sticky w
-	grid config $tiff2.en_pjname -row 0 -column 1 -sticky w -columnspan 4
+	grid config $winNewProj.l_empty -row 0 -column 0 
+	
+	grid config $titleFrame1 -row 1 -column 0 -sticky "news" -ipadx 10 -padx 10 -ipady 10
+	#grid config $winNewProj.l_empty1 -row 2 -column 0 
+	#grid config $titleInnerFrame1.l_empty2 -row 0 -column 0 
+	grid config $titleInnerFrame1.l_pjname -row 1 -column 0 
+	grid config $titleInnerFrame1.en_pjname -row 1 -column 1 -sticky "w"
+	grid config $titleInnerFrame1.l_pjpath -row 2 -column 0 
+	grid config $titleInnerFrame1.en_pjpath -row 2 -column 1 -sticky "w"
+	grid config $titleInnerFrame1.bt_pjpath -row 2 -column 2 
+	
+	grid config $titleInnerFrame1.l_empty3 -row 3 -column 0 
 
-	grid config $tiff2.l_pjpath -row 1 -column 0 -sticky w
-	grid config $tiff2.en_pjpath -row 1 -column 1 -sticky w -columnspan 4
-	grid config $tiff2.l_empty4 -row 1 -column 5
-	grid config $tiff2.bt_pjpath -row 1 -column 6
+	grid config $titleFrame2 -row 4 -column 0 -columnspan 3 -sticky "news"
+	grid config $titleInnerFrame2.ch_def -row 0 -column 0 -sticky "w"
+	grid config $titleInnerFrame2.ch_imp -row 1 -column 0
+	grid config $titleInnerFrame2.en_imppath -row 1 -column 1
+	grid config $titleInnerFrame2.bt_imppath -row 1 -column 2
+ 
 
-	grid config $tiff2.l_empty2 -row 2 -column 0
+	grid config $titleInnerFrame1.l_empty4 -row 5 -column 0 
+	
+	grid config $frame1 -row 6 -column 1 
+	grid config $frame1.bt_ok -row 0 -column 0 
+	grid config $frame1.bt_cancel -row 0 -column 1 
+	
+	grid config $winNewProj.l_empty1 -row 7 -column 0 
 
-	grid config $tiff2.l_pjconfig -row 3 -column 1 -sticky w
-
-	grid config $tiff2.l_empty3 -row 4 -column 0 
-
-	grid config $tiff2.l_tmout -row 5 -column 0 -sticky w
-	grid config $tiff2.en_tmout -row 5 -column 1 -sticky w -columnspan 2
-	grid config $tiff2.l_info -row 5 -column 3 -sticky w
-
-	grid config $tiff2.l_usrpath -row 6 -column 0 -sticky w
-	grid config $tiff2.en_usrpath -row 6 -column 1 -sticky w -columnspan 4
-	grid config $tiff2.l_empty5 -row 6 -column 5
-	grid config $tiff2.bt_usrpath -row 6 -column 6
-	grid config $tiff2.l_empty7 -row 7 -column 0
-	grid config $tiff2.l_toolpath -row 8 -column 0 -sticky w
-	grid config $tiff2.en_toolpath -row 8 -column 1 -sticky w -columnspan 4
-	grid config $tiff2.l_empty6 -row 8 -column 5 
-	grid config $tiff2.bt_toolpath -row 8 -column 6
-
-	grid config $tiff2.l_prfname -row 9 -column 0 -sticky w
-	grid config $tiff2.en_prfname -row 9 -column 1 -sticky w -columnspan 4
-
-	grid config $tiff2.l_empty1 -row 10 -column 0 -sticky w
-	grid config $tiff2.bt_ok -row 11 -column 1 -sticky news -columnspan 1
-	grid config $tiff2.bt_cancel -row 11 -column 6 -sticky news
-	grid config $titf1 -column 1 -ipadx 100 -row 1
-	focus $tiff2.l_pjname
-	bind $winNewProj <KeyPress-Return> {set PjtName [string trim $PjtName]
-						if {$PjtName == "" } {
-							tk_messageBox -message "Enter Project Name" -title "Set Project Name error" -icon error
-							focus .newprj
-							return
-						}
-						if {![file isdirectory $pjtUserInclPath]} {
-							tk_messageBox -message "Entered User include path is not a directory" -icon error
-							focus .newprj
-							return
-						}
-						set pjtTimeOut [string trim $pjtTimeOut]
-						if {$pjtTimeOut > 10000} {
-							tk_messageBox -message "Enter value less than 10000" -title "Set Execution Count error" -icon error
-							focus .newprj
-						} elseif {$pjtTimeOut==""} {
-							tk_messageBox -message "Enter value for Timeout" -title "Set Execution Count error" -icon error
-							focus .newprj
-							return
-						}
-						if {$profileName==""} {
-							set profileName "Default"
-							tk_messageBox -message "ProfileName Cannot be empty" -title "Profile" -icon error
-							focus .newprj
-							return
-						}
-						if {$pjtUserInclPath==""} {
-							tk_messageBox -message "Select path for User Include File Directory" -icon error
-							focus .newprj
-							return
-						}
-						
-						if {![file isdirectory $pjtUserInclPath]} {
-							tk_messageBox -message "Entered User include path is not a directory" -icon error
-							focus .newprj
-							return
-						}
-
-						if {$pjtToolBoxPath==""} {
-							tk_messageBox -message "Select path for ToolBox File Directory" -icon error
-							focus .newprj
-							return
-						}
-						if {![file isdirectory $pjtToolBoxPath]} {
-							tk_messageBox -message "Entered Toolbox path is not a directory" -icon error
-							focus .newprj
-							return
-						}
-						font delete custom3
-						NewProject
-						destroy .newprj
-					}
 	wm protocol .newprj WM_DELETE_WINDOW { 
-					 font delete custom3
+
 					 puts "Deleted"
 					 destroy .newprj
 				       }
@@ -4150,7 +4041,7 @@ proc Editor::create { } {
     set Editor::projectMenu [menu  .projectmenu -tearoff 0]
 #    set Editor::addMenu .projectmenu.cascade
 #    $Editor::projectMenu add cascade -label "Add" -menu $Editor::addMenu
-     $Editor::projectMenu add command -label "Add MN/CN" -command {AddNewTestGroupWindow} 
+     $Editor::projectMenu add command -label "Add MN/CN" -command {AddMNCNWindow} 
 #    menu $Editor::addMenu -tearoff 0
 #    $Editor::addMenu add command -label "Test Group" -command {AddNewTestGroupWindow}
 #    $Editor::addMenu add command -label "Profile" -command {AddProfileWindow}   
@@ -4275,7 +4166,7 @@ proc Editor::create { } {
     set sep2 [Separator::create $tb1.sep2 -orient vertical]
     pack $sep2 -side left -fill y -padx 4 -anchor w
     
-    incr prgindic
+    #incr prgindic
     set bbox [ButtonBox::create $tb1.bbox2b -spacing 0 -padx 1 -pady 1]
     set toolbarButtons(toglcom) [ButtonBox::add $bbox -image [Bitmap::get toglcom] \
             -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
@@ -4294,7 +4185,7 @@ proc Editor::create { } {
     set sep1c [Separator::create $tb1.sep1c -orient vertical]
     pack $sep1c -side left -fill y -padx 4 -anchor w
     
-    incr prgindic
+    #incr prgindic
     set bbox [ButtonBox::create $tb1.bbox3 -spacing 0 -padx 1 -pady 1]
     
     set toolbarButtons(undo) [ButtonBox::add $bbox -image [Bitmap::get undo] \
@@ -4364,8 +4255,8 @@ proc Editor::create { } {
             -width 25\
             -helptype balloon\
             -helptext "Compile"\
-	    -command {Compile }\
-    ]
+	    -command ""]
+    #puts [$tb1.bbox itemcget -image]
     pack $compile_arrow -side left -padx 4
     set right_arrow [ArrowButton::create $bbox.ua -dir right\
             -height 35\
@@ -4474,7 +4365,7 @@ proc Editor::create { } {
     set temp [MainFrame::addindicator $mainframe -textvariable clock_var]
     
     # NoteBook creation
-    incr prgindic
+    #incr prgindic
     set frame    [$mainframe getframe]
     
     set pw1 [PanedWindow::create $frame.pw -side left]
@@ -4484,7 +4375,7 @@ proc Editor::create { } {
 # TODO: Improper Way of implementation. Done to get screenshot of the GUI
     set pw3 [PanedWindow::create $pane.pw1 -side top]
     
-    set pane1 [PanedWindow::add $pw2 -minsize 100]
+    set pane1 [PanedWindow::add $pw2 -minsize 250]
     set pane2 [PanedWindow::add $pw2 -minsize 100]
     set pane3 [PanedWindow::add $pw1 -minsize 100]
 
@@ -4493,6 +4384,7 @@ proc Editor::create { } {
     set notebook [NoteBook::create $pane2.nb]	
 
     set con_notebook [NoteBook::create $pane3.nb]
+    
     #set myWin [NoteBook::create $pane4.nb]
     
     set pf1 [EditManager::create_treeWindow $list_notebook]
@@ -4515,7 +4407,7 @@ proc Editor::create { } {
     set PjtDir $EditorData(options,History)
     incr prgindic
 
-    set f0 [EditManager::create_tab $notebook Tab]
+    set f0 [EditManager::create_tab $notebook "Index"]
 
     #set Editor::text_win($Editor::index_counter,undo_id) [new textUndoer [lindex $f0 2]]
     
@@ -4525,11 +4417,25 @@ proc Editor::create { } {
     # Commented out to remove Editor window    
     NoteBook::compute_size $notebook
 
-    set cf0 [EditManager::create_conWindow $con_notebook]
+    set cf0 [EditManager::create_conWindow $con_notebook "Console"]
+
+
+#TODO hard coded to bring image
+#code for adding image in console
+
+    $con_notebook itemconfigure Console1 -image [Bitmap::get file]
+    set cf1 [EditManager::create_conWindow $con_notebook "Error"]
+   $con_notebook itemconfigure Console2 -image [Bitmap::get error_small]
+    set cf2 [EditManager::create_conWindow $con_notebook "Warning"]
+   $con_notebook itemconfigure Console3 -image [Bitmap::get warning_small]
+
+
 
     NoteBook::compute_size $con_notebook
 
     pack $con_notebook -side bottom -fill both -expand yes -padx 4 -pady 4
+    
+#pack $con_notebook1 -side bottom -fill both -expand yes -padx 4 -pady 4
 
     pack $pw1 -fill both -expand yes
 
@@ -4574,15 +4480,19 @@ set tbl $pane4.tbl
 set vsb $pane4.vsb
 tablelist::tablelist $pane4.tbl \
     -columns {0 "Label" left
-	      0 "Value" center
-	      0 "Format" center} \
+	      0 "Value" center} \
     -setgrid no -width 0 \
     -stripebackground gray98 \
+    -labelcommand "" \
+    -resizable 0 -movablecolumns 0 -movablerows 0\
     -showseparators 1 -spacing 10
 
-$tbl columnconfigure 0 -background #f9cf7e
-$tbl columnconfigure 1 -background #f9cf7e
-$tbl columnconfigure 2 -background #f9cf7e
+#label command is to disable sorting 
+#resizable doesnt allow the user to change table width 
+
+$tbl columnconfigure 0 -background #f9cf7e -width 47
+$tbl columnconfigure 1 -background #f9cf7e -width 47
+#$tbl columnconfigure 2 -background #f9cf7e
 
 #$tbl columnconfigure 1 -formatcommand emptyStr -sortmode integer
 #$tbl columnconfigure 2 -name fileSize -sortmode integer
@@ -4629,9 +4539,9 @@ $tbl insert 4 [list Access\ Type: rw ""]
 $tbl insert 5 [list Value: 0007 ""]
 $tbl cellconfigure 5,1 -editable yes
 $tbl insert 6 [list]
-$tbl cellconfigure 6,0 -window createSaveButton -bg gray98
+$tbl cellconfigure 6,0 -window createSaveButton -bg gray98 
 $tbl cellconfigure 6,1 -window createDiscardButton -bg gray98
-$tbl cellconfigure 5,2 -window createFormatButton -bg gray98
+#$tbl cellconfigure 5,2 -window createFormatButton -bg gray98
 
 $tbl cellconfigure 0,0 -editable yes
 $tbl cellconfigure 0,1 -editable yes
@@ -4663,26 +4573,84 @@ pack $pane4.tbl -fill both -expand yes -padx 4 -pady 4
 #Widget::configure $pane4 "-state disabled"
 
 
-
-set f1 [EditManager::create_tab $notebook Tab1]
-
-     set pane5 [lindex $f1 0]
-set tbl1 $pane5.tbl1
-set vsb1 $pane5.vsb1
-tablelist::tablelist $pane5.tbl1 \
+set f1 [EditManager::create_tab $notebook "Sub Index"]
+ set pane6 [lindex $f1 0]
+set tbl2 $pane6.tbl2
+set vsb2 $pane6.vsb2
+tablelist::tablelist $pane6.tbl2 \
     -columns {0 "Label" left
-	      0 "Value" center
-	      0 "Format" center
-	      0 "4"
-	      0 "5"
-	      0 "6"
-	      0 "7"} \
+	      0 "Value" center} \
     -setgrid no -yscrollcommand [list $vsb set] -width 0 \
     -stripebackground gray98 \
+    -labelcommand "" \
+    -resizable 0 -movablecolumns 0 -movablerows 0 \
     -showseparators 1 -spacing 10
 
 
-$tbl1 insert end [list 1 0010000000202106 2106 02 00 0000 0010]
+$tbl2 columnconfigure 0 -background #f9cf7e -width 47
+$tbl2 columnconfigure 1 -background #f9cf7e -width 47
+
+$tbl2 insert 0 [list Index: 1006 ""]
+$tbl2 insert 1 [list Sub\ Index: 00 ""]
+$tbl2 insert 2 [list Name: NMT_CycleLen_U32 ""]
+$tbl2 cellconfigure 0,1 -editable yes
+$tbl2 insert 3 [list Object\ Type: VAR ""]
+$tbl2 insert 4 [list Data\ Type: Unsigned32 ""]
+$tbl2 insert 5 [list Access\ Type: rw ""]
+$tbl2 insert 6 [list Value: 0007 ""]
+$tbl2 cellconfigure 5,1 -editable yes
+$tbl2 insert 7 [list]
+$tbl2 cellconfigure 7,0 -window createSaveButton -bg gray98 
+$tbl2 cellconfigure 7,1 -window createDiscardButton -bg gray98 
+#$tbl2 cellconfigure 7,2 -window createFormatButton -bg gray98
+
+$tbl2 cellconfigure 0,0 -editable yes
+$tbl2 cellconfigure 0,1 -editable yes
+$tbl2 cellconfigure 1,0 -editable yes
+$tbl2 cellconfigure 1,1 -editable yes
+$tbl2 cellconfigure 2,0 -editable yes
+$tbl2 cellconfigure 2,1 -editable yes
+$tbl2 cellconfigure 3,0 -editable yes
+$tbl2 cellconfigure 3,1 -editable yes
+$tbl2 cellconfigure 4,0 -editable yes
+$tbl2 cellconfigure 4,1 -editable yes
+$tbl2 cellconfigure 5,0 -editable yes
+$tbl2 cellconfigure 5,1 -editable yes
+$tbl2 cellconfigure 6,0 -editable yes
+$tbl2 cellconfigure 6,1 -editable yes
+
+pack $pane6.tbl2 -fill both -expand yes -padx 4 -pady 4
+
+
+set f2 [EditManager::create_tab $notebook "PDO mapping"]
+
+     set pane5 [lindex $f2 0]
+set tbl1 $pane5.tbl1
+set vsb1 $pane5.vsb1
+tablelist::tablelist $pane5.tbl1 \
+    -columns {0 "No" left
+	      0 "Mapping Entries" center
+	      0 "Index" center
+	      0 "Sub Index"
+	      0 "Reserved"
+	      0 "Offset"
+	      0 "Length"} \
+    -setgrid no -yscrollcommand [list $vsb set] -width 0 \
+    -stripebackground gray98 \
+    -resizable 0 -movablecolumns 0 -movablerows 0 \
+    -showseparators 1 -spacing 10
+
+
+# the column No has onlly integer values som sorting based on integer
+$tbl1 columnconfigure 0 -background #f9cf7e -width 6 -sortmode integer
+$tbl1 columnconfigure 1 -background #f9cf7e -width 23
+$tbl1 columnconfigure 2 -background #f9cf7e -width 11
+$tbl1 columnconfigure 3 -background #f9cf7e -width 11
+$tbl1 columnconfigure 4 -background #f9cf7e -width 11
+$tbl1 columnconfigure 5 -background #f9cf7e -width 11
+$tbl1 columnconfigure 6 -background #f9cf7e -width 11
+
+$tbl1 insert end [list 65536 0010000000202106 2106 02 00 0000 0010]
 $tbl1 insert end [list 2 0008001000202104 2104 02 00 0001 0008]
 $tbl1 insert end [list 3 0010000000202106 2106 02 00 0000 0010]
 $tbl1 insert end [list 4 0008001000202104 2104 02 00 0001 0008]
@@ -4718,10 +4686,16 @@ pack $pane5.tbl1 -fill both -expand yes -padx 4 -pady 4
 
     #incr prgindic
     $list_notebook raise objtree
-    $con_notebook raise Console
-    #$notebook raise [lindex $f0 1]
-    
+    $con_notebook raise Console1
+    #$con_notebook _select Console1
+    $notebook raise [lindex $f0 1]
+    #$notebook _select [lindex $f0 1]
+
+
     pack $mainframe -fill both -expand yes
+
+#set prgindic -1
+set prgindic 0
 
     update idletasks
     destroy .intro
@@ -5313,187 +5287,151 @@ proc NewProject {} {
 	##puts PAGEOPENLIST:$pageopened_list
 }
 #################################################################################################################
-# proc AddNewTestGroupWindow
+# proc AddMNCNWindow
 #
 # pops up a window and gets all the details for a testgroup and calls AddTestGroup procedure to update in tree window # and in structure
 #####################################################################################################################
-proc AddNewTestGroupWindow {} {
-	global testGroupName
-	global execCount
-	global mode_interactive
-	global mode_continuous
-	global mode_sequence
-	global titleInnerFrame1
-	global helpMsg
-	global disptext
-	set testGroupName ""
-	set execCount 1
-	set winAddTestGroup .addTestGroup
-	catch "destroy $winAddTestGroup"
-	toplevel     $winAddTestGroup
-	wm title     $winAddTestGroup "Add New Controlled Node"
-	wm resizable $winAddTestGroup 0 0
-	wm transient $winAddTestGroup .
-	wm deiconify $winAddTestGroup
-	grab $winAddTestGroup
+proc AddMNCNWindow {} {
+	#global testGroupName
+	#global execCount
+	#global mode_interactive
+	#global mode_continuous
+	#global mode_sequence
+	#global titleInnerFrame1
+	#global helpMsg
+	#global disptext
+	#set testGroupName ""
+	#set execCount 1
+	set winAddMNCN .addMNCN
+	catch "destroy $winAddMNCN"
+	toplevel     $winAddMNCN
+	wm title     $winAddMNCN "Add New Controlled Node"
+	wm resizable $winAddMNCN 0 0
+	wm transient $winAddMNCN .
+	wm deiconify $winAddMNCN
+	grab $winAddMNCN
 	#wm minsize   $winAddTestGroup 300 400
 	#wm maxsize   $winAddTestGroup 250 400
-	font create custom1 -weight bold
-	label $winAddTestGroup.l_empty1 -text ""	
-	label $winAddTestGroup.l_title -text "Add New Controlled Node" -font custom1
-	label $winAddTestGroup.l_empty2 -text ""
-	
-	grid config $winAddTestGroup.l_empty1 -row 0 -column 0 -sticky "news"
-	grid config $winAddTestGroup.l_title  -row 1 -column 0 -sticky "news" -ipadx 125
-	grid config $winAddTestGroup.l_empty2 -row 2 -column 0 -sticky "news"
 
-	set titleFrame1 [TitleFrame $winAddTestGroup.titleFrame1 -text "New Controlled Node" ]
-	grid config $titleFrame1 -row 3 -column 0 -ipadx 20 -sticky "news"
+	label $winAddMNCN.l_empty -text ""	
+
+	set titleFrame1 [TitleFrame $winAddMNCN.titleFrame1 -text "Add MN/CN" ]
 	set titleInnerFrame1 [$titleFrame1 getframe]
-	
-	set titleFrame2 [TitleFrame $titleInnerFrame1.titleFrame2 -text "Configuration"]  
-	grid config $titleFrame2 -row 2 -column 0 -ipadx 5  -sticky "news"
-	set titleInnerFrame2 [$titleFrame2 getframe]
-	
-	####frame1 has six radio buttons to select excution mode 
-	set frame1 [frame $titleInnerFrame2.fram1]
-	#### frame2 has label TestGroupName and the entry box
-	set frame2 [frame $titleInnerFrame1.fram2]
-	#### frame3 has label Execution count and the entry box
-	set frame3 [frame $titleInnerFrame2.fram3]
-	#### frame 4 has ok and cancel button
-	set frame4 [frame $titleInnerFrame1.fram4]
-	set frame5 [frame $titleInnerFrame1.fram5]
-	
-	label $frame2.l_name -text "CN Name :"
-	entry $frame2.en_name -textvariable testGroupName -background white
-	grid config $frame2.l_name  -row 0 -column 0 
-	grid config $frame2.en_name -row 0 -column 1
-	grid config $frame2 -row 0 -column 0
 
-	label $titleInnerFrame1.l_empty3 -text ""
-	grid config $titleInnerFrame1.l_empty3  -row 1 -column 0
+	label $titleInnerFrame1.l_empty1 -text "               "
+	set titleFrame2 [TitleFrame $titleInnerFrame1.titleFrame2 -text "Add" ]
+	set titleInnerFrame2 [$titleFrame2 getframe]
+	$titleInnerFrame2 configure -width 50 
+	radiobutton $titleInnerFrame2.ra_mn -text "MN" -variable mncn -value on  
+	radiobutton $titleInnerFrame2.ra_cn -text "CN" -variable mncn -value off 
+
+
+	label $titleInnerFrame1.l_empty2 -text "               "
+
+	set frame2 [frame $titleInnerFrame1.fram2]
+	label $frame2.l_name -text "Name :   " -justify left
+	set Name ""
+	entry $frame2.en_name -textvariable Name -background white -relief ridge
 	
-	label $titleInnerFrame2.l_empty4 -text ""
-	grid config $titleInnerFrame2.l_empty4  -row 0 -column 0 
+	label $frame2.l_node -text "Node ID :" -justify left
+	#set nodeId ""
+	entry $frame2.en_node -textvariable nodeId -background white -relief ridge 
+
 	
-	label $frame3.l_exe -text "Import XDC :"
-	entry $frame3.en_exe -textvariable filename -background white -validate key -vcmd {expr {[string len %P] <= 5} && {[string is int %P]}}
-button $frame3.bt_name -text Browse -command {
-						set types {
-						        {"All XDC Files"     {.XDC } }
-							}
-						set filename [tk_getOpenFile -title "Add TestCase" -filetypes $types -parent .]
+	label $titleInnerFrame1.l_empty3 -text "               "
+
+
+	set titleFrame3 [TitleFrame $titleInnerFrame1.titleFrame3 -text "Node Config" ]
+	set titleInnerFrame3 [$titleFrame3 getframe]
+	checkbutton $titleInnerFrame3.ch_def -text "Default" -variable default -onvalue 1 -offvalue 0 -command { }
+	checkbutton $titleInnerFrame3.ch_imp -text "Import XDC/XD" -variable import -onvalue 1 -offvalue 0 -command { }
+	entry $titleInnerFrame3.en_imppath -textvariable tmpImpDir -background white -relief ridge -width 35
+	button $titleInnerFrame3.bt_imppath -text Browse -command {
+		set tmpImpDir [tk_chooseDirectory -title "Import XDC/XD" -parent $winAddMNCN]
+		if {$tmpImpDir == ""} {
+			focus .newprj
+			return
+			}
+		}
+
+
+
+	label $titleInnerFrame1.l_empty4 -text "              "
+
+
+	set frame1 [frame $titleInnerFrame1.fram1]
+	button $frame1.bt_ok -text "  Ok  " -command {
+						set PjtName [string trim $PjtName]
+						if {$PjtName == "" } {
+							tk_messageBox -message "Enter MN/CN Name" -title "Set Node Name error" -icon error
+							focus $winAddMNCN
+							return
+						}
+						if {![file isdirectory $tmpPjtDir]} {
+							tk_messageBox -message "Entered path for project is not a Directory" -icon error
+							focus $winAddMNCN
+							return
+						}
+						
+						
+					
+						
+						destroy $winAddMNCN
 					}
-	grid config $frame3.l_exe  -row 0 -column 0 
-	grid config $frame3.en_exe -row 0 -column 1
-	grid config $frame3.bt_name -row 0 -column 2
-	grid config $frame3 -row 1 -column 0
+
+	button $frame1.bt_cancel -text Cancel -command { 
+							
+							destroy $winAddMNCN
+							
+							
+						      }
+
+
+	label $winAddMNCN.l_empty5 -text " "
+
+
+	grid config $winAddMNCN.l_empty -row 0 -column 0  
 	
-	label $titleInnerFrame2.l_empty5 -text ""
-	grid config $titleInnerFrame2.l_empty5  -row 2 -column 0
-	label $titleInnerFrame2.l_mode -text "Type of CN"
-	grid config $titleInnerFrame2.l_mode  -row 3 -column 0 
+	grid config $titleFrame1 -row 1 -column 0 -sticky "news" 
+
+	grid config $titleInnerFrame1.l_empty1 -row 0 -column 0  
+
+	grid config $titleFrame2 -row 1 -column 0  -sticky "w" 
+	grid config $titleInnerFrame2.ra_mn -row 0 -column 0 -sticky "w" 
+	grid config $titleInnerFrame2.ra_cn -row 1 -column 0 -sticky "w" 
+
+	grid config $titleInnerFrame1.l_empty2 -row 2 -column 0  
+
+	grid config $frame2 -row 3 -column 0 -columnspan 2  -sticky "news"
+	grid config $frame2.l_name -row 0 -column 0 -sticky "e"
+	grid config $frame2.en_name -row 0 -column 1 -sticky "w"
+	grid config $frame2.l_node -row 1 -column 0 -sticky "e"
+	grid config $frame2.en_node -row 1 -column 1 -sticky "w"
+
 	
-	#variables used for radio buttons
-	set mode_interactive on
-	set mode_continuous on
-	set mode_sequence on
-	radiobutton $frame1.ra_inter -text "Software CN"   -variable mode_interactive   -value on 
-	radiobutton $frame1.ra_bat   -text "Hardware CN"         -variable mode_interactive   -value off 
-	label $frame1.ra_cont  -text ""
-	label $frame1.ra_disco -text "" 
-	label $frame1.ra_seq   -text "" 
-	label $frame1.ra_ran   -text "" 
-	grid config $frame1.ra_inter -row 0 -column 0 -sticky "w"
-	grid config $frame1.ra_bat   -row 0 -column 1 -sticky "w"
-	grid config $frame1.ra_cont  -row 1 -column 0 -sticky "w"
-	grid config $frame1.ra_disco -row 1 -column 1 -sticky "w"
-	grid config $frame1.ra_seq   -row 2 -column 0 -sticky "w"
-	grid config $frame1.ra_ran   -row 2 -column 1 -sticky "w"
-	grid config $frame1 -row 5 -column 0
+	grid config $titleInnerFrame1.l_empty3 -row 5 -column 0  
+
+	grid config $titleFrame3 -row 6 -column 0 -columnspan 2 -sticky "news"
+	grid config $titleInnerFrame3.ch_def -row 0 -column 0 -sticky "w"
+	grid config $titleInnerFrame3.ch_imp -row 1 -column 0
+	grid config $titleInnerFrame3.en_imppath -row 1 -column 1
+	grid config $titleInnerFrame3.bt_imppath -row 1 -column 2
+ 
+
+	grid config $titleInnerFrame1.l_empty4 -row 7 -column 0  
 	
-#	scrollbar $titleInnerFrame1.h -orient horizontal -command "$titleInnerFrame1.t_help xview"
-#	scrollbar $titleInnerFrame1.v -command "$titleInnerFrame1.t_help yview"
-#	text $titleInnerFrame1.t_help -width 40 -height 10 -xscroll "$titleInnerFrame1.h set" -yscroll "$titleInnerFrame1.v set" -state disabled
-#	grid config $titleInnerFrame1.t_help -row 5 -column 0
-#	grid  $titleInnerFrame1.v -row 5 -column 2 -sticky "ns"
-#	grid  $titleInnerFrame1.h -row 6 -column 0 -columnspan 2 -sticky "we"
-#	set disptext 0
-#	label $titleInnerFrame1.l_empty6 -text ""
-#	grid config $titleInnerFrame1.l_empty6  -row 3 -column 0
-	####when check buton is selected text is enabled if it is unselected text is disabled
-#	checkbutton $titleInnerFrame1.ch_help -text "Add Help Messages" -variable disptext -onvalue 1 -offvalue 0 -command {
-#		global $titleInnerFrame1
-#		if {$disptext==1} {
-#			$titleInnerFrame1.t_help config -state normal -background white
-#		} else {
-#			$titleInnerFrame1.t_help config -state disabled -background lightgrey
-#		}
-#	}
-#	grid config $titleInnerFrame1.ch_help -row 4 -column 0
-#	label $titleInnerFrame1.l_empty7 -text ""
-#	grid config $titleInnerFrame1.l_empty7  -row 7 -column 0
-	button $frame4.b_ok -text "  Ok  " -command { 
-							set testGroupName [string trim $testGroupName]
-							if {$testGroupName==""} {
-								tk_messageBox -message "Enter CN name" -icon error -parent .addTestGroup
-								return
-							}
-							set execCount [string trim $execCount]
-							if {$execCount==""} {
-								tk_messageBox -message "Enter value for Execution Count" -icon error -parent .addTestGroup
-								return
-							} elseif {$execCount>10000} {
-								tk_messageBox -message "Enter value less than 10000" -icon error -parent .addTestGroup
-								return
-							}
-#							if {$disptext==1} {
-#								set helpMsg [string trim [$titleInnerFrame1.t_help get @0,0 end]]
-#							} else {
-#								set helpMsg ""
-#							}
-							AddTestGroup
-							font delete custom1
-							destroy .addTestGroup
-						    }
-	button $frame4.b_cancel -text "Cancel" -command {
-								destroy .addTestGroup
-								font delete custom1
-							}
-	grid config $frame4.b_ok  -row 0 -column 0 
-	grid config $frame4.b_cancel -row 0 -column 1
-	grid config $frame4 -row 8 -column 0 
-	bind $winAddTestGroup <KeyPress-Return> {  
-							set testGroupName [string trim $testGroupName]
-							if {$testGroupName==""} {
-								tk_messageBox -message "Enter TestGroup name" -icon error -parent .addTestGroup
-								return
-							}
-							set execCount [string trim $execCount]
-							if {$execCount==""} {
-								tk_messageBox -message "Enter value for Execution Count" -icon error -parent .addTestGroup
-								return
-							} elseif {$execCount>10000} {
-								tk_messageBox -message "Enter value less than 10000" -icon error -parent .addTestGroup
-								return
-							}
-#							if {$disptext==1} {
-#								set helpMsg [string trim [$titleInnerFrame1.t_help get @0,0 end]]
-#							} else {
-#								set helpMsg ""
-#							}
-							AddTestGroup
-							font delete custom1
-							destroy .addTestGroup
-						    }
-	label $winAddTestGroup.l_empty8 -text ""
-	grid config $winAddTestGroup.l_empty8 -row 4 -column 0 -sticky "news"
-	label $winAddTestGroup.l_empty9 -text ""
-	grid config $winAddTestGroup.l_empty9 -row 5 -column 0 -sticky "news"
-	wm protocol .addTestGroup WM_DELETE_WINDOW {
-							font delete custom1
-							destroy .addTestGroup
+	grid config $frame1 -row 8 -column 0 -columnspan 2  -sticky "news"
+	grid config $frame1.bt_ok -row 0 -column 0  -sticky "e"
+	grid config $frame1.bt_cancel -row 0 -column 1 -sticky "w"
+	
+	grid config $winAddMNCN.l_empty5 -row 9 -column 0  
+
+
+
+
+	wm protocol $winAddMNCN WM_DELETE_WINDOW {
+							
+							destroy $winAddMNCN
 						   }
 }
 

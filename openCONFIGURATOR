@@ -70,7 +70,7 @@ proc initSTB_TSUITE {argc argv} {
      
     option add *TitleFrame.font {helvetica 11 bold italic}
     if {"$tcl_platform(platform)" != "windows"} {
-        option add *background grey userDefault
+        option add *background #d7d5d3 userDefault
     }
     
     wm withdraw .

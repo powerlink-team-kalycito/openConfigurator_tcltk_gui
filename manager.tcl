@@ -18,6 +18,7 @@ namespace eval EditManager {
     variable _status "Compute in progress..."
     variable _homogeneous 0
     variable _newPageCounter 0
+    variable _newConsoleCounter 0
     variable lastPage ""
 }
 
@@ -141,14 +142,23 @@ proc EditManager::create_tab {nb filename} {
     set frame [$nb insert end $pageName -text $filename ]
 
 set sw [ScrolledWindow $frame.sw]
+
 pack $sw -fill both -expand true
 set sf [ScrollableFrame $sw.sf]
+#$sf configure -bg white
+$sf configure
 $sw setwidget $sf
+
+#pack $sf -fill both -expand true
+
 set uf [$sf getframe]
+#pack $uf -fill both -expand true
+#$uf config -bg white
 
     incr Editor::index_counter
     #return [list $frame $pageName]
     return [list $uf $pageName]
+    #return [list $sf $pageName]
 }
 
 ###########################################################################							
@@ -215,11 +225,14 @@ proc EditManager::create_procWindow {nb } {
 # Description:	Create the Output Console for the OutPut display and 
 #		User Interactions.
 ###########################################################################
-proc EditManager::create_conWindow {nb } {
+proc EditManager::create_conWindow {nb text} {
     global conWindow
+    variable _newConsoleCounter
     
-    set pagename Console
-    set frame [$nb insert end $pagename -text "Output Console"]
+    incr _newConsoleCounter
+
+    set pagename Console$_newConsoleCounter
+    set frame [$nb insert end $pagename -text $text]
     
     set sw [ScrolledWindow::create $frame.sw -auto both]
     set conWindow [consoleInit $sw]
@@ -227,7 +240,8 @@ proc EditManager::create_conWindow {nb } {
     ScrolledWindow::setwidget $sw $conWindow
     pack $sw -fill both -expand yes
     
-    return $frame
+    #return [$frame $pagename]
+	return $frame
 }
 ###########################################################################							
 # Proc Name:	create_testTerminal					

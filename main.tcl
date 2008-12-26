@@ -5305,7 +5305,7 @@ proc AddMNCNWindow {} {
 	set winAddMNCN .addMNCN
 	catch "destroy $winAddMNCN"
 	toplevel     $winAddMNCN
-	wm title     $winAddMNCN "Add New Controlled Node"
+	wm title     $winAddMNCN "Add New Node"
 	wm resizable $winAddMNCN 0 0
 	wm transient $winAddMNCN .
 	wm deiconify $winAddMNCN
@@ -5319,9 +5319,9 @@ proc AddMNCNWindow {} {
 	set titleInnerFrame1 [$titleFrame1 getframe]
 
 	label $titleInnerFrame1.l_empty1 -text "               "
-	set titleFrame2 [TitleFrame $titleInnerFrame1.titleFrame2 -text "Add" ]
+	set titleFrame2 [TitleFrame $titleInnerFrame1.titleFrame2 -text "Select Node Type" ]
 	set titleInnerFrame2 [$titleFrame2 getframe]
-	$titleInnerFrame2 configure -width 50 
+#	$titleInnerFrame2 configure -width 50 
 	radiobutton $titleInnerFrame2.ra_mn -text "MN" -variable mncn -value on  
 	radiobutton $titleInnerFrame2.ra_cn -text "CN" -variable mncn -value off 
 
@@ -5343,7 +5343,7 @@ proc AddMNCNWindow {} {
 
 	set titleFrame3 [TitleFrame $titleInnerFrame1.titleFrame3 -text "Node Config" ]
 	set titleInnerFrame3 [$titleFrame3 getframe]
-	checkbutton $titleInnerFrame3.ch_def -text "Default" -variable default -onvalue 1 -offvalue 0 -command { }
+	checkbutton $titleInnerFrame3.ch_def -text "Default" -variable default -onvalue 1 -relief flat -offvalue 0 -command { }
 	checkbutton $titleInnerFrame3.ch_imp -text "Import XDC/XD" -variable import -onvalue 1 -offvalue 0 -command { }
 	entry $titleInnerFrame3.en_imppath -textvariable tmpImpDir -background white -relief ridge -width 35
 	button $titleInnerFrame3.bt_imppath -text Browse -command {
@@ -5362,26 +5362,26 @@ proc AddMNCNWindow {} {
 	set frame1 [frame $titleInnerFrame1.fram1]
 	button $frame1.bt_ok -text "  Ok  " -command {
 						set PjtName [string trim $PjtName]
-						if {$PjtName == "" } {
+						if {$Name == "" } {
 							tk_messageBox -message "Enter MN/CN Name" -title "Set Node Name error" -icon error
-							focus $winAddMNCN
+							focus .addMNCN
 							return
 						}
-						if {![file isdirectory $tmpPjtDir]} {
-							tk_messageBox -message "Entered path for project is not a Directory" -icon error
-							focus $winAddMNCN
+						if {$nodeId == "" } {
+							tk_messageBox -message "Enter Node id" -icon error
+							focus .addMNCN
 							return
 						}
 						
 						
 					
 						
-						destroy $winAddMNCN
+						destroy .addMNCN
 					}
 
 	button $frame1.bt_cancel -text Cancel -command { 
 							
-							destroy $winAddMNCN
+							destroy .addMNCN
 							
 							
 						      }
@@ -5396,9 +5396,9 @@ proc AddMNCNWindow {} {
 
 	grid config $titleInnerFrame1.l_empty1 -row 0 -column 0  
 
-	grid config $titleFrame2 -row 1 -column 0  -sticky "w" 
+	grid config $titleFrame2 -row 1 -column 0  -ipadx 5 -ipady 5 -padx 100 -pady 5 -sticky "news"
 	grid config $titleInnerFrame2.ra_mn -row 0 -column 0 -sticky "w" 
-	grid config $titleInnerFrame2.ra_cn -row 1 -column 0 -sticky "w" 
+	grid config $titleInnerFrame2.ra_cn -row 0 -column 1 -sticky "e" 
 
 	grid config $titleInnerFrame1.l_empty2 -row 2 -column 0  
 
@@ -5411,7 +5411,7 @@ proc AddMNCNWindow {} {
 	
 	grid config $titleInnerFrame1.l_empty3 -row 5 -column 0  
 
-	grid config $titleFrame3 -row 6 -column 0 -columnspan 2 -sticky "news"
+	grid config $titleFrame3 -row 6 -column 0 -sticky "news"
 	grid config $titleInnerFrame3.ch_def -row 0 -column 0 -sticky "w"
 	grid config $titleInnerFrame3.ch_imp -row 1 -column 0
 	grid config $titleInnerFrame3.en_imppath -row 1 -column 1
@@ -5420,7 +5420,7 @@ proc AddMNCNWindow {} {
 
 	grid config $titleInnerFrame1.l_empty4 -row 7 -column 0  
 	
-	grid config $frame1 -row 8 -column 0 -columnspan 2  -sticky "news"
+	grid config $frame1 -row 8 -column 0 -sticky "news"
 	grid config $frame1.bt_ok -row 0 -column 0  -sticky "e"
 	grid config $frame1.bt_cancel -row 0 -column 1 -sticky "w"
 	
@@ -5431,7 +5431,7 @@ proc AddMNCNWindow {} {
 
 	wm protocol $winAddMNCN WM_DELETE_WINDOW {
 							
-							destroy $winAddMNCN
+							destroy .addMNCN
 						   }
 }
 

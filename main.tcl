@@ -3206,7 +3206,7 @@ proc openproject { } {
 	   		}
 	}
 	set types {
-        {"All Project Files"     {*.pjt } }
+        {"All Project Files"     {*.oct } }
 	}
 	########### Before Closing Write the Data to the file ##########
 
@@ -3292,6 +3292,99 @@ proc saveproject { } {
 	conPuts "Project $PjtName saved" info
 	
 }
+
+
+#######################################################################
+# proc saveProjectAsWindow
+#
+########################################################################
+proc saveProjectAsWindow {} {
+	
+	set winSavProjAs .savProjAs
+	catch "destroy $winSavProjAs"
+	toplevel $winSavProjAs
+	wm title     $winSavProjAs	"Project Wizard"
+	wm resizable $winSavProjAs 0 0
+	wm transient $winSavProjAs .
+	wm deiconify $winSavProjAs
+	wm minsize   $winSavProjAs 50 200
+	grab $winSavProjAs
+
+	label $winSavProjAs.l_empty -text "               "
+
+	set titleFrame1 [TitleFrame $winSavProjAs.titleFrame1 -text "Save Project as" ]
+	set titleInnerFrame1 [$titleFrame1 getframe]
+
+
+	
+	label $winSavProjAs.l_empty1 -text "               "
+	
+	label $titleInnerFrame1.l_empty2 -text "               "
+
+	label $titleInnerFrame1.l_pjname -text "Project Name :" -justify left
+	set tmpPjtName ""
+	entry $titleInnerFrame1.en_pjname -textvariable tmpPjtName -background white -relief ridge
+	
+	label $titleInnerFrame1.l_pjpath -text "Project Path :" -justify left
+	#set tmpPjtDir [pwd]
+	entry $titleInnerFrame1.en_pjpath -textvariable tmpPjtDir -background white -relief ridge -width 35
+	button $titleInnerFrame1.bt_pjpath -text Browse -command {
+		set tmpPjtDir [tk_chooseDirectory -title "Save Project at" -parent .savProjAs]
+		if {$tmpPjtDir == ""} {
+			focus .savProjAs
+			return
+		}
+	}
+	label $titleInnerFrame1.l_empty3 -text "               "
+	set frame1 [frame $titleInnerFrame1.fram1]
+	button $frame1.bt_ok -text "  Ok  " -command {
+		set tmpPjtName [string trim $tmpPjtName]
+		if {$tmpPjtName == "" } {
+			tk_messageBox -message "Enter Project Name" -title "Set Project Name error" -parent .savProjAs -icon error
+			focus .savProjAs
+			return
+		}
+		if {![file isdirectory $tmpPjtDir]} {
+			tk_messageBox -message "Entered path for project is not a Directory" -parent .savProjAs -icon error
+			focus .savProjAs
+			return
+		}
+						
+						
+					
+						
+		destroy .savProjAs
+	}
+
+	button $frame1.bt_cancel -text Cancel -command { 
+	
+		destroy .savProjAs
+	}
+
+	label $winSavProjAs.l_empty4 -text "               "
+
+	grid config $winSavProjAs.l_empty -row 0 -column 0 
+	
+	grid config $titleFrame1 -row 1 -column 0 -sticky "news" -ipadx 10 -padx 10 -ipady 10
+	#grid config $winNewProj.l_empty1 -row 2 -column 0 
+	#grid config $titleInnerFrame1.l_empty2 -row 0 -column 0 
+	grid config $titleInnerFrame1.l_pjname -row 1 -column 0 
+	grid config $titleInnerFrame1.en_pjname -row 1 -column 1 -sticky "w"
+	grid config $titleInnerFrame1.l_pjpath -row 2 -column 0 
+	grid config $titleInnerFrame1.en_pjpath -row 2 -column 1 -sticky "w"
+	grid config $titleInnerFrame1.bt_pjpath -row 2 -column 2 
+	
+	grid config $titleInnerFrame1.l_empty3 -row 3 -column 0 
+	grid config $frame1 -row 6 -column 1 
+	grid config $frame1.bt_ok -row 0 -column 0 
+	grid config $frame1.bt_cancel -row 0 -column 1 
+
+	grid config $winSavProjAs.l_empty4 -row 2 -column 0 
+
+	wm protocol .savProjAs WM_DELETE_WINDOW { 
+		 destroy .savProjAs
+       }
+}
 #######################################################################
 # proc newprojectwindow
 # Creates a new project
@@ -3348,66 +3441,79 @@ proc newprojectWindow {} {
 	label $titleInnerFrame1.l_empty2 -text "               "
 
 	label $titleInnerFrame1.l_pjname -text "Project Name :" -justify left
-	set PjtName ""
-	entry $titleInnerFrame1.en_pjname -textvariable PjtName -background white -relief ridge
+	set tmpPjtName ""
+	entry $titleInnerFrame1.en_pjname -textvariable tmpPjtName -background white -relief ridge
 	
 	label $titleInnerFrame1.l_pjpath -text "Project Path :" -justify left
-	#set tmpPjtDir [pwd]
+	set tmpPjtDir ""
 	entry $titleInnerFrame1.en_pjpath -textvariable tmpPjtDir -background white -relief ridge -width 35
 	button $titleInnerFrame1.bt_pjpath -text Browse -command {
-							set tmpPjtDir [tk_chooseDirectory -title "New Project" -parent .newprj]
-							if {$tmpPjtDir == ""} {
-							focus .newprj
-								return
-							}
-						       }
+		set tmpImpDir [tk_chooseDirectory -title "Project Location" -parent .newprj]
+		if {$tmpImpDir == ""} {
+			focus .newprj
+			return
+		}
+	}
 
 	label $titleInnerFrame1.l_empty3 -text "               "
 
 
-	set titleFrame2 [TitleFrame $titleInnerFrame1.titleFrame2 -text "Node Config" ]
+	set titleFrame2 [TitleFrame $titleInnerFrame1.titleFrame2 -text "MN Config" ]
 	set titleInnerFrame2 [$titleFrame2 getframe]
-	checkbutton $titleInnerFrame2.ch_def -text "Default" -variable default -onvalue 1 -offvalue 0 -command { }
-	checkbutton $titleInnerFrame2.ch_imp -text "Import XDC/XD" -variable import -onvalue 1 -offvalue 0 -command { }
+	#checkbutton $titleInnerFrame2.ch_def -text "Default" -variable default -onvalue 1 -offvalue 0 -command { }
+	#checkbutton $titleInnerFrame2.ch_imp -text "Import XDC/XD" -variable import -onvalue 1 -offvalue 0 -command { }
+
 	entry $titleInnerFrame2.en_imppath -textvariable tmpImpDir -background white -relief ridge -width 35
 	button $titleInnerFrame2.bt_imppath -text Browse -command {
-							set tmpImpDir [tk_chooseDirectory -title "Import XDC/XD" -parent .newprj]
-							if {$tmpImpDir == ""} {
-							focus .newprj
-								return
-							}
-						       }
+		set types {
+		        {"XDC Files"     {.xdc } }
+		        {"XDD Files"     {.xdd } }
+		}
+		set tmpImpDir [tk_getOpenFile -title "Import XDC/XD" -filetypes $types -parent .newprj]
+		if {$tmpImpDir == ""} {
+			focus .newprj
+			return
+		}
+       }
 
+	$titleInnerFrame2.en_imppath config -state disabled 
+	$titleInnerFrame2.bt_imppath config -state disabled 
 
+	radiobutton $titleInnerFrame2.ra_def -text "Default" -variable conf -value on -command {
+			.newprj.titleFrame1.f.titleFrame2.f.en_imppath config -state disabled 
+			.newprj.titleFrame1.f.titleFrame2.f.bt_imppath config -state disabled 
+			#$titleInnerFrame2.en_imppath config -state disabled
+			#$titleInnerFrame2.bt_imppath config -state disabled 
+	}
+	radiobutton $titleInnerFrame2.ra_imp -text "Import XDC/XDD" -variable conf -value off -command {
+			.newprj.titleFrame1.f.titleFrame2.f.en_imppath config -state normal 
+			.newprj.titleFrame1.f.titleFrame2.f.bt_imppath config -state normal 
+			#$titleInnerFrame2.en_imppath config -state normal
+			#$titleInnerFrame2.bt_imppath config -state normal 
+	} 
+	$titleInnerFrame2.ra_def select
 
 	label $titleInnerFrame1.l_empty4 -text "               "
 
 	set frame1 [frame $titleInnerFrame1.fram1]
 	button $frame1.bt_ok -text "  Ok  " -command {
-						set PjtName [string trim $PjtName]
-						if {$PjtName == "" } {
-							tk_messageBox -message "Enter Project Name" -title "Set Project Name error" -icon error
-							focus .newprj
-							return
-						}
-						if {![file isdirectory $tmpPjtDir]} {
-							tk_messageBox -message "Entered path for project is not a Directory" -icon error
-							focus .newprj
-							return
-						}
-						
-						
-					
-						
-						destroy .newprj
-					}
+		set tmpPjtName [string trim $tmpPjtName]
+		if {$tmpPjtName == "" } {
+			tk_messageBox -message "Enter Project Name" -title "Set Project Name error" -icon error
+			focus .newprj
+			return
+		}
+		#if {![file isdirectory $tmpPjtDir]} {
+		#	tk_messageBox -message "Entered path for project is not a Directory" -icon error
+		#	focus .newprj
+		#	return
+		#}
+		destroy .newprj
+	}
 
 	button $frame1.bt_cancel -text Cancel -command { 
-							
-							destroy .newprj
-							
-							
-						      }
+		destroy .newprj
+	}
 
 	grid config $winNewProj.l_empty -row 0 -column 0 
 	
@@ -3423,8 +3529,8 @@ proc newprojectWindow {} {
 	grid config $titleInnerFrame1.l_empty3 -row 3 -column 0 
 
 	grid config $titleFrame2 -row 4 -column 0 -columnspan 3 -sticky "news"
-	grid config $titleInnerFrame2.ch_def -row 0 -column 0 -sticky "w"
-	grid config $titleInnerFrame2.ch_imp -row 1 -column 0
+	grid config $titleInnerFrame2.ra_def -row 0 -column 0 -sticky "w"
+	grid config $titleInnerFrame2.ra_imp -row 1 -column 0
 	grid config $titleInnerFrame2.en_imppath -row 1 -column 1
 	grid config $titleInnerFrame2.bt_imppath -row 1 -column 2
  
@@ -3438,10 +3544,8 @@ proc newprojectWindow {} {
 	grid config $winNewProj.l_empty1 -row 7 -column 0 
 
 	wm protocol .newprj WM_DELETE_WINDOW { 
-
-					 puts "Deleted"
-					 destroy .newprj
-				       }
+		destroy .newprj
+       }
 }
 
 #######################################################################
@@ -3914,38 +4018,16 @@ proc Editor::create { } {
         "&File" {} {} 0 {           
             {command "New &Project" {} "New Project" {Ctrl n}  -command newprojectWindow}
 	    {command "Open Project" {}  "Open Project" {Ctrl o} -command openproject}
-            {command "Save Project" {noFile}  "Save Project" {Ctrl s} -command saveproject}
-            {command "Save Project as" {noFile}  "Save Project as" {} -command YetToImplement}
+            {command "Save Project" {noFile}  "Save Project" {Ctrl s} -command YetToImplement}
+            {command "Save Project as" {noFile}  "Save Project as" {} -command saveProjectAsWindow}
 	    {command "Close Project" {}  "Close Project" {} -command YetToImplement}                 
 	    {separator}
             {command "E&xit" {}  "Exit openCONFIGURATOR" {Alt x} -command Editor::exit_app}
         }
-        "&Edit" {noFile} {} 0 {
-            {command "Copy" {} "Copy to Clipboard" {Ctrl c} -command Editor::copy }
-            {command "Cut" {} "Cut to Clipboard" {Ctrl x} -command Editor::cut }
-            {command "Paste" {} "Paste from Clipboard" {Ctrl v} -command Editor::paste }
-            {command "Delete" {} "Delete Selection" {} -command Editor::delete }
-            {command "Delete Line" {} "Delete current line" {} -command {Editor::delLine ; break} }
-            {separator}
-            {command "Select all" {} "Select All" {} -command Editor::SelectAll }
-            {separator}
-            {command "Insert File ..." {} "Insert file at current cursor position" {} -command Editor::insertFile }
-            {separator}
-            {command "Goto Line ..." {} "Goto Line" {} -command Editor::gotoLineDlg }
-            {separator}
-            {command "Search ..." {} "Search dialog" {} -command Editor::search_dialog }
-            {command "Search in files ..." {} "Search in files" {} -command Editor::findInFiles}
-            {command "Replace ..." {} "Replace dialog" {} -command Editor::replace_dialog }
-            {separator}
-            {command "Undo" {} "Undo" {CtrlAlt u} -command Editor::undo }
-            {command "Redo" {} "Redo" {} -command Editor::redo }
-            {separator}
-            {command "AutoIndent File" {} "AutoIndent current file" {} -command editorWindows::autoIndent}
-        }
         "&Project" {} {} 0 {
-            {command "Build Project" {noFile} "Generate CDC and XML" {CtrlAlt F} -command YetToImplement }
-            {command "Rebuild Project" {noFile} "Clean and Build" {CtrlAlt R} -command YetToImplement }
-	    {command "Clean Project" {noFile} "Clean" {CtrlAlt C} -command YetToImplement }
+            {command "Build Project" {noFile} "Generate CDC and XML" {F7} -command YetToImplement }
+            {command "Rebuild Project" {noFile} "Clean and Build" {Ctrl+F7} -command YetToImplement }
+	    {command "Clean Project" {noFile} "Clean" {} -command YetToImplement }
 	    {command "Stop Build" {}  "Reserved" {} -command YetToImplement -state disabled}
             {separator}
             {command "Settings" {}  "Reserved" {} -command YetToImplement -state disabled}
@@ -3957,9 +4039,9 @@ proc Editor::create { } {
             {command "Configure" {}  "Reserved" {} -command YetToImplement -state disabled}
         }
         "&Actions" all options 0 {
-            {command "SDO Read/Write" {noFile} "Do SDO Read or Write" {} -command YetToImplement }
-            {command "Transfer CDC" {noFile} "Transfer CDC" {} -command YetToImplement }
-            {command "Transfer XML" {noFile} "Transfer XML" {} -command YetToImplement }
+            {command "SDO Read/Write" {noFile} "Do SDO Read or Write" {} -command YetToImplement -state disabled}
+            {command "Transfer CDC" {noFile} "Transfer CDC" {Ctrl+F5} -command YetToImplement }
+            {command "Transfer XML" {noFile} "Transfer XML" {Ctrl+F6} -command YetToImplement }
 	    {separator}
             {command "Start MN" {noFile} "Start the Managing Node" {} -command YetToImplement }
             {command "Stop MN" {noFile} "Transfer CDC" {} -command YetToImplement }
@@ -4000,6 +4082,13 @@ proc Editor::create { } {
             {command "About" {} "About" {F1} -command Editor::aboutBox }
         }
     }
+
+#shortcut keys for project
+    bind . <F7> "puts {build project short cut}"
+    bind . <Control-F7> "puts {Rebuild project short cut}"
+
+    bind . <Control-F5> "puts {Transfer CDC short cut}"
+    bind . <Control-F6> "puts {Transfer XML short cut}"
 #############################################################################
 # Menu for the Test Group
 #############################################################################
@@ -4008,7 +4097,8 @@ proc Editor::create { } {
     set Editor::IndexaddMenu .groupmenu.cascade
     $Editor::groupMenu add command -label "Rename" \
 	     -command {set cursor [. cget -cursor]
-			DoubleClickNode ""
+			YetToImplement
+			#DoubleClickNode ""
 		      }
     $Editor::groupMenu add cascade -label "Add" -menu $Editor::IndexaddMenu
     menu $Editor::IndexaddMenu -tearoff 0
@@ -4018,7 +4108,7 @@ proc Editor::create { } {
 #	     -command {set cursor [. cget -cursor]
 #			YetToImplement
 #		      } 
-     $Editor::groupMenu add command -label "Replace XDC" \
+     $Editor::groupMenu add command -label "Import XDC" \
             -command {set cursor [. cget -cursor]
 			#Call the procedure
 			set types {
@@ -4029,7 +4119,8 @@ proc Editor::create { } {
 	
     
     $Editor::groupMenu add separator
-    $Editor::groupMenu add command -label "Delete" -command { Editor::deletegroup }
+    $Editor::groupMenu add command -label "Delete" -command { YetToImplement }
+    #$Editor::groupMenu add command -label "Delete" -command { Editor::deletegroup }
 ############################################################################# 
 	# Menu for the Test Group
 	set Editor::groupconfic [menu  .groupconfic -tearoff 0]	
@@ -4041,7 +4132,9 @@ proc Editor::create { } {
     set Editor::projectMenu [menu  .projectmenu -tearoff 0]
 #    set Editor::addMenu .projectmenu.cascade
 #    $Editor::projectMenu add cascade -label "Add" -menu $Editor::addMenu
-     $Editor::projectMenu add command -label "Add MN/CN" -command {AddMNCNWindow} 
+     $Editor::projectMenu add command -label "Add CN" -command {AddMNCNWindow} 
+     $Editor::projectMenu add separator
+     $Editor::projectMenu add command -label "Auto Generate" -command {YetToImplement} 
 #    menu $Editor::addMenu -tearoff 0
 #    $Editor::addMenu add command -label "Test Group" -command {AddNewTestGroupWindow}
 #    $Editor::addMenu add command -label "Profile" -command {AddProfileWindow}   
@@ -4075,9 +4168,9 @@ proc Editor::create { } {
     $Editor::textMenu add command -label "    copy     " -command Editor::copy
     $Editor::textMenu add command -label "    paste     " -command Editor::paste
     $Editor::textMenu add separator
-    $Editor::textMenu add command -label "undo" -command Editor::undo
-    $Editor::textMenu add command -label "redo" -command Editor::redo
-    $Editor::textMenu add separator
+    #$Editor::textMenu add command -label "undo" -command Editor::undo
+    #$Editor::textMenu add command -label "redo" -command Editor::redo
+    #$Editor::textMenu add separator
     $Editor::textMenu add command -label "Auto Indent Selection" -command editorWindows::autoIndent
     $Editor::textMenu add separator
     $Editor::textMenu add separator
@@ -4134,13 +4227,13 @@ proc Editor::create { } {
     set bbox [ButtonBox::create $tb1.bbox1 -spacing 0 -padx 1 -pady 1]
     set toolbarButtons(new) [ButtonBox::add $bbox -image [Bitmap::get new] \
             -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
-            -helptext "Create a new file" -command Editor::newFile]
+            -helptext "Create new project" -command newprojectWindow]
     set toolbarButtons(save) [ButtonBox::add $bbox -image [Bitmap::get save] \
             -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
-            -helptext "Save file" -command Editor::saveFile]
+            -helptext "Save Project" -command YetToImplement]
     set toolbarButtons(saveAll) [ButtonBox::add $bbox -image [Bitmap::get saveAll] \
             -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
-            -helptext "Save Project" -command saveproject]    
+            -helptext "Save Project as" -command saveProjectAsWindow]    
     set toolbarButtons(openproject) [ButtonBox::add $bbox -image [Bitmap::get openfold] \
             -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
             -helptext "Open Project" -command openproject]
@@ -4162,9 +4255,9 @@ proc Editor::create { } {
             -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
             -helptext "Paste selection" -command Editor::paste]
     
-    pack $bbox -side left -anchor w
+    #pack $bbox -side left -anchor w
     set sep2 [Separator::create $tb1.sep2 -orient vertical]
-    pack $sep2 -side left -fill y -padx 4 -anchor w
+    #pack $sep2 -side left -fill y -padx 4 -anchor w
     
     #incr prgindic
     set bbox [ButtonBox::create $tb1.bbox2b -spacing 0 -padx 1 -pady 1]
@@ -4183,7 +4276,7 @@ proc Editor::create { } {
     
     
     set sep1c [Separator::create $tb1.sep1c -orient vertical]
-    pack $sep1c -side left -fill y -padx 4 -anchor w
+    #pack $sep1c -side left -fill y -padx 4 -anchor w
     
     #incr prgindic
     set bbox [ButtonBox::create $tb1.bbox3 -spacing 0 -padx 1 -pady 1]
@@ -4195,10 +4288,10 @@ proc Editor::create { } {
     set toolbarButtons(redo) [ButtonBox::add $bbox -image [Bitmap::get redo] \
             -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
             -helptext "Redo" -command Editor::redo ]
-    pack $bbox -side left -anchor w
+    #pack $bbox -side left -anchor w
     #incr prgindic
     set sep3 [Separator::create $tb1.sep3 -orient vertical]
-    pack $sep3 -side left -fill y -padx 4 -anchor w
+    #pack $sep3 -side left -fill y -padx 4 -anchor w
     
     set bbox [ButtonBox::create $tb1.bbox4 -spacing 0 -padx 1 -pady 1]
     
@@ -4210,15 +4303,15 @@ proc Editor::create { } {
             -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
             -helptext "Replace Dialog" -command Editor::replace_dialog ]
     
-    pack $bbox -side left -anchor w
+    #pack $bbox -side left -anchor w
     
     set search_combo [ComboBox::create $tb1.combo -label "" -labelwidth 0 -labelanchor w \
-            -textvariable Editor::search_var\
+           -textvariable Editor::search_var\
             -values {""} \
             -helptext "Enter Searchtext" \
             -entrybg white\
             -width 15]
-    pack $search_combo -side left
+    #pack $search_combo -side left
     
     set bbox [ButtonBox::create $tb1.bbox5 -spacing 1 -padx 1 -pady 1]
     
@@ -4233,55 +4326,55 @@ proc Editor::create { } {
             -width 21\
             -helptype balloon\
             -helptext "Search backwards"\
-            -command Editor::search_backward]
+             -command Editor::search_backward]
     
-    pack $down_arrow $up_arrow -side left
-    pack $bbox -side left -anchor w
+    #pack $down_arrow $up_arrow -side left
+    #pack $bbox -side left -anchor w
     #incr prgindic
     set sep [Separator::create $tb1.sep -orient vertical]
-    pack $sep -side left -fill y -padx 4 -anchor w
+    #pack $sep -side left -fill y -padx 4 -anchor w
     
-    set bbox [ButtonBox::create $tb1.bbox1b -spacing 0 -padx 1 -pady 1]
-    ButtonBox::add $bbox -image [Bitmap::get stop] \
+    set bbox [ButtonBox::create $tb1.bbox1b -spacing 0 -padx 4 -pady 1]
+    ButtonBox::add $bbox -image [Bitmap::get compile] \
             -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
-            -helptext "Terminate Execution" -command Editor::terminate
+            -helptext "Start" -command {YetToImplement}
     
     pack $bbox -side left -anchor w -padx 2
     
     set bbox [ButtonBox::create $tb1.bbox1c -spacing 1 -padx 1 -pady 1]
     
-    set compile_arrow [ButtonBox::add $bbox -image [Bitmap::get compile]\
+    set compile_arrow [ButtonBox::add $bbox -image [Bitmap::get stop]\
             -height 25\
             -width 25\
             -helptype balloon\
-            -helptext "Compile"\
-	    -command ""]
+            -helptext "Stop"\
+	    -command "YetToImplement"]
     #puts [$tb1.bbox itemcget -image]
     pack $compile_arrow -side left -padx 4
     set right_arrow [ArrowButton::create $bbox.ua -dir right\
             -height 35\
             -width 35\
             -helptype balloon\
-            -helptext "Run Test"\
-	    -command {RunTest }\
+            -helptext "Reconfigure"\
+	    -command {YetToImplement }\
     ]    
     pack $right_arrow -side left -padx 4
-    set export_arrow [ButtonBox::add $bbox -image [Bitmap::get compile]\
-            -height 25\
-            -width 25\
-            -helptype balloon\
-            -helptext "Export"\
-	    -command {ExportGui}\
-    ]
-    pack $export_arrow -side left -padx 5
-   set import_arrow [ButtonBox::add $bbox -image [Bitmap::get compile]\
-            -height 25\
-            -width 25\
-            -helptype balloon\
-            -helptext "Import"\
-	    -command {ImportProject}\
-    ]
-    pack $import_arrow -side left -padx 5
+    #set export_arrow [ButtonBox::add $bbox -image [Bitmap::get compile]\
+    #        -height 25\
+    #        -width 25\
+    #        -helptype balloon\
+    #        -helptext "Export"\
+    #	    -command {ExportGui}\
+    #]
+    #pack $export_arrow -side left -padx 5
+   #set import_arrow [ButtonBox::add $bbox -image [Bitmap::get compile]\
+   #         -height 25\
+   #         -width 25\
+   #         -helptype balloon\
+   #         -helptext "Import"\
+   #	    -command {ImportProject}\
+    #]
+    #pack $import_arrow -side left -padx 5
     pack $bbox -side left -anchor w
     
     set argument_combo [ComboBox::create $tb1.combo2 -label "" -labelwidth 0 -labelanchor w \
@@ -4290,17 +4383,71 @@ proc Editor::create { } {
             -helptext "Enter optional argument" \
             -entrybg white\
             -width 15]
-    pack $argument_combo -side left
+    #pack $argument_combo -side left
     
     set sep4 [Separator::create $tb1.sep4 -orient vertical]
     pack $sep4 -side left -fill y -padx 4 -anchor w
     
     set bbox [ButtonBox::create $tb1.bbox6 -spacing 1 -padx 1 -pady 1]
-    ButtonBox::add $bbox -image [Bitmap::get exitdoor] \
-            -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
-            -helptext "Exit STB_TSUITE" -command Editor::exit_app
+    pack $bbox -side left -anchor w
+    set down_arrow [ButtonBox::add $bbox -image [Bitmap::get stop]\
+            -height 21\
+            -width 21\
+            -helptype balloon\
+            -helptext "Transfer CDC"\
+            -command ""]
+    pack $down_arrow -side left -padx 4
+    set up_arrow [ButtonBox::add $bbox -image [Bitmap::get stop]\
+            -height 21\
+            -width 21\
+            -helptype balloon\
+            -helptext "Transfer XML"\
+             -command ""]
+        pack $up_arrow -side left -padx 4
+    #incr prgindic
+    set sep6 [Separator::create $tb1.sep6 -orient vertical]
+    pack $sep6 -side left -fill y -padx 4 -anchor w
+
+    set bbox [ButtonBox::create $tb1.bbox7 -spacing 1 -padx 1 -pady 1]
+    pack $bbox -side left -anchor w
+    set down_arrow [ButtonBox::add $bbox -image [Bitmap::get stop]\
+            -height 21\
+            -width 21\
+            -helptype balloon\
+            -helptext "Build Project"\
+            -command ""]
+    pack $down_arrow -side left -padx 4
+    set up_arrow [ButtonBox::add $bbox -image [Bitmap::get stop]\
+            -height 21\
+            -width 21\
+            -helptype balloon\
+            -helptext "Rebuild Project"\
+             -command ""]
+    pack $up_arrow -side left -padx 4
+    set right_arrow [ButtonBox::add $bbox -image [Bitmap::get stop]\
+            -height 21\
+            -width 21\
+            -helptype balloon\
+            -helptext "clean Project"\
+             -command ""]
+    pack $right_arrow -side left -padx 4
+    #incr prgindic
+    set sep7 [Separator::create $tb1.sep7 -orient vertical]
+    pack $sep7 -side left -fill y -padx 4 -anchor w
     
-    
+    set bbox [ButtonBox::create $tb1.bbox8 -spacing 1 -padx 1 -pady 1]
+    pack $bbox -side left -anchor w
+    set down_arrow [ButtonBox::add $bbox -image [Bitmap::get stop]\
+            -height 21\
+            -width 21\
+            -helptype balloon\
+            -helptext "connection"\
+            -command connectio ]
+    pack $down_arrow -side left -padx 4  
+
+    set sep8 [Separator::create $tb1.sep8 -orient vertical]
+    pack $sep8 -side left -fill y -padx 4 -anchor w 
+
     #get Entry path out of Combo Widget
     set childList [winfo children $search_combo]
     foreach w $childList {if {[winfo class $w] == "Entry"} { set entry $w ; break}}
@@ -4370,12 +4517,17 @@ proc Editor::create { } {
     
     set pw1 [PanedWindow::create $frame.pw -side left]
     set pane [PanedWindow::add $pw1 -minsize 200]
+#$pane configure -width 200	
+#$pw1 configure -width 200	
     set pw2 [PanedWindow::create $pane.pw -side top]
     
 # TODO: Improper Way of implementation. Done to get screenshot of the GUI
     set pw3 [PanedWindow::create $pane.pw1 -side top]
-    
+	
+
     set pane1 [PanedWindow::add $pw2 -minsize 250]
+$pane1 configure -width 250
+$pw2 configure -width 250  
     set pane2 [PanedWindow::add $pw2 -minsize 100]
     set pane3 [PanedWindow::add $pw1 -minsize 100]
 
@@ -4402,6 +4554,7 @@ proc Editor::create { } {
 	$treeWindow bindImage <ButtonPress-3> {Editor::tselectright %X %Y}
         
 	$treeWindow bindText <ButtonPress-3> {Editor::tselectright %X %Y}
+	$treeWindow configure -width 10
     global EditorData
     global PjtDir
     set PjtDir $EditorData(options,History)
@@ -4410,9 +4563,13 @@ proc Editor::create { } {
     set f0 [EditManager::create_tab $notebook "Index"]
 
     #set Editor::text_win($Editor::index_counter,undo_id) [new textUndoer [lindex $f0 2]]
-    
+
+$list_notebook configure -width 10    
     NoteBook::compute_size $list_notebook
+#pack $pane -side left -expand yes
+
     pack $list_notebook -side left -fill both -expand yes -padx 2 -pady 4
+ 
 
     # Commented out to remove Editor window    
     NoteBook::compute_size $notebook
@@ -4492,7 +4649,9 @@ tablelist::tablelist $pane4.tbl \
 
 $tbl columnconfigure 0 -background #f9cf7e -width 47
 $tbl columnconfigure 1 -background #f9cf7e -width 47
-#$tbl columnconfigure 2 -background #f9cf7e
+
+#$tbl columnconfigure 0 -background #f9cf7e 
+#$tbl columnconfigure 1 -background #f9cf7e 
 
 #$tbl columnconfigure 1 -formatcommand emptyStr -sortmode integer
 #$tbl columnconfigure 2 -name fileSize -sortmode integer
@@ -4590,6 +4749,9 @@ tablelist::tablelist $pane6.tbl2 \
 $tbl2 columnconfigure 0 -background #f9cf7e -width 47
 $tbl2 columnconfigure 1 -background #f9cf7e -width 47
 
+#$tbl2 columnconfigure 0 -background #f9cf7e 
+#$tbl2 columnconfigure 1 -background #f9cf7e 
+
 $tbl2 insert 0 [list Index: 1006 ""]
 $tbl2 insert 1 [list Sub\ Index: 00 ""]
 $tbl2 insert 2 [list Name: NMT_CycleLen_U32 ""]
@@ -4649,6 +4811,14 @@ $tbl1 columnconfigure 3 -background #f9cf7e -width 11
 $tbl1 columnconfigure 4 -background #f9cf7e -width 11
 $tbl1 columnconfigure 5 -background #f9cf7e -width 11
 $tbl1 columnconfigure 6 -background #f9cf7e -width 11
+
+#$tbl1 columnconfigure 0 -background #f9cf7e -sortmode integer
+#$tbl1 columnconfigure 1 -background #f9cf7e
+#$tbl1 columnconfigure 2 -background #f9cf7e 
+#$tbl1 columnconfigure 3 -background #f9cf7e 
+#$tbl1 columnconfigure 4 -background #f9cf7e 
+#$tbl1 columnconfigure 5 -background #f9cf7e
+#$tbl1 columnconfigure 6 -background #f9cf7e 
 
 $tbl1 insert end [list 65536 0010000000202106 2106 02 00 0000 0010]
 $tbl1 insert end [list 2 0008001000202104 2104 02 00 0001 0008]
@@ -4898,6 +5068,7 @@ close $fileId
 proc DoubleClickNode {node} {
 	global updatetree
 	set node [$updatetree selection get]
+puts "node in doubleclick------------->$node"
 	set testGroupNo [GetCurrentNodeNum]
 	set selected [GetPreviousNum]
 	if { $selected == "TestGroup" } {
@@ -5078,7 +5249,7 @@ proc getRelativePath {abs_path hom_path} {
 #
 # Output: Creates a testgroup instance and add its in tree window.
 ################################################################################################
-proc AddTestGroup { } {
+proc AddTestGroup { Name } {
 	global updatetree
 	global PjtDir		
 	global tg_count
@@ -5097,20 +5268,20 @@ proc AddTestGroup { } {
 	##Create New Instance for TestGroup 
 	##################################################################
 	# Call the procedure to create the instance for testgroup
-	createtestgroup arrTestGroup $TotalTestGroup
-	set groupexecmode [buttontovalue]
+	#createtestgroup arrTestGroup $TotalTestGroup
+	#set groupexecmode [buttontovalue]
 	set grouptestcase 0
 	#set helpMessage $helpMsg
-	arrTestGroup($TotalTestGroup)  configure -memGroupName $testGroupName
-	arrTestGroup($TotalTestGroup)  configure -memGroupExecMode $groupexecmode
-	arrTestGroup($TotalTestGroup)  configure -memGroupExecCount $execCount
-	arrTestGroup($TotalTestGroup)  configure -memChecked C
+	#arrTestGroup($TotalTestGroup)  configure -memGroupName $testGroupName
+	#arrTestGroup($TotalTestGroup)  configure -memGroupExecMode $groupexecmode
+	#arrTestGroup($TotalTestGroup)  configure -memGroupExecCount $execCount
+	#arrTestGroup($TotalTestGroup)  configure -memChecked C
 	#arrTestGroup($TotalTestGroup)  configure -memHelpMsg $helpMsg
 	set totaltc($TotalTestGroup) $grouptestcase
 	#######################################################################
 	#Reads the variables and updates the tree 
 	########################################################################
-	set child [$updatetree insert $TotalTestGroup OBD TestGroup-$TotalTestGroup -text "$testGroupName" -open 1 -image [Bitmap::get openfold] -window [Bitmap::get userdefined_checked]]
+	set child [$updatetree insert $TotalTestGroup OBD TestGroup-$TotalTestGroup -text "$Name" -open 1 -image [Bitmap::get openfold]]
 	# Insert Config under the Group
 	#set child [$updatetree insert 0 TestGroup-$TotalTestGroup Config-$TotalTestGroup -text "Config"  -open 0 -image [Bitmap::get right]]
 	# Insert groupExecCount, groupTestCase,Message
@@ -5120,7 +5291,7 @@ proc AddTestGroup { } {
 #		set child [$updatetree insert 3 Config-$TotalTestGroup helpMsg-$TotalTestGroup -text Message  -open 0 -image [Bitmap::get palette]]
 #		$updatetree itemconfigure TestGroup-$TotalTestGroup -image [Bitmap::get openfolder_info]
 #	}
-	destroy .wintestgroupname
+	destroy .addMNCN
 }
 ################################################################################################
 # proc AddProfile
@@ -5297,7 +5468,7 @@ proc AddMNCNWindow {} {
 	#global mode_interactive
 	#global mode_continuous
 	#global mode_sequence
-	#global titleInnerFrame1
+	#global titleInnerFrame3
 	#global helpMsg
 	#global disptext
 	#set testGroupName ""
@@ -5315,16 +5486,16 @@ proc AddMNCNWindow {} {
 
 	label $winAddMNCN.l_empty -text ""	
 
-	set titleFrame1 [TitleFrame $winAddMNCN.titleFrame1 -text "Add MN/CN" ]
+	set titleFrame1 [TitleFrame $winAddMNCN.titleFrame1 -text "Add CN" ]
 	set titleInnerFrame1 [$titleFrame1 getframe]
 
 	label $titleInnerFrame1.l_empty1 -text "               "
-	set titleFrame2 [TitleFrame $titleInnerFrame1.titleFrame2 -text "Select Node Type" ]
+	set titleFrame2 [TitleFrame $titleInnerFrame1.titleFrame2 -text "Select Node" ]
 	set titleInnerFrame2 [$titleFrame2 getframe]
 #	$titleInnerFrame2 configure -width 50 
-	radiobutton $titleInnerFrame2.ra_mn -text "MN" -variable mncn -value on  
-	radiobutton $titleInnerFrame2.ra_cn -text "CN" -variable mncn -value off 
-
+	radiobutton $titleInnerFrame2.ra_mn -text "Managing Node" -variable mncn -value on  
+	radiobutton $titleInnerFrame2.ra_cn -text "Controlled Node" -variable mncn -value off 
+	$titleInnerFrame2.ra_mn select
 
 	label $titleInnerFrame1.l_empty2 -text "               "
 
@@ -5341,19 +5512,44 @@ proc AddMNCNWindow {} {
 	label $titleInnerFrame1.l_empty3 -text "               "
 
 
-	set titleFrame3 [TitleFrame $titleInnerFrame1.titleFrame3 -text "Node Config" ]
+	set titleFrame3 [TitleFrame $titleInnerFrame1.titleFrame3 -text "CN Config" ]
 	set titleInnerFrame3 [$titleFrame3 getframe]
-	checkbutton $titleInnerFrame3.ch_def -text "Default" -variable default -onvalue 1 -relief flat -offvalue 0 -command { }
-	checkbutton $titleInnerFrame3.ch_imp -text "Import XDC/XD" -variable import -onvalue 1 -offvalue 0 -command { }
+	
+
+	#checkbutton $titleInnerFrame3.ch_def -text "Default" -variable default -onvalue 1 -relief flat -offvalue 0 -command { }
+	#checkbutton $titleInnerFrame3.ch_imp -text "Import XDC/XDD" -variable import -onvalue 1 -offvalue 0 -command { }
+
 	entry $titleInnerFrame3.en_imppath -textvariable tmpImpDir -background white -relief ridge -width 35
 	button $titleInnerFrame3.bt_imppath -text Browse -command {
-		set tmpImpDir [tk_chooseDirectory -title "Import XDC/XD" -parent $winAddMNCN]
-		if {$tmpImpDir == ""} {
-			focus .newprj
-			return
-			}
+		set types {
+		        {"XDC Files"     {.xdc } }
+		        {"XDD Files"     {.xdd } }
 		}
+		set tmpImpDir [tk_getOpenFile -title "Import XDC/XD" -filetypes $types -parent .addMNCN]
+		if {$tmpImpDir == ""} {
+			focus .addMNCN
+			return
+		}
+	}
+	$titleInnerFrame3.en_imppath config -state disabled 
+	$titleInnerFrame3.bt_imppath config -state disabled 
+#global conf
+#set conf off
+	radiobutton $titleInnerFrame3.ra_def -text "Default" -variable conf -value on  -command {
+			.addMNCN.titleFrame1.f.titleFrame3.f.en_imppath config -state disabled 
+			.addMNCN.titleFrame1.f.titleFrame3.f.bt_imppath config -state disabled 
+			#$titleInnerFrame3.en_imppath config -state disabled 
+			#$titleInnerFrame3.bt_imppath config -state disabled 
+	}		
 
+	
+	radiobutton $titleInnerFrame3.ra_imp -text "Import XDC/XDD" -variable conf -value off -command {
+			.addMNCN.titleFrame1.f.titleFrame3.f.en_imppath config -state normal 
+			.addMNCN.titleFrame1.f.titleFrame3.f.bt_imppath config -state normal 
+			#$titleInnerFrame3.en_imppath config -state disabled
+			#$titleInnerFrame3.bt_imppath config -state disabled 
+	}
+	$titleInnerFrame3.ra_def select
 
 
 	label $titleInnerFrame1.l_empty4 -text "              "
@@ -5361,30 +5557,31 @@ proc AddMNCNWindow {} {
 
 	set frame1 [frame $titleInnerFrame1.fram1]
 	button $frame1.bt_ok -text "  Ok  " -command {
-						set PjtName [string trim $PjtName]
-						if {$Name == "" } {
-							tk_messageBox -message "Enter MN/CN Name" -title "Set Node Name error" -icon error
-							focus .addMNCN
-							return
-						}
-						if {$nodeId == "" } {
-							tk_messageBox -message "Enter Node id" -icon error
-							focus .addMNCN
-							return
-						}
-						
-						
-					
-						
-						destroy .addMNCN
-					}
+		set PjtName [string trim $PjtName]
+		if {$Name == "" } {
+			tk_messageBox -message "Enter MN/CN Name" -title "Set Node Name error" -parent .addMNCN -icon error
+			focus .addMNCN
+			return
+		}
+		if {$nodeId == "" } {
+			tk_messageBox -message "Enter Node id" -parent .addMNCN -icon error
+			focus .addMNCN
+			return
+		}
+
+
+
+		#AddTestGroup $Name
+		AddMNCN $Name
+		destroy .addMNCN
+	}
 
 	button $frame1.bt_cancel -text Cancel -command { 
 							
-							destroy .addMNCN
+		destroy .addMNCN
 							
-							
-						      }
+						
+	}
 
 
 	label $winAddMNCN.l_empty5 -text " "
@@ -5396,35 +5593,36 @@ proc AddMNCNWindow {} {
 
 	grid config $titleInnerFrame1.l_empty1 -row 0 -column 0  
 
-	grid config $titleFrame2 -row 1 -column 0  -ipadx 5 -ipady 5 -padx 100 -pady 5 -sticky "news"
-	grid config $titleInnerFrame2.ra_mn -row 0 -column 0 -sticky "w" 
-	grid config $titleInnerFrame2.ra_cn -row 0 -column 1 -sticky "e" 
+	#grid config $titleFrame2 -row 1 -column 0  -ipadx 5 -ipady 5 -padx 100 -pady 5 -sticky "news"
+	#grid config $titleFrame2 -row 1 -column 0  -ipadx 8 -ipady 5
+	#grid config $titleInnerFrame2.ra_mn -row 0 -column 0 
+	#grid config $titleInnerFrame2.ra_cn -row 1 -column 0 
 
-	grid config $titleInnerFrame1.l_empty2 -row 2 -column 0  
+	#grid config $titleInnerFrame1.l_empty2 -row 2 -column 0  
 
-	grid config $frame2 -row 3 -column 0 -columnspan 2  -sticky "news"
-	grid config $frame2.l_name -row 0 -column 0 -sticky "e"
-	grid config $frame2.en_name -row 0 -column 1 -sticky "w"
-	grid config $frame2.l_node -row 1 -column 0 -sticky "e"
-	grid config $frame2.en_node -row 1 -column 1 -sticky "w"
+	grid config $frame2 -row 2 -column 0 
+	grid config $frame2.l_name -row 0 -column 0 
+	grid config $frame2.en_name -row 0 -column 1 
+	grid config $frame2.l_node -row 1 -column 0 
+	grid config $frame2.en_node -row 1 -column 1 
 
 	
-	grid config $titleInnerFrame1.l_empty3 -row 5 -column 0  
+	grid config $titleInnerFrame1.l_empty3 -row 3 -column 0  
 
-	grid config $titleFrame3 -row 6 -column 0 -sticky "news"
-	grid config $titleInnerFrame3.ch_def -row 0 -column 0 -sticky "w"
-	grid config $titleInnerFrame3.ch_imp -row 1 -column 0
+	grid config $titleFrame3 -row 4 -column 0 -sticky "news"
+	grid config $titleInnerFrame3.ra_def -row 0 -column 0 -sticky "w"
+	grid config $titleInnerFrame3.ra_imp -row 1 -column 0
 	grid config $titleInnerFrame3.en_imppath -row 1 -column 1
 	grid config $titleInnerFrame3.bt_imppath -row 1 -column 2
  
 
-	grid config $titleInnerFrame1.l_empty4 -row 7 -column 0  
+	grid config $titleInnerFrame1.l_empty4 -row 5 -column 0  
 	
-	grid config $frame1 -row 8 -column 0 -sticky "news"
-	grid config $frame1.bt_ok -row 0 -column 0  -sticky "e"
-	grid config $frame1.bt_cancel -row 0 -column 1 -sticky "w"
+	grid config $frame1 -row 6 -column 0 
+	grid config $frame1.bt_ok -row 0 -column 0  
+	grid config $frame1.bt_cancel -row 0 -column 1
 	
-	grid config $winAddMNCN.l_empty5 -row 9 -column 0  
+	grid config $winAddMNCN.l_empty5 -row 7 -column 0  
 
 
 
@@ -5434,6 +5632,62 @@ proc AddMNCNWindow {} {
 							destroy .addMNCN
 						   }
 }
+
+proc AddMNCN {Name} {
+	global updatetree
+	global testGroupName
+	global tg_count
+	set TotalTestGroup $tg_count
+	incr TotalTestGroup
+	incr tg_count
+	set child [$updatetree insert $TotalTestGroup OBD TestGroup-$TotalTestGroup -text "$Name" -open 1 -image [Bitmap::get openfold]]
+	set child [$updatetree insert 0 Config-$TotalTestGroup TestGroup-$TotalTestGroup -text "NMT_Cycle(1006)"  -open 0 -image [Bitmap::get right]]
+	#Insert groupExecCount, groupTestCase,Message
+#	incr TotalTestGroup
+	set child [$updatetree insert 1 Config-$TotalTestGroup TestGroup-$TotalTestGroup -text "Pdomapping"  -open 0 -image [Bitmap::get palette]]
+	#set child [$updatetree insert 2 Config-$TotalTestGroup groupExecCount-$TotalTestGroup -text $execCount -open 0 -image [Bitmap::get palette]]
+#AddTestCase
+
+
+
+#	global updatetree
+#	global PjtDir		
+#	global tg_count
+#	global totaltc
+#	global testGroupName
+#	global execCount
+#	global helpMsg
+#	set TotalTestGroup $tg_count
+#	incr TotalTestGroup
+	##################################################################
+	# Update the Total TestGroup value 
+	##################################################################
+#	incr tg_count
+	##################################################################
+	##Format the New TestGroup
+	##Create New Instance for TestGroup 
+	##################################################################
+	# Call the procedure to create the instance for testgroup
+	#createtestgroup arrTestGroup $TotalTestGroup
+	#set groupexecmode [buttontovalue]
+#	set grouptestcase 0
+	#set helpMessage $helpMsg
+	#arrTestGroup($TotalTestGroup)  configure -memGroupName $testGroupName
+	#arrTestGroup($TotalTestGroup)  configure -memGroupExecMode $groupexecmode
+	#arrTestGroup($TotalTestGroup)  configure -memGroupExecCount $execCount
+	#arrTestGroup($TotalTestGroup)  configure -memChecked C
+	#arrTestGroup($TotalTestGroup)  configure -memHelpMsg $helpMsg
+#	set totaltc($TotalTestGroup) $grouptestcase
+	#######################################################################
+	#Reads the variables and updates the tree 
+	########################################################################
+#	set child [$updatetree insert $TotalTestGroup OBD TestGroup-$TotalTestGroup -text "$Name" -open 1 -image [Bitmap::get openfold]]
+}
+
+
+
+
+
 
 ##############################################################################
 # proc ConfigTestGroup
@@ -6388,30 +6642,30 @@ proc AddPDOProc {} {
 
 	font create custom1 -weight bold
 	label $winAddPDO.l_empty1 -text ""	
-	label $winAddPDO.l_title -text "Add Process Data Object(s)" -font custom1
+	#label $winAddPDO.l_title -text "Add Process Data Object(s)" -font custom1
 	label $winAddPDO.l_empty2 -text ""
 	
 	grid config $winAddPDO.l_empty1 -row 0 -column 0 -sticky "news"
-	grid config $winAddPDO.l_title  -row 1 -column 0 -sticky "news" -ipadx 125
-	grid config $winAddPDO.l_empty2 -row 2 -column 0 -sticky "news"
+	#grid config $winAddPDO.l_title  -row 1 -column 0 -sticky "news" -ipadx 125
+	#grid config $winAddPDO.l_empty2 -row 2 -column 0 -sticky "news"
 
-	set titleFrame1 [TitleFrame $winAddPDO.titleFrame1 -text "PDO" ]
-	grid config $titleFrame1 -row 3 -column 0 -ipadx 20 -sticky "news"
-	set titleInnerFrame1 [$titleFrame1 getframe]
+	set titleFrame1 [TitleFrame $winAddPDO.titleFrame1 -text "PDO Configuration" ]
+	grid config $titleFrame1 -row 1 -column 0 -ipadx 20 -padx 20 -sticky "news"
+	set titleInnerFrame2 [$titleFrame1 getframe]
 	
-	set titleFrame2 [TitleFrame $titleInnerFrame1.titleFrame2 -text "Configuration"]  
-	grid config $titleFrame2 -row 2 -column 0 -ipadx 0  -sticky "news"
-	set titleInnerFrame2 [$titleFrame2 getframe]
+	#set titleFrame2 [TitleFrame $titleInnerFrame1.titleFrame2 -text "Configuration"]  
+	#grid config $titleFrame2 -row 2 -column 0 -ipadx 0  -sticky "news"
+	#set titleInnerFrame2 [$titleFrame2 getframe]
 	
 	####frame1 has six radio buttons to select excution mode 
 	set frame1 [frame $titleInnerFrame2.fram1]
 	#### frame2 has label TestGroupName and the entry box
-	set frame2 [frame $titleInnerFrame1.fram2]
+	set frame2 [frame $titleInnerFrame2.fram2]
 	#### frame3 has label Execution count and the entry box
 	set frame3 [frame $titleInnerFrame2.fram3]
 	#### frame 4 has ok and cancel button
-	set frame4 [frame $titleInnerFrame1.fram4]
-	set frame5 [frame $titleInnerFrame1.fram5]
+	set frame4 [frame $titleInnerFrame2.fram4]
+	set frame5 [frame $titleInnerFrame2.fram5]
 	
 #	label $frame2.l_name -text "CN Name :"
 #	entry $frame2.en_name -textvariable testGroupName -background white
@@ -6425,14 +6679,14 @@ proc AddPDOProc {} {
 #	label $titleInnerFrame2.l_empty4 -text ""
 #	grid config $titleInnerFrame2.l_empty4  -row 0 -column 0 
 	
-	label $frame3.l_pdostart -text "PDO Starting number \[1-255\] :"
-	entry $frame3.en_pdostart -textvariable pdostartValue -background white -validate key -vcmd {expr {[string len %P] <= 5} && {[string is int %P]}}
+	label $frame1.l_pdostart -text "PDO Starting number \[1-255\] :"
+	entry $frame1.en_pdostart -textvariable pdostartValue -background white -validate key -vcmd {expr {[string len %P] <= 5} && {[string is int %P]}}
 
-	label $frame3.l_MapEnt -text "Mapping Entries \[1-254\] :"
-	entry $frame3.en_MapEnt -textvariable MapEntValue -background white -validate key -vcmd {expr {[string len %P] <= 5} && {[string is int %P]}}
+	label $frame1.l_MapEnt -text   "Mapping Entries \[1-254\] :"
+	entry $frame1.en_MapEnt -textvariable MapEntValue -background white -validate key -vcmd {expr {[string len %P] <= 5} && {[string is int %P]}}
 
-	label $frame3.l_NoPDO -text "Number of PDOs \[1-255\] :"
-	entry $frame3.en_NoPDO -textvariable NoPDOValue -background white -validate key -vcmd {expr {[string len %P] <= 5} && {[string is int %P]}}
+	label $frame1.l_NoPDO -text    "Number of PDOs \[1-255\] :"
+	entry $frame1.en_NoPDO -textvariable NoPDOValue -background white -validate key -vcmd {expr {[string len %P] <= 5} && {[string is int %P]}}
 
 #button $frame3.bt_name -text Browse -command {
 #						set types {
@@ -6440,39 +6694,40 @@ proc AddPDOProc {} {
 #							}
 #						set filename [tk_getOpenFile -title "Add TestCase" -filetypes $types -parent .]
 #					}
-	grid config $frame3.l_pdostart  -row 0 -column 0 
-	grid config $frame3.en_pdostart -row 0 -column 1
-	grid config $frame3.l_MapEnt  -row 1 -column 0 
-	grid config $frame3.en_MapEnt -row 1 -column 1
-	grid config $frame3.l_NoPDO  -row 2 -column 0 
-	grid config $frame3.en_NoPDO -row 2 -column 1
+
+	grid config $frame1 -row 0 -column 0 -sticky "news" -columnspan 1
+	grid config $frame1.l_pdostart  -row 0 -column 0 
+	grid config $frame1.en_pdostart -row 0 -column 1
+	#grid config $frame2 -row 1 -column 0
+	grid config $frame1.l_MapEnt  -row 1 -column 0 
+	grid config $frame1.en_MapEnt -row 1 -column 1
+	#grid config $frame3 -row 2 -column 0	
+	grid config $frame1.l_NoPDO  -row 2 -column 0 
+	grid config $frame1.en_NoPDO -row 2 -column 1
 
 #	grid config $frame3.bt_name -row 0 -column 2
-	grid config $frame3 -row 1 -column 0
-	
-	label $titleInnerFrame2.l_empty5 -text "Kind of PDO"
-	grid config $titleInnerFrame2.l_empty5  -row 2 -column 0
+
+
+	label $titleInnerFrame2.l_empty5 -text "    "
+	grid config $titleInnerFrame2.l_empty5  -row 3 -column 0
+	label $titleInnerFrame2.l_type -text "PDO type"
+	grid config $titleInnerFrame2.l_type  -row 4 -column 0
 	#label $titleInnerFrame2.l_mode -text "Type of CN"
 	#grid config $titleInnerFrame2.l_mode  -row 3 -column 0 
 	
 	#variables used for radio buttons
-	set mode_interactive on
-	set mode_continuous on
-	set mode_sequence on
-	radiobutton $frame1.ra_inter -text "Transmit PDO"   -variable mode_interactive   -value on 
-	radiobutton $frame1.ra_bat   -text "Receive PDO"         -variable mode_interactive   -value off 
-	label $frame1.ra_cont  -text ""
-	label $frame1.ra_disco -text "" 
-	label $frame1.ra_seq   -text "" 
-	label $frame1.ra_ran   -text "" 
-	grid config $frame1.ra_inter -row 0 -column 0 -sticky "w"
-	grid config $frame1.ra_bat   -row 0 -column 1 -sticky "w"
-	grid config $frame1.ra_cont  -row 1 -column 0 -sticky "w"
-	grid config $frame1.ra_disco -row 1 -column 1 -sticky "w"
-	grid config $frame1.ra_seq   -row 2 -column 0 -sticky "w"
-	grid config $frame1.ra_ran   -row 2 -column 1 -sticky "w"
-	grid config $frame1 -row 5 -column 0
+	set pdoType on
 	
+	radiobutton $frame4.ra_inter -text "Transmit PDO" -variable pdoType   -value on 
+	radiobutton $frame4.ra_bat   -text "Receive PDO"  -variable pdoType   -value off 
+	$frame4.ra_bat select
+	grid config $frame4.ra_inter -row 0 -column 0 -sticky "w"
+	grid config $frame4.ra_bat   -row 0 -column 1 -sticky "w"
+	grid config $frame4 -row 5 -column 0
+	
+
+	label $titleInnerFrame2.l_empty9 -text ""
+	grid config $titleInnerFrame2.l_empty9 -row 6 -column 0 -sticky "news"
 #	scrollbar $titleInnerFrame1.h -orient horizontal -command "$titleInnerFrame1.t_help xview"
 #	scrollbar $titleInnerFrame1.v -command "$titleInnerFrame1.t_help yview"
 #	text $titleInnerFrame1.t_help -width 40 -height 10 -xscroll "$titleInnerFrame1.h set" -yscroll "$titleInnerFrame1.v set" -state disabled
@@ -6494,18 +6749,18 @@ proc AddPDOProc {} {
 #	grid config $titleInnerFrame1.ch_help -row 4 -column 0
 #	label $titleInnerFrame1.l_empty7 -text ""
 #	grid config $titleInnerFrame1.l_empty7  -row 7 -column 0
-	button $frame4.b_ok -text "  Add  " -command { 
+	button $frame5.b_ok -text "  Add  " -command { 
 							YetToImplement
 							font delete custom1
 							destroy .addPDO
 						    }
-	button $frame4.b_cancel -text "Cancel" -command {
+	button $frame5.b_cancel -text "Cancel" -command {
 								destroy .addPDO
 								font delete custom1
 							}
-	grid config $frame4.b_ok  -row 0 -column 0 
-	grid config $frame4.b_cancel -row 0 -column 1
-	grid config $frame4 -row 8 -column 0 
+	grid config $frame5.b_ok  -row 0 -column 0 
+	grid config $frame5.b_cancel -row 0 -column 1
+	grid config $frame5 -row 7 -column 0 
 	bind $winAddPDO <KeyPress-Return> {  
 							set testGroupName [string trim $testGroupName]
 							if {$testGroupName==""} {
@@ -6530,9 +6785,8 @@ proc AddPDOProc {} {
 							destroy .addTestGroup
 						    }
 	label $winAddPDO.l_empty8 -text ""
-	grid config $winAddPDO.l_empty8 -row 4 -column 0 -sticky "news"
-	label $winAddPDO.l_empty9 -text ""
-	grid config $winAddPDO.l_empty9 -row 5 -column 0 -sticky "news"
+	grid config $winAddPDO.l_empty8 -row 2 -column 0 -sticky "news"
+
 	wm protocol .addPDO WM_DELETE_WINDOW {
 							font delete custom1
 							destroy .addTestGroup
@@ -6558,4 +6812,15 @@ proc createFormatButton {tbl row col w} {
 #    button $w -image [Bitmap::get openfold] -highlightthickness 0 -takefocus 0 \
 #	      -command [list viewFile $tbl $key]
     button $w -text "Dec" -command "YetToImplement" -width 1 -height 1
+}
+
+
+proc connectio {} {
+	set tog [.mainframe.topf.tb0.bbox8.b0 cget -image]
+
+	if {$tog=="image16"} {
+	        .mainframe.topf.tb0.bbox8.b0 configure -image [Bitmap::get compile]
+	} else {
+	        .mainframe.topf.tb0.bbox8.b0 configure -image [Bitmap::get stop]
+	}
 }

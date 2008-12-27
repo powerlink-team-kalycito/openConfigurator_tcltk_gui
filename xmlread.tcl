@@ -186,7 +186,11 @@ proc InsertTree { } {
 	#exec rm *~
 	#Insert Project Tree
 	$updatetree insert end root PjtName -text "POWERLINK Network" -open 1 -image [Bitmap::get openfold]
-	$updatetree insert end root OBD -text "openPOWERLINK MN" -open 1 -image [Bitmap::get right]
+	$updatetree insert end PjtName OBD -text "openPOWERLINK MN" -open 1 -image [Bitmap::get right]
+
+	$updatetree insert end OBD Child1 -text "CN_1" -open 1 -image [Bitmap::get file]
+	$updatetree insert end Child1 Index_1  -text "NMT_CycleTime_U32 \[1006\]" -open 1
+	$updatetree insert end Child1 Index_2  -text "PDO" -open 1 -image [Bitmap::get open]
 	# Insert Config file of the Project
 #	set child [$updatetree insert end TestSuite OBD -text "Object Dictionary" -open 1 -image [Bitmap::get right]]
 		# Insert Config for the Project

@@ -1,7 +1,0 @@
-<?xml version="1.0"?>
-
-<Project Name="Default.pjt" Timeout="4" ExecProfile="Default" Mode="D">
-  <Profile Name="Default"></Profile>
-  <Usrinclpath>./UserIncludeFile/</Usrinclpath>
-  <Toolboxpath>./ToolBox/</Toolboxpath>
-</Project>

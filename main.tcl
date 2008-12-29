@@ -4030,13 +4030,13 @@ proc Editor::create { } {
 	    {command "Clean Project" {noFile} "Clean" {} -command YetToImplement }
 	    {command "Stop Build" {}  "Reserved" {} -command YetToImplement -state disabled}
             {separator}
-            {command "Settings" {}  "Reserved" {} -command YetToImplement -state disabled}
+            {command "Project Settings" {}  "Project Settings" {} -command YetToImplement }
         }
         "&Connection" all options 0 {
             {command "Connect to POWERLINK network" {noFile} "Establish connection with POWERLINK network" {} -command YetToImplement }
             {command "Disconnect from POWERLINK network" {noFile} "Disconnect from POWERLINK network" {} -command YetToImplement }
 	    {separator}
-            {command "Configure" {}  "Reserved" {} -command YetToImplement -state disabled}
+            {command "Connection Settings" {}  "Connection Settings" {} -command ConnSettWindow -state normal}
         }
         "&Actions" all options 0 {
             {command "SDO Read/Write" {noFile} "Do SDO Read or Write" {} -command YetToImplement -state disabled}
@@ -4079,7 +4079,7 @@ proc Editor::create { } {
         "&Help" {} {} 0 {
 	    {command "How to" {noFile} "How to Manual" {} -command YetToImplement }
 	    {separator}
-            {command "About" {} "About" {F1} -command Editor::aboutBox }
+            {command "About" {} "About" {F1} -command "" }
         }
     }
 
@@ -4225,16 +4225,16 @@ proc Editor::create { } {
    # toolbar 1 creation
     set tb1  [MainFrame::addtoolbar $mainframe]
     set bbox [ButtonBox::create $tb1.bbox1 -spacing 0 -padx 1 -pady 1]
-    set toolbarButtons(new) [ButtonBox::add $bbox -image [Bitmap::get new] \
+    set toolbarButtons(new) [ButtonBox::add $bbox -image [Bitmap::get document] \
             -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
             -helptext "Create new project" -command newprojectWindow]
-    set toolbarButtons(save) [ButtonBox::add $bbox -image [Bitmap::get save] \
+    set toolbarButtons(save) [ButtonBox::add $bbox -image [Bitmap::get disk_black] \
             -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
             -helptext "Save Project" -command YetToImplement]
-    set toolbarButtons(saveAll) [ButtonBox::add $bbox -image [Bitmap::get saveAll] \
+    set toolbarButtons(saveAll) [ButtonBox::add $bbox -image [Bitmap::get disks_black] \
             -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
             -helptext "Save Project as" -command saveProjectAsWindow]    
-    set toolbarButtons(openproject) [ButtonBox::add $bbox -image [Bitmap::get openfold] \
+    set toolbarButtons(openproject) [ButtonBox::add $bbox -image [Bitmap::get folder_open] \
             -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
             -helptext "Open Project" -command openproject]
         
@@ -4335,7 +4335,9 @@ proc Editor::create { } {
     #pack $sep -side left -fill y -padx 4 -anchor w
     
     set bbox [ButtonBox::create $tb1.bbox1b -spacing 0 -padx 4 -pady 1]
-    ButtonBox::add $bbox -image [Bitmap::get compile] \
+    ButtonBox::add $bbox -image [Bitmap::get start] \
+            -height 21\
+            -width 21\
             -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
             -helptext "Start" -command {YetToImplement}
     
@@ -4344,21 +4346,30 @@ proc Editor::create { } {
     set bbox [ButtonBox::create $tb1.bbox1c -spacing 1 -padx 1 -pady 1]
     
     set compile_arrow [ButtonBox::add $bbox -image [Bitmap::get stop]\
-            -height 25\
-            -width 25\
+            -height 21\
+            -width 21\
             -helptype balloon\
             -helptext "Stop"\
 	    -command "YetToImplement"]
     #puts [$tb1.bbox itemcget -image]
     pack $compile_arrow -side left -padx 4
-    set right_arrow [ArrowButton::create $bbox.ua -dir right\
-            -height 35\
-            -width 35\
+
+    set right_arrow [ButtonBox::add $bbox -image [Bitmap::get reconfig]\
+            -height 21\
+            -width 21\
             -helptype balloon\
             -helptext "Reconfigure"\
-	    -command {YetToImplement }\
-    ]    
+    	    -command "YetToImplement"]
     pack $right_arrow -side left -padx 4
+
+    #set right_arrow [ArrowButton::create $bbox.ua -dir right\
+    #        -height 35\
+    #        -width 35\
+    #        -helptype balloon\
+    #        -helptext "Reconfigure"\
+    #        -command {YetToImplement }\
+    #]    
+    #pack $right_arrow -side left -padx 4
     #set export_arrow [ButtonBox::add $bbox -image [Bitmap::get compile]\
     #        -height 25\
     #        -width 25\
@@ -4390,19 +4401,19 @@ proc Editor::create { } {
     
     set bbox [ButtonBox::create $tb1.bbox6 -spacing 1 -padx 1 -pady 1]
     pack $bbox -side left -anchor w
-    set down_arrow [ButtonBox::add $bbox -image [Bitmap::get stop]\
+    set down_arrow [ButtonBox::add $bbox -image [Bitmap::get transfer_orange]\
             -height 21\
             -width 21\
             -helptype balloon\
             -helptext "Transfer CDC"\
-            -command ""]
+    	    -command "YetToImplement"]
     pack $down_arrow -side left -padx 4
-    set up_arrow [ButtonBox::add $bbox -image [Bitmap::get stop]\
+    set up_arrow [ButtonBox::add $bbox -image [Bitmap::get transfer_blue]\
             -height 21\
             -width 21\
             -helptype balloon\
             -helptext "Transfer XML"\
-             -command ""]
+    	    -command "YetToImplement"]
         pack $up_arrow -side left -padx 4
     #incr prgindic
     set sep6 [Separator::create $tb1.sep6 -orient vertical]
@@ -4410,26 +4421,26 @@ proc Editor::create { } {
 
     set bbox [ButtonBox::create $tb1.bbox7 -spacing 1 -padx 1 -pady 1]
     pack $bbox -side left -anchor w
-    set down_arrow [ButtonBox::add $bbox -image [Bitmap::get stop]\
+    set down_arrow [ButtonBox::add $bbox -image [Bitmap::get build]\
             -height 21\
             -width 21\
             -helptype balloon\
             -helptext "Build Project"\
-            -command ""]
+    	    -command "YetToImplement"]
     pack $down_arrow -side left -padx 4
-    set up_arrow [ButtonBox::add $bbox -image [Bitmap::get stop]\
+    set up_arrow [ButtonBox::add $bbox -image [Bitmap::get rebuild]\
             -height 21\
             -width 21\
             -helptype balloon\
             -helptext "Rebuild Project"\
-             -command ""]
+    	    -command "YetToImplement"]
     pack $up_arrow -side left -padx 4
-    set right_arrow [ButtonBox::add $bbox -image [Bitmap::get stop]\
+    set right_arrow [ButtonBox::add $bbox -image [Bitmap::get clean]\
             -height 21\
             -width 21\
             -helptype balloon\
             -helptext "clean Project"\
-             -command ""]
+    	    -command "YetToImplement"]
     pack $right_arrow -side left -padx 4
     #incr prgindic
     set sep7 [Separator::create $tb1.sep7 -orient vertical]
@@ -4437,7 +4448,7 @@ proc Editor::create { } {
     
     set bbox [ButtonBox::create $tb1.bbox8 -spacing 1 -padx 1 -pady 1]
     pack $bbox -side left -anchor w
-    set down_arrow [ButtonBox::add $bbox -image [Bitmap::get stop]\
+    set down_arrow [ButtonBox::add $bbox -image [Bitmap::get socket]\
             -height 21\
             -width 21\
             -helptype balloon\
@@ -4447,6 +4458,24 @@ proc Editor::create { } {
 
     set sep8 [Separator::create $tb1.sep8 -orient vertical]
     pack $sep8 -side left -fill y -padx 4 -anchor w 
+
+    set f_tb1 [frame $tb1.f]
+    label $f_tb1.l_empty -text ""
+    radiobutton $f_tb1.ra_dec -text "Dec" -variable hexDec -value on
+    radiobutton $f_tb1.ra_hex -text "Hex" -variable hexDec -value off
+    pack $f_tb1 -side right -anchor e -expand 1 -padx 200
+    #pack $f_tb1 -side right -anchor w -expand 1 -fill x
+    #pack $f_tb1.ra_dec 
+    #pack $f_tb1.ra_hex 
+
+#grid config $f_tb1  
+
+grid config $f_tb1.ra_dec -row 0 -column 1 -sticky "w"
+grid config $f_tb1.ra_hex -row 0 -column 2 -sticky "w"
+
+
+    #puts $tb1.ra_hex
+    #pack forget $tb1.ra_hex
 
     #get Entry path out of Combo Widget
     set childList [winfo children $search_combo]
@@ -4463,45 +4492,45 @@ proc Editor::create { } {
     }
     incr prgindic
     # toolbar 2 creation
-    set tb2  [MainFrame::addtoolbar $mainframe]
+    #set tb2  [MainFrame::addtoolbar $mainframe]
     
-    set bbox [ButtonBox::create $tb2.bbox2 -spacing 0 -padx 1 -pady 1]
+    #set bbox [ButtonBox::create $tb2.bbox2 -spacing 0 -padx 1 -pady 1]
     
-    ButtonBox::add $bbox -image [Bitmap::get incfont] \
-            -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
-            -helptext "Increase Fontsize" -command {Editor::increaseFontSize up}
-    pack $bbox -side left -anchor w
+    #ButtonBox::add $bbox -image [Bitmap::get incfont] \
+    #        -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
+    #        -helptext "Increase Fontsize" -command {Editor::increaseFontSize up}
+    #pack $bbox -side left -anchor w
     
-    ButtonBox::add $bbox -image [Bitmap::get decrfont] \
-            -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
-            -helptext "Decrease Fontsize" -command {Editor::increaseFontSize down}
-    pack $bbox -side left -anchor w
-    set sep3 [Separator::create $tb2.sep3 -orient vertical]
-    pack $sep3 -side left -fill y -padx 4 -anchor w
-    set Editor::Font_var [font configure editorFont -family]
-    set Font_combo [ComboBox::create $tb2.combo \
-            -label "" \
-            -labelwidth 0\
-            -labelanchor w \
-            -textvariable Editor::Font_var\
-            -values [lsort -dictionary [font families]] \
-            -helptext "Choose Font" \
-            -entrybg white\
-            -modifycmd {Editor::changeFont}\
-            ]
-    pack $Font_combo -side left
-    set Editor::FontSize_var [font configure editorFont -size]
-    set FontSize_combo [ComboBox::create $tb2.combo2 -width 2 -label "" -labelwidth 0 -labelanchor w \
-            -textvariable Editor::FontSize_var\
-            -values {8 9 10 11 12 14 16 20 24 30} \
-            -helptext "Choose Fontsize" \
-            -entrybg white\
-            -modifycmd {Editor::changeFont}\
-            ]
-    pack $FontSize_combo -side left
+    #ButtonBox::add $bbox -image [Bitmap::get decrfont] \
+    #        -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
+    #        -helptext "Decrease Fontsize" -command {Editor::increaseFontSize down}
+    #pack $bbox -side left -anchor w
+    #set sep3 [Separator::create $tb2.sep3 -orient vertical]
+    #pack $sep3 -side left -fill y -padx 4 -anchor w
+    #set Editor::Font_var [font configure editorFont -family]
+    #set Font_combo [ComboBox::create $tb2.combo \
+    #        -label "" \
+    #        -labelwidth 0\
+    #        -labelanchor w \
+    #        -textvariable Editor::Font_var\
+    #        -values [lsort -dictionary [font families]] \
+    #        -helptext "Choose Font" \
+    #        -entrybg white\
+    #        -modifycmd {Editor::changeFont}\
+    #        ]
+    #pack $Font_combo -side left
+    #set Editor::FontSize_var [font configure editorFont -size]
+    #set FontSize_combo [ComboBox::create $tb2.combo2 -width 2 -label "" -labelwidth 0 -labelanchor w \
+    #        -textvariable Editor::FontSize_var\
+    #        -values {8 9 10 11 12 14 16 20 24 30} \
+    #        -helptext "Choose Fontsize" \
+    #        -entrybg white\
+    #        -modifycmd {Editor::changeFont}\
+    #        ]
+    #pack $FontSize_combo -side left
     
     $Editor::mainframe showtoolbar 0 $Editor::toolbar1
-    $Editor::mainframe showtoolbar 1 $Editor::toolbar2
+    #$Editor::mainframe showtoolbar 1 $Editor::toolbar2
     
     # set statusbar indicator for file-directory clock and Line/Pos
     set temp [MainFrame::addindicator $mainframe -text "Current Startfile: " ]
@@ -4534,7 +4563,6 @@ $pw2 configure -width 250
 
     set list_notebook [NoteBook::create $pane1.nb]
     set notebook [NoteBook::create $pane2.nb]	
-
     set con_notebook [NoteBook::create $pane3.nb]
     
     #set myWin [NoteBook::create $pane4.nb]
@@ -4560,7 +4588,7 @@ $pw2 configure -width 250
     set PjtDir $EditorData(options,History)
     incr prgindic
 
-    set f0 [EditManager::create_tab $notebook "Index"]
+#    set f0 [EditManager::create_tab $notebook "Index"]
 
     #set Editor::text_win($Editor::index_counter,undo_id) [new textUndoer [lindex $f0 2]]
 
@@ -4572,18 +4600,18 @@ $list_notebook configure -width 10
  
 
     # Commented out to remove Editor window    
-    NoteBook::compute_size $notebook
+#    NoteBook::compute_size $notebook
 
-    set cf0 [EditManager::create_conWindow $con_notebook "Console"]
+    set cf0 [EditManager::create_conWindow $con_notebook "Console" 1]
 
 
 #TODO hard coded to bring image
 #code for adding image in console
 
     $con_notebook itemconfigure Console1 -image [Bitmap::get file]
-    set cf1 [EditManager::create_conWindow $con_notebook "Error"]
+    set cf1 [EditManager::create_conWindow $con_notebook "Error" 2]
    $con_notebook itemconfigure Console2 -image [Bitmap::get error_small]
-    set cf2 [EditManager::create_conWindow $con_notebook "Warning"]
+    set cf2 [EditManager::create_conWindow $con_notebook "Warning" 3]
    $con_notebook itemconfigure Console3 -image [Bitmap::get warning_small]
 
 
@@ -4597,28 +4625,28 @@ $list_notebook configure -width 10
     pack $pw1 -fill both -expand yes
 
 
-    pack $notebook -side left -fill both -expand yes -padx 4 -pady 4
+#    pack $notebook -side left -fill both -expand yes -padx 4 -pady 4
     
     #alternate way of creating tab in right note book
     #set pane4 [$notebook insert end Tab1 -text "Tab1"]
-     set pane4 [lindex $f0 0]
 
-	entry $pane4.ent_1 -width 35 -textvariable pjtToolBoxPath -relief ridge -background white
-	label $pane4.lab_1 -text "Object" -anchor w
-	entry $pane4.ent_2 -width 35 -textvariable pjtToolBoxPath -relief ridge -background white
-	label $pane4.lab_2 -text "Parameter Name" -anchor w
-	entry $pane4.ent_3 -width 35 -textvariable pjtToolBoxPath -relief ridge -background white
-	label $pane4.lab_3 -text "Data Type" -anchor w
-	entry $pane4.ent_4 -width 35 -textvariable pjtToolBoxPath -relief ridge -background white
-	label $pane4.lab_4 -text "Access Mode" -anchor w
-	entry $pane4.ent_5 -width 35 -textvariable pjtToolBoxPath -relief ridge -background white
-	label $pane4.lab_5 -text "Default Value" -anchor w
-	entry $pane4.ent_6 -width 35 -textvariable pjtToolBoxPath -relief ridge -background white
-	label $pane4.lab_6 -text "Parameter Value" -anchor w
-	button $pane4.but_1 -width 25 -textvariable "Save changes" -relief ridge -text "Save Changes"
-	button $pane4.but_2 -width 25 -textvariable "Save in XDS/XDD" -relief ridge -text "Save Changes in XDC/XDD file"
 
-	label $pane4.disclaimer -width 75 -text "This window will be used for editing the parameters \n and yet to be designed" -relief ridge -background white -foreground red
+	#entry $pane4.ent_1 -width 35 -textvariable pjtToolBoxPath -relief ridge -background white
+	#label $pane4.lab_1 -text "Object" -anchor w
+	#entry $pane4.ent_2 -width 35 -textvariable pjtToolBoxPath -relief ridge -background white
+	#label $pane4.lab_2 -text "Parameter Name" -anchor w
+	#entry $pane4.ent_3 -width 35 -textvariable pjtToolBoxPath -relief ridge -background white
+	#label $pane4.lab_3 -text "Data Type" -anchor w
+	#entry $pane4.ent_4 -width 35 -textvariable pjtToolBoxPath -relief ridge -background white
+	#label $pane4.lab_4 -text "Access Mode" -anchor w
+	#entry $pane4.ent_5 -width 35 -textvariable pjtToolBoxPath -relief ridge -background white
+	#label $pane4.lab_5 -text "Default Value" -anchor w
+	#entry $pane4.ent_6 -width 35 -textvariable pjtToolBoxPath -relief ridge -background white
+	#label $pane4.lab_6 -text "Parameter Value" -anchor w
+	#button $pane4.but_1 -width 25 -textvariable "Save changes" -relief ridge -text "Save Changes"
+	#button $pane4.but_2 -width 25 -textvariable "Save in XDS/XDD" -relief ridge -text "Save Changes in XDC/XDD file"
+
+	#label $pane4.disclaimer -width 75 -text "This window will be used for editing the parameters \n and yet to be designed" -relief ridge -background white -foreground red
 
 #
 # Create the font TkFixedFont if not yet present
@@ -4633,6 +4661,11 @@ $list_notebook configure -width 10
 # Create a vertically scrolled tablelist widget with 5
 # dynamic-width columns and interactive sort capability
 #
+
+    set f0 [EditManager::create_tab $notebook "Index"]
+    NoteBook::compute_size $notebook
+    pack $notebook -side left -fill both -expand yes -padx 4 -pady 4
+     set pane4 [lindex $f0 0]
 set tbl $pane4.tbl
 set vsb $pane4.vsb
 tablelist::tablelist $pane4.tbl \
@@ -4642,16 +4675,16 @@ tablelist::tablelist $pane4.tbl \
     -stripebackground gray98 \
     -labelcommand "" \
     -resizable 0 -movablecolumns 0 -movablerows 0\
-    -showseparators 1 -spacing 10
+    -showseparators 1 -spacing 10 
 
 #label command is to disable sorting 
 #resizable doesnt allow the user to change table width 
 
-$tbl columnconfigure 0 -background #f9cf7e -width 47
-$tbl columnconfigure 1 -background #f9cf7e -width 47
+#$tbl columnconfigure 0 -background #e6e6d3 -width 47
+#$tbl columnconfigure 1 -background #e1e1e1 -width 47
 
-#$tbl columnconfigure 0 -background #f9cf7e 
-#$tbl columnconfigure 1 -background #f9cf7e 
+$tbl columnconfigure 0 -background #a8dfee -width 47
+$tbl columnconfigure 1 -background #a8dfee -width 47
 
 #$tbl columnconfigure 1 -formatcommand emptyStr -sortmode integer
 #$tbl columnconfigure 2 -name fileSize -sortmode integer
@@ -4691,28 +4724,28 @@ eval font create BoldFont [font actual [$tbl cget -font]] -weight bold
 
 $tbl insert 0 [list Index: 1006 ""]
 $tbl insert 1 [list Name: NMT_CycleLen_U32 ""]
-$tbl cellconfigure 0,1 -editable yes
 $tbl insert 2 [list Object\ Type: VAR ""]
 $tbl insert 3 [list Data\ Type: Unsigned32 ""]
 $tbl insert 4 [list Access\ Type: rw ""]
 $tbl insert 5 [list Value: 0007 ""]
-$tbl cellconfigure 5,1 -editable yes
-$tbl insert 6 [list]
-$tbl cellconfigure 6,0 -window createSaveButton -bg gray98 
-$tbl cellconfigure 6,1 -window createDiscardButton -bg gray98
+
+#$tbl insert 6 [list]
+
+#$tbl cellconfigure 6,0 -window createSaveButton -bg gray98 
+#$tbl cellconfigure 6,1 -window createDiscardButton -bg gray98
 #$tbl cellconfigure 5,2 -window createFormatButton -bg gray98
 
-$tbl cellconfigure 0,0 -editable yes
-$tbl cellconfigure 0,1 -editable yes
-$tbl cellconfigure 1,0 -editable yes
+#$tbl cellconfigure 0,0 -editable yes
+#$tbl cellconfigure 0,1 -editable yes
+#$tbl cellconfigure 1,0 -editable yes
 $tbl cellconfigure 1,1 -editable yes
-$tbl cellconfigure 2,0 -editable yes
-$tbl cellconfigure 2,1 -editable yes
-$tbl cellconfigure 3,0 -editable yes
-$tbl cellconfigure 3,1 -editable yes
-$tbl cellconfigure 4,0 -editable yes
-$tbl cellconfigure 4,1 -editable yes
-$tbl cellconfigure 5,0 -editable yes
+#$tbl cellconfigure 2,0 -editable yes
+#$tbl cellconfigure 2,1 -editable yes
+#$tbl cellconfigure 3,0 -editable yes
+#$tbl cellconfigure 3,1 -editable yes
+#$tbl cellconfigure 4,0 -editable yes
+#$tbl cellconfigure 4,1 -editable yes
+#$tbl cellconfigure 5,0 -editable yes
 $tbl cellconfigure 5,1 -editable yes
 
 
@@ -4722,6 +4755,16 @@ $tbl columnconfigure 1 -font Courier
 # For packing the Tablelist in the right window
 
 pack $pane4.tbl -fill both -expand yes -padx 4 -pady 4
+
+set frame4 [frame $pane4.f] 
+button $frame4.b_sav -text " Save " -command "YetToImplement"
+button $frame4.b_dis -text "Discard" -command "YetToImplement"
+pack $frame4
+#pack $frame4.b_sav
+#pack $frame4.b_dis
+grid config $frame4.b_sav -row 0 -column 0
+grid config $frame4.b_dis -row 0 -column 1
+
 #scrollbar $pane4.yscroll -command {$tbl yview} -orient vertical
 #scrollbar $pane4.xscroll -command {$tbl xview} -orient horizontal
 #pack $pane4.yscroll -side right
@@ -4743,46 +4786,52 @@ tablelist::tablelist $pane6.tbl2 \
     -stripebackground gray98 \
     -labelcommand "" \
     -resizable 0 -movablecolumns 0 -movablerows 0 \
-    -showseparators 1 -spacing 10
+    -showseparators 1 -borderwidth 1 -spacing 10
 
 
-$tbl2 columnconfigure 0 -background #f9cf7e -width 47
-$tbl2 columnconfigure 1 -background #f9cf7e -width 47
+#$tbl2 columnconfigure 0 -background #dbdbc9 -width 47
+#$tbl2 columnconfigure 1 -background #f9cf7e -width 47
 
-#$tbl2 columnconfigure 0 -background #f9cf7e 
-#$tbl2 columnconfigure 1 -background #f9cf7e 
+$tbl2 columnconfigure 0 -background #a8dfee -width 47 
+$tbl2 columnconfigure 1 -background #a8dfee -width 47
 
-$tbl2 insert 0 [list Index: 1006 ""]
-$tbl2 insert 1 [list Sub\ Index: 00 ""]
-$tbl2 insert 2 [list Name: NMT_CycleLen_U32 ""]
-$tbl2 cellconfigure 0,1 -editable yes
-$tbl2 insert 3 [list Object\ Type: VAR ""]
-$tbl2 insert 4 [list Data\ Type: Unsigned32 ""]
-$tbl2 insert 5 [list Access\ Type: rw ""]
-$tbl2 insert 6 [list Value: 0007 ""]
-$tbl2 cellconfigure 5,1 -editable yes
-$tbl2 insert 7 [list]
-$tbl2 cellconfigure 7,0 -window createSaveButton -bg gray98 
-$tbl2 cellconfigure 7,1 -window createDiscardButton -bg gray98 
+$tbl2 insert 0 [list Index: 1006]
+$tbl2 insert 1 [list Sub\ Index: 00]
+$tbl2 insert 2 [list Name: NMT_CycleLen_U32]
+$tbl2 insert 3 [list Object\ Type: VAR]
+$tbl2 insert 4 [list Data\ Type: Unsigned32]
+$tbl2 insert 5 [list Access\ Type: rw]
+$tbl2 insert 6 [list Value: 0007]
+
+#$tbl2 insert 7 [list]
+#$tbl2 cellconfigure 7,0 -window createSaveButton -bg gray98 
+#$tbl2 cellconfigure 7,1 -window createDiscardButton -bg gray98 
 #$tbl2 cellconfigure 7,2 -window createFormatButton -bg gray98
 
-$tbl2 cellconfigure 0,0 -editable yes
-$tbl2 cellconfigure 0,1 -editable yes
-$tbl2 cellconfigure 1,0 -editable yes
-$tbl2 cellconfigure 1,1 -editable yes
-$tbl2 cellconfigure 2,0 -editable yes
+#$tbl2 cellconfigure 0,0 -editable yes
+#$tbl2 cellconfigure 0,1 -editable yes
+#$tbl2 cellconfigure 1,0 -editable yes
+#$tbl2 cellconfigure 1,1 -editable yes
+#$tbl2 cellconfigure 2,0 -editable yes
 $tbl2 cellconfigure 2,1 -editable yes
-$tbl2 cellconfigure 3,0 -editable yes
-$tbl2 cellconfigure 3,1 -editable yes
-$tbl2 cellconfigure 4,0 -editable yes
-$tbl2 cellconfigure 4,1 -editable yes
-$tbl2 cellconfigure 5,0 -editable yes
-$tbl2 cellconfigure 5,1 -editable yes
-$tbl2 cellconfigure 6,0 -editable yes
+#$tbl2 cellconfigure 3,0 -editable yes
+#$tbl2 cellconfigure 3,1 -editable yes
+#$tbl2 cellconfigure 4,0 -editable yes
+#$tbl2 cellconfigure 4,1 -editable yes
+#$tbl2 cellconfigure 5,0 -editable yes
+#$tbl2 cellconfigure 5,1 -editable yes
+#$tbl2 cellconfigure 6,0 -editable yes
 $tbl2 cellconfigure 6,1 -editable yes
 
 pack $pane6.tbl2 -fill both -expand yes -padx 4 -pady 4
-
+set frame6 [frame $pane6.f] 
+button $frame6.b_sav -text " Save " -command "YetToImplement"
+button $frame6.b_dis -text "Discard" -command "YetToImplement"
+pack $frame6
+#pack $frame4.b_sav
+#pack $frame4.b_dis
+grid config $frame6.b_sav -row 0 -column 0
+grid config $frame6.b_dis -row 0 -column 1
 
 set f2 [EditManager::create_tab $notebook "PDO mapping"]
 
@@ -4804,13 +4853,13 @@ tablelist::tablelist $pane5.tbl1 \
 
 
 # the column No has onlly integer values som sorting based on integer
-$tbl1 columnconfigure 0 -background #f9cf7e -width 6 -sortmode integer
-$tbl1 columnconfigure 1 -background #f9cf7e -width 23
-$tbl1 columnconfigure 2 -background #f9cf7e -width 11
-$tbl1 columnconfigure 3 -background #f9cf7e -width 11
-$tbl1 columnconfigure 4 -background #f9cf7e -width 11
-$tbl1 columnconfigure 5 -background #f9cf7e -width 11
-$tbl1 columnconfigure 6 -background #f9cf7e -width 11
+$tbl1 columnconfigure 0 -background #a8dfee -width 6 -sortmode integer
+$tbl1 columnconfigure 1 -background #a8dfee -width 23
+$tbl1 columnconfigure 2 -background #a8dfee -width 11
+$tbl1 columnconfigure 3 -background #a8dfee -width 11
+$tbl1 columnconfigure 4 -background #a8dfee -width 11
+$tbl1 columnconfigure 5 -background #a8dfee -width 11
+$tbl1 columnconfigure 6 -background #a8dfee -width 11
 
 #$tbl1 columnconfigure 0 -background #f9cf7e -sortmode integer
 #$tbl1 columnconfigure 1 -background #f9cf7e
@@ -4872,11 +4921,17 @@ set prgindic 0
     wm protocol . WM_DELETE_WINDOW Editor::exit_app
       	if {!$configError} {catch Editor::restoreWindowPositions}
 
+
+    errorPuts "testing Error.."
+    warnPuts "testing Warn.."
+    conPuts "testing console"
 }
 
 proc Editor::changeFont {} {
     global EditorData
     global conWindow
+    global warWindow
+    global errWindow
     
     variable index
     variable text_win
@@ -4906,12 +4961,16 @@ proc Editor::changeFont {} {
         editorWindows::onChangeFontSize $text_win($idx,path)
     }
     $conWindow configure -font $EditorData(options,fonts,editorFont)
+    $warWindow configure -font $EditorData(options,fonts,editorFont)
+    $errWindow configure -font $EditorData(options,fonts,editorFont)
     
 }
 
 proc Editor::increaseFontSize {direction} {
     global EditorData
     global conWindow
+    global warWindow
+    global errWindow
     
     variable notebook
     variable current
@@ -4962,6 +5021,8 @@ proc Editor::increaseFontSize {direction} {
     }
     set FontSize_var [font configure editorFont -size]
     $conWindow configure -font $EditorData(options,fonts,editorFont)
+    $warWindow configure -font $EditorData(options,fonts,editorFont)
+    $errWindow configure -font $EditorData(options,fonts,editorFont)
     
 }
 
@@ -5069,6 +5130,15 @@ proc DoubleClickNode {node} {
 	global updatetree
 	set node [$updatetree selection get]
 puts "node in doubleclick------------->$node"
+
+	if {$node=="Index_2"} {
+		pack forget .mainframe.topf.tb0.f.ra_dec
+		pack forget .mainframe.topf.tb0.f.ra_hex
+	} else {
+		pack .mainframe.topf.tb0.f.ra_dec -side left
+		pack .mainframe.topf.tb0.f.ra_hex -side left
+	}
+
 	set testGroupNo [GetCurrentNodeNum]
 	set selected [GetPreviousNum]
 	if { $selected == "TestGroup" } {
@@ -6817,10 +6887,77 @@ proc createFormatButton {tbl row col w} {
 
 proc connectio {} {
 	set tog [.mainframe.topf.tb0.bbox8.b0 cget -image]
-
-	if {$tog=="image16"} {
-	        .mainframe.topf.tb0.bbox8.b0 configure -image [Bitmap::get compile]
+	puts $tog
+	#to toggle image the value varies according to images added 
+	if {$tog=="image25"} {
+	        .mainframe.topf.tb0.bbox8.b0 configure -image [Bitmap::get plug]
 	} else {
-	        .mainframe.topf.tb0.bbox8.b0 configure -image [Bitmap::get stop]
+	        .mainframe.topf.tb0.bbox8.b0 configure -image [Bitmap::get socket]
 	}
 }
+
+proc ConnSettWindow {} {
+	set winConnSett .connSett
+	catch "destroy $winConnSett"
+	toplevel     $winConnSett
+	wm title     $winConnSett "Connection Settings"
+	wm resizable $winConnSett 0 0
+	wm transient $winConnSett .
+	wm deiconify $winConnSett
+	grab $winConnSett
+
+	set frame1 [frame $winConnSett.fram1]
+	set frame2 [frame $winConnSett.fram2]
+
+	label $winConnSett.l_empty1 -text ""
+	label $frame1.l_ip -text "IP Address"
+	label $winConnSett.l_empty2 -text ""
+	label $winConnSett.l_empty3 -text ""
+
+	entry $frame1.en_ip -textvariable connIpAddr -background white -relief ridge -validate all -vcmd "isIP %P %V"
+
+	button $frame2.b_ok -text "  Ok  " -command { 
+		YetToImplement
+		destroy .connSett
+	}
+	button $frame2.b_cancel -text "Cancel" -command {
+		destroy .connSett
+	}
+}
+
+
+###################################################################################
+# proc isIp
+# To validate the entering ipaddress
+###################################################################################
+proc isIP {str type} {
+#catch {
+   # modify these if you want to check specific ranges for
+   # each portion - now it look for 0 - 255 in each
+   set ipnum1 {\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]}
+   set ipnum2 {\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]}
+   set ipnum3 {\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]}
+   set ipnum4 {\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]}
+   set fullExp {^($ipnum1)\.($ipnum2)\.($ipnum3)\.($ipnum4)$}
+   set partialExp {^(($ipnum1)(\.(($ipnum2)(\.(($ipnum3)(\.(($ipnum4)?)?)?)?)?)?)?)?$}
+   set fullExp [subst -nocommands -nobackslashes $fullExp]
+   set partialExp [subst -nocommands -nobackslashes $partialExp]
+   if [string equal $type focusout] {
+      if [regexp -- $fullExp $str] {
+         return 1
+      } else {
+         #tk_messageBox -message "IP is NOT complete!" -title "IP Address" -parent .projconfig
+         return 0
+      }
+   } elseif [string equal $type dstry] {
+      if [regexp -- $fullExp $str] {
+         return 1
+      } else {
+         #tk_messageBox -message "IP is NOT complete!" -title "IP Address" -parent .projconfig
+         return 0
+      }
+   } else {
+      return [regexp -- $partialExp $str]
+   }
+#}
+} 

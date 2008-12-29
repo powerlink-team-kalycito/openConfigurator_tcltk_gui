@@ -26,6 +26,8 @@ global EditorData
 global clock_var
 global textChanged
 global conWindow
+global warWindow
+global errWindow
 
 set RootDir [pwd]
 #set ASEDsRootDir [file dirname [info script]]

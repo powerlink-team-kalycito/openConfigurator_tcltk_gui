@@ -225,8 +225,10 @@ proc EditManager::create_procWindow {nb } {
 # Description:	Create the Output Console for the OutPut display and 
 #		User Interactions.
 ###########################################################################
-proc EditManager::create_conWindow {nb text} {
+proc EditManager::create_conWindow {nb text choice} {
     global conWindow
+    global warWindow
+    global errWindow
     variable _newConsoleCounter
     
     incr _newConsoleCounter
@@ -235,11 +237,25 @@ proc EditManager::create_conWindow {nb text} {
     set frame [$nb insert end $pagename -text $text]
     
     set sw [ScrolledWindow::create $frame.sw -auto both]
-    set conWindow [consoleInit $sw]
-    $conWindow configure -wrap word
-    ScrolledWindow::setwidget $sw $conWindow
+    if {$choice==1} {
+	set conWindow [consoleInit $sw]
+	set window $conWindow
+    } elseif {$choice==2} {    
+	set errWindow [errorInit $sw]
+	set window $errWindow
+    } elseif {$choice==3} {    
+	set warWindow [warnInit $sw]
+	set window $warWindow
+    } else {
+	#invalid selection
+	return
+    }
+    $window configure -wrap word
+    ScrolledWindow::setwidget $sw $window
     pack $sw -fill both -expand yes
-    
+
+    #raised the window after creating it 
+    $nb raise $pagename
     #return [$frame $pagename]
 	return $frame
 }

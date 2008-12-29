@@ -13,6 +13,8 @@
 #Console
 global Console
 global conWindow
+global warWindow
+global errWindow
 
 #Acitivated the Console window key press events
 proc flashWin {win delay} {
@@ -277,6 +279,140 @@ proc onKeyHome {win} {
     $win mark set insert prompt
 }
 
+proc errorInit {win {width 60} {height 5}} {
+    global Console
+    global prompt
+    global window
+    #global historyIndex
+    global EditorData
+    
+    #set historyIndex 0
+    set window $win
+    set prompt ERROR
+    
+    if {$window == "."} {
+        set window ""
+    }
+    set Console [interp create]
+    
+    
+    $Console alias setValues SetValues
+    $Console alias exit reset
+    $Console alias puts errorPuts
+    text $window.t -width $width -height $height -bg white
+    catch {$window.t configure -font $EditorData(options,fonts,editorFont)}
+    
+    $window.t tag configure output -foreground blue
+    $window.t tag configure prompt -foreground grey40
+    $window.t tag configure error -foreground red
+    $window.t insert end "$prompt % " prompt
+    $window.t mark set prompt insert
+    $window.t mark gravity prompt left
+    bind $window.t <KeyPress-Return> {%W mark set insert "prompt lineend"}
+    #bind $window.t <KeyRelease-Return> {evalCommand %W $Console [getCommand %W];break}
+    bind $window.t <Key-Up> {onKeyUp %W ; break}
+    bind $window.t <Key-Down> {onKeyDown %W ; break}
+    bind $window.t <Key-Left> {onKeyLeft %W ; break}
+    bind $window.t <Key-Right> {onKeyRight %W ; break}
+    bind $window.t <Key-BackSpace> {onKeyBackSpace %W;break}
+    bind $window.t <Key-Home> {onKeyHome %W ;break}
+    bind $window.t <Control-c> {set dummy nothing}
+    bind $window.t <KeyPress> {onKeyPressed %W}
+    pack $window.t -fill both -expand yes
+    return $window.t
+}
+
+proc errorPuts {var {tag output} {win {}} {flash 0} {see 1}} {
+    global prompt
+    global errWindow
+    
+    if {$win == {}} {
+        set win $errWindow
+    }
+    $win mark gravity prompt right
+    $win insert end $var $tag
+    if {[string index $var [expr [string length $var]-1]] != "\n"} {
+        $win insert end "\n"
+    }
+    set prompt ERROR
+    $win insert end "$prompt : " prompt
+    $win mark gravity prompt left
+    if $see {$win see insert}
+    update
+    if $flash {
+        flashWin $win $flash
+    }
+    return
+}
+
+proc warnInit {win {width 60} {height 5}} {
+    global Console
+    global prompt
+    global window
+    #global historyIndex
+    global EditorData
+    
+    #set historyIndex 0
+    set window $win
+    set prompt WARN
+    
+    if {$window == "."} {
+        set window ""
+    }
+    set Console [interp create]
+    
+    
+    $Console alias setValues SetValues
+    $Console alias exit reset
+    $Console alias puts warnPuts
+    text $window.t -width $width -height $height -bg white
+    catch {$window.t configure -font $EditorData(options,fonts,editorFont)}
+    
+    $window.t tag configure output -foreground blue
+    $window.t tag configure prompt -foreground grey40
+    $window.t tag configure error -foreground red
+    $window.t insert end "$prompt % " prompt
+    $window.t mark set prompt insert
+    $window.t mark gravity prompt left
+    bind $window.t <KeyPress-Return> {%W mark set insert "prompt lineend"}
+    #bind $window.t <KeyRelease-Return> {evalCommand %W $Console [getCommand %W];break}
+    bind $window.t <Key-Up> {onKeyUp %W ; break}
+    bind $window.t <Key-Down> {onKeyDown %W ; break}
+    bind $window.t <Key-Left> {onKeyLeft %W ; break}
+    bind $window.t <Key-Right> {onKeyRight %W ; break}
+    bind $window.t <Key-BackSpace> {onKeyBackSpace %W;break}
+    bind $window.t <Key-Home> {onKeyHome %W ;break}
+    bind $window.t <Control-c> {set dummy nothing}
+    bind $window.t <KeyPress> {onKeyPressed %W}
+    pack $window.t -fill both -expand yes
+    return $window.t
+}
+
+proc warnPuts {var {tag output} {win {}} {flash 0} {see 1}} {
+    global prompt
+    global warWindow
+    
+    if {$win == {}} {
+        set win $warWindow
+    }
+    $win mark gravity prompt right
+    $win insert end $var $tag
+    if {[string index $var [expr [string length $var]-1]] != "\n"} {
+        $win insert end "\n"
+    }
+    set prompt WARN
+    $win insert end "$prompt : " prompt
+    $win mark gravity prompt left
+    if $see {$win see insert}
+    update
+    if $flash {
+        flashWin $win $flash
+    }
+    return
+}
+
+
+
 proc consoleInit {win {width 60} {height 5}} {
     global Console
     global prompt
@@ -319,7 +455,6 @@ proc consoleInit {win {width 60} {height 5}} {
     pack $window.t -fill both -expand yes
     return $window.t
 }
-
 proc testTermInit {win {interp {}} {width 60} {height 5}} {
     global prompt
     global historyIndex

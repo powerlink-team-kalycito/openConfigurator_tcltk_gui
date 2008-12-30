@@ -4225,16 +4225,16 @@ proc Editor::create { } {
    # toolbar 1 creation
     set tb1  [MainFrame::addtoolbar $mainframe]
     set bbox [ButtonBox::create $tb1.bbox1 -spacing 0 -padx 1 -pady 1]
-    set toolbarButtons(new) [ButtonBox::add $bbox -image [Bitmap::get document] \
+    set toolbarButtons(new) [ButtonBox::add $bbox -image [Bitmap::get page_white] \
             -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
             -helptext "Create new project" -command newprojectWindow]
-    set toolbarButtons(save) [ButtonBox::add $bbox -image [Bitmap::get disk_black] \
+    set toolbarButtons(save) [ButtonBox::add $bbox -image [Bitmap::get disk] \
             -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
             -helptext "Save Project" -command YetToImplement]
-    set toolbarButtons(saveAll) [ButtonBox::add $bbox -image [Bitmap::get disks_black] \
+    set toolbarButtons(saveAll) [ButtonBox::add $bbox -image [Bitmap::get disk_multiple] \
             -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
             -helptext "Save Project as" -command saveProjectAsWindow]    
-    set toolbarButtons(openproject) [ButtonBox::add $bbox -image [Bitmap::get folder_open] \
+    set toolbarButtons(openproject) [ButtonBox::add $bbox -image [Bitmap::get openfolder] \
             -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
             -helptext "Open Project" -command openproject]
         
@@ -4335,12 +4335,12 @@ proc Editor::create { } {
     #pack $sep -side left -fill y -padx 4 -anchor w
     
     set bbox [ButtonBox::create $tb1.bbox1b -spacing 0 -padx 4 -pady 1]
-    ButtonBox::add $bbox -image [Bitmap::get start] \
+    set start [ButtonBox::add $bbox -image [Bitmap::get start] \
             -height 21\
             -width 21\
             -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
-            -helptext "Start" -command {YetToImplement}
-    
+            -helptext "Start" -command {YetToImplement}]
+    pack $start -side left -padx 4
     pack $bbox -side left -anchor w -padx 2
     
     set bbox [ButtonBox::create $tb1.bbox1c -spacing 1 -padx 1 -pady 1]
@@ -4349,6 +4349,7 @@ proc Editor::create { } {
             -height 21\
             -width 21\
             -helptype balloon\
+            -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
             -helptext "Stop"\
 	    -command "YetToImplement"]
     #puts [$tb1.bbox itemcget -image]
@@ -4358,6 +4359,7 @@ proc Editor::create { } {
             -height 21\
             -width 21\
             -helptype balloon\
+            -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
             -helptext "Reconfigure"\
     	    -command "YetToImplement"]
     pack $right_arrow -side left -padx 4
@@ -4401,17 +4403,19 @@ proc Editor::create { } {
     
     set bbox [ButtonBox::create $tb1.bbox6 -spacing 1 -padx 1 -pady 1]
     pack $bbox -side left -anchor w
-    set down_arrow [ButtonBox::add $bbox -image [Bitmap::get transfer_orange]\
+    set down_arrow [ButtonBox::add $bbox -image [Bitmap::get transfercdc]\
             -height 21\
             -width 21\
             -helptype balloon\
+            -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
             -helptext "Transfer CDC"\
     	    -command "YetToImplement"]
     pack $down_arrow -side left -padx 4
-    set up_arrow [ButtonBox::add $bbox -image [Bitmap::get transfer_blue]\
+    set up_arrow [ButtonBox::add $bbox -image [Bitmap::get transferxml]\
             -height 21\
             -width 21\
             -helptype balloon\
+            -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
             -helptext "Transfer XML"\
     	    -command "YetToImplement"]
         pack $up_arrow -side left -padx 4
@@ -4425,6 +4429,7 @@ proc Editor::create { } {
             -height 21\
             -width 21\
             -helptype balloon\
+            -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
             -helptext "Build Project"\
     	    -command "YetToImplement"]
     pack $down_arrow -side left -padx 4
@@ -4432,6 +4437,7 @@ proc Editor::create { } {
             -height 21\
             -width 21\
             -helptype balloon\
+            -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
             -helptext "Rebuild Project"\
     	    -command "YetToImplement"]
     pack $up_arrow -side left -padx 4
@@ -4439,6 +4445,7 @@ proc Editor::create { } {
             -height 21\
             -width 21\
             -helptype balloon\
+            -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
             -helptext "clean Project"\
     	    -command "YetToImplement"]
     pack $right_arrow -side left -padx 4
@@ -4448,7 +4455,7 @@ proc Editor::create { } {
     
     set bbox [ButtonBox::create $tb1.bbox8 -spacing 1 -padx 1 -pady 1]
     pack $bbox -side left -anchor w
-    set down_arrow [ButtonBox::add $bbox -image [Bitmap::get socket]\
+    set down_arrow [ButtonBox::add $bbox -image [Bitmap::get disconnect]\
             -height 21\
             -width 21\
             -helptype balloon\
@@ -4683,8 +4690,8 @@ tablelist::tablelist $pane4.tbl \
 #$tbl columnconfigure 0 -background #e6e6d3 -width 47
 #$tbl columnconfigure 1 -background #e1e1e1 -width 47
 
-$tbl columnconfigure 0 -background #a8dfee -width 47
-$tbl columnconfigure 1 -background #a8dfee -width 47
+$tbl columnconfigure 0 -background #e0e8f0 -width 47
+$tbl columnconfigure 1 -background #e0e8f0 -width 47
 
 #$tbl columnconfigure 1 -formatcommand emptyStr -sortmode integer
 #$tbl columnconfigure 2 -name fileSize -sortmode integer
@@ -4792,8 +4799,8 @@ tablelist::tablelist $pane6.tbl2 \
 #$tbl2 columnconfigure 0 -background #dbdbc9 -width 47
 #$tbl2 columnconfigure 1 -background #f9cf7e -width 47
 
-$tbl2 columnconfigure 0 -background #a8dfee -width 47 
-$tbl2 columnconfigure 1 -background #a8dfee -width 47
+$tbl2 columnconfigure 0 -background #e0e8f0 -width 47 
+$tbl2 columnconfigure 1 -background #e0e8f0 -width 47
 
 $tbl2 insert 0 [list Index: 1006]
 $tbl2 insert 1 [list Sub\ Index: 00]
@@ -4853,13 +4860,13 @@ tablelist::tablelist $pane5.tbl1 \
 
 
 # the column No has onlly integer values som sorting based on integer
-$tbl1 columnconfigure 0 -background #a8dfee -width 6 -sortmode integer
-$tbl1 columnconfigure 1 -background #a8dfee -width 23
-$tbl1 columnconfigure 2 -background #a8dfee -width 11
-$tbl1 columnconfigure 3 -background #a8dfee -width 11
-$tbl1 columnconfigure 4 -background #a8dfee -width 11
-$tbl1 columnconfigure 5 -background #a8dfee -width 11
-$tbl1 columnconfigure 6 -background #a8dfee -width 11
+$tbl1 columnconfigure 0 -background #e0e8f0 -width 6 -sortmode integer
+$tbl1 columnconfigure 1 -background #e0e8f0 -width 23
+$tbl1 columnconfigure 2 -background #e0e8f0 -width 11
+$tbl1 columnconfigure 3 -background #e0e8f0 -width 11
+$tbl1 columnconfigure 4 -background #e0e8f0 -width 11
+$tbl1 columnconfigure 5 -background #e0e8f0 -width 11
+$tbl1 columnconfigure 6 -background #e0e8f0 -width 11
 
 #$tbl1 columnconfigure 0 -background #f9cf7e -sortmode integer
 #$tbl1 columnconfigure 1 -background #f9cf7e
@@ -6890,9 +6897,9 @@ proc connectio {} {
 	puts $tog
 	#to toggle image the value varies according to images added 
 	if {$tog=="image25"} {
-	        .mainframe.topf.tb0.bbox8.b0 configure -image [Bitmap::get plug]
+	        .mainframe.topf.tb0.bbox8.b0 configure -image [Bitmap::get connect]
 	} else {
-	        .mainframe.topf.tb0.bbox8.b0 configure -image [Bitmap::get socket]
+	        .mainframe.topf.tb0.bbox8.b0 configure -image [Bitmap::get disconnect]
 	}
 }
 
@@ -6923,6 +6930,23 @@ proc ConnSettWindow {} {
 	button $frame2.b_cancel -text "Cancel" -command {
 		destroy .connSett
 	}
+
+	grid config $winConnSett.l_empty1 -row 0 -column 0
+	grid config $frame1 -row 1 -column 0 -padx 10
+	grid config $winConnSett.l_empty2 -row 2 -column 0
+	grid config $frame2 -row 3 -column 0
+	grid config $winConnSett.l_empty3 -row 4 -column 0
+
+	grid config $frame1.l_ip -row 0 -column 0
+	grid config $frame1.en_ip -row 0 -column 1
+
+	grid config $frame2.b_ok -row 0 -column 0
+	grid config $frame2.b_cancel -row 0 -column 1
+
+	wm protocol .connSett WM_DELETE_WINDOW {
+		destroy .connSett
+	}
+
 }
 
 

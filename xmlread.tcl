@@ -185,12 +185,15 @@ proc InsertTree { } {
         set toolBoxDir [instProject cget -memTollbox_path]
 	#exec rm *~
 	#Insert Project Tree
-	$updatetree insert end root PjtName -text "POWERLINK Network" -open 1 -image [Bitmap::get openfold]
-	$updatetree insert end PjtName OBD -text "openPOWERLINK MN" -open 1 -image [Bitmap::get right]
+	$updatetree insert end root PjtName -text "POWERLINK Network" -open 1 -image [Bitmap::get network]
+	$updatetree insert end PjtName OBD -text "openPOWERLINK MN" -open 1 -image [Bitmap::get mn]
 
-	$updatetree insert end OBD Child1 -text "CN_1" -open 1 -image [Bitmap::get file]
-	$updatetree insert end Child1 Index_1  -text "NMT_CycleTime_U32 \[1006\]" -open 1
-	$updatetree insert end Child1 Index_2  -text "PDO" -open 1 -image [Bitmap::get open]
+	$updatetree insert end OBD Child1 -text "CN_1" -open 1 -image [Bitmap::get cn]
+	$updatetree insert end Child1 Index_1  -text "NMT_CycleTime_U32 \[1006\]" -open 1 -image [Bitmap::get index]
+	$updatetree insert end Index_1 SubIndex_1  -text "Sub_index" -open 1 -image [Bitmap::get subindex]
+	$updatetree insert end Child1 Index_2  -text "PDO" -open 1 -image [Bitmap::get pdo]
+	$updatetree insert end Index_2 pdoIndex_1  -text "PDO_Index" -open 1 -image [Bitmap::get index]
+	$updatetree insert end pdoIndex_1 pdoSubIndex_1  -text "PDO_Sub_index" -open 1 -image [Bitmap::get subindex]
 	# Insert Config file of the Project
 #	set child [$updatetree insert end TestSuite OBD -text "Object Dictionary" -open 1 -image [Bitmap::get right]]
 		# Insert Config for the Project

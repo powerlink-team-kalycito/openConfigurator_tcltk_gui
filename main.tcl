@@ -2613,55 +2613,55 @@ proc Editor::exit_app {} {
 				return}
    		}
     }
-    set taskList [after info]
+    #set taskList [after info]
 	
-    foreach id $taskList {
-        after cancel $id
-    }
-    if {$current(hasChanged)} {\
-        if {[catch {set idx $index($current(text))}]} {
-            exit
-        }
-        set text_win($idx,hasChanged) $current(hasChanged)
-    }
-    set newlist ""
-    set index_list [array names index]
-    foreach idx $index_list {\
-        set newlist [concat $newlist  $index($idx)]
-    }
-    
-    Editor::getWindowPositions
-    Editor::saveOptions
+    #foreach id $taskList {
+    #    after cancel $id
+    #}
+    #if {$current(hasChanged)} {\
+    #    if {[catch {set idx $index($current(text))}]} {
+    #        exit
+    #    }
+    #    set text_win($idx,hasChanged) $current(hasChanged)
+    #}
+    #set newlist ""
+    #set index_list [array names index]
+    #foreach idx $index_list {\
+    #    set newlist [concat $newlist  $index($idx)]
+    #}
+
+    #Editor::getWindowPositions
+    #Editor::saveOptions
     
     #    if no window is open, we can exit at once
-    if {[llength $newlist] == ""} {
-        exit
-    }
+    #if {[llength $newlist] == ""} {
+    #    exit
+    #}
     
-    foreach idx $newlist {\
-        set current(text) $text_win($idx,path)
-        set current(page) $text_win($idx,page)
-        set current(pagename) $text_win($idx,pagename)
-        set current(hasChanged) $text_win($idx,hasChanged)
-        set current(undo_id) $text_win($idx,undo_id)
-        set current(file) $text_win($idx,file)
-        set current(slave) $text_win($idx,slave)
-        set current(writable) $text_win($idx,writable)
-        set result [Editor::closeFile exit]
-        if {$result} {
-            NoteBook::raise $notebook $current(pagename)
-            return
-        }
-    }
-    if {$serverUp} {
-        set slave [interp create]
-        interp eval $slave set RootDir [list $RootDir]
-        interp eval $slave set argv0 shutdown_Server
-        interp eval $slave {load {} Tk}
-        interp eval $slave set Client::port $EditorData(options,serverPort)
-        interp eval $slave Client::exitExecutionServer
-        interp delete $slave
-    }
+    #foreach idx $newlist {\
+    #    set current(text) $text_win($idx,path)
+    #    set current(page) $text_win($idx,page)
+    #    set current(pagename) $text_win($idx,pagename)
+    #    set current(hasChanged) $text_win($idx,hasChanged)
+    #    set current(undo_id) $text_win($idx,undo_id)
+    #    set current(file) $text_win($idx,file)
+    #    set current(slave) $text_win($idx,slave)
+    #    set current(writable) $text_win($idx,writable)
+    #    set result [Editor::closeFile exit]
+    #    if {$result} {
+    #       NoteBook::raise $notebook $current(pagename)
+    #        return
+    #    }
+    #}
+    #if {$serverUp} {
+    #    set slave [interp create]
+    #    interp eval $slave set RootDir [list $RootDir]
+    #    interp eval $slave set argv0 shutdown_Server
+    #    interp eval $slave {load {} Tk}
+    #    interp eval $slave set Client::port $EditorData(options,serverPort)
+    #    interp eval $slave Client::exitExecutionServer
+    #    interp delete $slave
+    #}
 
     exit
 }
@@ -4470,16 +4470,21 @@ proc Editor::create { } {
     label $f_tb1.l_empty -text ""
     radiobutton $f_tb1.ra_dec -text "Dec" -variable hexDec -value on
     radiobutton $f_tb1.ra_hex -text "Hex" -variable hexDec -value off
-    pack $f_tb1 -side right -anchor e -expand 1 -padx 200
+    #button $f_tb1.b_sav -text " Save " -command "YetToImplement"
+    #button $f_tb1.b_dis -text "Discard" -command "YetToImplement"
+
+    pack $f_tb1 -side right -anchor e -expand 1 -padx 100
     #pack $f_tb1 -side right -anchor w -expand 1 -fill x
     #pack $f_tb1.ra_dec 
     #pack $f_tb1.ra_hex 
 
-#grid config $f_tb1  
+    #grid config $f_tb1  
 
-grid config $f_tb1.ra_dec -row 0 -column 1 -sticky "w"
-grid config $f_tb1.ra_hex -row 0 -column 2 -sticky "w"
-
+    grid config $f_tb1.ra_dec -row 0 -column 1 -sticky "w" -padx 5
+    grid config $f_tb1.ra_hex -row 0 -column 2 -sticky "w" -padx 5
+    #grid config $f_tb1.b_sav -row 0 -column 3 -padx 5
+    #grid config $f_tb1.b_dis -row 0 -column 4 -padx 5
+    $f_tb1.ra_dec select
 
     #puts $tb1.ra_hex
     #pack forget $tb1.ra_hex
@@ -4562,6 +4567,9 @@ grid config $f_tb1.ra_hex -row 0 -column 2 -sticky "w"
 	
 
     set pane1 [PanedWindow::add $pw2 -minsize 250]
+
+#PanedWindow::configure $pane1 "-width 250"
+#PanedWindow $pane1 configure -width 250
 $pane1 configure -width 250
 $pw2 configure -width 250  
     set pane2 [PanedWindow::add $pw2 -minsize 100]
@@ -4602,7 +4610,7 @@ $pw2 configure -width 250
 $list_notebook configure -width 10    
     NoteBook::compute_size $list_notebook
 #pack $pane -side left -expand yes
-
+    #pack $list_notebook -side left -padx 2 -pady 4
     pack $list_notebook -side left -fill both -expand yes -padx 2 -pady 4
  
 
@@ -4624,7 +4632,7 @@ $list_notebook configure -width 10
 
 
     NoteBook::compute_size $con_notebook
-
+    #pack $con_notebook -side bottom -padx 4 -pady 4
     pack $con_notebook -side bottom -fill both -expand yes -padx 4 -pady 4
     
 #pack $con_notebook1 -side bottom -fill both -expand yes -padx 4 -pady 4
@@ -4674,14 +4682,14 @@ $list_notebook configure -width 10
     pack $notebook -side left -fill both -expand yes -padx 4 -pady 4
      set pane4 [lindex $f0 0]
 set tbl $pane4.tbl
-set vsb $pane4.vsb
+
 tablelist::tablelist $pane4.tbl \
     -columns {0 "Label" left
 	      0 "Value" center} \
-    -setgrid no -width 0 \
-    -stripebackground gray98 \
+    -setgrid no -width 0 -height 6 \
+    -stripebackground gray98  \
     -labelcommand "" \
-    -resizable 0 -movablecolumns 0 -movablerows 0\
+    -resizable 0 -movablecolumns 0 -movablerows 0 \
     -showseparators 1 -spacing 10 
 
 #label command is to disable sorting 
@@ -4696,7 +4704,7 @@ $tbl columnconfigure 1 -background #e0e8f0 -width 47
 #$tbl columnconfigure 1 -formatcommand emptyStr -sortmode integer
 #$tbl columnconfigure 2 -name fileSize -sortmode integer
 #$tbl columnconfigure 4 -name seen
-scrollbar $vsb -orient vertical -command [list $tbl yview]
+
 
 proc emptyStr val { return "" }
 
@@ -4742,17 +4750,7 @@ $tbl insert 5 [list Value: 0007 ""]
 #$tbl cellconfigure 6,1 -window createDiscardButton -bg gray98
 #$tbl cellconfigure 5,2 -window createFormatButton -bg gray98
 
-#$tbl cellconfigure 0,0 -editable yes
-#$tbl cellconfigure 0,1 -editable yes
-#$tbl cellconfigure 1,0 -editable yes
 $tbl cellconfigure 1,1 -editable yes
-#$tbl cellconfigure 2,0 -editable yes
-#$tbl cellconfigure 2,1 -editable yes
-#$tbl cellconfigure 3,0 -editable yes
-#$tbl cellconfigure 3,1 -editable yes
-#$tbl cellconfigure 4,0 -editable yes
-#$tbl cellconfigure 4,1 -editable yes
-#$tbl cellconfigure 5,0 -editable yes
 $tbl cellconfigure 5,1 -editable yes
 
 
@@ -4761,7 +4759,10 @@ $tbl columnconfigure 1 -font Courier
 
 # For packing the Tablelist in the right window
 
-pack $pane4.tbl -fill both -expand yes -padx 4 -pady 4
+#pack $pane4.tbl -fill both -expand yes -padx 4 -pady 4
+pack $pane4.tbl  -padx 4 -pady 4
+puts [$pane4.tbl cget -height]
+#grid config $pane4.tbl -row 0 -column 0
 
 set frame4 [frame $pane4.f] 
 button $frame4.b_sav -text " Save " -command "YetToImplement"
@@ -4785,11 +4786,11 @@ grid config $frame4.b_dis -row 0 -column 1
 set f1 [EditManager::create_tab $notebook "Sub Index"]
  set pane6 [lindex $f1 0]
 set tbl2 $pane6.tbl2
-set vsb2 $pane6.vsb2
+
 tablelist::tablelist $pane6.tbl2 \
     -columns {0 "Label" left
 	      0 "Value" center} \
-    -setgrid no -yscrollcommand [list $vsb set] -width 0 \
+    -setgrid no -width 0 -height 7 \
     -stripebackground gray98 \
     -labelcommand "" \
     -resizable 0 -movablecolumns 0 -movablerows 0 \
@@ -4844,7 +4845,7 @@ set f2 [EditManager::create_tab $notebook "PDO mapping"]
 
      set pane5 [lindex $f2 0]
 set tbl1 $pane5.tbl1
-set vsb1 $pane5.vsb1
+
 tablelist::tablelist $pane5.tbl1 \
     -columns {0 "No" left
 	      0 "Mapping Entries" center
@@ -4853,7 +4854,7 @@ tablelist::tablelist $pane5.tbl1 \
 	      0 "Reserved"
 	      0 "Offset"
 	      0 "Length"} \
-    -setgrid no -yscrollcommand [list $vsb set] -width 0 \
+    -setgrid 0 -width 0 \
     -stripebackground gray98 \
     -resizable 0 -movablecolumns 0 -movablerows 0 \
     -showseparators 1 -spacing 10
@@ -4932,6 +4933,9 @@ set prgindic 0
     errorPuts "testing Error.."
     warnPuts "testing Warn.."
     conPuts "testing console"
+
+EditManager::create_table $notebook "Index"
+
 }
 
 proc Editor::changeFont {} {
@@ -5139,11 +5143,21 @@ proc DoubleClickNode {node} {
 puts "node in doubleclick------------->$node"
 
 	if {$node=="Index_2"} {
+		pack .mainframe.topf.tb0.f.ra_dec -side left -padx 5
+		pack .mainframe.topf.tb0.f.ra_hex -side left -padx 5
+		#pack .mainframe.topf.tb0.f.b_sav -side left -padx 5
+		#pack .mainframe.topf.tb0.f.b_dis -side left -padx 5
 		pack forget .mainframe.topf.tb0.f.ra_dec
 		pack forget .mainframe.topf.tb0.f.ra_hex
+		#pack forget .mainframe.topf.tb0.f.b_sav
+		#pack forget .mainframe.topf.tb0.f.b_dis
+		puts "entered if"
 	} else {
-		pack .mainframe.topf.tb0.f.ra_dec -side left
-		pack .mainframe.topf.tb0.f.ra_hex -side left
+		puts "entered else"
+		pack .mainframe.topf.tb0.f.ra_dec -side left -padx 5
+		pack .mainframe.topf.tb0.f.ra_hex -side left -padx 5
+		#pack .mainframe.topf.tb0.f.b_sav -side left -padx 5
+		#pack .mainframe.topf.tb0.f.b_dis -side left -padx 5
 	}
 
 	set testGroupNo [GetCurrentNodeNum]

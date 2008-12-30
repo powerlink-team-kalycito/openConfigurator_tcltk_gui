@@ -141,23 +141,89 @@ proc EditManager::create_tab {nb filename} {
     set pageName "Page$_newPageCounter"
     set frame [$nb insert end $pageName -text $filename ]
 
-set sw [ScrolledWindow $frame.sw]
+    set sw [ScrolledWindow $frame.sw]
 
-pack $sw -fill both -expand true
-set sf [ScrollableFrame $sw.sf]
-#$sf configure -bg white
-$sf configure
-$sw setwidget $sf
+    pack $sw -fill both -expand true
 
-#pack $sf -fill both -expand true
 
-set uf [$sf getframe]
-#pack $uf -fill both -expand true
-#$uf config -bg white
+    set sf [ScrollableFrame $sw.sf]
+    #$sf configure -bg white
+    $sw setwidget $sf
+
+    #pack $sf -fill both -expand true
+
+    set uf [$sf getframe]
+    $uf configure -height 20 
+    #pack $uf -fill both -expand true
+    #$uf config -bg blue
 
     incr Editor::index_counter
     #return [list $frame $pageName]
     return [list $uf $pageName]
+    #return [list $sf $pageName]
+}
+
+
+
+proc EditManager::create_table {nb filename} {
+    global EditorData
+    variable TxtWidget
+    variable _newPageCounter
+    
+    incr _newPageCounter
+    set pageName "Page$_newPageCounter"
+    set frame [$nb insert end $pageName -text $filename ]
+
+    set sw [ScrolledWindow $frame.sw]
+
+    pack $sw -fill both -expand true
+
+
+set st [tablelist::tablelist $sw.st \
+    -columns {0 "Label" left
+	      0 "Value" center} \
+    -setgrid no -width 0 -height 1 \
+    -stripebackground gray98  \
+    -labelcommand "" \
+    -resizable 0 -movablecolumns 0 -movablerows 0 \
+    -showseparators 1 -spacing 10 ]
+
+
+$st columnconfigure 0 -background #e0e8f0 -width 47
+$st columnconfigure 1 -background #e0e8f0 -width 47
+
+$st insert 0 [list Index: 1006 ""]
+$st insert 1 [list Name: NMT_CycleLen_U32 ""]
+$st insert 2 [list Object\ Type: VAR ""]
+$st insert 3 [list Data\ Type: Unsigned32 ""]
+$st insert 4 [list Access\ Type: rw ""]
+$st insert 5 [list Value: 0007 ""]
+
+
+
+
+    #set sf [ScrollableFrame $sw.sf]
+    #$sf configure -bg white
+    $sw setwidget $st
+
+    #pack $sf -fill both -expand true
+
+    #set uf [$sf getframe]
+    #$uf configure -height 20 
+    pack $st -fill both -expand true
+    #$uf config -bg blue
+
+#set frame6 [frame $st.f]
+set frame6 [frame $frame.f]  
+button $frame6.b_sav -text " Save " -command "YetToImplement"
+button $frame6.b_dis -text "Discard" -command "YetToImplement"
+grid config $frame6.b_sav -row 0 -column 0
+grid config $frame6.b_dis -row 0 -column 1
+pack $frame6
+
+    incr Editor::index_counter
+    #return [list $frame $pageName]
+    #return [list $uf $pageName]
     #return [list $sf $pageName]
 }
 

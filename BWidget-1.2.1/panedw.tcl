@@ -120,6 +120,7 @@ proc PanedWindow::add { path args } {
                 place $but -relx 0.5 -rely 1.0 -y [expr {-6-$wbut/2}] -anchor c
             }
             $but configure -cursor sb_h_double_arrow 
+            $sep configure -cursor sb_h_double_arrow
             grid $frame -column [expr 2*$num-1] -row 0 -sticky ns
             grid columnconfigure $path [expr 2*$num-1] -weight 0
         } else {
@@ -130,10 +131,12 @@ proc PanedWindow::add { path args } {
                 place $but -rely 0.5 -relx 1.0 -x [expr {-6-$wbut/2}] -anchor c
             }
             $but configure -cursor sb_v_double_arrow 
+            $sep configure -cursor sb_v_double_arrow
             grid $frame -row [expr 2*$num-1] -column 0 -sticky ew
             grid rowconfigure $path [expr 2*$num-1] -weight 0
         }
         bind $but <ButtonPress-1> "PanedWindow::_beg_move_sash $path $num %X %Y"
+        bind $sep <ButtonPress-1> "PanedWindow::_beg_move_sash $path $num %X %Y"
     } else {
         if { ![string compare $side "top"] || ![string compare $side "bottom"] } {
             grid rowconfigure $path 0 -weight 1

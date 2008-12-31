@@ -214,13 +214,20 @@ $st insert 5 [list Value: 0007 ""]
     #$uf config -bg blue
 
 #set frame6 [frame $st.f]
-set frame6 [frame $frame.f]  
+#set frame5 [frame $frame.f]
+#pack $frame5 -side bottom -ipady 4
+set frame6 [frame $frame.f1]  
+label $frame6.l_empty -text "  " -height 1 
 button $frame6.b_sav -text " Save " -command "YetToImplement"
+label $frame6.l_empty1 -text "  "
 button $frame6.b_dis -text "Discard" -command "YetToImplement"
-grid config $frame6.b_sav -row 0 -column 0
-grid config $frame6.b_dis -row 0 -column 1
-pack $frame6
-
+grid config $frame6.l_empty -row 0 -column 0 -columnspan 2
+grid config $frame6.b_sav -row 1 -column 0 -sticky s
+grid config $frame6.l_empty1 -row 1 -column 1 -sticky s
+grid config $frame6.b_dis -row 1 -column 2 -sticky s
+#pack $frame6 -pady 4
+pack $frame6 -side bottom
+#pack $frame6 -side bottom -ipady 4
     incr Editor::index_counter
     #return [list $frame $pageName]
     #return [list $uf $pageName]

@@ -114,7 +114,7 @@ proc Editor::aboutBox {} {\
     grab $aboutWindow
     wm title	 $aboutWindow	"About"
     wm protocol $aboutWindow WM_DELETE_WINDOW "destroy $aboutWindow"
-    label $aboutWindow.l_msg -image [Bitmap::get info] -compound left -text "\n   Host Target Interactive TestSuite-2.0\n     (Based On DejaGNU & TCL/Tk)   \n           Designed by       \nKalycito Infotech Private Limited.  \n   For use by Sagem Communications   \n" 
+    label $aboutWindow.l_msg -image [Bitmap::get info] -compound left -text "\n   PowerLink Configurator Tool       \n       Designed by       \nKalycito Infotech Private Limited.  \n"
     button $aboutWindow.bt_ok -text Ok -command "destroy $aboutWindow"
     grid config $aboutWindow.l_msg -row 0 -column 0 
     grid config $aboutWindow.bt_ok -row 1 -column 0
@@ -3299,7 +3299,9 @@ proc saveproject { } {
 #
 ########################################################################
 proc saveProjectAsWindow {} {
-	
+	global tmpPjtName
+	global tmpPjtDir
+
 	set winSavProjAs .savProjAs
 	catch "destroy $winSavProjAs"
 	toplevel $winSavProjAs
@@ -3326,7 +3328,7 @@ proc saveProjectAsWindow {} {
 	entry $titleInnerFrame1.en_pjname -textvariable tmpPjtName -background white -relief ridge
 	
 	label $titleInnerFrame1.l_pjpath -text "Project Path :" -justify left
-	#set tmpPjtDir [pwd]
+	set tmpPjtDir ""
 	entry $titleInnerFrame1.en_pjpath -textvariable tmpPjtDir -background white -relief ridge -width 35
 	button $titleInnerFrame1.bt_pjpath -text Browse -command {
 		set tmpPjtDir [tk_chooseDirectory -title "Save Project at" -parent .savProjAs]
@@ -3381,9 +3383,12 @@ proc saveProjectAsWindow {} {
 
 	grid config $winSavProjAs.l_empty4 -row 2 -column 0 
 
-	wm protocol .savProjAs WM_DELETE_WINDOW { 
-		 destroy .savProjAs
-       }
+	#wm protocol .savProjAs WM_DELETE_WINDOW { 
+	#	 destroy .savProjAs
+        #}
+	wm protocol .savProjAs WM_DELETE_WINDOW "$frame1.bt_cancel invoke"
+	bind $winSavProjAs <KeyPress-Return> "$frame1.bt_ok invoke"
+	bind $winSavProjAs <KeyPress-Escape> "$frame1.bt_cancel invoke"
 }
 #######################################################################
 # proc newprojectwindow
@@ -3418,6 +3423,9 @@ proc newprojectWindow {} {
 				#}
 	   		#}
 	#}
+	global tmpPjtName
+	global tmpPjtDir
+	global tmpImpDir
 
 	set winNewProj .newprj
 	catch "destroy $winNewProj"
@@ -3448,8 +3456,8 @@ proc newprojectWindow {} {
 	set tmpPjtDir ""
 	entry $titleInnerFrame1.en_pjpath -textvariable tmpPjtDir -background white -relief ridge -width 35
 	button $titleInnerFrame1.bt_pjpath -text Browse -command {
-		set tmpImpDir [tk_chooseDirectory -title "Project Location" -parent .newprj]
-		if {$tmpImpDir == ""} {
+		set tmpPjtDir [tk_chooseDirectory -title "Project Location" -parent .newprj]
+		if {$tmpPjtDir == ""} {
 			focus .newprj
 			return
 		}
@@ -3464,12 +3472,13 @@ proc newprojectWindow {} {
 	#checkbutton $titleInnerFrame2.ch_imp -text "Import XDC/XD" -variable import -onvalue 1 -offvalue 0 -command { }
 
 	entry $titleInnerFrame2.en_imppath -textvariable tmpImpDir -background white -relief ridge -width 35
+	set tmpImpDir ""
 	button $titleInnerFrame2.bt_imppath -text Browse -command {
 		set types {
 		        {"XDC Files"     {.xdc } }
 		        {"XDD Files"     {.xdd } }
 		}
-		set tmpImpDir [tk_getOpenFile -title "Import XDC/XD" -filetypes $types -parent .newprj]
+		set tmpImpDir [tk_getOpenFile -title "Import XDC/XDD" -filetypes $types -parent .newprj]
 		if {$tmpImpDir == ""} {
 			focus .newprj
 			return
@@ -3503,6 +3512,18 @@ proc newprojectWindow {} {
 			focus .newprj
 			return
 		}
+		if {![file isdirectory $tmpPjtDir]} {
+			tk_messageBox -message "Entered path for Project is not a directory" -icon error -parent .newprj
+			focus .newprj
+			return
+		
+		}
+		if {$conf=="off" && ![file isfile $tmpImpDir]} {
+			tk_messageBox -message "Entered path for Import XDC/XDD not exist " -icon error -parent .newprj
+			focus .newprj
+			return
+		}
+
 		#if {![file isdirectory $tmpPjtDir]} {
 		#	tk_messageBox -message "Entered path for project is not a Directory" -icon error
 		#	focus .newprj
@@ -3543,9 +3564,13 @@ proc newprojectWindow {} {
 	
 	grid config $winNewProj.l_empty1 -row 7 -column 0 
 
-	wm protocol .newprj WM_DELETE_WINDOW { 
-		destroy .newprj
-       }
+	#wm protocol .newprj WM_DELETE_WINDOW { 
+	#	destroy .newprj
+       # }
+
+	wm protocol .newprj WM_DELETE_WINDOW "$frame1.bt_cancel invoke"
+	bind $winNewProj <KeyPress-Return> "$frame1.bt_ok invoke"
+	bind $winNewProj <KeyPress-Escape> "$frame1.bt_cancel invoke"
 }
 
 #######################################################################
@@ -4025,23 +4050,23 @@ proc Editor::create { } {
             {command "E&xit" {}  "Exit openCONFIGURATOR" {Alt x} -command Editor::exit_app}
         }
         "&Project" {} {} 0 {
-            {command "Build Project" {noFile} "Generate CDC and XML" {F7} -command YetToImplement }
-            {command "Rebuild Project" {noFile} "Clean and Build" {Ctrl+F7} -command YetToImplement }
+            {command "Build Project    F7" {noFile} "Generate CDC and XML" {} -command YetToImplement }
+            {command "Rebuild Project  Ctrl+F7" {noFile} "Clean and Build" {} -command YetToImplement }
 	    {command "Clean Project" {noFile} "Clean" {} -command YetToImplement }
 	    {command "Stop Build" {}  "Reserved" {} -command YetToImplement -state disabled}
             {separator}
             {command "Project Settings" {}  "Project Settings" {} -command YetToImplement }
         }
         "&Connection" all options 0 {
-            {command "Connect to POWERLINK network" {noFile} "Establish connection with POWERLINK network" {} -command YetToImplement }
-            {command "Disconnect from POWERLINK network" {noFile} "Disconnect from POWERLINK network" {} -command YetToImplement }
+            {command "Connect to POWERLINK network" {noFile} "Establish connection with POWERLINK network" {} -command Connect }
+            {command "Disconnect from POWERLINK network" {noFile} "Disconnect from POWERLINK network" {} -command Disconnect }
 	    {separator}
             {command "Connection Settings" {}  "Connection Settings" {} -command ConnSettWindow -state normal}
         }
         "&Actions" all options 0 {
             {command "SDO Read/Write" {noFile} "Do SDO Read or Write" {} -command YetToImplement -state disabled}
-            {command "Transfer CDC" {noFile} "Transfer CDC" {Ctrl+F5} -command YetToImplement }
-            {command "Transfer XML" {noFile} "Transfer XML" {Ctrl+F6} -command YetToImplement }
+            {command "Transfer CDC   Ctrl+F5" {noFile} "Transfer CDC" {} -command YetToImplement }
+            {command "Transfer XML   Ctrl+F6" {noFile} "Transfer XML" {} -command YetToImplement }
 	    {separator}
             {command "Start MN" {noFile} "Start the Managing Node" {} -command YetToImplement }
             {command "Stop MN" {noFile} "Transfer CDC" {} -command YetToImplement }
@@ -4079,16 +4104,16 @@ proc Editor::create { } {
         "&Help" {} {} 0 {
 	    {command "How to" {noFile} "How to Manual" {} -command YetToImplement }
 	    {separator}
-            {command "About" {} "About" {F1} -command "" }
+            {command "About" {} "About" {F1} -command Editor::aboutBox }
         }
     }
 
 #shortcut keys for project
-    bind . <F7> "puts {build project short cut}"
-    bind . <Control-F7> "puts {Rebuild project short cut}"
+    bind . <Key-F7> "puts {build project short cut}"
+    bind . <Control-Key-F7> "puts {Rebuild project short cut}"
 
-    bind . <Control-F5> "puts {Transfer CDC short cut}"
-    bind . <Control-F6> "puts {Transfer XML short cut}"
+    bind . <Control-Key-F5> "puts {Transfer CDC short cut}"
+    bind . <Control-Key-F6> "puts {Transfer XML short cut}"
 #############################################################################
 # Menu for the Test Group
 #############################################################################
@@ -4114,7 +4139,7 @@ proc Editor::create { } {
 			set types {
 			        {"All XDC Files"     {.XDC } }
 			}
-			tk_getOpenFile -title "Add TestCase" -filetypes $types -parent .
+			tk_getOpenFile -title "Import XDC" -filetypes $types -parent .
             		}
 	
     
@@ -4761,7 +4786,7 @@ $tbl columnconfigure 1 -font Courier
 
 #pack $pane4.tbl -fill both -expand yes -padx 4 -pady 4
 pack $pane4.tbl  -padx 4 -pady 4
-puts [$pane4.tbl cget -height]
+#puts [$pane4.tbl cget -height]
 #grid config $pane4.tbl -row 0 -column 0
 
 set frame4 [frame $pane4.f] 
@@ -5562,6 +5587,9 @@ proc AddMNCNWindow {} {
 	#global titleInnerFrame3
 	#global helpMsg
 	#global disptext
+	global Name
+	global nodeId
+
 	#set testGroupName ""
 	#set execCount 1
 	set winAddMNCN .addMNCN
@@ -5592,13 +5620,13 @@ proc AddMNCNWindow {} {
 
 	set frame2 [frame $titleInnerFrame1.fram2]
 	label $frame2.l_name -text "Name :   " -justify left
-	set Name ""
-	entry $frame2.en_name -textvariable Name -background white -relief ridge
-	
-	label $frame2.l_node -text "Node ID :" -justify left
-	#set nodeId ""
-	entry $frame2.en_node -textvariable nodeId -background white -relief ridge 
 
+	entry $frame2.en_name -textvariable Name -background white -relief ridge
+	set Name ""	
+	label $frame2.l_node -text "Node ID :" -justify left
+
+	entry $frame2.en_node -textvariable nodeId -background white -relief ridge -validate key -vcmd {expr {[string len %P] <= 3} && {[string is int %P]}}
+	set nodeId ""
 	
 	label $titleInnerFrame1.l_empty3 -text "               "
 
@@ -5626,7 +5654,7 @@ proc AddMNCNWindow {} {
 	$titleInnerFrame3.bt_imppath config -state disabled 
 #global conf
 #set conf off
-	radiobutton $titleInnerFrame3.ra_def -text "Default" -variable conf -value on  -command {
+	radiobutton $titleInnerFrame3.ra_def -text "Default" -variable confCn -value on  -command {
 			.addMNCN.titleFrame1.f.titleFrame3.f.en_imppath config -state disabled 
 			.addMNCN.titleFrame1.f.titleFrame3.f.bt_imppath config -state disabled 
 			#$titleInnerFrame3.en_imppath config -state disabled 
@@ -5634,7 +5662,7 @@ proc AddMNCNWindow {} {
 	}		
 
 	
-	radiobutton $titleInnerFrame3.ra_imp -text "Import XDC/XDD" -variable conf -value off -command {
+	radiobutton $titleInnerFrame3.ra_imp -text "Import XDC/XDD" -variable confCn -value off -command {
 			.addMNCN.titleFrame1.f.titleFrame3.f.en_imppath config -state normal 
 			.addMNCN.titleFrame1.f.titleFrame3.f.bt_imppath config -state normal 
 			#$titleInnerFrame3.en_imppath config -state disabled
@@ -5648,7 +5676,7 @@ proc AddMNCNWindow {} {
 
 	set frame1 [frame $titleInnerFrame1.fram1]
 	button $frame1.bt_ok -text "  Ok  " -command {
-		set PjtName [string trim $PjtName]
+		set Name [string trim $Name]
 		if {$Name == "" } {
 			tk_messageBox -message "Enter MN/CN Name" -title "Set Node Name error" -parent .addMNCN -icon error
 			focus .addMNCN
@@ -5659,19 +5687,25 @@ proc AddMNCNWindow {} {
 			focus .addMNCN
 			return
 		}
-
-
+		if {$nodeId < 1 ||$nodeId > 239 } {
+			tk_messageBox -message "Node id value range is 1 to 239" -parent .addMNCN -icon error
+			focus .addMNCN
+			return
+		}
+		
+		if {$confCn=="off" && ![file isfile $tmpImpDir]} {
+			tk_messageBox -message "Entered path for Import XDC/XDD not exist " -icon error -parent .addMNCN
+			focus .addMNCN
+			return
+		}
 
 		#AddTestGroup $Name
-		AddMNCN $Name
+		set chk [AddMNCN $Name]
 		destroy .addMNCN
 	}
 
 	button $frame1.bt_cancel -text Cancel -command { 
-							
 		destroy .addMNCN
-							
-						
 	}
 
 
@@ -5719,9 +5753,13 @@ proc AddMNCNWindow {} {
 
 
 	wm protocol $winAddMNCN WM_DELETE_WINDOW {
-							
-							destroy .addMNCN
-						   }
+		destroy .addMNCN
+        }
+
+	wm protocol .addMNCN WM_DELETE_WINDOW "$frame1.bt_cancel invoke"
+	bind $winAddMNCN <KeyPress-Return> "$frame1.bt_ok invoke"
+	bind $winAddMNCN <KeyPress-Escape> "$frame1.bt_cancel invoke"
+
 }
 
 proc AddMNCN {Name} {
@@ -5732,10 +5770,11 @@ proc AddMNCN {Name} {
 	incr TotalTestGroup
 	incr tg_count
 	set child [$updatetree insert $TotalTestGroup OBD TestGroup-$TotalTestGroup -text "$Name" -open 1 -image [Bitmap::get openfold]]
-	set child [$updatetree insert 0 Config-$TotalTestGroup TestGroup-$TotalTestGroup -text "NMT_Cycle(1006)"  -open 0 -image [Bitmap::get right]]
+	#incr TotalTestGroup
+	#set child [$updatetree insert 0 Config-$TotalTestGroup TestGroup-$TotalTestGroup -text "NMT_Cycle(1006)"  -open 0 -image [Bitmap::get right]]
 	#Insert groupExecCount, groupTestCase,Message
-#	incr TotalTestGroup
-	set child [$updatetree insert 1 Config-$TotalTestGroup TestGroup-$TotalTestGroup -text "Pdomapping"  -open 0 -image [Bitmap::get palette]]
+	#incr TotalTestGroup
+	#set child [$updatetree insert 1 Config-$TotalTestGroup TestGroup-$TotalTestGroup -text "Pdomapping"  -open 0 -image [Bitmap::get palette]]
 	#set child [$updatetree insert 2 Config-$TotalTestGroup groupExecCount-$TotalTestGroup -text $execCount -open 0 -image [Bitmap::get palette]]
 #AddTestCase
 
@@ -5773,6 +5812,8 @@ proc AddMNCN {Name} {
 	#Reads the variables and updates the tree 
 	########################################################################
 #	set child [$updatetree insert $TotalTestGroup OBD TestGroup-$TotalTestGroup -text "$Name" -open 1 -image [Bitmap::get openfold]]
+
+	return
 }
 
 
@@ -6718,10 +6759,13 @@ proc AddPDOProc {} {
 	global mode_continuous
 	global mode_sequence
 	global titleInnerFrame1
-	global helpMsg
-	global disptext
+	
+	global pdostartValue
+	global mapEntValue
+	global noPDOValue
+	global pdoType
 	set testGroupName ""
-	set execCount 1
+	#set execCount 1
 	set winAddPDO .addPDO
 	catch "destroy $winAddPDO"
 	toplevel     $winAddPDO
@@ -6771,13 +6815,13 @@ proc AddPDOProc {} {
 #	grid config $titleInnerFrame2.l_empty4  -row 0 -column 0 
 	
 	label $frame1.l_pdostart -text "PDO Starting number \[1-255\] :"
-	entry $frame1.en_pdostart -textvariable pdostartValue -background white -validate key -vcmd {expr {[string len %P] <= 5} && {[string is int %P]}}
+	entry $frame1.en_pdostart -textvariable pdostartValue -background white -validate key -vcmd {expr {[string len %P] <= 3} && {[string is int %P]}}
 
 	label $frame1.l_MapEnt -text   "Mapping Entries \[1-254\] :"
-	entry $frame1.en_MapEnt -textvariable MapEntValue -background white -validate key -vcmd {expr {[string len %P] <= 5} && {[string is int %P]}}
+	entry $frame1.en_MapEnt -textvariable mapEntValue -background white -validate key -vcmd {expr {[string len %P] <= 3} && {[string is int %P]}}
 
 	label $frame1.l_NoPDO -text    "Number of PDOs \[1-255\] :"
-	entry $frame1.en_NoPDO -textvariable NoPDOValue -background white -validate key -vcmd {expr {[string len %P] <= 5} && {[string is int %P]}}
+	entry $frame1.en_NoPDO -textvariable noPDOValue -background white -validate key -vcmd {expr {[string len %P] <= 3} && {[string is int %P]}}
 
 #button $frame3.bt_name -text Browse -command {
 #						set types {
@@ -6807,7 +6851,7 @@ proc AddPDOProc {} {
 	#grid config $titleInnerFrame2.l_mode  -row 3 -column 0 
 	
 	#variables used for radio buttons
-	set pdoType on
+	set pdoType off
 	
 	radiobutton $frame4.ra_inter -text "Transmit PDO" -variable pdoType   -value on 
 	radiobutton $frame4.ra_bat   -text "Receive PDO"  -variable pdoType   -value off 
@@ -6840,50 +6884,47 @@ proc AddPDOProc {} {
 #	grid config $titleInnerFrame1.ch_help -row 4 -column 0
 #	label $titleInnerFrame1.l_empty7 -text ""
 #	grid config $titleInnerFrame1.l_empty7  -row 7 -column 0
+
+
 	button $frame5.b_ok -text "  Add  " -command { 
-							YetToImplement
-							font delete custom1
-							destroy .addPDO
-						    }
+		if {$pdostartValue < 1 ||$pdostartValue > 255 } {
+			tk_messageBox -message "PDO Starting number value range is 1 to 255" -parent .addPDO -icon error
+			focus .addPDO
+			return
+		}
+		if {$mapEntValue < 1 ||$mapEntValue > 254 } {
+			tk_messageBox -message "Mapping Entries value range is 1 to 254" -parent .addPDO -icon error
+			focus .addPDO
+			return
+		}
+		if {$noPDOValue < 1 ||$noPDOValue > 255 } {
+			tk_messageBox -message "Number of PDOs value range is 1 to 255" -parent .addPDO -icon error
+			focus .addPDO
+			return
+		}
+		font delete custom1
+		destroy .addPDO
+	}
 	button $frame5.b_cancel -text "Cancel" -command {
-								destroy .addPDO
-								font delete custom1
-							}
+		destroy .addPDO
+		font delete custom1
+	}
 	grid config $frame5.b_ok  -row 0 -column 0 
 	grid config $frame5.b_cancel -row 0 -column 1
 	grid config $frame5 -row 7 -column 0 
-	bind $winAddPDO <KeyPress-Return> {  
-							set testGroupName [string trim $testGroupName]
-							if {$testGroupName==""} {
-								tk_messageBox -message "Enter TestGroup name" -icon error -parent .addTestGroup
-								return
-							}
-							set execCount [string trim $execCount]
-							if {$execCount==""} {
-								tk_messageBox -message "Enter value for Execution Count" -icon error -parent .addTestGroup
-								return
-							} elseif {$execCount>10000} {
-								tk_messageBox -message "Enter value less than 10000" -icon error -parent .addTestGroup
-								return
-							}
-#							if {$disptext==1} {
-#								set helpMsg [string trim [$titleInnerFrame1.t_help get @0,0 end]]
-#							} else {
-#								set helpMsg ""
-#							}
-							AddTestGroup
-							font delete custom1
-							destroy .addTestGroup
-						    }
+	
 	label $winAddPDO.l_empty8 -text ""
 	grid config $winAddPDO.l_empty8 -row 2 -column 0 -sticky "news"
 
-	wm protocol .addPDO WM_DELETE_WINDOW {
-							font delete custom1
-							destroy .addTestGroup
-						   }
+	#wm protocol .addPDO WM_DELETE_WINDOW {
+	#	font delete custom1
+	#	destroy .addTestGroup
+	#}
+	wm protocol .addPDO WM_DELETE_WINDOW "$frame5.b_cancel invoke"
+	bind $winAddPDO <KeyPress-Return> "$frame5.b_ok invoke"
+	bind $winAddPDO <KeyPress-Escape> "$frame5.b_cancel invoke"
 }
-
+#########################################################################3
 proc createSaveButton {tbl row col w} {
     set key [$tbl getkeys $row]
 #    button $w -image [Bitmap::get openfold] -highlightthickness 0 -takefocus 0 \
@@ -6916,8 +6957,17 @@ proc connectio {} {
 	        .mainframe.topf.tb0.bbox8.b0 configure -image [Bitmap::get disconnect]
 	}
 }
+proc Connect {} {
+	.mainframe.topf.tb0.bbox8.b0 configure -image [Bitmap::get disconnect]
+}
+
+proc Disconnect {} {
+	.mainframe.topf.tb0.bbox8.b0 configure -image [Bitmap::get connect]
+}
+
 
 proc ConnSettWindow {} {
+	global connIpAddr
 	set winConnSett .connSett
 	catch "destroy $winConnSett"
 	toplevel     $winConnSett
@@ -6935,6 +6985,7 @@ proc ConnSettWindow {} {
 	label $winConnSett.l_empty2 -text ""
 	label $winConnSett.l_empty3 -text ""
 
+	set connIpAddr ""
 	entry $frame1.en_ip -textvariable connIpAddr -background white -relief ridge -validate all -vcmd "isIP %P %V"
 
 	button $frame2.b_ok -text "  Ok  " -command { 
@@ -6957,9 +7008,12 @@ proc ConnSettWindow {} {
 	grid config $frame2.b_ok -row 0 -column 0
 	grid config $frame2.b_cancel -row 0 -column 1
 
-	wm protocol .connSett WM_DELETE_WINDOW {
-		destroy .connSett
-	}
+	#wm protocol .connSett WM_DELETE_WINDOW {
+	#	destroy .connSett
+	#}
+	wm protocol .connSett WM_DELETE_WINDOW "$frame2.b_cancel invoke"
+	bind $winConnSett <KeyPress-Return> "$frame2.b_ok invoke"
+	bind $winConnSett <KeyPress-Escape> "$frame2.b_cancel invoke"
 
 }
 

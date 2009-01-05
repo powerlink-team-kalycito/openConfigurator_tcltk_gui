@@ -1,6 +1,6 @@
 ################################################################################
 #									
-# Script:	main.tcl						
+# Script:	operations.tcl						
 #									
 # Author:	Kalycito Infotech Pvt Ltd		
 #									
@@ -14,6 +14,8 @@
 source $RootDir/record.tcl
 source $RootDir/xmlread.tcl
 source $RootDir/ReadResultXml.tcl
+source $RootDir/windows.tcl
+source $RootDir/validation.tcl
 
 ##
 # For Tablelist Package
@@ -463,7 +465,7 @@ proc Editor::scanLine {} {
 
 proc Editor::updateOnIdle {range} {
     variable current
-    # if there?s a pending update only store new range
+    # if there�s a pending update only store new range
     if {$current(isUpdate)} {
         if {[$current(text) compare $current(updateStart) > [lindex $range 0]]} {
             set current(updateStart) [$current(text) index [lindex $range 0]]
@@ -683,7 +685,7 @@ proc Editor::tdelNode {node} {
     
     regsub -all " " $node \306 node
     regsub ":$" $node \327 node
-    regsub -all "\\\$" $node "?" node
+    regsub -all "\\\$" $node "�" node
     $treeWindow delete $node
 }
 
@@ -713,7 +715,7 @@ proc Editor::tnewNode {nodedata} {
     # mask ending single : in node name
     regsub ":$" $node \327 node
     # mask "$" in nodename
-    regsub -all "\\\$" $node "?" node
+    regsub -all "\\\$" $node "�" node
     # mask instance number
     regsub "\367.+\376$" $node "" node
     
@@ -724,7 +726,7 @@ proc Editor::tnewNode {nodedata} {
     if {$current(checkRootNode) != 0} {
         # if node doesn't present a qualified name,
         # which presents it's rootnode by itself (e.g. test::test)
-        # try to set it?s rootnode
+        # try to set it�s rootnode
         # use regsub to count qualifiers (# in nodes instead of ::)
         if {[regsub -all -- {#} $node "" dummy] > 1} {
             # do nothing
@@ -743,10 +745,10 @@ proc Editor::tnewNode {nodedata} {
     set rootnode [string range $node 0 [expr [string last \# $node] -1]]
     set name [string range $node [expr [string last \# $node]+1] end]
     
-    # get rid of the ? in the node
+    # get rid of the � in the node
     regsub -all \306 $name " " name
     regsub \327 $name ":" name
-    regsub -all "?" $name "\$" name
+    regsub -all "�" $name "\$" name
     if {$name == ""} {
         set name $node
     }
@@ -933,7 +935,7 @@ proc Editor::topen {path} {
     variable current
     regsub -all " " $current(file) \306 node
     regsub ":$" $node \327 node
-    regsub -all "\\\$" $node "?" node
+    regsub -all "\\\$" $node "�" node
 #    $treeWindow opentree $node
 	## commented for avoid opening all nodes and subnodes.
 	#$treeWindow opentree $path
@@ -952,7 +954,7 @@ proc Editor::tclose {} {
     set node $current(file)
     regsub -all " " $node \306 node
     regsub ":$" $node \327 node
-    regsub -all "\\\$" $node "?" node
+    regsub -all "\\\$" $node "�" node
     $treeWindow closetree $node
 }
 ################################################################################
@@ -1050,7 +1052,7 @@ proc Editor::tselectObject {node} {
 			set filename $node
 		}
 		
-		#get rid of the ? (as a substitude for a space) in the filename
+		#get rid of the � (as a substitude for a space) in the filename
 		regsub -all \306 $filename " " filename
 		set pagelist [array names ::Editor::text_win]
 		set found 0
@@ -1151,7 +1153,7 @@ proc Editor::torder {node} {
     
     regsub -all " " $node \306 node
     regsub ":$" $node \327 node
-    regsub -all "\\\$" $node "?" node
+    regsub -all "\\\$" $node "�" node
     
     proc sortTree {node} {
         variable treeWindow
@@ -1402,7 +1404,7 @@ proc Editor::chooseWish {} {
                 -type yesnocancel] {
                     yes {
                         foreach slaveInterp [interp slaves] {
-                            # don?t delete console interpreter
+                            # don�t delete console interpreter
                             if {$slaveInterp != "Console"} {
                                 Editor::exitSlave $slaveInterp
                             }
@@ -1909,7 +1911,7 @@ proc Editor::saveAll {} {
         set idx $Editor::index($textWin)
         if {$Editor::text_win($idx,writable) == 0} {
             set filename $Editor::text_win($idx,file)
-            tk_messageBox -message "File is write protected!\nCan?t save $filename !"
+            tk_messageBox -message "File is write protected!\nCan�t save $filename !"
             continue
         }
         set data [$textWin get 1.0 "end -1c"]
@@ -2027,7 +2029,7 @@ proc Editor::_saveFileas {filename data} {
                     close $fd
                     . configure -cursor $cursor
                     }]} {
-                tk_messageBox -message "Can?t save file $file\nMaybe no write permission!"
+                tk_messageBox -message "Can�t save file $file\nMaybe no write permission!"
                 set file ""
             }
         }
@@ -2896,7 +2898,7 @@ proc saveproject { } {
         	set idx $Editor::index($textWin)
         	if {$Editor::text_win($idx,writable) == 0} {
             		set filename $Editor::text_win($idx,file)
-            		tk_messageBox -message "File is write protected!\nCan?t save $filename !"
+            		tk_messageBox -message "File is write protected!\nCan�t save $filename !"
             		continue
         	}
         set data [$textWin get 1.0 "end -1c"]
@@ -2914,328 +2916,7 @@ proc saveproject { } {
 }
 
 
-#######################################################################
-# proc saveProjectAsWindow
-#
-########################################################################
-proc saveProjectAsWindow {} {
-	global tmpPjtName
-	global tmpPjtDir
 
-	set winSavProjAs .savProjAs
-	catch "destroy $winSavProjAs"
-	toplevel $winSavProjAs
-	wm title     $winSavProjAs	"Project Wizard"
-	wm resizable $winSavProjAs 0 0
-	wm transient $winSavProjAs .
-	wm deiconify $winSavProjAs
-	wm minsize   $winSavProjAs 50 200
-	grab $winSavProjAs
-
-	label $winSavProjAs.l_empty -text "               "
-
-	set titleFrame1 [TitleFrame $winSavProjAs.titleFrame1 -text "Save Project as" ]
-	set titleInnerFrame1 [$titleFrame1 getframe]
-
-
-	
-	label $winSavProjAs.l_empty1 -text "               "
-	
-	label $titleInnerFrame1.l_empty2 -text "               "
-
-	label $titleInnerFrame1.l_pjname -text "Project Name :" -justify left
-	set tmpPjtName ""
-	entry $titleInnerFrame1.en_pjname -textvariable tmpPjtName -background white -relief ridge
-	
-	label $titleInnerFrame1.l_pjpath -text "Project Path :" -justify left
-	set tmpPjtDir ""
-	entry $titleInnerFrame1.en_pjpath -textvariable tmpPjtDir -background white -relief ridge -width 35
-	button $titleInnerFrame1.bt_pjpath -text Browse -command {
-		set tmpPjtDir [tk_chooseDirectory -title "Save Project at" -parent .savProjAs]
-		if {$tmpPjtDir == ""} {
-			focus .savProjAs
-			return
-		}
-	}
-	label $titleInnerFrame1.l_empty3 -text "               "
-	set frame1 [frame $titleInnerFrame1.fram1]
-	button $frame1.bt_ok -text "  Ok  " -command {
-		set tmpPjtName [string trim $tmpPjtName]
-		if {$tmpPjtName == "" } {
-			tk_messageBox -message "Enter Project Name" -title "Set Project Name error" -parent .savProjAs -icon error
-			focus .savProjAs
-			return
-		}
-		if {![file isdirectory $tmpPjtDir]} {
-			tk_messageBox -message "Entered path for project is not a Directory" -parent .savProjAs -icon error
-			focus .savProjAs
-			return
-		}
-						
-						
-					
-						
-		destroy .savProjAs
-	}
-
-	button $frame1.bt_cancel -text Cancel -command { 
-	
-		destroy .savProjAs
-	}
-
-	label $winSavProjAs.l_empty4 -text "               "
-
-	grid config $winSavProjAs.l_empty -row 0 -column 0 
-	
-	grid config $titleFrame1 -row 1 -column 0 -sticky "news" -ipadx 10 -padx 10 -ipady 10
-	#grid config $winNewProj.l_empty1 -row 2 -column 0 
-	#grid config $titleInnerFrame1.l_empty2 -row 0 -column 0 
-	grid config $titleInnerFrame1.l_pjname -row 1 -column 0 
-	grid config $titleInnerFrame1.en_pjname -row 1 -column 1 -sticky "w"
-	grid config $titleInnerFrame1.l_pjpath -row 2 -column 0 
-	grid config $titleInnerFrame1.en_pjpath -row 2 -column 1 -sticky "w"
-	grid config $titleInnerFrame1.bt_pjpath -row 2 -column 2 
-	
-	grid config $titleInnerFrame1.l_empty3 -row 3 -column 0 
-	grid config $frame1 -row 6 -column 1 
-	grid config $frame1.bt_ok -row 0 -column 0 
-	grid config $frame1.bt_cancel -row 0 -column 1 
-
-	grid config $winSavProjAs.l_empty4 -row 2 -column 0 
-
-	#wm protocol .savProjAs WM_DELETE_WINDOW { 
-	#	 destroy .savProjAs
-        #}
-	wm protocol .savProjAs WM_DELETE_WINDOW "$frame1.bt_cancel invoke"
-	bind $winSavProjAs <KeyPress-Return> "$frame1.bt_ok invoke"
-	bind $winSavProjAs <KeyPress-Escape> "$frame1.bt_cancel invoke"
-}
-#######################################################################
-# proc newprojectwindow
-# Creates a new project
-########################################################################
-
-proc newprojectWindow {} {
-	#global PjtDir
-	#global PjtName	
-	#global tmpPjtDir
-	#global status_run
-	#global tg_count
-	#global profileName
-	#global pjtToolBoxPath
-	#global pjtTimeOut
-	#global pjtUserInclPath
-	#if { $status_run == 1 } {
-	#	Editor::RunStatusInfo
-	#}
-	#if {$PjtDir != "None"} {
-		#Prompt for Saving the Existing Project
-		#set result [tk_messageBox -message "Save Project $PjtName ?" -type yesnocancel -icon question -title 			#"Question"]
-			 #switch -- $result {
-	 		   #  yes {			 
-	   		   #      saveproject
-	   		    # }
-	   		    # no  {conPuts "Project $PjtName not saved" info}
-	   		    # cancel {
-					#set PjtDir None
-				#	conPuts "Create New Project Canceled" info
-				#	return
-				#}
-	   		#}
-	#}
-	global tmpPjtName
-	global tmpPjtDir
-	global tmpImpDir
-
-	set winNewProj .newprj
-	catch "destroy $winNewProj"
-	toplevel $winNewProj
-	wm title     $winNewProj	"Project Wizard"
-	wm resizable $winNewProj 0 0
-	wm transient $winNewProj .
-	wm deiconify $winNewProj
-	wm minsize   $winNewProj 50 200
-	grab $winNewProj
-
-	label $winNewProj.l_empty -text "               "
-
-	set titleFrame1 [TitleFrame $winNewProj.titleFrame1 -text "Create New Project" ]
-	set titleInnerFrame1 [$titleFrame1 getframe]
-
-
-	
-	label $winNewProj.l_empty1 -text "               "
-	
-	label $titleInnerFrame1.l_empty2 -text "               "
-
-	label $titleInnerFrame1.l_pjname -text "Project Name :" -justify left
-	set tmpPjtName ""
-	entry $titleInnerFrame1.en_pjname -textvariable tmpPjtName -background white -relief ridge
-	
-	label $titleInnerFrame1.l_pjpath -text "Project Path :" -justify left
-	set tmpPjtDir ""
-	entry $titleInnerFrame1.en_pjpath -textvariable tmpPjtDir -background white -relief ridge -width 35
-	button $titleInnerFrame1.bt_pjpath -text Browse -command {
-		set tmpPjtDir [tk_chooseDirectory -title "Project Location" -parent .newprj]
-		if {$tmpPjtDir == ""} {
-			focus .newprj
-			return
-		}
-	}
-
-	label $titleInnerFrame1.l_empty3 -text "               "
-
-
-	set titleFrame2 [TitleFrame $titleInnerFrame1.titleFrame2 -text "MN Config" ]
-	set titleInnerFrame2 [$titleFrame2 getframe]
-	#checkbutton $titleInnerFrame2.ch_def -text "Default" -variable default -onvalue 1 -offvalue 0 -command { }
-	#checkbutton $titleInnerFrame2.ch_imp -text "Import XDC/XD" -variable import -onvalue 1 -offvalue 0 -command { }
-
-	entry $titleInnerFrame2.en_imppath -textvariable tmpImpDir -background white -relief ridge -width 35
-	set tmpImpDir ""
-	button $titleInnerFrame2.bt_imppath -text Browse -command {
-		set types {
-		        {"XDC Files"     {.xdc } }
-		        {"XDD Files"     {.xdd } }
-		}
-		set tmpImpDir [tk_getOpenFile -title "Import XDC/XDD" -filetypes $types -parent .newprj]
-		if {$tmpImpDir == ""} {
-			focus .newprj
-			return
-		}
-       }
-
-	$titleInnerFrame2.en_imppath config -state disabled 
-	$titleInnerFrame2.bt_imppath config -state disabled 
-
-	radiobutton $titleInnerFrame2.ra_def -text "Default" -variable conf -value on -command {
-			.newprj.titleFrame1.f.titleFrame2.f.en_imppath config -state disabled 
-			.newprj.titleFrame1.f.titleFrame2.f.bt_imppath config -state disabled 
-			#$titleInnerFrame2.en_imppath config -state disabled
-			#$titleInnerFrame2.bt_imppath config -state disabled 
-	}
-	radiobutton $titleInnerFrame2.ra_imp -text "Import XDC/XDD" -variable conf -value off -command {
-			.newprj.titleFrame1.f.titleFrame2.f.en_imppath config -state normal 
-			.newprj.titleFrame1.f.titleFrame2.f.bt_imppath config -state normal 
-			#$titleInnerFrame2.en_imppath config -state normal
-			#$titleInnerFrame2.bt_imppath config -state normal 
-	} 
-	$titleInnerFrame2.ra_def select
-
-	label $titleInnerFrame1.l_empty4 -text "               "
-
-	set frame1 [frame $titleInnerFrame1.fram1]
-	button $frame1.bt_ok -text "  Ok  " -command {
-		set tmpPjtName [string trim $tmpPjtName]
-		if {$tmpPjtName == "" } {
-			tk_messageBox -message "Enter Project Name" -title "Set Project Name error" -icon error
-			focus .newprj
-			return
-		}
-		if {![file isdirectory $tmpPjtDir]} {
-			tk_messageBox -message "Entered path for Project is not a directory" -icon error -parent .newprj
-			focus .newprj
-			return
-		
-		}
-		if {$conf=="off" && ![file isfile $tmpImpDir]} {
-			tk_messageBox -message "Entered path for Import XDC/XDD not exist " -icon error -parent .newprj
-			focus .newprj
-			return
-		}
-
-		#if {![file isdirectory $tmpPjtDir]} {
-		#	tk_messageBox -message "Entered path for project is not a Directory" -icon error
-		#	focus .newprj
-		#	return
-		#}
-		destroy .newprj
-	}
-
-	button $frame1.bt_cancel -text Cancel -command { 
-		destroy .newprj
-	}
-
-	grid config $winNewProj.l_empty -row 0 -column 0 
-	
-	grid config $titleFrame1 -row 1 -column 0 -sticky "news" -ipadx 10 -padx 10 -ipady 10
-	#grid config $winNewProj.l_empty1 -row 2 -column 0 
-	#grid config $titleInnerFrame1.l_empty2 -row 0 -column 0 
-	grid config $titleInnerFrame1.l_pjname -row 1 -column 0 
-	grid config $titleInnerFrame1.en_pjname -row 1 -column 1 -sticky "w"
-	grid config $titleInnerFrame1.l_pjpath -row 2 -column 0 
-	grid config $titleInnerFrame1.en_pjpath -row 2 -column 1 -sticky "w"
-	grid config $titleInnerFrame1.bt_pjpath -row 2 -column 2 
-	
-	grid config $titleInnerFrame1.l_empty3 -row 3 -column 0 
-
-	grid config $titleFrame2 -row 4 -column 0 -columnspan 3 -sticky "news"
-	grid config $titleInnerFrame2.ra_def -row 0 -column 0 -sticky "w"
-	grid config $titleInnerFrame2.ra_imp -row 1 -column 0
-	grid config $titleInnerFrame2.en_imppath -row 1 -column 1
-	grid config $titleInnerFrame2.bt_imppath -row 1 -column 2
- 
-
-	grid config $titleInnerFrame1.l_empty4 -row 5 -column 0 
-	
-	grid config $frame1 -row 6 -column 1 
-	grid config $frame1.bt_ok -row 0 -column 0 
-	grid config $frame1.bt_cancel -row 0 -column 1 
-	
-	grid config $winNewProj.l_empty1 -row 7 -column 0 
-
-	#wm protocol .newprj WM_DELETE_WINDOW { 
-	#	destroy .newprj
-       # }
-
-	wm protocol .newprj WM_DELETE_WINDOW "$frame1.bt_cancel invoke"
-	bind $winNewProj <KeyPress-Return> "$frame1.bt_ok invoke"
-	bind $winNewProj <KeyPress-Escape> "$frame1.bt_cancel invoke"
-}
-
-#######################################################################
-# proc closeproject
-# Saves the project if user selects the clears the structure
-########################################################################
-
-proc closeproject {} {
-	global PjtDir
-	global PjtName
-	if {$PjtDir == "" || $PjtDir == "None"} {
-		conPuts "No Project Selected" error
-		return
-	} else {	
-	set result [tk_messageBox -message "Save Project $PjtName ?" -type yesnocancel -icon question -title 			"Question"]
-   		 switch -- $result {
-   		     yes {			 
-   		         saveproject
-   		     }
-   		     no  {conPuts "Project $PjtName not saved" info}
-   		     cancel {
-				conPuts "Exit Canceled" info
-				return}
-   		}	
-	global updatetree
-	#Editor::tselectObject "TargetConfig"
-	Editor::closeFile
-	# Delete all the records
-	struct::record delete record recProjectDetail
-	struct::record delete record recTestGroup
-	struct::record delete record recTestCase
-	struct::record delete record recProfile
-	# Delete the Tree
-	$updatetree delete end root TestSuite
-	set PjtDir None
-		
-	##################################################################
-  	### Reading Datas from XML File
-    	##################################################################
-   	#readxml $filename
-    	##################################################################
-	#InsertTree
-	#Editor::tselectObject "TargetConfig"
-	}
-}
 
 
 ########################################################################
@@ -3345,7 +3026,7 @@ proc Editor::create { } {
             {command "Connect to POWERLINK network" {connect} "Establish connection with POWERLINK network" {} -command Connect }
             {command "Disconnect from POWERLINK network" {disconnect} "Disconnect from POWERLINK network" {} -command Disconnect }
 	    {separator}
-            {command "Connection Settings" {}  "Connection Settings" {} -command ConnSettWindow -state normal}
+            {command "Connection Settings" {}  "Connection Settings" {} -command ConnectionSettingWindow -state normal}
         }
         "&Actions" all options 0 {
             {command "SDO Read/Write" {noFile} "Do SDO Read or Write" {} -command YetToImplement -state disabled}
@@ -3412,7 +3093,7 @@ proc Editor::create { } {
     $Editor::cnMenu add cascade -label "Add" -menu $Editor::IndexaddMenu
     menu $Editor::IndexaddMenu -tearoff 0
     $Editor::IndexaddMenu add command -label "Add Index" -command {YetToImplement}
-    $Editor::IndexaddMenu add command -label "Add PDO Objects" -command {AddPDOProc}   
+    $Editor::IndexaddMenu add command -label "Add PDO Objects" -command {AddPDOWindow}   
 
 #	     -command {set cursor [. cget -cursor]
 #			YetToImplement
@@ -3436,7 +3117,7 @@ proc Editor::create { } {
 #############################################################################
     set Editor::mnMenu [menu  .mnMenu -tearoff 0]
 
-     $Editor::mnMenu add command -label "Add CN" -command {AddMNCNWindow} 
+     $Editor::mnMenu add command -label "Add CN" -command "AddCNWindow" 
      $Editor::mnMenu add separator
      $Editor::mnMenu add command -label "Auto Generate" -command {YetToImplement} 
 
@@ -4212,167 +3893,9 @@ proc getAbsolutePath {rel_path hom_path} {
 }
 
 
-#################################################################################################################
-# proc AddMNCNWindow
-#
-# pops up a window and gets all the details for a testgroup and calls AddTestGroup procedure to update in tree window # and in structure
-#####################################################################################################################
-proc AddMNCNWindow {} {
-	global Name
-	global nodeId
-
-	set winAddMNCN .addMNCN
-	catch "destroy $winAddMNCN"
-	toplevel     $winAddMNCN
-	wm title     $winAddMNCN "Add New Node"
-	wm resizable $winAddMNCN 0 0
-	wm transient $winAddMNCN .
-	wm deiconify $winAddMNCN
-	grab $winAddMNCN
-
-	label $winAddMNCN.l_empty -text ""	
-
-	set titleFrame1 [TitleFrame $winAddMNCN.titleFrame1 -text "Add CN" ]
-	set titleInnerFrame1 [$titleFrame1 getframe]
-
-	label $titleInnerFrame1.l_empty1 -text "               "
-	set titleFrame2 [TitleFrame $titleInnerFrame1.titleFrame2 -text "Select Node" ]
-	set titleInnerFrame2 [$titleFrame2 getframe]
-	radiobutton $titleInnerFrame2.ra_mn -text "Managing Node" -variable mncn -value on  
-	radiobutton $titleInnerFrame2.ra_cn -text "Controlled Node" -variable mncn -value off 
-	$titleInnerFrame2.ra_mn select
-
-	label $titleInnerFrame1.l_empty2 -text "               "
-
-	set frame2 [frame $titleInnerFrame1.fram2]
-	label $frame2.l_name -text "Name :   " -justify left
-
-	entry $frame2.en_name -textvariable Name -background white -relief ridge
-	set Name ""	
-	label $frame2.l_node -text "Node ID :" -justify left
-
-	entry $frame2.en_node -textvariable nodeId -background white -relief ridge -validate key -vcmd {expr {[string len %P] <= 3} && {[string is int %P]}}
-	set nodeId ""
-	
-	label $titleInnerFrame1.l_empty3 -text "               "
 
 
-	set titleFrame3 [TitleFrame $titleInnerFrame1.titleFrame3 -text "CN Config" ]
-	set titleInnerFrame3 [$titleFrame3 getframe]
-
-	entry $titleInnerFrame3.en_imppath -textvariable tmpImpDir -background white -relief ridge -width 35
-	button $titleInnerFrame3.bt_imppath -text Browse -command {
-		set types {
-		        {"XDC Files"     {.xdc } }
-		        {"XDD Files"     {.xdd } }
-		}
-		set tmpImpDir [tk_getOpenFile -title "Import XDC/XD" -filetypes $types -parent .addMNCN]
-		if {$tmpImpDir == ""} {
-			focus .addMNCN
-			return
-		}
-	}
-	$titleInnerFrame3.en_imppath config -state disabled 
-	$titleInnerFrame3.bt_imppath config -state disabled 
-#global conf
-#set conf off
-	radiobutton $titleInnerFrame3.ra_def -text "Default" -variable confCn -value on  -command {
-			.addMNCN.titleFrame1.f.titleFrame3.f.en_imppath config -state disabled 
-			.addMNCN.titleFrame1.f.titleFrame3.f.bt_imppath config -state disabled 
-	}		
-
-	
-	radiobutton $titleInnerFrame3.ra_imp -text "Import XDC/XDD" -variable confCn -value off -command {
-			.addMNCN.titleFrame1.f.titleFrame3.f.en_imppath config -state normal 
-			.addMNCN.titleFrame1.f.titleFrame3.f.bt_imppath config -state normal 
-	}
-	$titleInnerFrame3.ra_def select
-
-
-	label $titleInnerFrame1.l_empty4 -text "              "
-
-
-	set frame1 [frame $titleInnerFrame1.fram1]
-	button $frame1.bt_ok -text "  Ok  " -command {
-		set Name [string trim $Name]
-		if {$Name == "" } {
-			tk_messageBox -message "Enter MN/CN Name" -title "Set Node Name error" -parent .addMNCN -icon error
-			focus .addMNCN
-			return
-		}
-		if {$nodeId == "" } {
-			tk_messageBox -message "Enter Node id" -parent .addMNCN -icon error
-			focus .addMNCN
-			return
-		}
-		if {$nodeId < 1 ||$nodeId > 239 } {
-			tk_messageBox -message "Node id value range is 1 to 239" -parent .addMNCN -icon error
-			focus .addMNCN
-			return
-		}
-		
-		if {$confCn=="off" && ![file isfile $tmpImpDir]} {
-			tk_messageBox -message "Entered path for Import XDC/XDD not exist " -icon error -parent .addMNCN
-			focus .addMNCN
-			return
-		}
-
-		set chk [AddMNCN $Name]
-		destroy .addMNCN
-	}
-
-	button $frame1.bt_cancel -text Cancel -command { 
-		destroy .addMNCN
-	}
-
-
-	label $winAddMNCN.l_empty5 -text " "
-
-
-	grid config $winAddMNCN.l_empty -row 0 -column 0  
-	
-	grid config $titleFrame1 -row 1 -column 0 -sticky "news" 
-
-	grid config $titleInnerFrame1.l_empty1 -row 0 -column 0  
-
-	grid config $frame2 -row 2 -column 0 
-	grid config $frame2.l_name -row 0 -column 0 
-	grid config $frame2.en_name -row 0 -column 1 
-	grid config $frame2.l_node -row 1 -column 0 
-	grid config $frame2.en_node -row 1 -column 1 
-
-	
-	grid config $titleInnerFrame1.l_empty3 -row 3 -column 0  
-
-	grid config $titleFrame3 -row 4 -column 0 -sticky "news"
-	grid config $titleInnerFrame3.ra_def -row 0 -column 0 -sticky "w"
-	grid config $titleInnerFrame3.ra_imp -row 1 -column 0
-	grid config $titleInnerFrame3.en_imppath -row 1 -column 1
-	grid config $titleInnerFrame3.bt_imppath -row 1 -column 2
- 
-
-	grid config $titleInnerFrame1.l_empty4 -row 5 -column 0  
-	
-	grid config $frame1 -row 6 -column 0 
-	grid config $frame1.bt_ok -row 0 -column 0  
-	grid config $frame1.bt_cancel -row 0 -column 1
-	
-	grid config $winAddMNCN.l_empty5 -row 7 -column 0  
-
-
-
-
-	wm protocol $winAddMNCN WM_DELETE_WINDOW {
-		destroy .addMNCN
-        }
-
-	wm protocol .addMNCN WM_DELETE_WINDOW "$frame1.bt_cancel invoke"
-	bind $winAddMNCN <KeyPress-Return> "$frame1.bt_ok invoke"
-	bind $winAddMNCN <KeyPress-Escape> "$frame1.bt_cancel invoke"
-
-}
-
-proc AddMNCN {Name} {
+proc AddCN {Name} {
 	global updatetree
 	global testGroupName
 	global tg_count
@@ -4415,31 +3938,7 @@ proc BreakPoint {} {
 		$updatetree closetree $node
 	}
 }
-###############################################################################
-# proc Forcecompile
-# Compiles the selected testcase
-##############################################################################
-proc ForceCompile {} {
-	global PjtDir
-	global RootDir
-	set CaseCount [GetCurrentNodeNum]
-	set GroupCount [GetPreviousNum]
-	set groupname [arrTestGroup($GroupCount) cget -memGroupName]
-	file mkdir $PjtDir/Elfs/$GroupCount-$groupname
-	set casename [getAbsolutePath [arrTestCase($GroupCount)($CaseCount) cget -memCasePath] $PjtDir]
-	set header [arrTestCase($GroupCount)($CaseCount) cget -memHeaderPath]
-	set tmpsplit [split $casename .]
-	set output [lindex $tmpsplit [expr [llength $tmpsplit] - 2]]
-	set tmpsplit [split $output /]
-	set output [lindex $tmpsplit [expr [llength $tmpsplit] - 1]]
-	if {$header == "" || $header == "None"} {
-		set header "$RootDir/type.h"
-		evalCommand . interp0 "make -B -f $PjtDir/makefile --directory=$PjtDir/Elfs/$GroupCount-$groupname/ testcase=$casename header=$header output=$output RootDir=$RootDir"
-	} else {
-		set header [getAbsolutePath [arrTestCase($GroupCount)($CaseCount) cget -memHeaderPath] $PjtDir]
-		evalCommand . interp0 "make -B -f $PjtDir/makefile --directory=$PjtDir/Elfs/$GroupCount-$groupname/ testcase=$casename header=$header output=$output RootDir=$RootDir"
-	}	
-}
+
 ###############################################################################
 
 
@@ -4447,125 +3946,7 @@ proc YetToImplement {} {
 tk_messageBox -message "Yet to be Implemented !" -title Info -icon info
 }
 
-proc AddPDOProc {} {
-	global testGroupName
-	global execCount
-	global mode_interactive
-	global mode_continuous
-	global mode_sequence
-	global titleInnerFrame1
-	
-	global pdostartValue
-	global mapEntValue
-	global noPDOValue
-	global pdoType
-	set testGroupName ""
-	set winAddPDO .addPDO
-	catch "destroy $winAddPDO"
-	toplevel     $winAddPDO
-	wm title     $winAddPDO "Add PDOs"
-	wm resizable $winAddPDO 0 0
-	wm transient $winAddPDO .
-	wm deiconify $winAddPDO
-	grab $winAddPDO
 
-	font create custom1 -weight bold
-	label $winAddPDO.l_empty1 -text ""	
-	label $winAddPDO.l_empty2 -text ""
-	
-	grid config $winAddPDO.l_empty1 -row 0 -column 0 -sticky "news"
-
-	set titleFrame1 [TitleFrame $winAddPDO.titleFrame1 -text "PDO Configuration" ]
-	grid config $titleFrame1 -row 1 -column 0 -ipadx 20 -padx 20 -sticky "news"
-	set titleInnerFrame2 [$titleFrame1 getframe]
-	
-	####frame1 has six radio buttons to select excution mode 
-	set frame1 [frame $titleInnerFrame2.fram1]
-	#### frame2 has label TestGroupName and the entry box
-	set frame2 [frame $titleInnerFrame2.fram2]
-	#### frame3 has label Execution count and the entry box
-	set frame3 [frame $titleInnerFrame2.fram3]
-	#### frame 4 has ok and cancel button
-	set frame4 [frame $titleInnerFrame2.fram4]
-	set frame5 [frame $titleInnerFrame2.fram5]
-	
-
-	
-	label $frame1.l_pdostart -text "PDO Starting number \[1-255\] :"
-	entry $frame1.en_pdostart -textvariable pdostartValue -background white -validate key -vcmd {expr {[string len %P] <= 3} && {[string is int %P]}}
-
-	label $frame1.l_MapEnt -text   "Mapping Entries \[1-254\] :"
-	entry $frame1.en_MapEnt -textvariable mapEntValue -background white -validate key -vcmd {expr {[string len %P] <= 3} && {[string is int %P]}}
-
-	label $frame1.l_NoPDO -text    "Number of PDOs \[1-255\] :"
-	entry $frame1.en_NoPDO -textvariable noPDOValue -background white -validate key -vcmd {expr {[string len %P] <= 3} && {[string is int %P]}}
-
-
-	grid config $frame1 -row 0 -column 0 -sticky "news" -columnspan 1
-	grid config $frame1.l_pdostart  -row 0 -column 0 
-	grid config $frame1.en_pdostart -row 0 -column 1
-	grid config $frame1.l_MapEnt  -row 1 -column 0 
-	grid config $frame1.en_MapEnt -row 1 -column 1
-	grid config $frame1.l_NoPDO  -row 2 -column 0 
-	grid config $frame1.en_NoPDO -row 2 -column 1
-
-
-
-	label $titleInnerFrame2.l_empty5 -text "    "
-	grid config $titleInnerFrame2.l_empty5  -row 3 -column 0
-	label $titleInnerFrame2.l_type -text "PDO type"
-	grid config $titleInnerFrame2.l_type  -row 4 -column 0
-
-	set pdoType off
-	
-	radiobutton $frame4.ra_inter -text "Transmit PDO" -variable pdoType   -value on 
-	radiobutton $frame4.ra_bat   -text "Receive PDO"  -variable pdoType   -value off 
-	$frame4.ra_bat select
-	grid config $frame4.ra_inter -row 0 -column 0 -sticky "w"
-	grid config $frame4.ra_bat   -row 0 -column 1 -sticky "w"
-	grid config $frame4 -row 5 -column 0
-	
-
-	label $titleInnerFrame2.l_empty9 -text ""
-	grid config $titleInnerFrame2.l_empty9 -row 6 -column 0 -sticky "news"
-
-
-
-	button $frame5.b_ok -text "  Add  " -command { 
-		if {$pdostartValue < 1 ||$pdostartValue > 255 } {
-			tk_messageBox -message "PDO Starting number value range is 1 to 255" -parent .addPDO -icon error
-			focus .addPDO
-			return
-		}
-		if {$mapEntValue < 1 ||$mapEntValue > 254 } {
-			tk_messageBox -message "Mapping Entries value range is 1 to 254" -parent .addPDO -icon error
-			focus .addPDO
-			return
-		}
-		if {$noPDOValue < 1 ||$noPDOValue > 255 } {
-			tk_messageBox -message "Number of PDOs value range is 1 to 255" -parent .addPDO -icon error
-			focus .addPDO
-			return
-		}
-		font delete custom1
-		destroy .addPDO
-	}
-	button $frame5.b_cancel -text "Cancel" -command {
-		destroy .addPDO
-		font delete custom1
-	}
-	grid config $frame5.b_ok  -row 0 -column 0 
-	grid config $frame5.b_cancel -row 0 -column 1
-	grid config $frame5 -row 7 -column 0 
-	
-	label $winAddPDO.l_empty8 -text ""
-	grid config $winAddPDO.l_empty8 -row 2 -column 0 -sticky "news"
-
-
-	wm protocol .addPDO WM_DELETE_WINDOW "$frame5.b_cancel invoke"
-	bind $winAddPDO <KeyPress-Return> "$frame5.b_ok invoke"
-	bind $winAddPDO <KeyPress-Escape> "$frame5.b_cancel invoke"
-}
 #########################################################################3
 
 
@@ -4574,7 +3955,7 @@ proc connectio {} {
 	set tog [.mainframe.topf.tb0.bbox8.b0 cget -image]
 	#puts $tog
 	#to toggle image the value varies according to images added 
-	if {$tog=="image25"} {
+	if {$tog=="image15"} {
 	        .mainframe.topf.tb0.bbox8.b0 configure -image [Bitmap::get connect]
 	} else {
 	        .mainframe.topf.tb0.bbox8.b0 configure -image [Bitmap::get disconnect]
@@ -4593,88 +3974,7 @@ proc Disconnect {} {
 }
 
 
-proc ConnSettWindow {} {
-	global connIpAddr
-	set winConnSett .connSett
-	catch "destroy $winConnSett"
-	toplevel     $winConnSett
-	wm title     $winConnSett "Connection Settings"
-	wm resizable $winConnSett 0 0
-	wm transient $winConnSett .
-	wm deiconify $winConnSett
-	grab $winConnSett
-
-	set frame1 [frame $winConnSett.fram1]
-	set frame2 [frame $winConnSett.fram2]
-
-	label $winConnSett.l_empty1 -text ""
-	label $frame1.l_ip -text "IP Address"
-	label $winConnSett.l_empty2 -text ""
-	label $winConnSett.l_empty3 -text ""
-
-	set connIpAddr ""
-	entry $frame1.en_ip -textvariable connIpAddr -background white -relief ridge -validate all -vcmd "isIP %P %V"
-
-	button $frame2.b_ok -text "  Ok  " -command { 
-		YetToImplement
-		destroy .connSett
-	}
-	button $frame2.b_cancel -text "Cancel" -command {
-		destroy .connSett
-	}
-
-	grid config $winConnSett.l_empty1 -row 0 -column 0
-	grid config $frame1 -row 1 -column 0 -padx 10
-	grid config $winConnSett.l_empty2 -row 2 -column 0
-	grid config $frame2 -row 3 -column 0
-	grid config $winConnSett.l_empty3 -row 4 -column 0
-
-	grid config $frame1.l_ip -row 0 -column 0
-	grid config $frame1.en_ip -row 0 -column 1
-
-	grid config $frame2.b_ok -row 0 -column 0
-	grid config $frame2.b_cancel -row 0 -column 1
-
-	#wm protocol .connSett WM_DELETE_WINDOW {
-	#	destroy .connSett
-	#}
-	wm protocol .connSett WM_DELETE_WINDOW "$frame2.b_cancel invoke"
-	bind $winConnSett <KeyPress-Return> "$frame2.b_ok invoke"
-	bind $winConnSett <KeyPress-Escape> "$frame2.b_cancel invoke"
-
-}
 
 
-###################################################################################
-# proc isIp
-# To validate the entering ipaddress
-###################################################################################
-proc isIP {str type} {
-   # modify these if you want to check specific ranges for
-   # each portion - now it look for 0 - 255 in each
-   set ipnum1 {\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]}
-   set ipnum2 {\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]}
-   set ipnum3 {\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]}
-   set ipnum4 {\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]}
-   set fullExp {^($ipnum1)\.($ipnum2)\.($ipnum3)\.($ipnum4)$}
-   set partialExp {^(($ipnum1)(\.(($ipnum2)(\.(($ipnum3)(\.(($ipnum4)?)?)?)?)?)?)?)?$}
-   set fullExp [subst -nocommands -nobackslashes $fullExp]
-   set partialExp [subst -nocommands -nobackslashes $partialExp]
-   if [string equal $type focusout] {
-      if [regexp -- $fullExp $str] {
-         return 1
-      } else {
-         #tk_messageBox -message "IP is NOT complete!" -title "IP Address" -parent .projconfig
-         return 0
-      }
-   } elseif [string equal $type dstry] {
-      if [regexp -- $fullExp $str] {
-         return 1
-      } else {
-         #tk_messageBox -message "IP is NOT complete!" -title "IP Address" -parent .projconfig
-         return 0
-      }
-   } else {
-      return [regexp -- $partialExp $str]
-   }
-} 
+
+

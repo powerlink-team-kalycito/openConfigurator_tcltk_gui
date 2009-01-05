@@ -48,7 +48,7 @@ Bitmap::get cut
 namespace eval Bitmap {
     lappend path [file join $RootDir images]
 }
-source [file join $RootDir main.tcl]
+source [file join $RootDir operations.tcl]
 source [file join $RootDir editor.tcl]
 source [file join $RootDir find.tcl]
 source [file join $RootDir repl.tcl]

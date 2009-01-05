@@ -4058,8 +4058,8 @@ proc Editor::create { } {
             {command "Project Settings" {}  "Project Settings" {} -command YetToImplement }
         }
         "&Connection" all options 0 {
-            {command "Connect to POWERLINK network" {noFile} "Establish connection with POWERLINK network" {} -command Connect }
-            {command "Disconnect from POWERLINK network" {noFile} "Disconnect from POWERLINK network" {} -command Disconnect }
+            {command "Connect to POWERLINK network" {connect} "Establish connection with POWERLINK network" {} -command Connect }
+            {command "Disconnect from POWERLINK network" {disconnect} "Disconnect from POWERLINK network" {} -command Disconnect }
 	    {separator}
             {command "Connection Settings" {}  "Connection Settings" {} -command ConnSettWindow -state normal}
         }
@@ -4108,6 +4108,7 @@ proc Editor::create { } {
         }
     }
 
+#$descmenu.Connection configure -state disabled  
 #shortcut keys for project
     bind . <Key-F7> "puts {build project short cut}"
     bind . <Control-Key-F7> "puts {Rebuild project short cut}"
@@ -4245,7 +4246,13 @@ proc Editor::create { } {
             -progresstype normal \
             -progressfg blue ]
     $mainframe showstatusbar progression
-    
+  #  $mainframe configure 
+#puts [$mainframe cget menu]
+#$mainframe setmenustate "Connect to POWERLINK network" disabled
+#$mainframe setmenustate all disabled    
+   
+
+
     #incr prgindic 
    # toolbar 1 creation
     set tb1  [MainFrame::addtoolbar $mainframe]
@@ -6959,10 +6966,14 @@ proc connectio {} {
 }
 proc Connect {} {
 	.mainframe.topf.tb0.bbox8.b0 configure -image [Bitmap::get disconnect]
+	.mainframe setmenustate connect disabled
+	.mainframe setmenustate disconnect normal
 }
 
 proc Disconnect {} {
 	.mainframe.topf.tb0.bbox8.b0 configure -image [Bitmap::get connect]
+	.mainframe setmenustate disconnect disabled
+	.mainframe setmenustate connect normal
 }
 
 

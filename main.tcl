@@ -87,11 +87,8 @@ namespace eval Editor {
     variable toolbarButtons
     variable searchResults
     variable procMarks
-    variable caseMenu
-    variable textMenu
-    variable profileMenu
-    variable helpmsgMenu
-    variable groupconfic
+    variable mnMenu
+    variable cnMenu
     variable serverUp 0
 }
 
@@ -381,35 +378,7 @@ proc Editor::setDefault {} {
     return
 }
 
-proc Editor::changeServerPort {} {
-    global EditorData
-    
-    set dialog [toplevel .top ]
-    label $dialog.l -text "Enter Port Number"
-    set port $EditorData(options,serverPort)
-    set portEntry [entry $dialog.e -width 5 -textvar EditorData(options,serverPort)]
-    set EditorData(oldPort) $EditorData(options,serverPort)
-    set f [frame $dialog.f]
-    button $dialog.f.ok -text Ok -width 8 -command {
-        destroy .top
-    }
-    button $dialog.f.c -text Cancel -width 8 -command {
-        global EditorData
-        destroy .top
-        set EditorData(options,serverPort) $EditorData(oldPort)
-    }
-    pack $dialog.l $portEntry -fill both -expand yes
-    pack $dialog.f.ok -side left -fill both -expand yes 
-    pack $dialog.f.c -side left -fill both -expand yes
-    pack $f
-    focus $portEntry
-    bind $portEntry <KeyRelease-Return> {
-        destroy .top
-        break
-    }
-    wm title $dialog "Enter Port"
-    BWidget::place $dialog 0 0 center
-}
+
 
 proc Editor::newFile {{force 0}} {
     variable notebook
@@ -1132,18 +1101,9 @@ proc Editor::tselectright {x y node} {
 	$treeWindow selection set $node 
 	set CurrentNode $node
 	if [regexp {TestGroup-(.*)} $node == 1] {
-		tk_popup $Editor::groupMenu $x $y	
-	} elseif {[regexp {path-(.*)} $node == 1]} { 
-		Editor::tselectObject $node
-		tk_popup $Editor::caseMenu $x $y		
+		tk_popup $Editor::cnMenu $x $y	
 	} elseif {[regexp {OBD(.*)} $node == 1]} { 
-		tk_popup $Editor::projectMenu $x $y		
-	}  elseif {[regexp {Config-(.*)} $node == 1]} { 
-		tk_popup $Editor::groupconfic $x $y	
-	} elseif {[regexp {profile-(.*)} $node == 1]} { 
-		tk_popup $Editor::profileMenu $x $y
-	} elseif {[regexp {helpMsg-(.*)} $node == 1]} { 
-		tk_popup $Editor::helpmsgMenu $x $y
+		tk_popup $Editor::mnMenu $x $y		
 	} else {
 		return 
 	}   
@@ -2390,154 +2350,7 @@ proc Editor::deleteNode {{exit 0}} {
 
 }
 
-#######################################################################
-# proc deletegroup
-# Deletes a TestGroup and updates the tree and structure
-#######################################################################
-proc Editor::deletegroup {{exit 0}} {
-    	global updatetree
-   	global tg_count
-	global totaltc
 
-	# Find the Group position to delete
-	
-	set TestGroupNo [GetCurrentNodeNum]
-	set totaltestgroup $tg_count
-	# Select all the Nodes in the Group and close them.
-	set currenttotalcase $totaltc($TestGroupNo)
-	for {set fndCaseCount 1 } {$fndCaseCount <= $currenttotalcase } {incr fndCaseCount } {
-		set temp -$TestGroupNo
-		append temp -$fndCaseCount
-		Editor::tselectObject "path$temp"
-		Editor::closeFile
-	}
-
-	
-	# Update the Global Data
-	# Changes in testgroup
-	# Changes in testcase
-	# Delete the TestGroups in Treeview 
-	for {set delTgCount $TestGroupNo } {$delTgCount <= $totaltestgroup} {incr delTgCount } {
-			set child [$updatetree delete TestGroup-$delTgCount]	
-		}
-	
-	set newGroupNo $TestGroupNo
-	# Reorder All the testgroups
-	for {set oldTgCount [expr $TestGroupNo + 1] } {$oldTgCount <= $totaltestgroup} {incr oldTgCount } {
-		set oldtotalcase $totaltc($newGroupNo)
-		puts oldtestcse->$oldtotalcase
-		set currenttotalcase $totaltc($oldTgCount)
-		puts current->$currenttotalcase
-		# Create necessary Testcase instances
-		if { $oldtotalcase < $currenttotalcase } {
-			set Total [expr $currenttotalcase - $oldtotalcase]
-			set tmpcount [expr $oldtotalcase + 1]
-			for {set CaseCount 1 } {$CaseCount <= $Total} {incr CaseCount } {
-				# Create the Testase instance
-				#Testcase testcase($newGroupNo)($tmpcount)
-				#global arrTestCase($newGroupNo)($tmpcount)
-				createtestcase arrTestCase $newGroupNo $tmpcount
-				incr tmpcount
-			}
-		}
-		# Delete Extra Testcase instances
-		if { $oldtotalcase > $currenttotalcase } {
-			set Total [expr $oldtotalcase - $currenttotalcase]
-			set tmpcount [expr $currenttotalcase + 1]
-			for {set CaseCount 1 } {$CaseCount <= $Total} {incr CaseCount } {
-				struct::record delete instance arrTestCase($newGroupNo)($tmpcount)
-				#set value arrTestCase($newGroupNo)($tmpcount)
-				#freegroup $value
-				incr tmpcount
-			}
-		}
-		# Copy the TestCase Details
-		for {set CaseCount 1 } {$CaseCount <= $currenttotalcase} {incr CaseCount } {
-			arrTestCase($newGroupNo)($CaseCount)  configure -memCasePath [arrTestCase($oldTgCount)($CaseCount) cget -memCasePath]
-			arrTestCase($newGroupNo)($CaseCount)  configure -memCaseExecCount [arrTestCase($oldTgCount)($CaseCount) cget -memCaseExecCount]
-			arrTestCase($newGroupNo)($CaseCount)  configure -memCaseRunoptions [arrTestCase($oldTgCount)($CaseCount) cget -memCaseRunoptions]
-			arrTestCase($newGroupNo)($CaseCount)  configure -memCaseProfile [arrTestCase($oldTgCount)($CaseCount) cget -memCaseProfile]
-			arrTestCase($newGroupNo)($CaseCount)  configure -memCeaderPath [arrTestCase($oldTgCount)($CaseCount) cget -memCeaderPath]
-		}
-		# Copy the Group Details
-		arrTestGroup($newGroupNo)  configure -memGroupName [arrTestGroup($oldTgCount) cget -memGroupName]
-		arrTestGroup($newGroupNo)  configure -memGroupExecMode [arrTestGroup($oldTgCount) cget -memGroupExecMode]
-		arrTestGroup($newGroupNo)  configure -memGroupExecCount [arrTestGroup($oldTgCount) cget -memGroupExecCount]
-		arrTestGroup($newGroupNo)  configure -memHelpMsg [arrTestGroup($oldTgCount) cget -memHelpMsg]	
-		arrTestGroup($newGroupNo)  configure -memChecked [arrTestGroup($oldTgCount) cget -memChecked]
-		set totaltc($newGroupNo) $totaltc($oldTgCount)
-		#arrTestGroup($newGroupNo) configure -groupTestCase [arrTestGroup($oldTgCount) cget -groupTestCase]
-		incr newGroupNo
-	}
-	# Delete the arrTestGroup 
-	set delreturn [struct::record delete instance arrTestGroup($totaltestgroup)]
-	#set currenttotalcase [arrTestGroup($totaltestgroup) cget -groupTestCase]
-	for {set CaseCount 1 } {$CaseCount <= $currenttotalcase} {incr CaseCount } {
-		# Delete Last Testcase in the TestGroup.
-		struct::record delete instance arrTestCase($totaltestgroup)($CaseCount)
-	}
-	# Set the Updated Project Details
-	incr totaltestgroup -1
-	incr tg_count -1
-	#project configure -totalTestGroup $totaltestgroup
-	
-	# Redraw the tree view
-	for {set testGrpCount $TestGroupNo } {$testGrpCount <= $totaltestgroup} {incr testGrpCount } {
-		set groupname [arrTestGroup($testGrpCount) cget -memGroupName]
-		set groupexecmode [arrTestGroup($testGrpCount) cget -memGroupExecMode]
-		set groupexecount [arrTestGroup($testGrpCount) cget -memGroupExecCount]
-		set helpMsg [arrTestGroup($testGrpCount) cget -memHelpMsg]
-		set checked [arrTestGroup($testGrpCount) cget -memChecked]
-		set currenttotalcase $totaltc($testGrpCount)
-		set tgname [arrTestGroup($testGrpCount) cget -memGroupName]
-		# Insert TestGroup Node 
-		# Checking for which image and window to draw
-        	if { $checked == "N" && $helpMsg == "" } {
-			set child [$updatetree insert $testGrpCount TestSuite TestGroup-$testGrpCount -text "$groupname" -open 1 -image [Bitmap::get openfold] -window [Bitmap::get userdefined_unchecked] ]
-		} elseif { $checked == "C" && $helpMsg == ""} {
-			set child [$updatetree insert $testGrpCount TestSuite TestGroup-$testGrpCount -text "$groupname" -open 1 -image [Bitmap::get openfold] -window [Bitmap::get userdefined_checked] ]
-		} elseif { $checked == "N" && $helpMsg != "" } {
-			set child [$updatetree insert $testGrpCount TestSuite TestGroup-$testGrpCount -text "$groupname" -open 1 -image [Bitmap::get openfolder_info] -window [Bitmap::get userdefined_unchecked]]
-		} elseif { $checked == "C" && $helpMsg != "" } {
-			set child [$updatetree insert $testGrpCount TestSuite TestGroup-$testGrpCount -text "$groupname" -open 1 -image [Bitmap::get openfolder_info] -window [Bitmap::get userdefined_checked]]
-		}	
-		# Insert Config under the Group
-		set child [$updatetree insert 0 TestGroup-$testGrpCount Config-$testGrpCount -text "Config"  -open 0 -image [Bitmap::get right]]
-		# Insert groupExecCount, groupTestCase
-		set child [$updatetree insert 1 Config-$testGrpCount groupExecMode-$testGrpCount -text $groupexecmode  -open 0 -image [Bitmap::get palette]]
-		set child [$updatetree insert 2 Config-$testGrpCount groupExecCount-$testGrpCount -text $groupexecount  -open 0 -image [Bitmap::get palette]]
-		if {$helpMsg != ""} {
-			set child [$updatetree insert 2 Config-$testGrpCount helpMsg-$testGrpCount -text Message  -open 0 -image [Bitmap::get palette]]
-		}
-                # Insert TestCase Node
-		for {set CaseCount 1 } {$CaseCount <= $currenttotalcase} {incr CaseCount } {
-				set casename [arrTestCase($testGrpCount)($CaseCount) cget -memCasePath]
-				set execcount [arrTestCase($testGrpCount)($CaseCount) cget -memCaseExecCount]
-				set header [arrTestCase($testGrpCount)($CaseCount) cget -memHeaderPath]
-				set runoptions [arrTestCase($testGrpCount)($CaseCount) cget -memCaseRunoptions]
-				# Spliting Name from whole path
-				set tmpsplit [split $casename /]
-				set tmpcasename [lindex $tmpsplit [expr [llength $tmpsplit] - 1]]
-				# Spliting header from whole path
-				set tmpsplit [split $header /]
-				set tmpheader [lindex $tmpsplit [expr [llength $tmpsplit] - 1]]
-				set temp -$testGrpCount
-				append temp -$CaseCount
-				if {$runoptions=="NN"} {
-					set child [$updatetree insert $CaseCount TestGroup-$testGrpCount path$temp -text $tmpcasename  -open 0 -image [Bitmap::get file] -window [Bitmap::get userdefined_unchecked]]
-				} elseif {$runoptions=="NB"} {
-					set child [$updatetree insert $CaseCount TestGroup-$testGrpCount path$temp -text $tmpcasename  -open 0 -image [Bitmap::get file_brkpoint] -window [Bitmap::get userdefined_unchecked]]
-				} elseif {$runoptions=="CN"} {
-					set child [$updatetree insert $CaseCount TestGroup-$testGrpCount path$temp -text $tmpcasename  -open 0 -image [Bitmap::get file] -window [Bitmap::get userdefined_checked]]
-				} elseif {$runoptions=="CB"} {
-					set child [$updatetree insert $CaseCount TestGroup-$testGrpCount path$temp -text $tmpcasename  -open 0 -image [Bitmap::get file_brkpoint] -window [Bitmap::get userdefined_checked]]
-				}
-			set child [$updatetree insert 1 path$temp  ExecCount$temp -text $execcount -open 0 -image [Bitmap::get file]]
-			set child [$updatetree insert 2 path$temp  header$temp -text $tmpheader -open 0 -image [Bitmap::get file]]
-		}
-
-	}
-}
 proc Editor::closeFile {{exit 0}} {
     
     variable notebook
@@ -2613,114 +2426,10 @@ proc Editor::exit_app {} {
 				return}
    		}
     }
-    #set taskList [after info]
-	
-    #foreach id $taskList {
-    #    after cancel $id
-    #}
-    #if {$current(hasChanged)} {\
-    #    if {[catch {set idx $index($current(text))}]} {
-    #        exit
-    #    }
-    #    set text_win($idx,hasChanged) $current(hasChanged)
-    #}
-    #set newlist ""
-    #set index_list [array names index]
-    #foreach idx $index_list {\
-    #    set newlist [concat $newlist  $index($idx)]
-    #}
-
-    #Editor::getWindowPositions
-    #Editor::saveOptions
-    
-    #    if no window is open, we can exit at once
-    #if {[llength $newlist] == ""} {
-    #    exit
-    #}
-    
-    #foreach idx $newlist {\
-    #    set current(text) $text_win($idx,path)
-    #    set current(page) $text_win($idx,page)
-    #    set current(pagename) $text_win($idx,pagename)
-    #    set current(hasChanged) $text_win($idx,hasChanged)
-    #    set current(undo_id) $text_win($idx,undo_id)
-    #    set current(file) $text_win($idx,file)
-    #    set current(slave) $text_win($idx,slave)
-    #    set current(writable) $text_win($idx,writable)
-    #    set result [Editor::closeFile exit]
-    #    if {$result} {
-    #       NoteBook::raise $notebook $current(pagename)
-    #        return
-    #    }
-    #}
-    #if {$serverUp} {
-    #    set slave [interp create]
-    #    interp eval $slave set RootDir [list $RootDir]
-    #    interp eval $slave set argv0 shutdown_Server
-    #    interp eval $slave {load {} Tk}
-    #    interp eval $slave set Client::port $EditorData(options,serverPort)
-    #    interp eval $slave Client::exitExecutionServer
-    #    interp delete $slave
-    #}
 
     exit
 }
 
-proc Editor::gotoLineDlg {} {
-    variable current
-    
-    set gotoLineDlg [toplevel .dlg]
-    set entryLabel [label .dlg.label -text "Please enter line number"]
-    set lineEntry [entry .dlg.entry -textvariable lineNo]
-    set buttonFrame [frame .dlg.frame]
-    set okButton [button $buttonFrame.ok -width 8 -text Ok -command {catch {destroy .dlg};Editor::gotoLine $lineNo}]
-    set cancelButton [button $buttonFrame.cancel -width 8 -text Cancel -command {catch {destroy .dlg}}]
-    wm title .dlg "Goto Line"
-    bind $lineEntry <KeyRelease-Return> {.dlg.frame.ok invoke}
-    pack $entryLabel
-    pack $lineEntry
-    pack $okButton $cancelButton -padx 10 -pady 10 -side left -fill both -expand yes
-    pack $buttonFrame
-    BWidget::place $gotoLineDlg 0 0 center
-    focus $lineEntry
-}
-
-proc Editor::gotoLine {lineNo} {
-    variable current
-    
-    switch -- [string index $lineNo 0] {
-        "-" -
-        "+" {set curLine [lindex [split [$current(text) index insert] "."] 0]
-            set lineNo [expr $curLine $lineNo]}
-    }
-    if {[catch {$current(text) mark set insert $lineNo.0}]} {
-        tk_messageBox -message "Line number out of range!" -icon warning -title "Warning"
-    }
-    $current(text) see insert
-    editorWindows::flashLine
-    editorWindows::ReadCursor
-    selectObject 0
-    focus $current(text)
-}
-
-proc Editor::cut {} {
-    variable current
-    
-    editorWindows::cut
-    set current(lastPos) [$current(text) index insert]
-}
-
-proc Editor::copy {} {
-    variable current
-    editorWindows::copy
-}
-
-proc Editor::paste {} {
-    
-    variable current
-    editorWindows::paste
-    set current(lastPos) [$current(text) index insert]
-}
 
 proc Editor::delete {} {
     variable current
@@ -3029,39 +2738,9 @@ proc Editor::search_backward {{searchText {}}} {\
     selectObject 0
 }
 
-proc Editor::load_search_defaults {} {\
-    search_default_options
-}
 
-proc Editor::search {textWindow search_string tagname icase where match blink} {\
-    variable current
-    set result [search_proc $textWindow $search_string $tagname $icase $where $match $blink]
-    editorWindows::ReadCursor 0
-    set current(lastPos) [$current(text) index insert]
-    return $result
-}
 
-proc Editor::search_dialog {} {\
-    
-    variable current
-    
-    search_dbox $current(text)
-    Editor::search_history_add
-    focus $current(text)
-}
 
-proc Editor::replace_dialog {} {\
-    variable current
-    
-    replace_dbox $current(text)
-    focus $current(text)
-}
-
-proc Editor::findInFiles {} {
-    global EditorData
-    
-    set resultList [fif::openFifDialog $EditorData(options,workingDir)]
-}
 
 proc Editor::showResults {resultList} {
     variable resultWindow
@@ -3097,65 +2776,6 @@ proc Editor::showResults {resultList} {
         editorWindows::flashLine
         Editor::selectObject 0
     }
-}
-
-
-proc Editor::undo {} {\
-    variable notebook
-    variable current
-    
-    set cursor [. cget -cursor]
-    . configure -cursor watch
-    update
-    set range [textUndoer:undo $Editor::current(undo_id)]
-    . configure -cursor $cursor
-    if {$range != {}} {
-        set curPos [lindex $range 1]
-        if {[$current(text) compare [lindex $range 0] == [lindex $range 1]]} {
-            #delete all marks at insert
-            set range [editorWindows::deleteMarks [$current(text) index insert] [$current(text) index insert]]
-        } else  {
-            set range [editorWindows::deleteMarks [lindex $range 0] [lindex $range 1]]
-        }
-        set startLine [lindex [split [$current(text) index [lindex $range 0]] "."] 0]
-        set endLine [lindex [split [$current(text) index [lindex $range 1]] "."] 0]
-        update
-        after idle "editorWindows::ColorizeLines $startLine $endLine"
-        updateOnIdle $range
-        $Editor::current(text) mark set insert $curPos
-    }
-    
-    set current(lastPos) [$current(text) index insert]
-    focus $current(text)
-}
-
-proc Editor::redo {} {\
-    variable notebook
-    variable current
-    
-    set cursor [. cget -cursor]
-    . configure -cursor watch
-    update
-    set range [textRedoer:redo $Editor::current(undo_id)]
-    . configure -cursor $cursor
-    
-    if {$range != {}} {
-        set curPos [lindex $range 1]
-        if {[$current(text) compare [lindex $range 0] == [lindex $range 1]]} {
-            #delete all marks at insert
-            set range [editorWindows::deleteMarks [$current(text) index insert] [$current(text) index insert]]
-        } else  {
-            set range [editorWindows::deleteMarks [lindex $range 0] [lindex $range 1]]
-        }
-        set startLine [lindex [split [$current(text) index [lindex $range 0]] "."] 0]
-        set endLine [lindex [split [$current(text) index [lindex $range 1]] "."] 0]
-        updateOnIdle $range
-        after idle "editorWindows::ColorizeLines $startLine $endLine"
-        $Editor::current(text) mark set insert $curPos
-    }
-    
-    set current(lastPos) [$current(text) index insert]
-    focus $current(text)
 }
 
 
@@ -3617,338 +3237,7 @@ proc closeproject {} {
 	}
 }
 
-########################################################################
-#proAddTestCase
-#
-#Update the variables and 
-#open the file on editor window
-########################################################################
-proc AddTestCase { } {
-	global updatetree
-	global totaltc
-	global currenttotalcase
-	global TestGroupNo
-	global filename
-	global testcaseexeccount
-	global testcaseheader
-	global runoptions
-	global selectedProfile
-	set TestGroupNo [GetCurrentNodeNum]
-	set currenttotalcase $totaltc($TestGroupNo)
-	
-	set ext [file extension $filename]
-	    if { $ext != "" } {
-	        if {[string compare $ext ".c"]} {
-	            conPuts "$ext not supported"
-		    return
-	        }
-	    }
-		
-	incr currenttotalcase
-	incr totaltc($TestGroupNo)	
-	########### Update TestGroup Details ###########
-	#### Create the Testase instance ###
-	createtestcase arrTestCase $TestGroupNo $currenttotalcase
-	########### Update TestCase Details ###########
-	arrTestCase($TestGroupNo)($currenttotalcase)  configure -memCasePath $filename
-	arrTestCase($TestGroupNo)($currenttotalcase)  configure -memCaseExecCount $testcaseexeccount
-	arrTestCase($TestGroupNo)($currenttotalcase)  configure -memHeaderPath $testcaseheader
-	arrTestCase($TestGroupNo)($currenttotalcase)  configure -memCaseRunoptions 	$runoptions
-	arrTestCase($TestGroupNo)($currenttotalcase)  configure -memCaseProfile $selectedProfile
-	########################################################################
-	# Updates the tree 
-	########################################################################
-	########### Spliting for Name ################
-	set tmpsplit [split $filename /]
-	set tmpcasename [lindex $tmpsplit [expr [llength $tmpsplit] - 2]]
-	if {$testcaseheader!="None"} {
-		set tmpsplit [split $testcaseheader /]
-		set tmpheader [lindex $tmpsplit [expr [llength $tmpsplit] - 2]]
-	} else {
-		set tmpheader "None"
-	}
-	set temp -$TestGroupNo
-	append temp -$currenttotalcase
-	if {$runoptions == "CN" } {
-		set child [$updatetree insert $currenttotalcase TestGroup-$TestGroupNo path$temp -text $tmpcasename  -open 0 -image [Bitmap::get file] -window [Bitmap::get userdefined_checked]]
-	} elseif {$runoptions =="CB"} {
-		set child [$updatetree insert $currenttotalcase TestGroup-$TestGroupNo path$temp -text $tmpcasename  -open 0 -image [Bitmap::get file_brkpoint] -window [Bitmap::get userdefined_checked]]
-	}
-	set child [$updatetree insert 1 path$temp  ExecCount$temp -text $testcaseexeccount -open 0 -image [Bitmap::get palette]]
-	set child [$updatetree insert 2 path$temp  header$temp -text $tmpheader -open 0 -image [Bitmap::get palette]]
-	########################################################################
-	#select the tree 
-	########################################################################
-	Editor::tselectObject "path$temp"
-	##append pageopened list
-}
 
-########################################################################
-#proc Configure Test Case
-# Pops up a window, get data from user and stores it in Global data
-########################################################################
-proc ConfigCase {} {
-	global PjtDir
-	global caseexeccount
-	set groupno  [GetPreviousNum]
-	set caseno [GetCurrentNodeNum]
- 	set caseexeccount [arrTestCase($groupno)($caseno)  cget -memCaseExecCount]
-    	set winConfigCase .configCase
-    	catch "destroy $winConfigCase"
-   	toplevel $winConfigCase
-   	wm title	 $winConfigCase	"Configure"
-	wm resizable $winConfigCase 0 0
-	wm transient $winConfigCase .
-	wm deiconify $winConfigCase
-	grab $winConfigCase
-   	label $winConfigCase.msg -text "Execution Count( Integer ):" -relief groove
-   	entry $winConfigCase.entry -width 5 -textvariable caseexeccount -validate key -vcmd {expr {[string len %P] <= 5} && {[string is int %P]}}
-   	pack $winConfigCase.msg -fill x
-    	pack $winConfigCase.entry -fill x     
-    	frame $winConfigCase.butn
-    	pack $winConfigCase.butn -side bottom
-
-	button $winConfigCase.butn.ok -text OK -command {
-		set caseexeccount [string trim $caseexeccount]	
-		if {$caseexeccount==""} {
-			tk_messageBox -message "Execution count cannot be empty" -title "Set Execution Count error" -icon error
-			focus .configCase
-			set caseexeccount 1
-			return		
-		} elseif {$caseexeccount > 10000} {
-			tk_messageBox -message "Enter value less than 10000" -title "Set Execution Count error" -icon error
-			focus .configCase
-			return	
-		}
-		#Update the Global data
-        	global updatetree
-        	
-		
-		#set name [lindex $tmpsplit [expr [llength $tmpsplit] - 2]]
-	
-		set groupno  [GetPreviousNum]
-		set caseno [GetCurrentNodeNum]
-		
-		if {$caseexeccount == ""} {
-			set caseexeccount "None"        	 
-        	}
-		# Read the Global Data headerPath for that Group
-		set headernameread [arrTestCase($groupno)($caseno)  cget -memHeaderPath]
-
-		arrTestCase($groupno)($caseno)  configure -memCaseExecCount $caseexeccount
-		# updatetree _draw_tree
-		# Delete the Sub Nodes
-		set temp -$groupno
-		append temp -$caseno
-		set child [$updatetree delete 1 ExecCount$temp]
-		set child [$updatetree delete 2 header$temp]
-
-		# ReDraw the Sub Nodes
-		set child [$updatetree insert 1 path$temp ExecCount$temp -text $caseexeccount -open 0 -image [Bitmap::get palette]]
-		# Split the header Name
-		if {$headernameread!="None"} {
-			set tmpsplit [split $headernameread /]
-			set tmpheadernameread [lindex $tmpsplit [expr [llength $tmpsplit] - 2]]
-		} else {
-			set tmpheadernameread "None"
-		}
-		set child [$updatetree insert 2 path$temp header$temp -text $tmpheadernameread -open 0 -image [Bitmap::get palette]]
-       		destroy .configCase
-    	}	
-	button $winConfigCase.butn.cancel -text Cancel -command "destroy $winConfigCase" 
-  	pack  $winConfigCase.butn.ok -side left -expand 1 \
-        -padx 10m -pady 2m
-	pack  $winConfigCase.butn.cancel -side left -expand 1 \
-        -padx 3m -pady 2m	
-
-    	focus $winConfigCase
-    	focus $winConfigCase.entry
-        centerW $winConfigCase
-}
-########################################################################
-# proc AddHeader
-# 
-# Adds a header file to the selected test case.
-########################################################################
-proc AddHeader {} {
-	global PjtDir
-	global CurrentNode
-	set headertypes {
-       		{"All Header Files"  { .h } }
-       	}
-  		set headernameread [tk_getOpenFile -filetypes $headertypes -parent .]
-		set ext [file extension $headernameread]
-	        if { $ext != "" } {
-	        	if {[string compare $ext ".h"]} {
-		    		set headernameread None
-		    		tk_messageBox -message "Extension $ext not supported" -title "Add Header Error" -icon error
-		    		return
-	        	}
-	    	}
-      		if {$headernameread == ""} {
-       	        	return
-       		}	
-		#Set relative path from project folder to the header file
-		set headernameread [getRelativePath $headernameread $PjtDir]
-		#Update the Global data
-        	global updatetree
-		set groupno  [GetPreviousNum]
-		set caseno [GetCurrentNodeNum]
-	
-		set caseexeccount [arrTestCase($groupno)($caseno)  cget -memCaseExecCount]		
-		if {$headernameread == ""} {
-			set headernameread "None"
-        	}	
-		if {$caseexeccount == ""} {
-			set caseexeccount 1 
-        	}
-		set temp -$groupno
-		append temp -$caseno
-		arrTestCase($groupno)($caseno)  configure -memCaseExecCount $caseexeccount
-		arrTestCase($groupno)($caseno)  configure -memHeaderPath $headernameread
-		# updatetree _draw_tree
-		# Delete the Sub Nodes
-		set child [$updatetree delete 1 ExecCount$temp]
-		set child [$updatetree delete 2 header$temp]
-
-		# ReDraw the Sub Nodes
-		set child [$updatetree insert 1 path$temp ExecCount$temp -text $caseexeccount -open 0 -image [Bitmap::get palette]]
-		# Split the header Name
-		set tmpsplit [split $headernameread /]
-		set tmpheadernameread [lindex $tmpsplit [expr [llength $tmpsplit] - 2]]
-		set child [$updatetree insert 2 path$temp header$temp -text $tmpheadernameread -open 0 -image [Bitmap::get palette]]
-}
-
-########################################################################
-#proc Configure Project
-# Pops up a window, get timeout,userincludepath directory,toolbox diretory from user and stores it in Global data
-################################################################################
-
-proc ConfigProject {} {
-	global PjtDir
-	global pjtTimeOut
-	global pjtUserInclPath
-	global pjtToolBoxPath
-	set pjtTimeOut [instProject cget -memTimeout]
-	set pjtUserInclPath [instProject cget -memUserInclude_path]
-	set pjtToolBoxPath [instProject cget -memTollbox_path]
-	set winProConfig .projconfig
-	catch "destroy $winProConfig"
-	toplevel $winProConfig
-    	wm title	 $winProConfig	"Project Configuration"
-	wm resizable $winProConfig 0 0
-	wm transient $winProConfig .
-	wm deiconify $winProConfig
-	grab $winProConfig
-	#wm minsize $winProConfig 550 400
-   	label $winProConfig.l_empty1 -text ""	
-	label $winProConfig.l_title -text "Project Configuration" 
-	label $winProConfig.l_empty2 -text ""
-
-	grid config $winProConfig.l_empty1 -row 0 -column 0 -sticky "news"
-	grid config $winProConfig.l_title  -row 1 -column 0 -sticky "news" -ipadx 125
-	grid config $winProConfig.l_empty2 -row 2 -column 0 -sticky "news"
-
-	set titleFrame1 [TitleFrame $winProConfig.titleFrame1 -text "Configure" ]
-	grid config $titleFrame1 -row 3 -column 0 -ipadx 20 -sticky "news"
-	set titleInnerFrame1 [$titleFrame1 getframe]
-
-   	label $titleInnerFrame1.l_tmout -text "Time Out (Seconds) :"
-   	entry $titleInnerFrame1.en_tmout -width 15 -textvariable pjtTimeOut -validate key -vcmd {expr {[string len %P] <= 5} && {[string is int %P]}} -relief ridge -background white
-	label $titleInnerFrame1.l_info -text "Max: 10000"
-	
-   	label $titleInnerFrame1.l_usrincl -text "User Include Path:"
-	set pjtUserInclPath [getAbsolutePath $pjtUserInclPath $PjtDir]
-   	entry $titleInnerFrame1.en_usrincl -width 35 -textvariable pjtUserInclPath -relief ridge -background white
-
-   	label $titleInnerFrame1.l_tool -text "ToolBox Path:"
-	set pjtToolBoxPath [getAbsolutePath $pjtToolBoxPath $PjtDir]
-   	entry $titleInnerFrame1.en_tool -width 35 -textvariable pjtToolBoxPath -relief ridge -background white
-	
-	grid config $titleInnerFrame1.l_tmout -row 0 -column 0 -sticky w
-	grid config $titleInnerFrame1.en_tmout -row 0 -column 1 -sticky w -columnspan 1
-	#grid config $titleInnerFrame1.l_info -row 0 -column 2 -sticky w
-	grid config $titleInnerFrame1.l_usrincl -row 1 -column 0 -sticky w
-	grid config $titleInnerFrame1.en_usrincl -row 1 -column 1
-
-	grid config $titleInnerFrame1.l_tool -row 2 -column 0 -sticky w
-	grid config $titleInnerFrame1.en_tool -row 2 -column 1
-	label $titleInnerFrame1.l_empty5 -text "   "
-	grid config $titleInnerFrame1.l_empty5 -row 1 -column 2 -sticky "news"
-	label $titleInnerFrame1.l_empty6 -text "   "
-	grid config $titleInnerFrame1.l_empty6 -row 2 -column 2 -sticky "news"
-   	button $titleInnerFrame1.bt_browinc -text Browse -command {
-				set pjtUserInclPath [tk_chooseDirectory -title "Choose User Include Path" -parent .projconfig]
-				focus .projconfig
-	}
-	grid config $titleInnerFrame1.bt_browinc -row 1 -column 3
-	button $titleInnerFrame1.bt_browtool -text Browse -command {
-				set pjtToolBoxPath [tk_chooseDirectory -title "Choose Toolbox Path" -parent .projconfig]
-				focus .projconfig
-	}
-	grid config $titleInnerFrame1.bt_browtool -row 2 -column 3
-
-	set frame1 [frame $titleInnerFrame1.fram1]
-	button $frame1.bt_ok -text OK -command {
-				set pjtTimeOut [string trim $pjtTimeOut]
-				if {$pjtTimeOut==""} {
-					tk_messageBox -message "Timeout cannot be empty" -icon error -parent .projconfig
-					focus .projconfig
-					return
-				}
-				puts "Validate->[file isdirectory $pjtToolBoxPath]"
-				puts $pjtToolBoxPath
-				if {![file isdirectory $pjtToolBoxPath]} {
-					tk_messageBox -message "Entered Tool Box path is not a directory" -icon error
-					return
-					focus .projconfig
-				}
-				if { $pjtToolBoxPath != "" } {
-					Editor::tdelNode ToolBox
-					instProject configure -memTollbox_path [getRelativePath $pjtToolBoxPath $PjtDir]
-					DrawToolBox $pjtToolBoxPath
-				} else {
-					tk_messageBox -message "ToolBoxPath cannot be empty" -icon error -parent .projconfig
-					focus .projconfig
-					return
-				}
-				if {![file isdirectory $pjtUserInclPath]} {
-					tk_messageBox -message "Entered UserIncludePath is not a directory" -icon error
-					return
-					focus .projconfig
-				}
-				if { $pjtUserInclPath==""} {
-					tk_messageBox -message "UserIncludePath cannot be empty" -icon error -parent .projconfig
-					return
-					focus .projconfig
-				} else {
-					instProject configure -memUserInclude_path [getRelativePath $pjtUserInclPath $PjtDir]
-				}
-				instProject configure -memTimeout $pjtTimeOut
-				set modifyto [instProject cget -memTimeout]
-        			destroy .projconfig
-    	}	
-	button $frame1.bt_cancel -text Cancel -command "destroy $winProConfig"   
-	label $titleInnerFrame1.l_empty1 -text ""
-	grid config $titleInnerFrame1.l_empty1 -row 3 -column 1 -sticky w
-
-	grid $frame1 -row 4 -column 1 -sticky e
-	grid config $frame1.bt_ok -row 0 -column 0 -sticky w
-	label $frame1.l_empty7 -text "   "
-	grid config $frame1.l_empty7 -row 0 -column 1 -sticky w
-	grid config $frame1.bt_cancel -row 0 -column 2 -sticky e
-
-	label $winProConfig.l_empty3 -text ""
-	grid config $winProConfig.l_empty3 -row 4 -column 0 -sticky "news"	
-	label $winProConfig.l_empty4 -text ""
-	grid config $winProConfig.l_empty4 -row 5 -column 0 -sticky "news"	  
-    focus $winProConfig
-    focus $titleInnerFrame1.en_tmout
-    centerW $winProConfig
-	wm protocol .projconfig WM_DELETE_WINDOW {
-							destroy .projconfig
-						   }
-}
 ########################################################################
 # proc buttontovalue 
 # inputs -nil
@@ -4011,13 +3300,8 @@ proc Editor::create { } {
     variable options
     
     variable toolbarButtons
-    variable caseMenu
-    variable textMenu
-    variable groupMenu
-    variable profileMenu
-    variable helpmsgMenu
-    variable groupconfic
-    variable projectMenu
+    variable cnMenu
+    variable mnMenu
     variable IndexaddMenu
     
     
@@ -4035,7 +3319,7 @@ proc Editor::create { } {
         set configError 1
         Editor::setDefault
     }
-    Editor::load_search_defaults
+
     Editor::tick
     
     # Menu description
@@ -4108,7 +3392,6 @@ proc Editor::create { } {
         }
     }
 
-#$descmenu.Connection configure -state disabled  
 #shortcut keys for project
     bind . <Key-F7> "puts {build project short cut}"
     bind . <Control-Key-F7> "puts {Rebuild project short cut}"
@@ -4116,17 +3399,17 @@ proc Editor::create { } {
     bind . <Control-Key-F5> "puts {Transfer CDC short cut}"
     bind . <Control-Key-F6> "puts {Transfer XML short cut}"
 #############################################################################
-# Menu for the Test Group
+# Menu for the Controlled Nodes
 #############################################################################
 
-    set Editor::groupMenu [menu  .groupmenu -tearoff 0]
-    set Editor::IndexaddMenu .groupmenu.cascade
-    $Editor::groupMenu add command -label "Rename" \
+    set Editor::cnMenu [menu  .cnMenu -tearoff 0]
+    set Editor::IndexaddMenu .cnMenu.cascade
+    $Editor::cnMenu add command -label "Rename" \
 	     -command {set cursor [. cget -cursor]
 			YetToImplement
 			#DoubleClickNode ""
 		      }
-    $Editor::groupMenu add cascade -label "Add" -menu $Editor::IndexaddMenu
+    $Editor::cnMenu add cascade -label "Add" -menu $Editor::IndexaddMenu
     menu $Editor::IndexaddMenu -tearoff 0
     $Editor::IndexaddMenu add command -label "Add Index" -command {YetToImplement}
     $Editor::IndexaddMenu add command -label "Add PDO Objects" -command {AddPDOProc}   
@@ -4134,7 +3417,7 @@ proc Editor::create { } {
 #	     -command {set cursor [. cget -cursor]
 #			YetToImplement
 #		      } 
-     $Editor::groupMenu add command -label "Import XDC" \
+     $Editor::cnMenu add command -label "Import XDC" \
             -command {set cursor [. cget -cursor]
 			#Call the procedure
 			set types {
@@ -4144,97 +3427,20 @@ proc Editor::create { } {
             		}
 	
     
-    $Editor::groupMenu add separator
-    $Editor::groupMenu add command -label "Delete" -command { YetToImplement }
-    #$Editor::groupMenu add command -label "Delete" -command { Editor::deletegroup }
-############################################################################# 
-	# Menu for the Test Group
-	set Editor::groupconfic [menu  .groupconfic -tearoff 0]	
-	$Editor::groupconfic add command -label "Configure" -command {ConfigTestGroup} 
+    $Editor::cnMenu add separator
+    $Editor::cnMenu add command -label "Delete" -command { YetToImplement }
+
    
 #############################################################################
-# Menu for the Project
+# Menu for the Managing Nodes
 #############################################################################
-    set Editor::projectMenu [menu  .projectmenu -tearoff 0]
-#    set Editor::addMenu .projectmenu.cascade
-#    $Editor::projectMenu add cascade -label "Add" -menu $Editor::addMenu
-     $Editor::projectMenu add command -label "Add CN" -command {AddMNCNWindow} 
-     $Editor::projectMenu add separator
-     $Editor::projectMenu add command -label "Auto Generate" -command {YetToImplement} 
-#    menu $Editor::addMenu -tearoff 0
-#    $Editor::addMenu add command -label "Test Group" -command {AddNewTestGroupWindow}
-#    $Editor::addMenu add command -label "Profile" -command {AddProfileWindow}   
-#    $Editor::projectMenu add command -label "Configure" -command {ConfigProject} 
-#############################################################################    
-# Menu for the Profiles
-#############################################################################
-	set Editor::profileMenu [menu .profilemenu -tearoff 0]
-	$Editor::profileMenu add command -label "Delete" -command {DeleteProfile}
-#############################################################################    
-# Menu for the Help Message
-#############################################################################
-	set Editor::helpmsgMenu [menu .helpmsgmenu -tearoff 0]
-	#$Editor::helpmsgMenu add command -label "Edit" -command {EditMessage} 
-	$Editor::helpmsgMenu add command -label "Delete" -command {DeleteMessage}
-#############################################################################    
-# Menu for the TestCase
-#############################################################################
-    set Editor::caseMenu [menu .casemenu -tearoff 0]
-    $Editor::caseMenu add command -label "Add Headerfile" -command {AddHeader}
-    $Editor::caseMenu add command -label "BreakPoint" -command {BreakPoint}
-    $Editor::caseMenu add command -label "Compile" -command {ForceCompile}
-    $Editor::caseMenu add command -label "Configure" -command {ConfigCase}
-    $Editor::caseMenu add command -label "Delete" -command Editor::deleteNode
+    set Editor::mnMenu [menu  .mnMenu -tearoff 0]
 
-#############################################################################
-# Menu for the Text
-#############################################################################
-    set Editor::textMenu [menu .textmenu -tearoff 0]
-    $Editor::textMenu add command -label "    cut     " -command Editor::cut
-    $Editor::textMenu add command -label "    copy     " -command Editor::copy
-    $Editor::textMenu add command -label "    paste     " -command Editor::paste
-    $Editor::textMenu add separator
-    #$Editor::textMenu add command -label "undo" -command Editor::undo
-    #$Editor::textMenu add command -label "redo" -command Editor::redo
-    #$Editor::textMenu add separator
-    $Editor::textMenu add command -label "Auto Indent Selection" -command editorWindows::autoIndent
-    $Editor::textMenu add separator
-    $Editor::textMenu add separator
-    $Editor::textMenu add checkbutton -label "Auto Update" \
-            -variable Editor::options(autoUpdate) \
-            -command  {
-                set EditorData(options,autoUpdate) $Editor::options(autoUpdate)
-                set EditorData(options,showProc) $Editor::options(autoUpdate)
-                set Editor::options(showProc) $Editor::options(autoUpdate)
-                catch {
-                    if {$Editor::options(autoUpdate)} {
-                        Editor::updateObjects
-                    }
-        }
-    }
-    $Editor::textMenu add checkbutton -label "Show Console" \
-            -variable Editor::options(showConsole) \
-            -command  {
-                set EditorData(options,showConsole) $Editor::options(showConsole)
-                Editor::showConsole $EditorData(options,showConsole)
-                update idletasks
-                catch {$Editor::current(text) see insert}
-            }
-    $Editor::textMenu add checkbutton -label "Show Code Browser" \
-            -variable Editor::options(showProcs) \
-            -command  {
-                set EditorData(options,showProcs) $Editor::options(showProcs)
-                Editor::showTreeWin $EditorData(options,showProcs)
-                update idletasks
-                catch {$Editor::current(text) see insert}
-            }
-    $Editor::textMenu add checkbutton -label "Solely Console" \
-            -variable Editor::options(solelyConsole) \
-            -command  {
-                set EditorData(options,solelyConsole) $Editor::options(solelyConsole)
-                Editor::showSolelyConsole $EditorData(options,solelyConsole)
-                update idletasks
-            }
+     $Editor::mnMenu add command -label "Add CN" -command {AddMNCNWindow} 
+     $Editor::mnMenu add separator
+     $Editor::mnMenu add command -label "Auto Generate" -command {YetToImplement} 
+
+
     
     set Editor::prgindic -1
     set Editor::status ""
@@ -4246,10 +3452,7 @@ proc Editor::create { } {
             -progresstype normal \
             -progressfg blue ]
     $mainframe showstatusbar progression
-  #  $mainframe configure 
-#puts [$mainframe cget menu]
-#$mainframe setmenustate "Connect to POWERLINK network" disabled
-#$mainframe setmenustate all disabled    
+ 
    
 
 
@@ -4276,108 +3479,23 @@ proc Editor::create { } {
     set sep0 [Separator::create $tb1.sep0 -orient vertical]
     pack $sep0 -side left -fill y -padx 4 -anchor w
     
-    set bbox [ButtonBox::create $tb1.bbox2 -spacing 0 -padx 1 -pady 1]
-    set toolbarButtons(cut) [ButtonBox::add $bbox -image [Bitmap::get cut] \
-            -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
-            -helptext "Cut selection" -command Editor::cut]
-    set toolbarButtons(copy) [ButtonBox::add $bbox -image [Bitmap::get copy] \
-            -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
-            -helptext "Copy selection" -command Editor::copy]
-    set toolbarButtons(paste) [ButtonBox::add $bbox -image [Bitmap::get paste] \
-            -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
-            -helptext "Paste selection" -command Editor::paste]
+
+
     
-    #pack $bbox -side left -anchor w
-    set sep2 [Separator::create $tb1.sep2 -orient vertical]
-    #pack $sep2 -side left -fill y -padx 4 -anchor w
-    
-    #incr prgindic
-    set bbox [ButtonBox::create $tb1.bbox2b -spacing 0 -padx 1 -pady 1]
-    set toolbarButtons(toglcom) [ButtonBox::add $bbox -image [Bitmap::get toglcom] \
-            -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
-            -helptext "Toggle Comment" -command Editor::toggle_comment]
-    set toolbarButtons(comblock) [ButtonBox::add $bbox -image [Bitmap::get comblock] \
-            -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
-            -helptext "Make Comment Block" -command Editor::make_comment_block]
-    set toolbarButtons(unindent) [ButtonBox::add $bbox -image [Bitmap::get unindent] \
-            -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
-            -helptext "Unindent Selection" -command editorWindows::unindentSelection]
-    set toolbarButtons(indent) [ButtonBox::add $bbox -image [Bitmap::get indent] \
-            -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
-            -helptext "Indent Selection" -command editorWindows::indentSelection]
-    
-    
-    set sep1c [Separator::create $tb1.sep1c -orient vertical]
-    #pack $sep1c -side left -fill y -padx 4 -anchor w
-    
-    #incr prgindic
-    set bbox [ButtonBox::create $tb1.bbox3 -spacing 0 -padx 1 -pady 1]
-    
-    set toolbarButtons(undo) [ButtonBox::add $bbox -image [Bitmap::get undo] \
-            -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
-            -helptext "Undo" -command Editor::undo ]
-    
-    set toolbarButtons(redo) [ButtonBox::add $bbox -image [Bitmap::get redo] \
-            -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
-            -helptext "Redo" -command Editor::redo ]
-    #pack $bbox -side left -anchor w
-    #incr prgindic
-    set sep3 [Separator::create $tb1.sep3 -orient vertical]
-    #pack $sep3 -side left -fill y -padx 4 -anchor w
-    
-    set bbox [ButtonBox::create $tb1.bbox4 -spacing 0 -padx 1 -pady 1]
-    
-    set toolbarButtons(find) [ButtonBox::add $bbox -image [Bitmap::get find] \
-            -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
-            -helptext "Find Dialog" -command Editor::search_dialog ]
-    
-    set toolbarButtons(replace) [ButtonBox::add $bbox -image [Bitmap::get replace] \
-            -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
-            -helptext "Replace Dialog" -command Editor::replace_dialog ]
-    
-    #pack $bbox -side left -anchor w
-    
-    set search_combo [ComboBox::create $tb1.combo -label "" -labelwidth 0 -labelanchor w \
-           -textvariable Editor::search_var\
-            -values {""} \
-            -helptext "Enter Searchtext" \
-            -entrybg white\
-            -width 15]
-    #pack $search_combo -side left
-    
-    set bbox [ButtonBox::create $tb1.bbox5 -spacing 1 -padx 1 -pady 1]
-    
-    set down_arrow [ArrowButton::create $bbox.da -dir bottom \
-            -height 21\
-            -width 21\
-            -helptype balloon\
-            -helptext "Search forwards"\
-            -command Editor::search_forward]
-    set up_arrow [ArrowButton::create $bbox.ua -dir top\
-            -height 21\
-            -width 21\
-            -helptype balloon\
-            -helptext "Search backwards"\
-             -command Editor::search_backward]
-    
-    #pack $down_arrow $up_arrow -side left
-    #pack $bbox -side left -anchor w
-    #incr prgindic
-    set sep [Separator::create $tb1.sep -orient vertical]
-    #pack $sep -side left -fill y -padx 4 -anchor w
+
     
     set bbox [ButtonBox::create $tb1.bbox1b -spacing 0 -padx 4 -pady 1]
-    set start [ButtonBox::add $bbox -image [Bitmap::get start] \
+    set bb_start [ButtonBox::add $bbox -image [Bitmap::get start] \
             -height 21\
             -width 21\
             -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
             -helptext "Start" -command {YetToImplement}]
-    pack $start -side left -padx 4
+    pack $bb_start -side left -padx 4
     pack $bbox -side left -anchor w -padx 2
     
     set bbox [ButtonBox::create $tb1.bbox1c -spacing 1 -padx 1 -pady 1]
     
-    set compile_arrow [ButtonBox::add $bbox -image [Bitmap::get stop]\
+    set bb_stop [ButtonBox::add $bbox -image [Bitmap::get stop]\
             -height 21\
             -width 21\
             -helptype balloon\
@@ -4385,115 +3503,85 @@ proc Editor::create { } {
             -helptext "Stop"\
 	    -command "YetToImplement"]
     #puts [$tb1.bbox itemcget -image]
-    pack $compile_arrow -side left -padx 4
+    pack $bb_stop -side left -padx 4
 
-    set right_arrow [ButtonBox::add $bbox -image [Bitmap::get reconfig]\
+    set bb_reconfig [ButtonBox::add $bbox -image [Bitmap::get reconfig]\
             -height 21\
             -width 21\
             -helptype balloon\
             -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
             -helptext "Reconfigure"\
     	    -command "YetToImplement"]
-    pack $right_arrow -side left -padx 4
-
-    #set right_arrow [ArrowButton::create $bbox.ua -dir right\
-    #        -height 35\
-    #        -width 35\
-    #        -helptype balloon\
-    #        -helptext "Reconfigure"\
-    #        -command {YetToImplement }\
-    #]    
-    #pack $right_arrow -side left -padx 4
-    #set export_arrow [ButtonBox::add $bbox -image [Bitmap::get compile]\
-    #        -height 25\
-    #        -width 25\
-    #        -helptype balloon\
-    #        -helptext "Export"\
-    #	    -command {ExportGui}\
-    #]
-    #pack $export_arrow -side left -padx 5
-   #set import_arrow [ButtonBox::add $bbox -image [Bitmap::get compile]\
-   #         -height 25\
-   #         -width 25\
-   #         -helptype balloon\
-   #         -helptext "Import"\
-   #	    -command {ImportProject}\
-    #]
-    #pack $import_arrow -side left -padx 5
+    pack $bb_reconfig -side left -padx 4
+ 
     pack $bbox -side left -anchor w
     
-    set argument_combo [ComboBox::create $tb1.combo2 -label "" -labelwidth 0 -labelanchor w \
-            -textvariable Editor::argument_var\
-            -values {""} \
-            -helptext "Enter optional argument" \
-            -entrybg white\
-            -width 15]
-    #pack $argument_combo -side left
+ 
     
     set sep4 [Separator::create $tb1.sep4 -orient vertical]
     pack $sep4 -side left -fill y -padx 4 -anchor w
     
     set bbox [ButtonBox::create $tb1.bbox6 -spacing 1 -padx 1 -pady 1]
     pack $bbox -side left -anchor w
-    set down_arrow [ButtonBox::add $bbox -image [Bitmap::get transfercdc]\
+    set bb_cdc [ButtonBox::add $bbox -image [Bitmap::get transfercdc]\
             -height 21\
             -width 21\
             -helptype balloon\
             -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
             -helptext "Transfer CDC"\
     	    -command "YetToImplement"]
-    pack $down_arrow -side left -padx 4
-    set up_arrow [ButtonBox::add $bbox -image [Bitmap::get transferxml]\
+    pack $bb_cdc -side left -padx 4
+    set bb_xml [ButtonBox::add $bbox -image [Bitmap::get transferxml]\
             -height 21\
             -width 21\
             -helptype balloon\
             -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
             -helptext "Transfer XML"\
     	    -command "YetToImplement"]
-        pack $up_arrow -side left -padx 4
+        pack $bb_xml -side left -padx 4
     #incr prgindic
     set sep6 [Separator::create $tb1.sep6 -orient vertical]
     pack $sep6 -side left -fill y -padx 4 -anchor w
 
     set bbox [ButtonBox::create $tb1.bbox7 -spacing 1 -padx 1 -pady 1]
     pack $bbox -side left -anchor w
-    set down_arrow [ButtonBox::add $bbox -image [Bitmap::get build]\
+    set bb_build [ButtonBox::add $bbox -image [Bitmap::get build]\
             -height 21\
             -width 21\
             -helptype balloon\
             -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
             -helptext "Build Project"\
     	    -command "YetToImplement"]
-    pack $down_arrow -side left -padx 4
-    set up_arrow [ButtonBox::add $bbox -image [Bitmap::get rebuild]\
+    pack $bb_build -side left -padx 4
+    set bb_rebuild [ButtonBox::add $bbox -image [Bitmap::get rebuild]\
             -height 21\
             -width 21\
             -helptype balloon\
             -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
             -helptext "Rebuild Project"\
     	    -command "YetToImplement"]
-    pack $up_arrow -side left -padx 4
-    set right_arrow [ButtonBox::add $bbox -image [Bitmap::get clean]\
+    pack $bb_rebuild -side left -padx 4
+    set bb_clean [ButtonBox::add $bbox -image [Bitmap::get clean]\
             -height 21\
             -width 21\
             -helptype balloon\
             -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
             -helptext "clean Project"\
     	    -command "YetToImplement"]
-    pack $right_arrow -side left -padx 4
+    pack $bb_clean -side left -padx 4
     #incr prgindic
     set sep7 [Separator::create $tb1.sep7 -orient vertical]
     pack $sep7 -side left -fill y -padx 4 -anchor w
     
     set bbox [ButtonBox::create $tb1.bbox8 -spacing 1 -padx 1 -pady 1]
     pack $bbox -side left -anchor w
-    set down_arrow [ButtonBox::add $bbox -image [Bitmap::get disconnect]\
+    set bb_connect [ButtonBox::add $bbox -image [Bitmap::get disconnect]\
             -height 21\
             -width 21\
             -helptype balloon\
             -helptext "connection"\
             -command connectio ]
-    pack $down_arrow -side left -padx 4  
+    pack $bb_connect -side left -padx 4  
 
     set sep8 [Separator::create $tb1.sep8 -orient vertical]
     pack $sep8 -side left -fill y -padx 4 -anchor w 
@@ -4502,81 +3590,15 @@ proc Editor::create { } {
     label $f_tb1.l_empty -text ""
     radiobutton $f_tb1.ra_dec -text "Dec" -variable hexDec -value on
     radiobutton $f_tb1.ra_hex -text "Hex" -variable hexDec -value off
-    #button $f_tb1.b_sav -text " Save " -command "YetToImplement"
-    #button $f_tb1.b_dis -text "Discard" -command "YetToImplement"
-
     pack $f_tb1 -side right -anchor e -expand 1 -padx 100
-    #pack $f_tb1 -side right -anchor w -expand 1 -fill x
-    #pack $f_tb1.ra_dec 
-    #pack $f_tb1.ra_hex 
-
-    #grid config $f_tb1  
-
     grid config $f_tb1.ra_dec -row 0 -column 1 -sticky "w" -padx 5
     grid config $f_tb1.ra_hex -row 0 -column 2 -sticky "w" -padx 5
-    #grid config $f_tb1.b_sav -row 0 -column 3 -padx 5
-    #grid config $f_tb1.b_dis -row 0 -column 4 -padx 5
     $f_tb1.ra_dec select
 
-    #puts $tb1.ra_hex
-    #pack forget $tb1.ra_hex
-
-    #get Entry path out of Combo Widget
-    set childList [winfo children $search_combo]
-    foreach w $childList {if {[winfo class $w] == "Entry"} { set entry $w ; break}}
-    bind $entry <KeyRelease-Return> {Editor::search_forward ; break}
-    set childList [winfo children $argument_combo]
-    foreach w $childList {if {[winfo class $w] == "Entry"} { set entry2 $w ; break}}
-    bind $entry2 <KeyRelease-Return> {
-        set code [catch Editor::execFile cmd]
-        if $code {
-            tk_messageBox -message $errorInfo -title Error -icon error
-        }
-        break
-    }
     incr prgindic
-    # toolbar 2 creation
-    #set tb2  [MainFrame::addtoolbar $mainframe]
-    
-    #set bbox [ButtonBox::create $tb2.bbox2 -spacing 0 -padx 1 -pady 1]
-    
-    #ButtonBox::add $bbox -image [Bitmap::get incfont] \
-    #        -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
-    #        -helptext "Increase Fontsize" -command {Editor::increaseFontSize up}
-    #pack $bbox -side left -anchor w
-    
-    #ButtonBox::add $bbox -image [Bitmap::get decrfont] \
-    #        -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
-    #        -helptext "Decrease Fontsize" -command {Editor::increaseFontSize down}
-    #pack $bbox -side left -anchor w
-    #set sep3 [Separator::create $tb2.sep3 -orient vertical]
-    #pack $sep3 -side left -fill y -padx 4 -anchor w
-    #set Editor::Font_var [font configure editorFont -family]
-    #set Font_combo [ComboBox::create $tb2.combo \
-    #        -label "" \
-    #        -labelwidth 0\
-    #        -labelanchor w \
-    #        -textvariable Editor::Font_var\
-    #        -values [lsort -dictionary [font families]] \
-    #        -helptext "Choose Font" \
-    #        -entrybg white\
-    #        -modifycmd {Editor::changeFont}\
-    #        ]
-    #pack $Font_combo -side left
-    #set Editor::FontSize_var [font configure editorFont -size]
-    #set FontSize_combo [ComboBox::create $tb2.combo2 -width 2 -label "" -labelwidth 0 -labelanchor w \
-    #        -textvariable Editor::FontSize_var\
-    #        -values {8 9 10 11 12 14 16 20 24 30} \
-    #        -helptext "Choose Fontsize" \
-    #        -entrybg white\
-    #        -modifycmd {Editor::changeFont}\
-    #        ]
-    #pack $FontSize_combo -side left
-    
+      
     $Editor::mainframe showtoolbar 0 $Editor::toolbar1
-    #$Editor::mainframe showtoolbar 1 $Editor::toolbar2
-    
-    # set statusbar indicator for file-directory clock and Line/Pos
+
     set temp [MainFrame::addindicator $mainframe -text "Current Startfile: " ]
     set temp [MainFrame::addindicator $mainframe -textvariable Editor::current(project) ]
     set temp [MainFrame::addindicator $mainframe -text " File: " ]
@@ -4675,25 +3697,7 @@ $list_notebook configure -width 10
 #    pack $notebook -side left -fill both -expand yes -padx 4 -pady 4
     
     #alternate way of creating tab in right note book
-    #set pane4 [$notebook insert end Tab1 -text "Tab1"]
 
-
-	#entry $pane4.ent_1 -width 35 -textvariable pjtToolBoxPath -relief ridge -background white
-	#label $pane4.lab_1 -text "Object" -anchor w
-	#entry $pane4.ent_2 -width 35 -textvariable pjtToolBoxPath -relief ridge -background white
-	#label $pane4.lab_2 -text "Parameter Name" -anchor w
-	#entry $pane4.ent_3 -width 35 -textvariable pjtToolBoxPath -relief ridge -background white
-	#label $pane4.lab_3 -text "Data Type" -anchor w
-	#entry $pane4.ent_4 -width 35 -textvariable pjtToolBoxPath -relief ridge -background white
-	#label $pane4.lab_4 -text "Access Mode" -anchor w
-	#entry $pane4.ent_5 -width 35 -textvariable pjtToolBoxPath -relief ridge -background white
-	#label $pane4.lab_5 -text "Default Value" -anchor w
-	#entry $pane4.ent_6 -width 35 -textvariable pjtToolBoxPath -relief ridge -background white
-	#label $pane4.lab_6 -text "Parameter Value" -anchor w
-	#button $pane4.but_1 -width 25 -textvariable "Save changes" -relief ridge -text "Save Changes"
-	#button $pane4.but_2 -width 25 -textvariable "Save in XDS/XDD" -relief ridge -text "Save Changes in XDC/XDD file"
-
-	#label $pane4.disclaimer -width 75 -text "This window will be used for editing the parameters \n and yet to be designed" -relief ridge -background white -foreground red
 
 #
 # Create the font TkFixedFont if not yet present
@@ -4745,29 +3749,6 @@ eval font create BoldFont [font actual [$tbl cget -font]] -weight bold
 #
 # Populate the tablelist widget for taking screen shots
 #
-#$tbl insert end [list 1 0010000000202106 2106 02 00 0000 0010]
-#$tbl insert end [list 2 0008001000202104 2104 02 00 0001 0008]
-#$tbl insert end [list 3 0010000000202106 2106 02 00 0000 0010]
-#$tbl insert end [list 4 0008001000202104 2104 02 00 0001 0008]
-#$tbl insert end [list 5 0010000000202106 2106 02 00 0000 0010]
-#$tbl insert end [list 6 0008001000202104 2104 02 00 0001 0008]
-#$tbl insert end [list 7 0010000000202106 2106 02 00 0000 0010]
-#$tbl insert end [list 8 0008001000202104 2104 02 00 0001 0008]
-#$tbl insert end [list 9 0010000000202106 2106 02 00 0000 0010]
-#$tbl insert end [list 10 0008001000202104 2104 02 00 0001 0008]
-#$tbl insert end [list 11 0010000000202106 2106 02 00 0000 0010]
-#$tbl insert end [list 12 0008001000202104 2104 02 00 0001 0008]
-#$tbl insert end [list 13 0010000000202106 2106 02 00 0000 0010]
-#$tbl insert end [list 14 0008001000202104 2104 02 00 0001 0008]
-#$tbl insert end [list 15 0010000000202106 2106 02 00 0000 0010]
-#$tbl insert end [list 16 0008001000202104 2104 02 00 0001 0008]
-#$tbl insert end [list 17 0010000000202106 2106 02 00 0000 0010]
-#$tbl insert end [list 18 0008001000202104 2104 02 00 0001 0008]
-#$tbl insert end [list 19 0010000000202106 2106 02 00 0000 0010]
-#$tbl insert end [list 20 0008001000202104 2104 02 00 0001 0008]
-#$tbl insert end [list 21 0010000000202106 2106 02 00 0000 0010]
-#$tbl insert end [list 22 0008001000202104 2104 02 00 0001 0008]
-#$tbl insert end [list 23 0010000000202106 2106 02 00 0000 0010]
 
 $tbl insert 0 [list Index: 1006 ""]
 $tbl insert 1 [list Name: NMT_CycleLen_U32 ""]
@@ -4776,16 +3757,8 @@ $tbl insert 3 [list Data\ Type: Unsigned32 ""]
 $tbl insert 4 [list Access\ Type: rw ""]
 $tbl insert 5 [list Value: 0007 ""]
 
-#$tbl insert 6 [list]
-
-#$tbl cellconfigure 6,0 -window createSaveButton -bg gray98 
-#$tbl cellconfigure 6,1 -window createDiscardButton -bg gray98
-#$tbl cellconfigure 5,2 -window createFormatButton -bg gray98
-
 $tbl cellconfigure 1,1 -editable yes
 $tbl cellconfigure 5,1 -editable yes
-
-
 
 $tbl columnconfigure 1 -font Courier
 
@@ -4800,16 +3773,8 @@ set frame4 [frame $pane4.f]
 button $frame4.b_sav -text " Save " -command "YetToImplement"
 button $frame4.b_dis -text "Discard" -command "YetToImplement"
 pack $frame4
-#pack $frame4.b_sav
-#pack $frame4.b_dis
 grid config $frame4.b_sav -row 0 -column 0
 grid config $frame4.b_dis -row 0 -column 1
-
-#scrollbar $pane4.yscroll -command {$tbl yview} -orient vertical
-#scrollbar $pane4.xscroll -command {$tbl xview} -orient horizontal
-#pack $pane4.yscroll -side right
-#pack $pane4.xscroll -side bottom
-
 
 #forcing the frist tab Tab to be disabled
 #Widget::configure $pane4 "-state disabled"
@@ -4843,24 +3808,8 @@ $tbl2 insert 4 [list Data\ Type: Unsigned32]
 $tbl2 insert 5 [list Access\ Type: rw]
 $tbl2 insert 6 [list Value: 0007]
 
-#$tbl2 insert 7 [list]
-#$tbl2 cellconfigure 7,0 -window createSaveButton -bg gray98 
-#$tbl2 cellconfigure 7,1 -window createDiscardButton -bg gray98 
-#$tbl2 cellconfigure 7,2 -window createFormatButton -bg gray98
 
-#$tbl2 cellconfigure 0,0 -editable yes
-#$tbl2 cellconfigure 0,1 -editable yes
-#$tbl2 cellconfigure 1,0 -editable yes
-#$tbl2 cellconfigure 1,1 -editable yes
-#$tbl2 cellconfigure 2,0 -editable yes
 $tbl2 cellconfigure 2,1 -editable yes
-#$tbl2 cellconfigure 3,0 -editable yes
-#$tbl2 cellconfigure 3,1 -editable yes
-#$tbl2 cellconfigure 4,0 -editable yes
-#$tbl2 cellconfigure 4,1 -editable yes
-#$tbl2 cellconfigure 5,0 -editable yes
-#$tbl2 cellconfigure 5,1 -editable yes
-#$tbl2 cellconfigure 6,0 -editable yes
 $tbl2 cellconfigure 6,1 -editable yes
 
 pack $pane6.tbl2 -fill both -expand yes -padx 4 -pady 4
@@ -4868,8 +3817,6 @@ set frame6 [frame $pane6.f]
 button $frame6.b_sav -text " Save " -command "YetToImplement"
 button $frame6.b_dis -text "Discard" -command "YetToImplement"
 pack $frame6
-#pack $frame4.b_sav
-#pack $frame4.b_dis
 grid config $frame6.b_sav -row 0 -column 0
 grid config $frame6.b_dis -row 0 -column 1
 
@@ -4970,124 +3917,6 @@ EditManager::create_table $notebook "Index"
 
 }
 
-proc Editor::changeFont {} {
-    global EditorData
-    global conWindow
-    global warWindow
-    global errWindow
-    
-    variable index
-    variable text_win
-    variable Font_var
-    variable FontSize_var
-    
-    
-    font configure editorFont -family $Font_var \
-            -size $FontSize_var
-    set EditorData(options,fonts,editorFont) [font configure editorFont]
-    
-    font configure commentFont -family $Font_var \
-            -size $FontSize_var
-    set EditorData(options,fonts,commentFont) [font configure commentFont]
-    
-    font configure keywordFont -family $Font_var \
-            -size $FontSize_var
-    set EditorData(options,fonts,keywordFont) [font configure keywordFont]
-    
-    set newlist ""
-    set index_list [array names index]
-    foreach idx $index_list {\
-        set newlist [concat $newlist  $index($idx)]
-    }
-    
-    foreach idx $newlist {\
-        editorWindows::onChangeFontSize $text_win($idx,path)
-    }
-    $conWindow configure -font $EditorData(options,fonts,editorFont)
-    $warWindow configure -font $EditorData(options,fonts,editorFont)
-    $errWindow configure -font $EditorData(options,fonts,editorFont)
-    
-}
-
-proc Editor::increaseFontSize {direction} {
-    global EditorData
-    global conWindow
-    global warWindow
-    global errWindow
-    
-    variable notebook
-    variable current
-    variable index
-    variable text_win
-    variable list_notebook
-    variable pw2
-    variable con_notebook
-    variable pw1
-    variable mainframe
-    variable FontSize_var
-    
-    
-    set minSize 8
-    set maxSize 30
-    
-    set newlist ""
-    set index_list [array names index]
-    foreach idx $index_list {\
-        set newlist [concat $newlist  $index($idx)]
-    }
-    
-    if {$direction == "up"} {
-        if {[font configure editorFont -size] == $maxSize} {
-            return
-        }
-        font configure editorFont -size [expr [font configure editorFont -size]+1]
-        set EditorData(options,fonts,editorFont) [font configure editorFont]
-        font configure commentFont -size [expr [font configure commentFont -size]+1]
-        set EditorData(options,fonts,commentFont) [font configure commentFont]
-        font configure keywordFont -size [expr [font configure keywordFont -size]+1]
-        set EditorData(options,fonts,keywordFont) [font configure keywordFont]
-    } else  {
-        if {[font configure editorFont -size] == $minSize} {
-            return
-        }
-        font configure editorFont -size [expr [font configure editorFont -size]-1]
-        set EditorData(options,fonts,editorFont) [font configure editorFont]
-        font configure commentFont -size [expr [font configure commentFont -size]-1]
-        set EditorData(options,fonts,commentFont) [font configure commentFont]
-        font configure keywordFont -size [expr [font configure keywordFont -size]-1]
-        set EditorData(options,fonts,keywordFont) [font configure keywordFont]
-    }
-    
-    
-    foreach idx $newlist {\
-        editorWindows::onChangeFontSize $text_win($idx,path)
-    }
-    set FontSize_var [font configure editorFont -size]
-    $conWindow configure -font $EditorData(options,fonts,editorFont)
-    $warWindow configure -font $EditorData(options,fonts,editorFont)
-    $errWindow configure -font $EditorData(options,fonts,editorFont)
-    
-}
-
-proc Editor::update_font { newfont } {
-    variable _wfont
-    variable notebook
-    variable font
-    variable font_name
-    variable current
-    variable con_notebook
-    
-    . configure -cursor watch
-    if { $font != $newfont } {
-        SelectFont::configure $_wfont -font $newfont
-        set raised [NoteBook::raise $notebook]
-        $current(text) configure -font $newfont
-        NoteBook::raise $con_notebook
-        $con_notebook configure -font $newfont
-        set font $newfont
-    }
-    . configure -cursor ""
-}
 
 
 proc Editor::_create_intro { } {
@@ -5172,24 +4001,16 @@ close $fileId
 proc DoubleClickNode {node} {
 	global updatetree
 	set node [$updatetree selection get]
-puts "node in doubleclick------------->$node"
+#puts "node in doubleclick------------->$node"
 
 	if {$node=="Index_2"} {
 		pack .mainframe.topf.tb0.f.ra_dec -side left -padx 5
 		pack .mainframe.topf.tb0.f.ra_hex -side left -padx 5
-		#pack .mainframe.topf.tb0.f.b_sav -side left -padx 5
-		#pack .mainframe.topf.tb0.f.b_dis -side left -padx 5
 		pack forget .mainframe.topf.tb0.f.ra_dec
 		pack forget .mainframe.topf.tb0.f.ra_hex
-		#pack forget .mainframe.topf.tb0.f.b_sav
-		#pack forget .mainframe.topf.tb0.f.b_dis
-		puts "entered if"
 	} else {
-		puts "entered else"
 		pack .mainframe.topf.tb0.f.ra_dec -side left -padx 5
 		pack .mainframe.topf.tb0.f.ra_hex -side left -padx 5
-		#pack .mainframe.topf.tb0.f.b_sav -side left -padx 5
-		#pack .mainframe.topf.tb0.f.b_dis -side left -padx 5
 	}
 
 	set testGroupNo [GetCurrentNodeNum]
@@ -5209,21 +4030,6 @@ puts "node in doubleclick------------->$node"
 	}		
 }
 
-################################################################################
-# proc DeleteMessage
-# Input: 
-# Output: Deletes the help message for a test group.
-################################################################################
-proc DeleteMessage {} {
-	global updatetree
-	set testgroupno [GetCurrentNodeNum]
-	set node [$updatetree selection get]
-	set node [$updatetree parent $node]
-	set node [$updatetree parent $node]
-	set child [$updatetree delete helpMsg-$testgroupno]
-	$updatetree itemconfigure $node -image [Bitmap::get openfold]
-	arrTestGroup($testgroupno) configure -memHelpMsg ""
-}
 
 #####################################################################
 # procedure to draw toolbox
@@ -5367,72 +4173,8 @@ proc getRelativePath {abs_path hom_path} {
 	}
 	return $output
 }
-################################################################################################
-# proc AddTestGroup
-#
-# Output: Creates a testgroup instance and add its in tree window.
-################################################################################################
-proc AddTestGroup { Name } {
-	global updatetree
-	global PjtDir		
-	global tg_count
-	global totaltc
-	global testGroupName
-	global execCount
-	global helpMsg
-	set TotalTestGroup $tg_count
-	incr TotalTestGroup
-	##################################################################
-	# Update the Total TestGroup value 
-	##################################################################
-	incr tg_count
-	##################################################################
-	##Format the New TestGroup
-	##Create New Instance for TestGroup 
-	##################################################################
-	# Call the procedure to create the instance for testgroup
-	#createtestgroup arrTestGroup $TotalTestGroup
-	#set groupexecmode [buttontovalue]
-	set grouptestcase 0
-	#set helpMessage $helpMsg
-	#arrTestGroup($TotalTestGroup)  configure -memGroupName $testGroupName
-	#arrTestGroup($TotalTestGroup)  configure -memGroupExecMode $groupexecmode
-	#arrTestGroup($TotalTestGroup)  configure -memGroupExecCount $execCount
-	#arrTestGroup($TotalTestGroup)  configure -memChecked C
-	#arrTestGroup($TotalTestGroup)  configure -memHelpMsg $helpMsg
-	set totaltc($TotalTestGroup) $grouptestcase
-	#######################################################################
-	#Reads the variables and updates the tree 
-	########################################################################
-	set child [$updatetree insert $TotalTestGroup OBD TestGroup-$TotalTestGroup -text "$Name" -open 1 -image [Bitmap::get openfold]]
-	# Insert Config under the Group
-	#set child [$updatetree insert 0 TestGroup-$TotalTestGroup Config-$TotalTestGroup -text "Config"  -open 0 -image [Bitmap::get right]]
-	# Insert groupExecCount, groupTestCase,Message
-#	set child [$updatetree insert 1 Config-$TotalTestGroup groupExecMode-$TotalTestGroup -text $groupexecmode  -open 0 -image [Bitmap::get palette]]
-#	set child [$updatetree insert 2 Config-$TotalTestGroup groupExecCount-$TotalTestGroup -text $execCount -open 0 -image [Bitmap::get palette]]
-#	if {$helpMsg!=""} {
-#		set child [$updatetree insert 3 Config-$TotalTestGroup helpMsg-$TotalTestGroup -text Message  -open 0 -image [Bitmap::get palette]]
-#		$updatetree itemconfigure TestGroup-$TotalTestGroup -image [Bitmap::get openfolder_info]
-#	}
-	destroy .addMNCN
-}
-################################################################################################
-# proc AddProfile
-# Input : profile name entered by the user
-# Output: Creates a profile instance and add its in tree window.
-################################################################################################
-proc AddProfile {profileName} {
-	global updatetree
-	global pro_count
-	##################################################################
-	# Update the Project 
-	##################################################################
-	incr pro_count
-	##Create New Instance for Profile 
-	createprofile arrProfile $pro_count
-	arrProfile($pro_count)  configure -memProfileName $profileName  
-	set child [$updatetree insert $pro_count Profiles profile-$pro_count -text "$profileName"  -open 0 -image [Bitmap::get file]] 
-}
+
+
 
 #######################################################################
 # proc getAbsolutePath
@@ -5468,137 +4210,17 @@ proc getAbsolutePath {rel_path hom_path} {
 	append strOutput [join $output {/}]
 	return $strOutput
 }
-####################################################################################################
-# proc NewProject
-# Creates a new project, updates the data structure,draws the tree.
-#####################################################################################################
-proc NewProject {} {
-	global PjtDir
-	global PjtName	
-	global pageopened_list
-	global RootDir
-	global tg_count
-	global tc_count
-	global pro_count
-	global profileName
-	global pjtToolBoxPath
-	global pjtTimeOut
-	global pjtUserInclPath
-	global updatetree
-	global totaltc
-	#Create instance for project
-	createproject tempProject
-	# Copy oldproject details before deleting 
-	tempProject configure -memProjectName [instProject cget -memProjectName]
-	tempProject configure -memTimeout [instProject cget -memTimeout]
-	tempProject configure -memExecProfile [instProject cget -memExecProfile]
-	tempProject configure -memMode D
-	tempProject configure -memTollbox_path [instProject cget -memTollbox_path]
-	tempProject configure -memUserInclude_path [instProject cget -memUserInclude_path]
-	set oldPro_count $pro_count
-	set oldTg_count $tg_count
-	for {set profileCount 1} {$profileCount<=$pro_count} {incr profileCount} {
-			createprofile tempProfile $profileCount
-			tempProfile($profileCount) configure -memProfileName [arrProfile($profileCount) cget -memProfileName]
-	}
-	for {set testGrpCount 1} {$testGrpCount<=$tg_count} {incr testGrpCount} {
-			createtestgroup tempTestGroup $testGrpCount
-			tempTestGroup($testGrpCount) configure -memGroupName [arrTestGroup($testGrpCount) cget -memGroupName]
-			tempTestGroup($testGrpCount) configure -memGroupExecMode [arrTestGroup($testGrpCount) cget -memGroupExecMode]
-			tempTestGroup($testGrpCount) configure -memGroupExecCount [arrTestGroup($testGrpCount) cget -memGroupExecCount]
-			tempTestGroup($testGrpCount) configure -memChecked [arrTestGroup($testGrpCount) cget -memChecked]
-			tempTestGroup($testGrpCount) configure -memHelpMsg [arrTestGroup($testGrpCount) cget -memHelpMsg]
-			set oldTotaltc($testGrpCount) $totaltc($testGrpCount)
-			for {set tccount 1} {$tccount<=$totaltc($testGrpCount)} {incr tccount} {
-				createtestcase tempTestCase $testGrpCount $tccount
-				tempTestCase($testGrpCount)($tccount) configure -memCasePath [arrTestCase($testGrpCount)($tccount) cget memCasePath]
-				tempTestCase($testGrpCount)($tccount) configure -memCaseExecCount [arrTestCase($testGrpCount)($tccount) cget memCaseExecCount]
-				tempTestCase($testGrpCount)($tccount) configure -memCaseRunoptions [arrTestCase($testGrpCount)($tccount) cget memCaseRunoptions]
-				tempTestCase($testGrpCount)($tccount) configure -memCaseProfile [arrTestCase($testGrpCount)($tccount) cget memCaseProfile]
-				tempTestCase($testGrpCount)($tccount) configure -memHeaderPath [arrTestCase($testGrpCount)($tccount) cget memHeaderPath]
-			}
-	}
-	#Delete the old project details
-	# Delete all the records
-	struct::record delete instance instProject
-	for {set delProfCount 1} {$delProfCount<=$pro_count} {incr delProfCount} {
-		struct::record delete instance arrProfile($delProfCount)
-	}
-	for {set testGrpCount 1} {$testGrpCount<=$tg_count} {incr testGrpCount} {
-		struct::record delete instance arrTestGroup($testGrpCount)
-		for {set tccount 1} {$tccount<=$totaltc($testGrpCount)} {incr tccount} {
-			struct::record delete instance arrTestCase($testGrpCount)($tccount)
-		}
-	}
-	#DeclareStructure
-	createproject instProject
-	createprofile arrProfile 1
-	set pro_count 1
-	arrProfile(1) configure -memProfileName $profileName
-	append PjtDir "/$PjtName"
-	# Configure new project details
-	instProject configure -memProjectName "$PjtName.pjt"
-	instProject configure -memTimeout $pjtTimeOut
-	instProject configure -memExecProfile $profileName
-	instProject configure -memMode D
-	instProject configure -memTollbox_path [getRelativePath $pjtToolBoxPath $PjtDir]
-	instProject configure -memUserInclude_path [getRelativePath $pjtUserInclPath $PjtDir]
-	set tg_count 0
-	set tc_count 0
-	set pro_count 1
-	file mkdir $PjtDir
-	set PjtName "$PjtName.pjt"
-	set filename "$PjtDir/$PjtName"
-	
-	#set ret_writ [initwritexml $filename]
-	#set ret_writ "xmlCompleted"
-	file mkdir $PjtDir/logs
-	file mkdir $PjtDir/Elfs
-	# Close all the opened files in the pageopened_list  
-	set listLength [llength $pageopened_list]
-	for { set tmpcount 1} { $tmpcount < $listLength } { incr tmpcount} {
-		Editor::closeFile
-	}
-	# Create the New Pageopened_list 
-	set pageopened_list START
-	struct::record delete instance tempProject
-	for {set profileCount 1} {$profileCount<=$oldPro_count} {incr profileCount} {
-		struct::record delete instance tempProfile($profileCount)
-		puts Profile->$oldPro_count
-	}
-	for {set testGrpCount 1} {$testGrpCount<=$oldTg_count} {incr testGrpCount} {
-		struct::record delete instance tempTestGroup($testGrpCount)
-		for {set tccount 1} {$tccount<=$oldTotaltc($testGrpCount)} {incr tccount} {
-			struct::record delete instance tempTestCase($testGrpCount)($tccount)
-		}
-	}
-	# Delete the Tree
-	$updatetree delete end root TestSuite
-	update idletask
 
-	# Draw tree
-	InsertTree 
-	##puts PAGEOPENLIST:$pageopened_list
-}
+
 #################################################################################################################
 # proc AddMNCNWindow
 #
 # pops up a window and gets all the details for a testgroup and calls AddTestGroup procedure to update in tree window # and in structure
 #####################################################################################################################
 proc AddMNCNWindow {} {
-	#global testGroupName
-	#global execCount
-	#global mode_interactive
-	#global mode_continuous
-	#global mode_sequence
-	#global titleInnerFrame3
-	#global helpMsg
-	#global disptext
 	global Name
 	global nodeId
 
-	#set testGroupName ""
-	#set execCount 1
 	set winAddMNCN .addMNCN
 	catch "destroy $winAddMNCN"
 	toplevel     $winAddMNCN
@@ -5607,8 +4229,6 @@ proc AddMNCNWindow {} {
 	wm transient $winAddMNCN .
 	wm deiconify $winAddMNCN
 	grab $winAddMNCN
-	#wm minsize   $winAddTestGroup 300 400
-	#wm maxsize   $winAddTestGroup 250 400
 
 	label $winAddMNCN.l_empty -text ""	
 
@@ -5618,7 +4238,6 @@ proc AddMNCNWindow {} {
 	label $titleInnerFrame1.l_empty1 -text "               "
 	set titleFrame2 [TitleFrame $titleInnerFrame1.titleFrame2 -text "Select Node" ]
 	set titleInnerFrame2 [$titleFrame2 getframe]
-#	$titleInnerFrame2 configure -width 50 
 	radiobutton $titleInnerFrame2.ra_mn -text "Managing Node" -variable mncn -value on  
 	radiobutton $titleInnerFrame2.ra_cn -text "Controlled Node" -variable mncn -value off 
 	$titleInnerFrame2.ra_mn select
@@ -5640,10 +4259,6 @@ proc AddMNCNWindow {} {
 
 	set titleFrame3 [TitleFrame $titleInnerFrame1.titleFrame3 -text "CN Config" ]
 	set titleInnerFrame3 [$titleFrame3 getframe]
-	
-
-	#checkbutton $titleInnerFrame3.ch_def -text "Default" -variable default -onvalue 1 -relief flat -offvalue 0 -command { }
-	#checkbutton $titleInnerFrame3.ch_imp -text "Import XDC/XDD" -variable import -onvalue 1 -offvalue 0 -command { }
 
 	entry $titleInnerFrame3.en_imppath -textvariable tmpImpDir -background white -relief ridge -width 35
 	button $titleInnerFrame3.bt_imppath -text Browse -command {
@@ -5664,16 +4279,12 @@ proc AddMNCNWindow {} {
 	radiobutton $titleInnerFrame3.ra_def -text "Default" -variable confCn -value on  -command {
 			.addMNCN.titleFrame1.f.titleFrame3.f.en_imppath config -state disabled 
 			.addMNCN.titleFrame1.f.titleFrame3.f.bt_imppath config -state disabled 
-			#$titleInnerFrame3.en_imppath config -state disabled 
-			#$titleInnerFrame3.bt_imppath config -state disabled 
 	}		
 
 	
 	radiobutton $titleInnerFrame3.ra_imp -text "Import XDC/XDD" -variable confCn -value off -command {
 			.addMNCN.titleFrame1.f.titleFrame3.f.en_imppath config -state normal 
 			.addMNCN.titleFrame1.f.titleFrame3.f.bt_imppath config -state normal 
-			#$titleInnerFrame3.en_imppath config -state disabled
-			#$titleInnerFrame3.bt_imppath config -state disabled 
 	}
 	$titleInnerFrame3.ra_def select
 
@@ -5706,7 +4317,6 @@ proc AddMNCNWindow {} {
 			return
 		}
 
-		#AddTestGroup $Name
 		set chk [AddMNCN $Name]
 		destroy .addMNCN
 	}
@@ -5724,13 +4334,6 @@ proc AddMNCNWindow {} {
 	grid config $titleFrame1 -row 1 -column 0 -sticky "news" 
 
 	grid config $titleInnerFrame1.l_empty1 -row 0 -column 0  
-
-	#grid config $titleFrame2 -row 1 -column 0  -ipadx 5 -ipady 5 -padx 100 -pady 5 -sticky "news"
-	#grid config $titleFrame2 -row 1 -column 0  -ipadx 8 -ipady 5
-	#grid config $titleInnerFrame2.ra_mn -row 0 -column 0 
-	#grid config $titleInnerFrame2.ra_cn -row 1 -column 0 
-
-	#grid config $titleInnerFrame1.l_empty2 -row 2 -column 0  
 
 	grid config $frame2 -row 2 -column 0 
 	grid config $frame2.l_name -row 0 -column 0 
@@ -5777,439 +4380,12 @@ proc AddMNCN {Name} {
 	incr TotalTestGroup
 	incr tg_count
 	set child [$updatetree insert $TotalTestGroup OBD TestGroup-$TotalTestGroup -text "$Name" -open 1 -image [Bitmap::get openfold]]
-	#incr TotalTestGroup
-	#set child [$updatetree insert 0 Config-$TotalTestGroup TestGroup-$TotalTestGroup -text "NMT_Cycle(1006)"  -open 0 -image [Bitmap::get right]]
-	#Insert groupExecCount, groupTestCase,Message
-	#incr TotalTestGroup
-	#set child [$updatetree insert 1 Config-$TotalTestGroup TestGroup-$TotalTestGroup -text "Pdomapping"  -open 0 -image [Bitmap::get palette]]
-	#set child [$updatetree insert 2 Config-$TotalTestGroup groupExecCount-$TotalTestGroup -text $execCount -open 0 -image [Bitmap::get palette]]
-#AddTestCase
-
-
-
-#	global updatetree
-#	global PjtDir		
-#	global tg_count
-#	global totaltc
-#	global testGroupName
-#	global execCount
-#	global helpMsg
-#	set TotalTestGroup $tg_count
-#	incr TotalTestGroup
-	##################################################################
-	# Update the Total TestGroup value 
-	##################################################################
-#	incr tg_count
-	##################################################################
-	##Format the New TestGroup
-	##Create New Instance for TestGroup 
-	##################################################################
-	# Call the procedure to create the instance for testgroup
-	#createtestgroup arrTestGroup $TotalTestGroup
-	#set groupexecmode [buttontovalue]
-#	set grouptestcase 0
-	#set helpMessage $helpMsg
-	#arrTestGroup($TotalTestGroup)  configure -memGroupName $testGroupName
-	#arrTestGroup($TotalTestGroup)  configure -memGroupExecMode $groupexecmode
-	#arrTestGroup($TotalTestGroup)  configure -memGroupExecCount $execCount
-	#arrTestGroup($TotalTestGroup)  configure -memChecked C
-	#arrTestGroup($TotalTestGroup)  configure -memHelpMsg $helpMsg
-#	set totaltc($TotalTestGroup) $grouptestcase
-	#######################################################################
-	#Reads the variables and updates the tree 
-	########################################################################
-#	set child [$updatetree insert $TotalTestGroup OBD TestGroup-$TotalTestGroup -text "$Name" -open 1 -image [Bitmap::get openfold]]
 
 	return
 }
 
 
 
-
-
-
-##############################################################################
-# proc ConfigTestGroup
-# inputs -nil
-# outputs -nil
-# Pops up a window contain entry and combobox, get the data from user and 
-# stores it in Global data
-################################################################################
-proc ConfigTestGroup {} {
-	global disptext
-	global helpMsg
-	global execCount
-	global memGroupExecMode
-	global titleInnerFrame1
-	global mode_interactive
-	global mode_continuous
-	global mode_sequence
-	set groupno [GetCurrentNodeNum]
-	# on startup set options to defaults
-	default_ExecModeOptions
-	set winConfigGroup .configTestGroup
-	catch "destroy $winConfigGroup"
-	toplevel     $winConfigGroup
-	wm title     $winConfigGroup "Configure Test Group"
-	wm resizable $winConfigGroup 0 0
-	wm transient $winConfigGroup .
-	wm deiconify $winConfigGroup
-	grab $winConfigGroup
-	#wm minsize   $winAddTestGroup 300 400
-	#wm maxsize   $winAddTestGroup 250 400
-	font create custom -weight bold
-	label $winConfigGroup.l_empty1 -text ""	
-	label $winConfigGroup.l_title -text "Configure Test Group" -font custom
-	label $winConfigGroup.l_empty2 -text ""
-	
-	grid config $winConfigGroup.l_empty1 -row 0 -column 0 -sticky "news"
-	grid config $winConfigGroup.l_title  -row 1 -column 0 -sticky "news" -ipadx 125
-	grid config $winConfigGroup.l_empty2 -row 2 -column 0 -sticky "news"
-	set titleFrame1 [TitleFrame $winConfigGroup.titleFrame1 -text "Configure Group" ]
-	grid config $titleFrame1 -row 3 -column 0 -ipadx 20 -sticky "news"
-	set titleInnerFrame1 [$titleFrame1 getframe]
-	
-	set titleFrame2 [TitleFrame $titleInnerFrame1.titleFrame2 -text "Configuration"]  
-	grid config $titleFrame2 -row 2 -column 0 -ipadx 5  -sticky "news"
-	set titleInnerFrame2 [$titleFrame2 getframe]
-		
-	####frame1 has six radio buttons to select excution mode 
-	set frame1 [frame $titleInnerFrame2.fram1]
-	
-	#### frame3 has label Execution count and the entry box
-	set frame3 [frame $titleInnerFrame2.fram3]
-	#### frame 4 has ok and cancel button
-	set frame4 [frame $titleInnerFrame1.fram4]
-	set frame5 [frame $titleInnerFrame1.fram5]
-	
-	label $titleInnerFrame1.l_empty3 -text ""
-	grid config $titleInnerFrame1.l_empty3  -row 1 -column 0
-	label $titleInnerFrame2.l_empty4 -text ""
-	grid config $titleInnerFrame2.l_empty4  -row 0 -column 0 	
-	label $frame3.l_exe -text "Execution Count :"
-	set execCount [arrTestGroup($groupno) cget -memGroupExecCount]
-	entry $frame3.en_exe -textvariable execCount -background white -validate key -vcmd {expr {[string len %P] <= 5} && {[string is int %P]}}
-	grid config $frame3.l_exe  -row 0 -column 0 
-	grid config $frame3.en_exe -row 0 -column 1
-	grid config $frame3 -row 1 -column 0
-	
-	label $titleInnerFrame2.l_empty5 -text ""
-	grid config $titleInnerFrame2.l_empty5  -row 2 -column 0
-	label $titleInnerFrame2.l_mode -text "Execution Mode"
-	grid config $titleInnerFrame2.l_mode  -row 3 -column 0 
-	
-	#variables used for radio buttons
-	radiobutton $frame1.ra_inter -text "Interactive"   -variable mode_interactive   -value on 
-	radiobutton $frame1.ra_bat   -text "Batch"         -variable mode_interactive   -value off 
-	radiobutton $frame1.ra_cont  -text "Continuous"    -variable mode_continuous  -value on 
-	radiobutton $frame1.ra_disco -text "Discontinuous" -variable mode_continuous  -value off 
-	radiobutton $frame1.ra_seq   -text "Sequence"      -variable mode_sequence     -value on 
-	radiobutton $frame1.ra_ran   -text "Random"        -variable mode_sequence     -value off 
-	grid config $frame1.ra_inter -row 0 -column 0 -sticky "w"
-	grid config $frame1.ra_bat   -row 0 -column 1 -sticky "w"
-	grid config $frame1.ra_cont  -row 1 -column 0 -sticky "w"
-	grid config $frame1.ra_disco -row 1 -column 1 -sticky "w"
-	grid config $frame1.ra_seq   -row 2 -column 0 -sticky "w"
-	grid config $frame1.ra_ran   -row 2 -column 1 -sticky "w"
-	grid config $frame1 -row 5 -column 0
-
-	scrollbar $titleInnerFrame1.h -orient horizontal -command "$titleInnerFrame1.t_help xview"
-	scrollbar $titleInnerFrame1.v -command "$titleInnerFrame1.t_help yview"
-	text $titleInnerFrame1.t_help -width 40 -height 10 -xscroll "$titleInnerFrame1.h set" -yscroll "$titleInnerFrame1.v set" 
-	set helpMsg [arrTestGroup($groupno) cget -memHelpMsg]
-	puts Helpmessage->$helpMsg
-	$titleInnerFrame1.t_help insert end $helpMsg	
-	grid config $titleInnerFrame1.t_help -row 5 -column 0
-	grid  $titleInnerFrame1.v -row 5 -column 2 -sticky "ns"
-	grid  $titleInnerFrame1.h -row 6 -column 0 -columnspan 2 -sticky "we"
-	if {$helpMsg!=""} {
-		set disptext 1
-			$titleInnerFrame1.t_help config -state normal -background white
-	} else {
-		set disptext 0
-		$titleInnerFrame1.t_help config -state disable -background lightgrey
-	}
-	label $titleInnerFrame1.l_empty6 -text ""
-	grid config $titleInnerFrame1.l_empty6  -row 3 -column 0
-	####when check buton is selected text is enabled if it is unselected text is disabled
-	checkbutton $titleInnerFrame1.ch_help -text "Enable/Disable Help Messages" -variable disptext -onvalue 1 -offvalue 0 -command {
- 		global $titleInnerFrame1
-		if {$disptext==1} {
-				$titleInnerFrame1.t_help insert end $helpMsg
-			$titleInnerFrame1.t_help config -state normal -background white
-		} else {
-			$titleInnerFrame1.t_help config -state disabled -background lightgrey
-		}
-	}
-	grid config $titleInnerFrame1.ch_help -row 4 -column 0
-	label $titleInnerFrame1.l_empty7 -text ""
-	grid config $titleInnerFrame1.l_empty7  -row 7 -column 0
-	button $frame4.b_ok -text "  Ok  " -command { 
-							global $titleInnerFrame1
-							set execCount [string trim $execCount]
-							if {$execCount==""} {
-								tk_messageBox -message "Enter value for Execution Count" -icon error -parent .configTestGroup
-								return
-							} elseif {$execCount>10000} {
-								tk_messageBox -message "Enter value less than 10000 for Execution Count" -icon error -parent .configTestGroup	
-								return
-							}
-							set groupno [GetCurrentNodeNum]
-							set selectvalue [arrTestGroup($groupno) cget -memGroupExecMode]
-							# Call the procedure to convert the Button Value to Exact Value
-							set groupexecmode [buttontovalue]	
-							# Update the TestGroup
-							arrTestGroup($groupno)  configure -memGroupExecMode $groupexecmode
-							arrTestGroup($groupno)  configure -memGroupExecCount $execCount
-							set modifyto [arrTestGroup($groupno) cget -memGroupExecCount]		
-							set modifyto [arrTestGroup($groupno) cget -memGroupExecMode]
-							set helpMsg [string trim [$titleInnerFrame1.t_help get @0,0 end]]
-							# updatetree _draw_tree
-							# Delete the Sub Nodes
-							set child [$updatetree delete 1 groupExecMode-$groupno]
-							set child [$updatetree delete 2 groupExecCount-$groupno]
-							if {[arrTestGroup($groupno) cget -memHelpMsg]!=""} {
-								set child [$updatetree delete 3 helpMsg-$groupno]
-								$updatetree itemconfigure TestGroup-$groupno -image [Bitmap::get openfold]
-								arrTestGroup($groupno) configure -memHelpMsg ""
-							}
-							
-							# ReDraw the Sub Nodes groupExecCount, groupTestCase
-							set child [$updatetree insert 1 Config-$groupno groupExecMode-$groupno -text $groupexecmode  -open 0 -image [Bitmap::get palette]]
-							set child [$updatetree insert 2 Config-$groupno groupExecCount-$groupno -text $groupexeccount  -open 0 -image [Bitmap::get palette]]
-							if {$disptext==1 && $helpMsg !=""} {
-								set child [$updatetree insert 3 Config-$groupno helpMsg-$groupno -text Message -open 0 -image [Bitmap::get palette]]
-								$updatetree itemconfigure TestGroup-$groupno -image [Bitmap::get openfolder_info]
-								#arrTestGroup($groupno) configure -memHelpMsg $helpMsg
-							} 
-							font delete custom
-							destroy .configTestGroup
-						    }
-	button $frame4.b_cancel -text "Cancel" -command {
-								destroy .configTestGroup
-								font delete custom
-							}
-	wm protocol .configTestGroup WM_DELETE_WINDOW {
-							font delete custom
-							destroy .configTestGroup
-						   }
-	grid config $frame4.b_ok  -row 0 -column 0 
-	grid config $frame4.b_cancel -row 0 -column 1
-	grid config $frame4 -row 8 -column 0 
-	label $winConfigGroup.l_empty8 -text ""
-	grid config $winConfigGroup.l_empty8 -row 4 -column 0 -sticky "news"
-	label $winConfigGroup.l_empty9 -text ""
-	grid config $winConfigGroup.l_empty9 -row 5 -column 0 -sticky "news"
-}
-#########################################################################################
-# proc AddTestCaseWindow
-# pops up a window to get all testcase details and then calls AddTestCase procedure
-#######################################################################################
-proc AddTestCaseWindow {} {
-	set winAddTestCase .addTestCase
-	global filename
-	global testcaseexeccount
-	global testcaseheader
-	global selectedProfile
-	global pro_count
-	global addheader
-	global breakpt
-	catch "destroy $winAddTestCase"
-	toplevel     $winAddTestCase
-	wm title     $winAddTestCase "Add New Test Case"
-	wm resizable $winAddTestCase 0 0
-	wm transient $winAddTestCase .
-	wm deiconify $winAddTestCase
-	grab $winAddTestCase
-	#wm minsize   $winAddTestGroup 300 400
-	#wm maxsize   $winAddTestGroup 250 400
-	font create custom2 -weight bold
-	global frame3
-	global titleInnerFrame3
-	label $winAddTestCase.l_empty1 -text ""	
-	label $winAddTestCase.l_title -text "Add New Test Case" -font custom2
-	label $winAddTestCase.l_empty2 -text ""
-	
-	grid config $winAddTestCase.l_empty1 -row 0 -column 0 -sticky "news"
-	grid config $winAddTestCase.l_title  -row 1 -column 0 -sticky "news" -ipadx 125
-	grid config $winAddTestCase.l_empty2 -row 2 -column 0 -sticky "news"
-	
-	set titleFrame1 [TitleFrame $winAddTestCase.titleFrame1 -text "New Test Case" ]
-	grid config $titleFrame1 -row 3 -column 0 -ipadx 20 -sticky "news"
-	set titleInnerFrame1 [$titleFrame1 getframe]
-
-	set titleFrame3 [TitleFrame $titleInnerFrame1.titleFrame3 -text "List of Available Profiles"]
-	grid config $titleFrame3 -row 2 -column 0 -ipadx 3 -sticky "news"
-	set titleInnerFrame3 [$titleFrame3 getframe]
-
-	set titleFrame2 [TitleFrame $titleInnerFrame1.titleFrame2 -text "Configuration"]  
-	grid config $titleFrame2 -row 3 -column 0 -ipadx 5  -sticky "news"
-	set titleInnerFrame2 [$titleFrame2 getframe]
-	
-	for { set chkButtonCount 1} {$chkButtonCount <= $pro_count} {incr chkButtonCount} {
-		set state($chkButtonCount) 1
-		checkbutton $titleInnerFrame3.cb_profile$chkButtonCount -text [arrProfile($chkButtonCount) cget -memProfileName] -variable state($chkButtonCount)
-	}
-	$titleInnerFrame3.cb_profile1 select
-
-	set row 0
-	for {set profileCount 1 } {$profileCount <= $pro_count} {incr profileCount} {
-		grid config $titleInnerFrame3.cb_profile$profileCount -row $row -column 0 -sticky w
-		incr row
-	}
-	#### frame2 has label TestGroupName and the entry box
-	set frame2 [frame $titleInnerFrame1.fram2]
-	#### frame3 has label Execution count and the entry box
-	set frame3 [frame $titleInnerFrame2.fram3]
-	#### frame 4 has ok and cancel button
-	set frame4 [frame $titleInnerFrame1.fram4]
-	set frame5 [frame $titleInnerFrame1.fram5]
-	
-	label $frame2.l_name -text "Test Case Path :"
-	set filename ""
-	entry $frame2.en_name -textvariable filename -background white -width 40
-	button $frame2.bt_name -text Browse -command {
-							set types {
-							        {"All C Files"     {.c } }
-									{"All Files"     {* } }
-							}
-							set filename [tk_getOpenFile -title "Add TestCase" -filetypes $types -parent .addTestCase]
-							}
-	grid config $frame2.l_name  -row 0 -column 0 
-	grid config $frame2.en_name -row 0 -column 1 -columnspan 3 
-	grid config $frame2.bt_name -row 0 -column 4
-	grid config $frame2 -row 0 -column 0
-	
-	label $frame3.l_empty3 -text ""
-	grid config $frame3.l_empty3  -row 1 -column 0
-	
-	label $titleInnerFrame2.l_empty4 -text ""
-	grid config $titleInnerFrame2.l_empty4  -row 0 -column 0 
-	
-	label $frame3.l_exe -text "Execution Count :"
-	set testcaseexeccount 1
-	entry $frame3.en_exe -textvariable testcaseexeccount -background white -validate key -vcmd {expr {[string len %P] <= 5} && {[string is int %P]}}
-	grid config $frame3.l_exe  -row 0 -column 0 
-	grid config $frame3.en_exe -row 0 -column 1 -sticky "w"
-	grid config $frame3 -row 1 -column 0
-	
-	#label $frame3.l_empty11 -text ""
-	#grid $frame3.l_empty11 -row 2 -column 3
-	label $frame3.l_header -text "Add Header File :" -state disabled
-	set testcaseheader ""
-	entry $frame3.en_header -textvariable testcaseheader -width 35
-	button $frame3.bt_header -text Browse -state disabled -command {
-									set types {
-       										 {"All Header Files"     {.h } }
-       				 					}
-									set testcaseheader [tk_getOpenFile -title "Add Header File" -filetypes $types -parent .addTestCase]
-									}											
-	grid config $frame3.l_header -row 4 -column 0
-	grid config $frame3.en_header -row 4 -column 1 -columnspan 3 -sticky "w"
-	grid config $frame3.bt_header -row 4 -column 4 
-	set addheader 0
-	set breakpt 0
-	
-	####when check buton is selected text is enabled if it is unselected text is disabled
-	checkbutton $frame3.ch_addHeader -text "Add Header File" -variable addheader -onvalue 1 -offvalue 0 -command {
-		if {$addheader==1} {
-			global $frame3
-			$frame3.l_header config -state normal
-			$frame3.en_header config -state normal -background white
-			$frame3.bt_header config -state normal
-		} else {
-			$frame3.l_header config -state disabled
-			$frame3.en_header config -state disabled -background lightgrey
-			$frame3.bt_header config -state disabled
-		}
-	}
-	
-	grid config $frame3.ch_addHeader -row 3 -column 0
-	label $frame3.l_empty10 -text ""
-	grid config $frame3.l_empty10 -row 5 -column 0
-	checkbutton $frame3.ch_brkpt -text "Set Break Point" -variable breakpt -onvalue 1 -offvalue 0 -command {}
-	grid config $frame3.ch_brkpt -row 6 -column 0
-	label $frame3.l_empty7 -text ""
-	grid config $frame3.l_empty7  -row 7 -column 0
-	button $frame4.b_ok -text "  Ok  " -command {
-							global $titleInnerFrame3
-							set selectedProfile ""
-							if {$filename==""} {
-								tk_messageBox -message "TestCase not selected" -icon error
-								focus .addTestCase
-								return
-							}
-							if {![file isfile $filename]} {
-								tk_messageBox -message "Entered test case path is not a file" -icon error -parent .addTestCase
-								focus .addTestCase
-								return
-							}						
-							set testcaseexeccount [string trim $testcaseexeccount]
-							if {$testcaseexeccount=="" } {
-								tk_messageBox -message "Execution Count cannot be empty" -icon error -parent .addTestCase
-								set testcaseexeccount 1
-								focus .addTestCase
-								return
-							}
-							if {$testcaseexeccount > 10000} {
-								tk_messageBox -message "Execution Count should be less than 10000" -icon error -parent .addTestCase
-								set testcaseexeccount 1
-								focus .addTestCase
-								return
-							}
-							set testcaseheader [string trim $testcaseheader]
-							if {$addheader==1} {
-								if {![file isfile $testcaseheader]} {
-									tk_messageBox -message "Entered header file path is not a file" -icon error -parent .addTestCase
-									focus .addTestCase
-									return
-								}
-							}
-							if {$addheader==0} {
-								set testcaseheader "None"
-							}
-							if {$breakpt==1} {
-								set runoptions "CB"
-							} else {
-								set runoptions "CN"
-							}
-							for {set chkButtonCount 1} { $chkButtonCount<=$pro_count } {incr chkButtonCount} {
-								global state($chkButtonCount)
-								if {$state($chkButtonCount) == 1 } {
-									lappend selectedProfile [$titleInnerFrame3.cb_profile$chkButtonCount cget -text]
-								}
-							}
-							if {$selectedProfile==""} {
-								tk_messageBox -message "Select atleast one profile" -icon error -parent .addTestCase
-								focus .addTestCase
-								return
-							}
-							set filename [getRelativePath $filename $PjtDir]
-							if {$testcaseheader!="None"} {
-								set testcaseheader [getRelativePath $testcaseheader $PjtDir]
-							}
-							AddTestCase
-							destroy .addTestCase
-							font delete custom2
-						     }
-								
-	button $frame4.b_cancel -text "Cancel" -command { 
-							destroy .addTestCase
-							font delete custom2
-					       }
-	wm protocol .addTestCase WM_DELETE_WINDOW {
-							font delete custom2
-							destroy .addTestCase
-						   }
-	grid config $frame4.b_ok  -row 0 -column 0 
-	grid config $frame4.b_cancel -row 0 -column 1
-	grid config $frame4 -row 8 -column 0 
-	
-	label $winAddTestCase.l_empty8 -text ""
-	grid config $winAddTestCase.l_empty8 -row 4 -column 0 -sticky "news"
-	label $winAddTestCase.l_empty9 -text ""
-	grid config $winAddTestCase.l_empty9 -row 5 -column 0 -sticky "news"
-}
 #################################################################
 # proc BreakPoint
 #Sets or removes the break point for the current testcase
@@ -6265,495 +4441,7 @@ proc ForceCompile {} {
 	}	
 }
 ###############################################################################
-proc ExportGui {} {	
-	global expFldrDirPath
-	global tempExpFldrNme
-	global .expprj
 
-	set winExpProj .expprj
-	catch "destroy $winExpProj"
-	toplevel $winExpProj
-	wm title	 $winExpProj	"Export"
-	wm resizable $winExpProj 0 0
-	wm transient $winExpProj .
-	wm deiconify $winExpProj
-	wm minsize $winExpProj 150 300
-	grab $winExpProj
-	font create custom3 -weight bold
-	label $winExpProj.l_title -text "Export Project" -font custom3
-	label $winExpProj.l_empty -text "               "
-	set titf1 [TitleFrame $winExpProj.titf1 -text "Export Folder"]
-	set tiff2 [$titf1 getframe]
-	label $tiff2.l_pjname -text "Export Folder Name :" -justify left
-	set PjtName ""
-	entry $tiff2.en_pjname -textvariable tempExpFldrNme -background white -relief ridge
-	set tempExpFldrNme ""
-	label $tiff2.l_pjpath -text "Export Path :" -justify left
-
-	entry $tiff2.en_pjpath -textvariable expFldrDirPath -background white -relief ridge -width 35
-	set expFldrDirPath [pwd]
-	button $tiff2.bt_pjpath -text Browse -command {
-							set expFldrDirPath [tk_chooseDirectory -title "Export Path" -parent .expprj]
-
-							if {$expFldrDirPath == ""} {
-								set expFldrDirPath [pwd]			
-								focus .expprj
-								return
-							}
-						       }
-		label $tiff2.l_empty1 -text "                         "
-	button $tiff2.bt_ok -text Ok -command {
-						set tempExpFldrNme [string trim $tempExpFldrNme]
-						if {$tempExpFldrNme == "" } {
-							tk_messageBox -message "Enter Project Name" -title "Set Project Name error" -icon error
-							focus .expprj
-							return
-						}
-						if {![file isdirectory $expFldrDirPath]} {
-							tk_messageBox -message "Entered path for project is not a Directory" -icon error
-							focus .expprj
-							return
-						}
-						if { [string match "*.*" $tempExpFldrNme ] } {
-							tk_messageBox -message "Invalid name should not have . " -icon error
-							focus .expprj
-							return							
-			
-						}
-						if { [string match "*/*" $tempExpFldrNme ] } {
-							tk_messageBox -message "Invalid name should not have / " -icon error
-							focus .expprj
-							return							
-			
-						}
-						if {[file isdirectory $expFldrDirPath/$tempExpFldrNme.tar]==1} {
-							set result [tk_messageBox -message "Archive file already exist\nDo you want to overwite it?" -type yesno -icon question -title 			"Question"]
-	   						switch -- $result {
-	   		     					yes {
-									file delete $expFldrDirPath/$tempExpFldrNme.tar
-								}
-	   		     					no  {
-									destroy .expprj
-								}
-	   		     					cancel {
-									conPuts "Open Project Canceled" info
-									return
-									}
-	   						}
-						}
-							
-						ExportProject $expFldrDirPath $tempExpFldrNme
-						
-
-						font delete custom3
-						destroy .expprj
-					}
-
-	button $tiff2.bt_cancel -text Cancel -command { 
-							font delete custom3
-							destroy .expprj
-						      }
-
-	grid config $winExpProj.l_title -row 0 -column 0 -columnspan 5 -sticky "news"
-	grid config $tiff2.l_pjname -row 0 -column 0 -sticky w
-	grid config $tiff2.en_pjname -row 0 -column 1 -sticky w -columnspan 4
-	grid config $tiff2.bt_pjpath -row 1 -column 6
-	grid config $tiff2.l_pjpath -row 1 -column 0 -sticky w
-	grid config $tiff2.en_pjpath -row 1 -column 1 -sticky w -columnspan 4
-	label $tiff2.l_empty2 -text "               "
-	grid config $tiff2.l_empty2 -row 2 -column 0
-	grid config $tiff2.l_empty1 -row 10 -column 0 -sticky w
-	grid config $tiff2.bt_ok -row 11 -column 1 -sticky news -columnspan 1
-	grid config $tiff2.bt_cancel -row 11 -column 6 -sticky news
-	grid config $titf1 -column 1 -ipadx 10 -row 1
-	focus $tiff2.l_pjname
-
-}
-###############################################################################
-# proc Export
-# to export requiired files
-##############################################################################
-proc ExportProject {expFldrDirPath tempExpFldrNme} {
-	global tg_count
-	global tc_count
-	global totaltc
-	global pro_count
-	global PjtDir
-
-
-#set expFldrPth [tk_chooseDirectory -title "Enter location where file is to be exported " -parent .]
-set expFldrPth $expFldrDirPath/$tempExpFldrNme
-set exportFolderPath /tmp/$tempExpFldrNme
-set tarSrcFldr $exportFolderPath
-#set tarSrcFldr $exportFolderPath
-set folderName [instProject cget -memProjectName]
-###to remove extension .pjt so that create folder with same name as project
-set folderName [string range $folderName 0 [expr [string length $folderName]-5]]
-set tarSrcFile $folderName
-#calclated for archiving files used later
-#set tarSrcFldr [string range $PjtDir 0 [expr [string length $PjtDir]- [string length $folderName]-1]]
-#set tarSrcFile $folderName
-######################################
-file delete -force $exportFolderPath
-file mkdir $exportFolderPath
-####copying elfs, logo, make file and myboard_sshscp.exp
-set elfsDest $exportFolderPath
-append elfsDest /$folderName/Elfs
-file mkdir $elfsDest
-set elfsSrc $PjtDir
-append elfsSrc /Elfs
-CpyFolder $elfsSrc $elfsDest
-
-set logoDest $exportFolderPath
-append logoDest /$folderName/logs
-file mkdir $logoDest
-set logoSrc $PjtDir
-append logoSrc /logs
-CpyFolder $logoSrc $logoDest
-
-set mkfiDest $exportFolderPath
-append mkfiDest /$folderName/makefile
-set mkfiSrc $PjtDir
-append mkfiSrc /makefile
-file copy $mkfiSrc $mkfiDest
-
-set boardDest $exportFolderPath
-append boardDest /$folderName/myboard_sshscp.exp
-set boardSrc $PjtDir
-append boardSrc /myboard_sshscp.exp
-file copy $boardSrc $boardDest
-####storing original structure before editing the contents
-	createproject cpyofProject
-	cpyofProject configure -memProjectName [instProject cget -memProjectName]
-	cpyofProject configure -memTimeout [instProject cget -memTimeout]
-	cpyofProject configure -memExecProfile [instProject cget -memExecProfile]
-	cpyofProject configure -memMode [instProject cget -memMode]
-	cpyofProject configure -memTollbox_path [instProject cget -memTollbox_path]
-	cpyofProject configure -memUserInclude_path [instProject cget -memUserInclude_path]
-	set oldPro_count $pro_count
-	set oldTg_count $tg_count
-	for {set count 1} {$count<=$pro_count} {incr count} {
-			createprofile cpyofProfile $count
-			cpyofProfile($count) configure -memProfileName [arrProfile($count) cget -memProfileName]
-	}
-	for {set count 1} {$count<=$tg_count} {incr count} {
-			createtestgroup cpyofTestGroup $count
-			cpyofTestGroup($count) configure -memGroupName [arrTestGroup($count) cget -memGroupName]
-			cpyofTestGroup($count) configure -memGroupExecMode [arrTestGroup($count) cget -memGroupExecMode]
-			cpyofTestGroup($count) configure -memGroupExecCount [arrTestGroup($count) cget -memGroupExecCount]
-			cpyofTestGroup($count) configure -memChecked [arrTestGroup($count) cget -memChecked]
-			cpyofTestGroup($count) configure -memHelpMsg [arrTestGroup($count) cget -memHelpMsg]
-			set oldTotaltc($count) totaltc($count)
-			for {set tccount 1} {$tccount<=$totaltc($count)} {incr tccount} {
-				createtestcase cpyofTestCase $count $tccount
-				cpyofTestCase($count)($tccount) configure -memCasePath [arrTestCase($count)($tccount) cget -memCasePath]
-				cpyofTestCase($count)($tccount) configure -memCaseExecCount [arrTestCase($count)($tccount) cget -memCaseExecCount]
-				cpyofTestCase($count)($tccount) configure -memCaseRunoptions [arrTestCase($count)($tccount) cget -memCaseRunoptions]
-				cpyofTestCase($count)($tccount) configure -memCaseProfile [arrTestCase($count)($tccount) cget -memCaseProfile]
-				cpyofTestCase($count)($tccount) configure -memHeaderPath [arrTestCase($count)($tccount) cget -memHeaderPath]
-			}
-	}
-####altering the structure required to export file and also copying the files into exported files
-if {[cpyofProject cget -memTollbox_path]==""} {
-	### if tool box path is empty should not change structure and there is no file to copy
-	
-	
-} else {
-	set tollboxPathFile $exportFolderPath
-	append tollboxPathFile /ToolBox
-	file mkdir $tollboxPathFile
-	set absTollboxPathSrc [getAbsolutePath [cpyofProject cget -memTollbox_path] $PjtDir]
-	CpyFolder $absTollboxPathSrc $tollboxPathFile
-	instProject configure -memTollbox_path ./../ToolBox/
-}
-if {[cpyofProject cget -memUserInclude_path]==""} {
-	### user include path is empty should not change structure and there is no file to copy
-} else {
-	set userincludePathFile $exportFolderPath
-	append userincludePathFile /UserIncludeFile
-	file mkdir $userincludePathFile
-	set absUserincludePathSrc [getAbsolutePath [cpyofProject cget -memUserInclude_path] $PjtDir]
-	CpyFolder $absUserincludePathSrc $userincludePathFile
-	instProject configure -memUserInclude_path ./../UserIncludeFile/
-}
-
-for {set count 1} {$count<=$tg_count} {incr count} {
-			set oldTotaltc($count) totaltc($count)
-			for {set tccount 1} {$tccount<=$totaltc($count)} {incr tccount} {
-				
-				set casePathList [split [cpyofTestCase($count)($tccount) cget -memCasePath] /]   
-				###need to extract directory in which the test case file resides
-				set casePathList [lrange $casePathList [expr [llength $casePathList]-3] end]
-				set casePathStr ./../
-				append casePathStr [join $casePathList /]
-				arrTestCase($count)($tccount) configure -memCasePath $casePathStr
-				set caseSrcPath [getAbsolutePath [cpyofTestCase($count)($tccount) cget -memCasePath] $PjtDir]
-				set caseDestPath $exportFolderPath
-				append caseDestPath /
-				append caseDestPath [join $casePathList /]
-				CpyTestCase $caseSrcPath $caseDestPath
-				if {[cpyofTestCase($count)($tccount) cget -memHeaderPath]=="None"} {
-					### if header is empty should not change structure and there is no file to copy
-				} else {
-					set headPathList [split [cpyofTestCase($count)($tccount) cget -memHeaderPath] /]
-					set headPathList [lrange $headPathList [expr [llength $headPathList]-3] end]
-					set headPathStr ./../
-					append headPathStr [join $headPathList /]
-					arrTestCase($count)($tccount) configure -memHeaderPath $headPathStr
-					set headSrcPath [getAbsolutePath [cpyofTestCase($count)($tccount) cget -memHeaderPath] $PjtDir]
-					set headDestPath $exportFolderPath
-					append headDestPath /
-					append headDestPath [join $headPathList /]
-					CpyTestCase $headSrcPath $headDestPath				
-					
-				}
-			}
-}
-set projectPath $exportFolderPath
-append projectPath /$folderName/$folderName.pjt
-
-
-set ret_writ [initwritexml $projectPath]
-
-
-#tempExpFldrNme
-exec tar -Pcvzf "$expFldrPth.tar"  -C /tmp $tempExpFldrNme
-#exec tar -Pcvzf "$expFldrPth.tar"  -C $tarSrcFldr $tarSrcFile
-file delete -force $exportFolderPath 
-
-#changing the structure to old form after exporting the file
-
-	instProject configure -memProjectName [cpyofProject cget -memProjectName]
-	instProject configure -memTimeout [cpyofProject cget -memTimeout]
-	instProject configure -memExecProfile [cpyofProject cget -memExecProfile]
-	instProject configure -memMode [cpyofProject cget -memMode]
-	instProject configure -memTollbox_path [cpyofProject cget -memTollbox_path]
-	instProject configure -memUserInclude_path [cpyofProject cget -memUserInclude_path]
-	set oldPro_count $pro_count
-	set oldTg_count $tg_count
-	for {set count 1} {$count<=$pro_count} {incr count} {
-			arrProfile($count) configure -memProfileName [cpyofProfile($count) cget -memProfileName]
-	}
-	for {set count 1} {$count<=$tg_count} {incr count} {
-
-			arrTestGroup($count) configure -memGroupName [cpyofTestGroup($count) cget -memGroupName]
-			arrTestGroup($count) configure -memGroupExecMode [cpyofTestGroup($count) cget -memGroupExecMode]
-			arrTestGroup($count) configure -memGroupExecCount [cpyofTestGroup($count) cget -memGroupExecCount]
-			arrTestGroup($count) configure -memChecked [cpyofTestGroup($count) cget -memChecked]
-			arrTestGroup($count) configure -memHelpMsg [cpyofTestGroup($count) cget -memHelpMsg]
-			set oldTotaltc($count) totaltc($count)
-			for {set tccount 1} {$tccount<=$totaltc($count)} {incr tccount} {
-
-				arrTestCase($count)($tccount) configure -memCasePath [cpyofTestCase($count)($tccount) cget -memCasePath]
-				arrTestCase($count)($tccount) configure -memCaseExecCount [cpyofTestCase($count)($tccount) cget -memCaseExecCount]
-				arrTestCase($count)($tccount) configure -memCaseRunoptions [cpyofTestCase($count)($tccount) cget -memCaseRunoptions]
-				arrTestCase($count)($tccount) configure -memCaseProfile [cpyofTestCase($count)($tccount) cget -memCaseProfile]
-				arrTestCase($count)($tccount) configure -memHeaderPath [cpyofTestCase($count)($tccount) cget -memHeaderPath]
-			}
-	}
-	#Delete the copied structue
-	# Delete all the records
-	struct::record delete instance cpyofProject
-	for {set count 1} {$count<=$pro_count} {incr count} {
-		struct::record delete instance cpyofProfile($count)
-	}
-	for {set count 1} {$count<=$tg_count} {incr count} {
-		struct::record delete instance cpyofTestGroup($count)
-		for {set tccount 1} {$tccount<=$totaltc($count)} {incr tccount} {
-			struct::record delete instance cpyofTestCase($count)($tccount)
-		}
-	}
-	
-}
-###########################################################
-#proc CpyFolder
-#input : path of folder whose input is to be copied
-#	 path where the copied content is to be stored
-# Output: to copy entire content of folder
-###########################################################
-proc CpyFolder {cpyPath storePath} {
-	set count 0
-	set lentries [glob -nocomplain [file join $cpyPath "*"]]
-	#puts $lentries
-	foreach f $lentries {
-        	set tail [file tail $f]
-		#puts $tail
-		#set extsplit [split $tail .]
-		set cpyFile [lindex $lentries $count]
-		#puts ||||||||$cpyFile
-		set storeFile $storePath
-		append $storeFile /
-		append $storeFile $tail
-		#puts !!!!!!!!!$storeFile
-		file copy $cpyFile $storeFile
-	        incr count
-	}
-}
-###########################################################
-#proc CpyTestCase
-#input : path of folder whose input is to be copied
-#	 path where the copied content is to be stored
-# Output: to copy the 
-###########################################################
-proc CpyTestCase {sourcePath destPath} {
-	set testCaseFldr [split $destPath /]
-	set testCaseFldr [lrange $testCaseFldr 0 [expr [llength $testCaseFldr]-3]]
-	set testCaseFldr [join $testCaseFldr /]
-	append testCaseFldr /
-        #puts [file isdirectory $testCaseFldr]
-	if {[file isdirectory $testCaseFldr]==1} {
-		#folder already exist
-		
-	} else {
-		file mkdir $testCaseFldr
-	}
-	if {[file isfile $destPath]==1} {
-		#file already exist
-	} else {
-		file copy $sourcePath $destPath
-	}
-}
-#############################################
-#proc Import
-#
-#############################################
-proc ImportProject {} {
-	global PjtDir
-	global PjtName
-	global updatetree
-	global pageopened_list
-	global status_run
-	if { $status_run == 1 } {
-		Editor::RunStatusInfo
-		return
-	}
-
-	if {$PjtDir != "None"} {
-		#Prompt for Saving the Existing Project
-			set result [tk_messageBox -message "Save Project $PjtName ?" -type yesnocancel -icon question -title 			"Question"]
-	   		switch -- $result {
-	   		     yes {
-				conPuts "Project $PjtName Saved" info
-				saveproject
-				}
-	   		     no  {
-				conPuts "Project $PjtName Not Saved" info
-				}
-	   		     cancel {
-				conPuts "Open Project Canceled" info
-				return
-				}
-	   		}
-	}
-	set types {
-        {"All Project Files"     {*.tar } }
-	}
-	########### Before Closing Write the Data to the file ##########
-
-	# Validate filename
-
-	set projectfilename [tk_getOpenFile -filetypes $types -parent .]
-        if {$projectfilename == ""} {
-                return
-        }
-
-	
-	set tmpsplit [split $projectfilename /]
-	set tarDestPath [lrange $tmpsplit 0 [expr [llength $tmpsplit] - 2]]
-	set tarDestPath [join $tarDestPath /]
-	set tempPjtName [lindex $tmpsplit [expr [llength $tmpsplit] - 1]]
-	set tempPjtName [string range $tempPjtName 0 [expr [string length $tempPjtName]-5]]
-	puts "Project name->$tempPjtName"
-	set ext [file extension $projectfilename]
-	    if { $ext != "" } {
-	        if {[string compare $ext ".tar"]} {
-		    set PjtDir None
-		    tk_messageBox -message "Extension $ext not supported" -title "Import Project Error" -icon error
-		    return
-	        }
-	    }
-	# to remove .tar from archive file .extracted folder has same name
-	set tempPjtDir [string range $projectfilename 0 [expr [string length $projectfilename]-5]]
-
-	exec tar -xvf $projectfilename -C $tarDestPath
-
-	#call procedure here to find .pjt file and should check for it if not it is some other .tar file
-	set chk [ FindChkPjt $tempPjtDir ]
-	
-	if { $chk==0 } {
-			tk_messageBox -message "Invalid project file" -type ok -title {Information} -icon info
-			return			
-	} else { 
-	}
-	
-	# Close all the opened files in the pageopened_list  
-	set listLength [llength $pageopened_list]
-	##puts listLength::$listLength
-	for { set tmpcount 1} { $tmpcount < $listLength } { incr tmpcount} {
-		Editor::closeFile		
-	}
-	# Create the New Pageopened_list 
-	set pageopened_list START
-
-	# Delete all the records of previously open project
-	struct::record delete record recProjectDetail
-	struct::record delete record recTestGroup
-	struct::record delete record recTestCase
-	struct::record delete record recProfile
-	# Delete the Tree
-	
-	$updatetree delete end root TestSuite
-	#exec tar -xvf $projectfilename -C $PjtDir
-	
-	##################################################################
-  	### Reading Datas from XML File (Contain FullPath)
-    	##################################################################
-	DeclareStructure 
-   	readxml $PjtDir/$PjtName
-    	##################################################################
-
-	InsertTree
-	# Open the lattest project's Myboard_sshscp.exp
-	Editor::tselectObject "myboard_sshscp.exp"
-
-
-}
-###################################################
-#proc 
-
-#to find directory in which the  project is saved
-##################################################
-proc FindChkPjt { tempPjtDir } {
-	global PjtDir
-	global PjtName
-	
-	set lentries1 [glob -nocomplain [file join $tempPjtDir "*"]]
-	foreach f1 $lentries1 {
-        	set tail1 [file tail $f1]
-		set extsplit1 [split $tail1 .]
-		set extention1 [lindex $extsplit1 [expr [llength $extsplit1] - 1]]
-		set tempF1 [split $f1 /]
-		set tempF1 [lindex $tempF1 [expr [llength $tempF1] - 1]]
-        	if { [file isdirectory $f1] } {
-			set lentries2 [glob -nocomplain [file join $f1 "*"]]
-			foreach f2 $lentries2 {
-        			set tail2 [file tail $f2]
-				set extsplit2 [split $tail2 .]
-				set extention2 [lindex $extsplit2 [expr [llength $extsplit2] - 1]]
-				set tempF2 [split $f2 /]
-				if { "$tempF1.pjt" == $tail2 } {
-					puts { pjt file is found }
-					set PjtDir $f1
-					set PjtName $tail2
-					return 1
-				} else {
-				}
-			}
-        	} else {
-        	}
-    	}
-	return 0	
-}
 
 proc YetToImplement {} {
 tk_messageBox -message "Yet to be Implemented !" -title Info -icon info
@@ -6772,7 +4460,6 @@ proc AddPDOProc {} {
 	global noPDOValue
 	global pdoType
 	set testGroupName ""
-	#set execCount 1
 	set winAddPDO .addPDO
 	catch "destroy $winAddPDO"
 	toplevel     $winAddPDO
@@ -6784,20 +4471,13 @@ proc AddPDOProc {} {
 
 	font create custom1 -weight bold
 	label $winAddPDO.l_empty1 -text ""	
-	#label $winAddPDO.l_title -text "Add Process Data Object(s)" -font custom1
 	label $winAddPDO.l_empty2 -text ""
 	
 	grid config $winAddPDO.l_empty1 -row 0 -column 0 -sticky "news"
-	#grid config $winAddPDO.l_title  -row 1 -column 0 -sticky "news" -ipadx 125
-	#grid config $winAddPDO.l_empty2 -row 2 -column 0 -sticky "news"
 
 	set titleFrame1 [TitleFrame $winAddPDO.titleFrame1 -text "PDO Configuration" ]
 	grid config $titleFrame1 -row 1 -column 0 -ipadx 20 -padx 20 -sticky "news"
 	set titleInnerFrame2 [$titleFrame1 getframe]
-	
-	#set titleFrame2 [TitleFrame $titleInnerFrame1.titleFrame2 -text "Configuration"]  
-	#grid config $titleFrame2 -row 2 -column 0 -ipadx 0  -sticky "news"
-	#set titleInnerFrame2 [$titleFrame2 getframe]
 	
 	####frame1 has six radio buttons to select excution mode 
 	set frame1 [frame $titleInnerFrame2.fram1]
@@ -6809,17 +4489,7 @@ proc AddPDOProc {} {
 	set frame4 [frame $titleInnerFrame2.fram4]
 	set frame5 [frame $titleInnerFrame2.fram5]
 	
-#	label $frame2.l_name -text "CN Name :"
-#	entry $frame2.en_name -textvariable testGroupName -background white
-#	grid config $frame2.l_name  -row 0 -column 0 
-#	grid config $frame2.en_name -row 0 -column 1
-#	grid config $frame2 -row 0 -column 0
 
-#	label $titleInnerFrame1.l_empty3 -text ""
-#	grid config $titleInnerFrame1.l_empty3  -row 1 -column 0
-	
-#	label $titleInnerFrame2.l_empty4 -text ""
-#	grid config $titleInnerFrame2.l_empty4  -row 0 -column 0 
 	
 	label $frame1.l_pdostart -text "PDO Starting number \[1-255\] :"
 	entry $frame1.en_pdostart -textvariable pdostartValue -background white -validate key -vcmd {expr {[string len %P] <= 3} && {[string is int %P]}}
@@ -6830,34 +4500,22 @@ proc AddPDOProc {} {
 	label $frame1.l_NoPDO -text    "Number of PDOs \[1-255\] :"
 	entry $frame1.en_NoPDO -textvariable noPDOValue -background white -validate key -vcmd {expr {[string len %P] <= 3} && {[string is int %P]}}
 
-#button $frame3.bt_name -text Browse -command {
-#						set types {
-#						        {"All XDC Files"     {.XDC } }
-#							}
-#						set filename [tk_getOpenFile -title "Add TestCase" -filetypes $types -parent .]
-#					}
 
 	grid config $frame1 -row 0 -column 0 -sticky "news" -columnspan 1
 	grid config $frame1.l_pdostart  -row 0 -column 0 
 	grid config $frame1.en_pdostart -row 0 -column 1
-	#grid config $frame2 -row 1 -column 0
 	grid config $frame1.l_MapEnt  -row 1 -column 0 
 	grid config $frame1.en_MapEnt -row 1 -column 1
-	#grid config $frame3 -row 2 -column 0	
 	grid config $frame1.l_NoPDO  -row 2 -column 0 
 	grid config $frame1.en_NoPDO -row 2 -column 1
 
-#	grid config $frame3.bt_name -row 0 -column 2
 
 
 	label $titleInnerFrame2.l_empty5 -text "    "
 	grid config $titleInnerFrame2.l_empty5  -row 3 -column 0
 	label $titleInnerFrame2.l_type -text "PDO type"
 	grid config $titleInnerFrame2.l_type  -row 4 -column 0
-	#label $titleInnerFrame2.l_mode -text "Type of CN"
-	#grid config $titleInnerFrame2.l_mode  -row 3 -column 0 
-	
-	#variables used for radio buttons
+
 	set pdoType off
 	
 	radiobutton $frame4.ra_inter -text "Transmit PDO" -variable pdoType   -value on 
@@ -6870,27 +4528,7 @@ proc AddPDOProc {} {
 
 	label $titleInnerFrame2.l_empty9 -text ""
 	grid config $titleInnerFrame2.l_empty9 -row 6 -column 0 -sticky "news"
-#	scrollbar $titleInnerFrame1.h -orient horizontal -command "$titleInnerFrame1.t_help xview"
-#	scrollbar $titleInnerFrame1.v -command "$titleInnerFrame1.t_help yview"
-#	text $titleInnerFrame1.t_help -width 40 -height 10 -xscroll "$titleInnerFrame1.h set" -yscroll "$titleInnerFrame1.v set" -state disabled
-#	grid config $titleInnerFrame1.t_help -row 5 -column 0
-#	grid  $titleInnerFrame1.v -row 5 -column 2 -sticky "ns"
-#	grid  $titleInnerFrame1.h -row 6 -column 0 -columnspan 2 -sticky "we"
-#	set disptext 0
-#	label $titleInnerFrame1.l_empty6 -text ""
-#	grid config $titleInnerFrame1.l_empty6  -row 3 -column 0
-	####when check buton is selected text is enabled if it is unselected text is disabled
-#	checkbutton $titleInnerFrame1.ch_help -text "Add Help Messages" -variable disptext -onvalue 1 -offvalue 0 -command {
-#		global $titleInnerFrame1
-#		if {$disptext==1} {
-#			$titleInnerFrame1.t_help config -state normal -background white
-#		} else {
-#			$titleInnerFrame1.t_help config -state disabled -background lightgrey
-#		}
-#	}
-#	grid config $titleInnerFrame1.ch_help -row 4 -column 0
-#	label $titleInnerFrame1.l_empty7 -text ""
-#	grid config $titleInnerFrame1.l_empty7  -row 7 -column 0
+
 
 
 	button $frame5.b_ok -text "  Add  " -command { 
@@ -6923,40 +4561,18 @@ proc AddPDOProc {} {
 	label $winAddPDO.l_empty8 -text ""
 	grid config $winAddPDO.l_empty8 -row 2 -column 0 -sticky "news"
 
-	#wm protocol .addPDO WM_DELETE_WINDOW {
-	#	font delete custom1
-	#	destroy .addTestGroup
-	#}
+
 	wm protocol .addPDO WM_DELETE_WINDOW "$frame5.b_cancel invoke"
 	bind $winAddPDO <KeyPress-Return> "$frame5.b_ok invoke"
 	bind $winAddPDO <KeyPress-Escape> "$frame5.b_cancel invoke"
 }
 #########################################################################3
-proc createSaveButton {tbl row col w} {
-    set key [$tbl getkeys $row]
-#    button $w -image [Bitmap::get openfold] -highlightthickness 0 -takefocus 0 \
-#	      -command [list viewFile $tbl $key]
-    button $w -text "Save" -command "YetToImplement" -width 10 -height 1
-}
 
-proc createDiscardButton {tbl row col w} {
-    set key [$tbl getkeys $row]
-#    button $w -image [Bitmap::get openfold] -highlightthickness 0 -takefocus 0 \
-#	      -command [list viewFile $tbl $key]
-    button $w -text "Discard" -command "YetToImplement" -width 10 -height 1
-}
-
-proc createFormatButton {tbl row col w} {
-    set key [$tbl getkeys $row]
-#    button $w -image [Bitmap::get openfold] -highlightthickness 0 -takefocus 0 \
-#	      -command [list viewFile $tbl $key]
-    button $w -text "Dec" -command "YetToImplement" -width 1 -height 1
-}
 
 
 proc connectio {} {
 	set tog [.mainframe.topf.tb0.bbox8.b0 cget -image]
-	puts $tog
+	#puts $tog
 	#to toggle image the value varies according to images added 
 	if {$tog=="image25"} {
 	        .mainframe.topf.tb0.bbox8.b0 configure -image [Bitmap::get connect]
@@ -7034,7 +4650,6 @@ proc ConnSettWindow {} {
 # To validate the entering ipaddress
 ###################################################################################
 proc isIP {str type} {
-#catch {
    # modify these if you want to check specific ranges for
    # each portion - now it look for 0 - 255 in each
    set ipnum1 {\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]}
@@ -7062,5 +4677,4 @@ proc isIP {str type} {
    } else {
       return [regexp -- $partialExp $str]
    }
-#}
 } 

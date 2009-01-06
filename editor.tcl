@@ -59,7 +59,7 @@ proc editorWindows::setBindings {} {
     bind $TxtWidget <Control-v> "Editor::paste; break"
     bind $TxtWidget <Control-y> "Editor::delLine ; break"
     bind $TxtWidget <KeyRelease-Home> "editorWindows::gotoFirstChar;break"
-    bind $TxtWidget <Control-l> "repeat_last_search $TxtWidget"
+    #bind $TxtWidget <Control-l> "repeat_last_search $TxtWidget"
     return
 }
 

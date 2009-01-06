@@ -4,16 +4,16 @@
 #									
 # Author:	Kalycito Infotech Pvt Ltd		
 #									
-# Description:	Contains the procedures for TestSuite and forms the backbone for
-# TestSuite.
+# Description:	Contains the procedures for Open Configurator 
+# 
 #
 # Version:	Version - 1.0.
 #
 ################################################################################
 
 source $RootDir/record.tcl
-source $RootDir/xmlread.tcl
-source $RootDir/ReadResultXml.tcl
+#source $RootDir/xmlread.tcl
+#source $RootDir/ReadResultXml.tcl
 source $RootDir/windows.tcl
 source $RootDir/validation.tcl
 
@@ -91,17 +91,11 @@ namespace eval Editor {
     variable procMarks
     variable mnMenu
     variable cnMenu
+    variable mnCount
+    variable cnCount
     variable serverUp 0
 }
 
-proc Editor::tick {} {
-    global clock_var
-    variable mainframe
-    variable startTime
-    set seconds [expr [clock seconds]  - $startTime]
-    set clock_var [clock format $seconds -format %H:%M:%S -gmt 1]
-    after 1000 Editor::tick
-}
 
 proc Editor::aboutBox {} {\
     set aboutWindow .about
@@ -113,13 +107,17 @@ proc Editor::aboutBox {} {\
     grab $aboutWindow
     wm title	 $aboutWindow	"About"
     wm protocol $aboutWindow WM_DELETE_WINDOW "destroy $aboutWindow"
-    label $aboutWindow.l_msg -image [Bitmap::get info] -compound left -text "\n   PowerLink Configurator Tool       \n       Designed by       \nKalycito Infotech Private Limited.  \n"
+    label $aboutWindow.l_msg -image [Bitmap::get info] -compound left -text "\n      OpenConfigurator Tool       \n       Designed by       \nKalycito Infotech Private Limited.  \n"
     button $aboutWindow.bt_ok -text Ok -command "destroy $aboutWindow"
     grid config $aboutWindow.l_msg -row 0 -column 0 
     grid config $aboutWindow.bt_ok -row 1 -column 0
     bind $aboutWindow <KeyPress-Return> "destroy $aboutWindow"
     focus $aboutWindow.bt_ok
     centerW .about
+}
+
+proc centerW w {
+    BWidget::place $w 0 0 center
 }
 
 proc Editor::RunStatusInfo {} {\
@@ -177,7 +175,7 @@ proc Editor::restoreWindowPositions {} {
 
 ################################################################################
 #proc Editor::saveOptions
-#called when STB_TSUITE exits
+#called when open configurator exits
 #saves only "EditorData(options,...)"
 #but might be easily enhanced with other options
 ################################################################################
@@ -187,8 +185,8 @@ proc Editor::saveOptions {} {
     
     Editor::getWindowPositions
     
-    set configData "#STB_TSUITE Configuration File\n\n"
-    set configFile [file join $RootDir/STB_TSUITE.cfg]
+    set configData "#PLK_CONFIGTOOL Configuration File\n\n"
+    set configFile [file join $RootDir/plk_configtool.cfg]
     set optionlist [array names EditorData]
     foreach option $optionlist {
         set optiontext EditorData($option)
@@ -268,14 +266,14 @@ proc Editor::setDefault {} {
     
     
     # set keywords
-    set fd [open [file join $RootDir keywords.txt ] r]
-    set keyList ""
-    while {![eof $fd]} {
-        gets $fd word
-        lappend keyList $word
-    }
-    close $fd
-    set EditorData(keywords) $keyList
+    #set fd [open [file join $RootDir keywords.txt ] r]
+    #set keyList ""
+    #while {![eof $fd]} {
+    #    gets $fd word
+    #    lappend keyList $word
+    #}
+    #close $fd
+    #set EditorData(keywords) $keyList
     set EditorData(files) {}
     set EditorData(curFile) ""
     set EditorData(find) {}
@@ -404,7 +402,7 @@ proc Editor::newFile {{force 0}} {
     set temp $current(hasChanged)
     set f0 [EditManager::create_text $notebook Untitled]
 	# Append Untitiled to the Pageopened List
-    set Editor::text_win($Editor::index_counter,undo_id) [new textUndoer [lindex $f0 2]]
+    #set Editor::text_win($Editor::index_counter,undo_id) [new textUndoer [lindex $f0 2]] ; # new and textUndoer are function from undo.tcl
     set current(hasChanged) $temp
     NoteBook::raise $notebook [lindex $f0 1]
     set current(hasChanged) 0
@@ -534,14 +532,15 @@ proc Editor::updateObjects {{range {}}} {
     set code {
         set temp [expr int($nend / $end * 100)]
         if {!$recursion && $temp > $Editor::prgindic && [expr $temp % 10] == 0 } {
-            set Editor::prgindic [expr int($nend / $end * 100)]
-            set Editor::status "Parsing: $Editor::prgindic % "
+            #set Editor::prgindic [expr int($nend / $end * 100)]
+            #set Editor::status "Parsing: $Editor::prgindic % "
             update idletasks
         }
     }
     
     # call parser
-    set nodeList [Parser::parseCode $current(file) $current(text) $range $code]  
+    #set nodeList [Parser::parseCode $current(file) $current(text) $range $code]  
+    # the function Parser::parseCode is from file tclparser.tcl this function Editor::updateObjects is used only when a text editor is opened
     # switch off progressbar
     set Editor::prgindic 0
     set Editor::status ""
@@ -964,53 +963,53 @@ proc Editor::tclose {} {
 #  inputs - node
 #  return - filename
 ################################################################################
-proc nodetoname {node} {
-	global PjtDir
-	set tmpsplit [split $node "-"]
-	set extsplit [split $node .]
-	set exten [lindex $extsplit [expr [llength $extsplit] - 1 ]]
-	set nodecount [lindex $tmpsplit [expr [llength $tmpsplit] - 1]]
-	set groupcount [lindex $tmpsplit [expr [llength $tmpsplit] - 2]] 
-	set selectname [lindex $tmpsplit [expr [llength $tmpsplit] - 3]]
-	if { $selectname ==  "path" } {
-		set filename [arrTestCase($groupcount)($nodecount) cget -memCasePath]	
-		set filename [getAbsolutePath $filename $PjtDir]
-		return $filename
-	} elseif { $selectname ==  "header" } {
-		set filename [arrTestCase($groupcount)($nodecount) cget -memHeaderPath]
-		set filename [getAbsolutePath $filename $PjtDir]
-		return $filename
-	} 
-	if { $node ==  "myboard_sshscp.exp" || $node == "makefile"  } {
-		set filename $node			
-		return "$PjtDir/$filename"
-	} elseif { $node ==  "Logfile" } { 
-		set filename "logs/DebugInfo"
-		if {![file exists "$PjtDir/$filename"]} {
-			 tk_messageBox -message "Please run the test to get DebugInfo !" -title Info -icon info		
-		}		
-		return "PjtDir/$filename"
-	} elseif {  $node == "Outputxml" } {
+#proc nodetoname {node} {
+#	global PjtDir
+#	set tmpsplit [split $node "-"]
+#	set extsplit [split $node .]
+#	set exten [lindex $extsplit [expr [llength $extsplit] - 1 ]]
+#	set nodecount [lindex $tmpsplit [expr [llength $tmpsplit] - 1]]
+#	set groupcount [lindex $tmpsplit [expr [llength $tmpsplit] - 2]] 
+#	set selectname [lindex $tmpsplit [expr [llength $tmpsplit] - 3]]
+#	if { $selectname ==  "path" } {
+#		set filename [arrTestCase($groupcount)($nodecount) cget -memCasePath]	
+#		set filename [getAbsolutePath $filename $PjtDir]
+#		return $filename
+#	} elseif { $selectname ==  "header" } {
+#		set filename [arrTestCase($groupcount)($nodecount) cget -memHeaderPath]
+#		set filename [getAbsolutePath $filename $PjtDir]
+#		return $filename
+#	} 
+#	if { $node ==  "myboard_sshscp.exp" || $node == "makefile"  } {
+#		set filename $node			
+#		return "$PjtDir/$filename"
+#	} elseif { $node ==  "Logfile" } { 
+#		set filename "logs/DebugInfo"
+#		if {![file exists "$PjtDir/$filename"]} {
+#			 tk_messageBox -message "Please run the test to get DebugInfo !" -title Info -icon info		
+#		}		
+#		return "PjtDir/$filename"
+#	} elseif {  $node == "Outputxml" } {
 		# Convert the cdata_xml to Testrun.XML file
-		set filename "logs/Test_Result.xml"
-		if {![file exists "$PjtDir/$filename"]} {
-			 tk_messageBox -message "Please run the test to get Test_Result.xml !" -title Info -icon info		
-		}				
-		return "PjtDir/$filename"
-	} elseif { $node == "CSV"} {
-		# Convert the cdata_xml to Testrun.XML file
-		# convert the Testrun.XML to csv file
-		set filename "logs/Test_Result.csv"
-		if {![file exists "$PjtDir/$filename"]} {
-			 tk_messageBox -message "Please run the test to get Test_Result.csv !" -title Info -icon info
-		}				
-		return "PjtDir/$filename"
-	} elseif { $exten == "c" || $exten == "h" || $exten == "C" || $exten == "H"} {
-		return "toolbox"
-	} else {
-		return "return_fail"
-	}
-}
+#		set filename "logs/Test_Result.xml"
+#		if {![file exists "$PjtDir/$filename"]} {
+#			 tk_messageBox -message "Please run the test to get Test_Result.xml !" -title Info -icon info		
+#		}				
+#		return "PjtDir/$filename"
+#	} elseif { $node == "CSV"} {
+#		# Convert the cdata_xml to Testrun.XML file
+#		# convert the Testrun.XML to csv file
+#		set filename "logs/Test_Result.csv"
+#		if {![file exists "$PjtDir/$filename"]} {
+#			 tk_messageBox -message "Please run the test to get Test_Result.csv !" -title Info -icon info
+#		}				
+#		return "PjtDir/$filename"
+#	} elseif { $exten == "c" || $exten == "h" || $exten == "C" || $exten == "H"} {
+#		return "toolbox"
+#	} else {
+#		return "return_fail"
+#	}
+#}
 
 
 
@@ -1030,63 +1029,63 @@ proc Editor::tselectObject {node} {
    	global PjtDir
 	##global updatetree
     	# Call the procedure to get the filename from the node
-	set convertfile [nodetoname $node]	
-	if { $convertfile != "return_fail" } {
-		set filename $convertfile
-		if {$convertfile != "toolbox"} {
-	 		set result [Editor::openFile $filename]
-			puts $filename
-		} else {
-			set toolDir [getAbsolutePath [instProject cget -memTollbox_path] $PjtDir]
-			set result [Editor::openFile "$toolDir/$node"]
-		}
-		$treeWindow selection clear
+	#set convertfile [nodetoname $node]	
+	#if { $convertfile != "return_fail" } {
+	#	set filename $convertfile
+	#	if {$convertfile != "toolbox"} {
+	# 		set result [Editor::openFile $filename]
+	#		puts $filename
+	#	} else {
+	#		set toolDir [getAbsolutePath [instProject cget -memTollbox_path] $PjtDir]
+	#		set result [Editor::openFile "$toolDir/$node"]
+	#	}
+	#	$treeWindow selection clear
 		$treeWindow selection set $node
 	 	#Switch to the right notebook
-        	set node $node
+        #	set node $node
 		##puts Nodeselect:$node
 		##puts FileName:$filename
-		if {$convertfile != "toolbox"} {
-	 		set filename "$PjtDir/$filename"
-		} else {
-			set filename $node
-		}
+	#	if {$convertfile != "toolbox"} {
+	# 		set filename "$PjtDir/$filename"
+	#	} else {
+	#		set filename $node
+	#	}
 		
 		#get rid of the � (as a substitude for a space) in the filename
-		regsub -all \306 $filename " " filename
-		set pagelist [array names ::Editor::text_win]
-		set found 0
-		set pagename ""
-		##puts filename2->$filename
-		foreach nbPage $pagelist {
-        		if {$Editor::text_win($nbPage) == $filename} {		
-        			set i [lindex [split $nbPage ,] 0]
-        			set pagename $::Editor::text_win($i,pagename)
-				set found 1
-				##puts pagenamefound_
-				break
-       			} 
-    		}
+	#	regsub -all \306 $filename " " filename
+	#	set pagelist [array names ::Editor::text_win]
+	#	set found 0
+	#	set pagename ""
+	#	##puts filename2->$filename
+	#	foreach nbPage $pagelist {
+        #		if {$Editor::text_win($nbPage) == $filename} {		
+        #			set i [lindex [split $nbPage ,] 0]
+        #			set pagename $::Editor::text_win($i,pagename)
+	#			set found 1
+	#			##puts pagenamefound_
+	#			break
+       	#		} 
+    	#	}
 	##puts notebook->$notebook
 	##puts pagename->$pagename
-    	catch {$notebook raise $pagename}
+    	#catch {$notebook raise $pagename}
 
-    	if {[catch {$current(text) mark set insert $node}]} {
-      		return
-   	 }
+    	#if {[catch {$current(text) mark set insert $node}]} {
+      	#	return
+   	#}
 	##puts toFocus...........
-    	$current(text) see insert
-    	focus $current(text)
+    	#$current(text) see insert
+    	#focus $current(text)
 
-    	editorWindows::flashLine
-    	Editor::selectObject 0
-    	editorWindows::ReadCursor
-    	Editor::procList_history_add
-    	set current(lastPos) [$current(text) index insert]
-    		return
-	} else {
-		return
-	}
+    	#editorWindows::flashLine
+    	#Editor::selectObject 0
+    	#editorWindows::ReadCursor
+    	#Editor::procList_history_add
+    	#set current(lastPos) [$current(text) index insert]
+    	#	return
+	#} else {
+	#	return
+	#}
 }
 
 ################################################################################
@@ -1102,9 +1101,9 @@ proc Editor::tselectright {x y node} {
 	$treeWindow selection clear
 	$treeWindow selection set $node 
 	set CurrentNode $node
-	if [regexp {TestGroup-(.*)} $node == 1] {
+	if [regexp {CN-(.*)} $node == 1] {
 		tk_popup $Editor::cnMenu $x $y	
-	} elseif {[regexp {OBD(.*)} $node == 1]} { 
+	} elseif {[regexp {MN-(.*)} $node == 1]} { 
 		tk_popup $Editor::mnMenu $x $y		
 	} else {
 		return 
@@ -1377,12 +1376,12 @@ proc Editor::execFile {} {
     catch {
         interp eval $current(slave) {
             if {[wm title .] != ""} {
-                wm title . "STB_TSUITE is running: >>[wm title .]<<"
+                wm title . "openCONFIGURATOR is running: >>[wm title .]<<"
             } else  {
                 if {$current(project) != "none" && $current(project) != $current(file)} {
-                    wm title . "STB_TSUITE is running \"$current(project)\" testing >>$current(file)<<"
+                    wm title . "openCONFIGURATOR is running \"$current(project)\" testing >>$current(file)<<"
                 } else  {
-                    wm title . "STB_TSUITE is running: >>$current(file)<<"
+                    wm title . "openCONFIGURATOR is running: >>$current(file)<<"
                 }
             }
         }
@@ -1602,9 +1601,9 @@ proc Editor::serverExecFile {} {
             puts $sock $line
         }
         puts $sock "wm deiconify ."
-        puts $sock [list wm title . "STB_TSUITE Test Server ([file tail $serverWish]): $title"]
+        puts $sock [list wm title . "openCONFIGURATOR Test Server ([file tail $serverWish]): $title"]
         puts $sock "focus ."
-        eval [list wm title . "STB_TSUITE Test Terminal: Output of $title"]
+        eval [list wm title . "openCONFIGURATOR Test Terminal: Output of $title"]
     }
     # restore original file from tmp file
     if {$current(file) != "Untitled"} {
@@ -1755,7 +1754,7 @@ proc Editor::openNewPage {{file {}}} {\
     $editorWindows::TxtWidget mark set insert 1.0
     set current(hasChanged) $temp
     editorWindows::colorize; #needs TxtWidget !
-    set Editor::text_win($Editor::index_counter,undo_id) [new textUndoer $editorWindows::TxtWidget]
+    #set Editor::text_win($Editor::index_counter,undo_id) [new textUndoer $editorWindows::TxtWidget] ; #new and textUndoer are function from undo.tcl
     NoteBook::raise $notebook [lindex $f0 1]
     $Editor::mainframe setmenustate noFile normal
     #Now the new textwindow is the current
@@ -2154,7 +2153,7 @@ proc Editor::showSolelyConsole {show} {
 }
 ################################################################################
 #proc Editor::close_dialog
-#called whenever the user wants to exit STB_TSUITE and there are files
+#called whenever the user wants to exit openCONFIGURATOR and there are files
 #that have changed and are still not saved yet
 ################################################################################
 proc Editor::close_dialog {} {\
@@ -2439,47 +2438,7 @@ proc Editor::delete {} {
     set current(lastPos) [$current(text) index insert]
 }
 
-proc Editor::delLine {} {
-    global EditorData
-    variable current
-    if {[$current(text) tag range sel] != ""} {
-        Editor::delete
-    }
-    set curPos [$current(text) index insert]
-    if {$EditorData(options,autoUpdate)} {
-        set range [editorWindows::deleteMarks "$curPos linestart" "$curPos lineend"]
-        $current(text) delete "$curPos linestart" "$curPos lineend +1c"
-        Editor::updateOnIdle $range
-    } else  {
-        $current(text) delete "$curPos linestart" "$curPos lineend +1c"
-    }
-    set current(lastPos) [$current(text) index insert]
-}
 
-proc Editor::SelectAll {} {
-    variable current
-    
-    $current(text) tag remove sel 1.0 end
-    $current(text) tag add sel 1.0 end
-}
-
-proc Editor::insertFile {} {
-    variable current
-    set filename [lindex $temp 0]
-    if {$filename == ""} {return 1}
-    if {$filename == $current(file)} {
-     #   tk_messageBox -message "File already opened !" -title Warning -icon warning
-      #  return 1
-    #}
-    set EditorData(options,workingDir) [file dirname $filename]
-    set data [lindex $temp 1]
-    set data "Success"
-    
-    $current(text) insert insert $data
-    
-    
-    return 0
-}
 
 proc Editor::getFirstChar { index } {
     
@@ -2679,14 +2638,6 @@ proc Editor::procList_history_add {{pos {}}} {
     set Editor::current(procListHistoryPos) 0
 }
 
-proc Editor::lineNo_history_add {} {\
-    variable lineEntryCombo
-    variable lineNo
-    set newlist [ComboBox::cget $lineEntryCombo -values]
-    if {[lsearch -exact $newlist $lineNo] != -1} {return}
-    set newlist [linsert $newlist 0 $lineNo]
-    ComboBox::configure $lineEntryCombo -values $newlist
-}
 
 proc Editor::argument_history_add {} {\
     variable argument_combo
@@ -2696,51 +2647,6 @@ proc Editor::argument_history_add {} {\
     set newlist [linsert $newlist 0 $argument_var]
     ComboBox::configure $argument_combo -values $newlist
 }
-
-proc Editor::search_history_add {} {\
-    variable search_combo
-    variable search_var
-    set newlist [ComboBox::cget $search_combo -values]
-    if {[lsearch -exact $newlist $search_var] != -1} {return}
-    set newlist [linsert $newlist 0 $search_var]
-    ComboBox::configure $search_combo -values $newlist
-}
-
-proc Editor::search_forward {} {\
-    global search_option_icase search_option_match search_option_blink
-    variable search_combo
-    variable current
-    Editor::search_history_add
-    set search_string $Editor::search_var
-    set result [Editor::search $current(text) $search_string search $search_option_icase\
-            forwards $search_option_match $search_option_blink]
-    focus $current(text)
-    selectObject 0
-}
-
-
-proc Editor::search_backward {{searchText {}}} {\
-    global search_option_icase search_option_match search_option_blink
-    variable search_combo
-    variable current
-    
-    if {$searchText == {}} {
-        Editor::search_history_add
-        set search_string $Editor::search_var
-        set result [Editor::search $current(text) $search_string search $search_option_icase\
-                backwards $search_option_match $search_option_blink]
-        
-    } else  {
-        set result [Editor::search $current(text) $searchText search 0\
-                backwards $search_option_match 0]
-    }
-    
-    if {$result != ""} {$current(text) mark set insert [lindex $result 0]}
-    focus $current(text)
-    selectObject 0
-}
-
-
 
 
 
@@ -2865,21 +2771,21 @@ proc openproject { } {
 	struct::record delete record recTestCase
 	struct::record delete record recProfile
 	# Delete the Tree
-	$updatetree delete end root TestSuite
+	#$updatetree delete end root PjtName
 	
 	##################################################################
   	### Reading Datas from XML File (Contain FullPath)
     	##################################################################
 	DeclareStructure
 	puts "Projectfilename->$projectfilename"
-   	readxml $projectfilename
+   	#readxml $projectfilename
     	##################################################################
 	#project configure -memProjectName $PjtName
 	#set tg_count 0
 	#set tc_count 0
-	InsertTree
+	#InsertTree
 	# Open the lattest project's Myboard_sshscp.exp
-	Editor::tselectObject "myboard_sshscp.exp"
+	#Editor::tselectObject "myboard_sshscp.exp"
 
 }
 
@@ -2910,7 +2816,7 @@ proc saveproject { } {
     	}
 	set Editor::current(hasChanged) 0
 	
-	set ret_writexml [initwritexml "$PjtDir/$PjtName"]
+	#set ret_writexml [initwritexml "$PjtDir/$PjtName"]
 	conPuts "Project $PjtName saved" info
 	
 }
@@ -2955,7 +2861,6 @@ proc Editor::create { } {
     global clock_var
     global EditorData
     global RootDir
-    global STB_TSUITEMacros
     variable _wfont
     variable notebook
     variable list_notebook
@@ -2986,7 +2891,7 @@ proc Editor::create { } {
     variable IndexaddMenu
     
     
-    set result [catch {source [file join $RootDir/STB_TSUITE.cfg]} info]
+    set result [catch {source [file join $RootDir/plk_configtool.cfg]} info]
     variable configError $result
    
     set prgtext "Please wait while loading ..."
@@ -2998,18 +2903,17 @@ proc Editor::create { } {
     # use default values
     if {[catch {Editor::setDefault}]} {
         set configError 1
-        Editor::setDefault
+        #Editor::setDefault
     }
 
-    Editor::tick
     
     # Menu description
     set descmenu {
         "&File" {} {} 0 {           
-            {command "New &Project" {} "New Project" {Ctrl n}  -command newprojectWindow}
+            {command "New &Project" {} "New Project" {Ctrl n}  -command NewProjectWindow}
 	    {command "Open Project" {}  "Open Project" {Ctrl o} -command openproject}
             {command "Save Project" {noFile}  "Save Project" {Ctrl s} -command YetToImplement}
-            {command "Save Project as" {noFile}  "Save Project as" {} -command saveProjectAsWindow}
+            {command "Save Project as" {noFile}  "Save Project as" {} -command SaveProjectAsWindow}
 	    {command "Close Project" {}  "Close Project" {} -command YetToImplement}                 
 	    {separator}
             {command "E&xit" {}  "Exit openCONFIGURATOR" {Alt x} -command Editor::exit_app}
@@ -3024,7 +2928,7 @@ proc Editor::create { } {
         }
         "&Connection" all options 0 {
             {command "Connect to POWERLINK network" {connect} "Establish connection with POWERLINK network" {} -command Connect }
-            {command "Disconnect from POWERLINK network" {disconnect} "Disconnect from POWERLINK network" {} -command Disconnect }
+            {command "Disconnect from POWERLINK network" {disconnect} "Disconnect from POWERLINK network" {} -command Disconnect -state disabled }
 	    {separator}
             {command "Connection Settings" {}  "Connection Settings" {} -command ConnectionSettingWindow -state normal}
         }
@@ -3074,11 +2978,11 @@ proc Editor::create { } {
     }
 
 #shortcut keys for project
-    bind . <Key-F7> "puts {build project short cut}"
-    bind . <Control-Key-F7> "puts {Rebuild project short cut}"
+    bind . <Key-F7> "YetToImplement"
+    bind . <Control-Key-F7> "YetToImplement"
 
-    bind . <Control-Key-F5> "puts {Transfer CDC short cut}"
-    bind . <Control-Key-F6> "puts {Transfer XML short cut}"
+    bind . <Control-Key-F5> "YetToImplement"
+    bind . <Control-Key-F6> "YetToImplement"
 #############################################################################
 # Menu for the Controlled Nodes
 #############################################################################
@@ -3127,12 +3031,12 @@ proc Editor::create { } {
     set Editor::status ""
     set mainframe [MainFrame::create .mainframe \
             -menu $descmenu \
-            -textvariable Editor::status \
-            -progressvar  Editor::prgindic \
-            -progressmax 100 \
-            -progresstype normal \
-            -progressfg blue ]
-    $mainframe showstatusbar progression
+            -textvariable Editor::status ]
+            #-progressvar  Editor::prgindic \
+            #-progressmax 100 \
+            #-progresstype normal \
+            #-progressfg blue ]
+    #$mainframe showstatusbar progression
  
    
 
@@ -3143,13 +3047,13 @@ proc Editor::create { } {
     set bbox [ButtonBox::create $tb1.bbox1 -spacing 0 -padx 1 -pady 1]
     set toolbarButtons(new) [ButtonBox::add $bbox -image [Bitmap::get page_white] \
             -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
-            -helptext "Create new project" -command newprojectWindow]
+            -helptext "Create new project" -command NewProjectWindow]
     set toolbarButtons(save) [ButtonBox::add $bbox -image [Bitmap::get disk] \
             -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
             -helptext "Save Project" -command YetToImplement]
     set toolbarButtons(saveAll) [ButtonBox::add $bbox -image [Bitmap::get disk_multiple] \
             -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
-            -helptext "Save Project as" -command saveProjectAsWindow]    
+            -helptext "Save Project as" -command SaveProjectAsWindow]    
     set toolbarButtons(openproject) [ButtonBox::add $bbox -image [Bitmap::get openfolder] \
             -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
             -helptext "Open Project" -command openproject]
@@ -3159,11 +3063,6 @@ proc Editor::create { } {
     set prgindic 0
     set sep0 [Separator::create $tb1.sep0 -orient vertical]
     pack $sep0 -side left -fill y -padx 4 -anchor w
-    
-
-
-    
-
     
     set bbox [ButtonBox::create $tb1.bbox1b -spacing 0 -padx 4 -pady 1]
     set bb_start [ButtonBox::add $bbox -image [Bitmap::get start] \
@@ -3256,12 +3155,12 @@ proc Editor::create { } {
     
     set bbox [ButtonBox::create $tb1.bbox8 -spacing 1 -padx 1 -pady 1]
     pack $bbox -side left -anchor w
-    set bb_connect [ButtonBox::add $bbox -image [Bitmap::get disconnect]\
+    set bb_connect [ButtonBox::add $bbox -image [Bitmap::get connect]\
             -height 21\
             -width 21\
             -helptype balloon\
             -helptext "connection"\
-            -command connectio ]
+            -command TogConnect ]
     pack $bb_connect -side left -padx 4  
 
     set sep8 [Separator::create $tb1.sep8 -orient vertical]
@@ -3280,12 +3179,12 @@ proc Editor::create { } {
       
     $Editor::mainframe showtoolbar 0 $Editor::toolbar1
 
-    set temp [MainFrame::addindicator $mainframe -text "Current Startfile: " ]
-    set temp [MainFrame::addindicator $mainframe -textvariable Editor::current(project) ]
-    set temp [MainFrame::addindicator $mainframe -text " File: " ]
-    set temp [MainFrame::addindicator $mainframe -textvariable Editor::current(file) ]
-    set temp [MainFrame::addindicator $mainframe -textvariable EditorData(cursorPos)]
-    set temp [MainFrame::addindicator $mainframe -textvariable clock_var]
+    #set temp [MainFrame::addindicator $mainframe -text "Current Startfile: " ]
+    #set temp [MainFrame::addindicator $mainframe -textvariable Editor::current(project) ]
+    #set temp [MainFrame::addindicator $mainframe -text " File: " ]
+    #set temp [MainFrame::addindicator $mainframe -textvariable Editor::current(file) ]
+    #set temp [MainFrame::addindicator $mainframe -textvariable EditorData(cursorPos)]
+    #set temp [MainFrame::addindicator $mainframe -textvariable clock_var]
     
     # NoteBook creation
     #incr prgindic
@@ -3330,7 +3229,6 @@ $pw2 configure -width 250
 
 	#$treeWindow bindWindow_userdef <ButtonPress-1> CheckObject
 	$treeWindow bindImage <ButtonPress-3> {Editor::tselectright %X %Y}
-        
 	$treeWindow bindText <ButtonPress-3> {Editor::tselectright %X %Y}
 	$treeWindow configure -width 10
     global EditorData
@@ -3340,7 +3238,6 @@ $pw2 configure -width 250
 
 #    set f0 [EditManager::create_tab $notebook "Index"]
 
-    #set Editor::text_win($Editor::index_counter,undo_id) [new textUndoer [lindex $f0 2]]
 
 $list_notebook configure -width 10    
     NoteBook::compute_size $list_notebook
@@ -3387,7 +3284,7 @@ $list_notebook configure -width 10
 #
 # Create an image to be displayed in buttons embedded in a tablelist widget
 #
-	set openImg [image create photo -file [file join . open.gif]]
+	set openImg [image create photo -file [file join ./images/open.gif]]
 
 #
 # Create a vertically scrolled tablelist widget with 5
@@ -3529,13 +3426,6 @@ $tbl1 columnconfigure 4 -background #e0e8f0 -width 11
 $tbl1 columnconfigure 5 -background #e0e8f0 -width 11
 $tbl1 columnconfigure 6 -background #e0e8f0 -width 11
 
-#$tbl1 columnconfigure 0 -background #f9cf7e -sortmode integer
-#$tbl1 columnconfigure 1 -background #f9cf7e
-#$tbl1 columnconfigure 2 -background #f9cf7e 
-#$tbl1 columnconfigure 3 -background #f9cf7e 
-#$tbl1 columnconfigure 4 -background #f9cf7e 
-#$tbl1 columnconfigure 5 -background #f9cf7e
-#$tbl1 columnconfigure 6 -background #f9cf7e 
 
 $tbl1 insert end [list 65536 0010000000202106 2106 02 00 0000 0010]
 $tbl1 insert end [list 2 0008001000202104 2104 02 00 0001 0008]
@@ -3682,9 +3572,9 @@ close $fileId
 proc DoubleClickNode {node} {
 	global updatetree
 	set node [$updatetree selection get]
-#puts "node in doubleclick------------->$node"
+	#puts "node in doubleclick------------->$node"
 
-	if {$node=="Index_2"} {
+	if {[string match "PDO*" $node]||[string match "pdo*" $node]} {
 		pack .mainframe.topf.tb0.f.ra_dec -side left -padx 5
 		pack .mainframe.topf.tb0.f.ra_hex -side left -padx 5
 		pack forget .mainframe.topf.tb0.f.ra_dec
@@ -3693,49 +3583,8 @@ proc DoubleClickNode {node} {
 		pack .mainframe.topf.tb0.f.ra_dec -side left -padx 5
 		pack .mainframe.topf.tb0.f.ra_hex -side left -padx 5
 	}
-
-	set testGroupNo [GetCurrentNodeNum]
-	set selected [GetPreviousNum]
-	if { $selected == "TestGroup" } {
-		set oldName [$updatetree itemcget $node -text]
-		set newName [string trim [$updatetree edit $node "$oldName" "" 1 1]]
-		if {$newName != ""} {
-			$updatetree itemconfigure $node -text $newName
-			arrTestGroup($testGroupNo) configure -memGroupName $newName
-		} else {
-			#tk_messageBox -message "Cannot be empty"
-			DoubleClickNode $node
-		}
-	} else {
-		Editor::tselectObject $node
-	}		
 }
 
-
-#####################################################################
-# procedure to draw toolbox
-# Input: Selected Directory
-# Output: Lists the contents of the selected directory in toolbox
-#####################################################################
-proc DrawToolBox {toolBoxDir} {
-	global updatetree
-	set child [$updatetree insert 1 TargetConfig ToolBox -text "Toolbox" -data $toolBoxDir -open 0 -image [Bitmap::get openfold]]
-	#exec rm -R *~
-	set toolFilesCount 0
-	set lentries [glob -nocomplain [file join $toolBoxDir "*"]]
-	foreach f $lentries {
-        	set tail [file tail $f]
-		set extsplit [split $tail .]
-		set extention [lindex $extsplit [expr [llength $extsplit] - 1]]
-        	if { [file isdirectory $f] } {
-        	} else {
-			if { $extention == "c" || $extention == "h" || $extention == "C" || $extention == "H"} {
-				set child [$updatetree insert $toolFilesCount ToolBox $tail -text $tail -open 0 -image [Bitmap::get file]] 
-        	        incr toolFilesCount
-			}
-        	}
-    	    }
-}
 
 ################################################################################
 #
@@ -3765,51 +3614,7 @@ proc GetPreviousNum {} {
 	set nodeNum [lindex $tmpsplit [expr [llength $tmpsplit] -2]]
 	return $nodeNum
 }
-################################################################################
-#
-#  proc CheckObject
-#
-#  Single Click to check/uncheck the object on the tree
-################################################################################
-proc CheckObject {node} {
-	global updatetree
-	set tmpsplit [split $node "-"]
-	set nodeName [lindex $tmpsplit 0]
-	if {$nodeName == "TestGroup"} {
-		set testGroupNo [lindex $tmpsplit [expr [llength $tmpsplit] -1]]
-		set check [arrTestGroup($testGroupNo) cget -memChecked]
-		if { $check == "N" } {
-			arrTestGroup($testGroupNo) configure -memChecked C
-			$updatetree itemconfigure $node -window [Bitmap::get userdefined_checked]
-			$updatetree closetree $node
-		} elseif { $check == "C" } {
-			arrTestGroup($testGroupNo) configure -memChecked N
-			$updatetree itemconfigure $node -window [Bitmap::get userdefined_unchecked]
-			$updatetree closetree $node
-		}
-	} elseif {$nodeName == "path"} {
-		set testCaseNo [lindex $tmpsplit [expr [llength $tmpsplit] -1]]
-		set testGroupNo [lindex $tmpsplit [expr [llength $tmpsplit] -2]]
-		set check [arrTestCase($testGroupNo)($testCaseNo) cget -memCaseRunoptions]
-		if {$check == "NN" } {
-			arrTestCase($testGroupNo)($testCaseNo) configure -memCaseRunoptions "CN"
-			$updatetree itemconfigure $node -window [Bitmap::get userdefined_checked]
-			$updatetree closetree $node
-		} elseif {$check == "NB" } {
-			arrTestCase($testGroupNo)($testCaseNo) configure -memCaseRunoptions "CB"
-			$updatetree itemconfigure $node -window [Bitmap::get userdefined_checked]
-			$updatetree closetree $node
-		} elseif {$check == "CN" } {
-			arrTestCase($testGroupNo)($testCaseNo) configure -memCaseRunoptions "NN"
-			$updatetree itemconfigure $node -window [Bitmap::get userdefined_unchecked]
-			$updatetree closetree $node
-		} elseif {$check == "CB" } {
-			arrTestCase($testGroupNo)($testCaseNo) configure -memCaseRunoptions "NB"
-			$updatetree itemconfigure $node -window [Bitmap::get userdefined_unchecked]
-			$updatetree closetree $node
-		}
-	}
-}
+
 ################################################################################
 #
 #  proc getRelativePath
@@ -3899,45 +3704,18 @@ proc AddCN {Name} {
 	global updatetree
 	global testGroupName
 	global tg_count
+	global cnCount
+
 	set TotalTestGroup $tg_count
 	incr TotalTestGroup
 	incr tg_count
-	set child [$updatetree insert $TotalTestGroup OBD TestGroup-$TotalTestGroup -text "$Name" -open 1 -image [Bitmap::get openfold]]
+	incr cnCount
+
+	set child [$updatetree insert $cnCount MN-1 CN-1-$cnCount -text "$Name" -open 1 -image [Bitmap::get cn]]
 
 	return
 }
 
-
-
-#################################################################
-# proc BreakPoint
-#Sets or removes the break point for the current testcase
-################################################################
-proc BreakPoint {} {
-	global updatetree
-	global runoptions
-	set testCaseNo [GetCurrentNodeNum]
-	set testGroupNo [GetPreviousNum]
-	set runoptions [arrTestCase($testGroupNo)($testCaseNo) cget -memCaseRunoptions]
-	set node [$updatetree selection get]
-	if {$runoptions=="CN"} {
-		arrTestCase($testGroupNo)($testCaseNo) configure -memCaseRunoptions "CB"
-		$updatetree itemconfigure $node -image [Bitmap::get file_brkpoint]
-		$updatetree closetree $node
-	} elseif {$runoptions=="NN"} {
-		arrTestCase($testGroupNo)($testCaseNo) configure -memCaseRunoptions "NB"
-		$updatetree itemconfigure $node -image [Bitmap::get file_brkpoint]
-		$updatetree closetree $node
-	} elseif {$runoptions=="NB"} {
-		arrTestCase($testGroupNo)($testCaseNo) configure -memCaseRunoptions "NN"
-		$updatetree itemconfigure $node -image [Bitmap::get file]
-		$updatetree closetree $node
-	} elseif {$runoptions=="CB"} {
-		arrTestCase($testGroupNo)($testCaseNo) configure -memCaseRunoptions "CN"
-		$updatetree itemconfigure $node -image [Bitmap::get file]
-		$updatetree closetree $node
-	}
-}
 
 ###############################################################################
 
@@ -3951,29 +3729,61 @@ tk_messageBox -message "Yet to be Implemented !" -title Info -icon info
 
 
 
-proc connectio {} {
+proc TogConnect {} {
 	set tog [.mainframe.topf.tb0.bbox8.b0 cget -image]
 	#puts $tog
 	#to toggle image the value varies according to images added 
 	if {$tog=="image15"} {
-	        .mainframe.topf.tb0.bbox8.b0 configure -image [Bitmap::get connect]
+		Connect	       
+		# .mainframe.topf.tb0.bbox8.b0 configure -image [Bitmap::get connect]
 	} else {
-	        .mainframe.topf.tb0.bbox8.b0 configure -image [Bitmap::get disconnect]
+		Disconnect
+	        #.mainframe.topf.tb0.bbox8.b0 configure -image [Bitmap::get disconnect]
 	}
 }
 proc Connect {} {
 	.mainframe.topf.tb0.bbox8.b0 configure -image [Bitmap::get disconnect]
 	.mainframe setmenustate connect disabled
 	.mainframe setmenustate disconnect normal
+	YetToImplement
 }
 
 proc Disconnect {} {
 	.mainframe.topf.tb0.bbox8.b0 configure -image [Bitmap::get connect]
 	.mainframe setmenustate disconnect disabled
 	.mainframe setmenustate connect normal
+	YetToImplement
 }
 
+###########################################################################							
+# Proc Name:	InsertTree						
+# Inputs:	 
+# Outputs:	
+# Description:	Based on the Global Data draw the treeview. 
+#
+###########################################################################
+proc InsertTree { } {
+	global updatetree
+	global cnCount
+	# Get the Project Details from instProject
+	#set ProjectName [instProject cget -memProjectName]
+	#set TotalTestGroup $tg_count
+	#puts "TotalTestGroup->$tg_count"	
+        #set toolBoxDir [instProject cget -memTollbox_path]
+	#exec rm *~
+	#Insert Project Tree
+	incr cnCount
 
+	$updatetree insert end root PjtName -text "POWERLINK Network" -open 1 -image [Bitmap::get network]
+	$updatetree insert end PjtName MN-1 -text "openPOWERLINK MN" -open 1 -image [Bitmap::get mn]
+
+	$updatetree insert end MN-1 CN-1-$cnCount -text "CN_1" -open 1 -image [Bitmap::get cn]
+	$updatetree insert end CN-1-$cnCount Index-1-1-1  -text "NMT_CycleTime_U32 \[1006\]" -open 1 -image [Bitmap::get index]
+	$updatetree insert end Index-1-1-1 SubIndex-1-1-1-1  -text "Sub_index" -open 1 -image [Bitmap::get subindex]
+	$updatetree insert end CN-1-$cnCount PDO-1-1  -text "PDO" -open 1 -image [Bitmap::get pdo]
+	$updatetree insert end PDO-1-1  pdoIndex-1-1-1  -text "PDO_Index" -open 1 -image [Bitmap::get index]
+	$updatetree insert end pdoIndex-1-1-1 pdoSubIndex-1-1-1-1 -text "PDO_Sub_index" -open 1 -image [Bitmap::get subindex]
+}
 
 
 

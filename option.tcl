@@ -1,8 +1,14 @@
-#==============================================================================
-# Contains some Tk option database settings.
+################################################################################
+#									
+# Script:	option.tcl						
+#									
+# Author:	Kalycito Infotech Pvt Ltd		
+#									
+# Description:	obtaining window system and setting the option for widgets
 #
-# Copyright (c) 2004-2008  Csaba Nemethi (E-mail: csaba.nemethi@t-online.de)
-#==============================================================================
+#
+################################################################################
+
 
 #
 # Get the current windowing system ("x11", "win32", "classic", or "aqua")

@@ -28,108 +28,108 @@ namespace eval EditManager {
 # Outputs:	-	
 # Description:	Set the focus to the selected file.  
 ###########################################################################
-proc EditManager::focus_text {nb pagename} {
-    global EditorData
+#proc EditManager::focus_text {nb pagename} {
+#    global EditorData
     
-    if {[info exists Editor::current(pagename)] && $Editor::current(pagename) == $pagename} {
-        return
-    } else  {
-        if {[catch Editor::tclose info]} {
+#    if {[info exists Editor::current(pagename)] && $Editor::current(pagename) == $pagename} {
+#        return
+#    } else  {
+#        if {[catch Editor::tclose info]} {
             # tk_messageBox -message $info
-        }
-    }
+#        }
+#    }
     
-    set text_page [$nb getframe $pagename]
+#    set text_page [$nb getframe $pagename]
 #save values of last active textWindow
-    if {[info exists Editor::current(text)]} {\
-        set f0 $Editor::current(text)
-        set p0 $Editor::current(pagename)
+#    if {[info exists Editor::current(text)]} {\
+#        set f0 $Editor::current(text)
+#        set p0 $Editor::current(pagename)
         
-        if {[info exists Editor::index($f0)]} {\
-            
-            set idx $Editor::index($f0)
-            set Editor::text_win($idx,hasChanged) $Editor::current(hasChanged)
-            set Editor::text_win($idx,file) $Editor::current(file)
-            set Editor::text_win($idx,slave) $Editor::current(slave)
-            set Editor::text_win($idx,project) $Editor::current(project)
-            set Editor::text_win($idx,history) $Editor::current(procListHistory)
-            set Editor::text_win($idx,writable) $Editor::current(writable)
-        }
-    }
-    set Editor::current(text) $text_page.sw.textWindow
-    set Editor::current(page) $text_page
-    set idx $Editor::index($Editor::current(text))
-    set Editor::current(undo_id)  $Editor::text_win($idx,undo_id)
-    set Editor::current(hasChanged) $Editor::text_win($idx,hasChanged)
-    set Editor::current(file) $Editor::text_win($idx,file)
-    set Editor::current(pagename) $Editor::text_win($idx,pagename)
-    set Editor::current(slave) $Editor::text_win($idx,slave)
-    set Editor::current(project) $Editor::text_win($idx,project)
-    set Editor::current(procListHistory) $Editor::text_win($idx,history)
-    set Editor::current(writable) $Editor::text_win($idx,writable)
-    #restore Cursor position
-    set Editor::last(index) $idx
-    focus $Editor::current(text)
-    NoteBook::see $nb $pagename
-    set editorWindows::TxtWidget $Editor::current(text)
-    set EditorData(curFile) $Editor::current(file)
-    $Editor::current(text) see insert
-    editorWindows::ReadCursor 0
-    editorWindows::flashLine
-    if {!$Editor::current(initDone)} {
-        Editor::updateObjects
-        Editor::selectObject 0
-        set Editor::current(initDone) 1
-    } else {
-        Editor::topen
-        Editor::selectObject 0
-    }
-    catch {$Editor::con_notebook raise $pagename}
-}
+#        if {[info exists Editor::index($f0)]} {\
+#            
+#            set idx $Editor::index($f0)
+#            set Editor::text_win($idx,hasChanged) $Editor::current(hasChanged)
+#            set Editor::text_win($idx,file) $Editor::current(file)
+#            set Editor::text_win($idx,slave) $Editor::current(slave)
+#            set Editor::text_win($idx,project) $Editor::current(project)
+#            set Editor::text_win($idx,history) $Editor::current(procListHistory)
+#            set Editor::text_win($idx,writable) $Editor::current(writable)
+#        }
+#    }
+#    set Editor::current(text) $text_page.sw.textWindow
+#    set Editor::current(page) $text_page
+#    set idx $Editor::index($Editor::current(text))
+#    set Editor::current(undo_id)  $Editor::text_win($idx,undo_id)
+#    set Editor::current(hasChanged) $Editor::text_win($idx,hasChanged)
+#    set Editor::current(file) $Editor::text_win($idx,file)
+#    set Editor::current(pagename) $Editor::text_win($idx,pagename)
+#    set Editor::current(slave) $Editor::text_win($idx,slave)
+#    set Editor::current(project) $Editor::text_win($idx,project)
+#    set Editor::current(procListHistory) $Editor::text_win($idx,history)
+#    set Editor::current(writable) $Editor::text_win($idx,writable)
+#    #restore Cursor position
+#    set Editor::last(index) $idx
+#    focus $Editor::current(text)
+#    NoteBook::see $nb $pagename
+#    set editorWindows::TxtWidget $Editor::current(text)
+#    set EditorData(curFile) $Editor::current(file)
+#    $Editor::current(text) see insert
+#    editorWindows::ReadCursor 0
+#    editorWindows::flashLine
+#    if {!$Editor::current(initDone)} {
+#        Editor::updateObjects
+#        Editor::selectObject 0
+#        set Editor::current(initDone) 1
+#    } else {
+#        Editor::topen
+#        Editor::selectObject 0
+#    }
+#    catch {$Editor::con_notebook raise $pagename}
+#}
 
 
-proc EditManager::create_text {nb file} {
-    global EditorData
-    variable TxtWidget
-    variable _newPageCounter
+#proc EditManager::create_text {nb file} {
+#    global EditorData
+#    variable TxtWidget
+#    variable _newPageCounter
     
-    incr _newPageCounter
-    set pageName "Page$_newPageCounter"
-    set filename [file tail $file]
-    set prjFile [file join [file dirname $file] [lindex [split $filename .] 0]].prj
-    set frame [$nb insert end $pageName -text $filename \
-        -raisecmd "EditManager::focus_text $nb $pageName" ]
-    set sw [ScrolledWindow::create $frame.sw -auto both]
-    set text [text $sw.textWindow -bg white -wrap none \
-        -font $EditorData(options,fonts,editorFont) -height 20 -width 80]
-    pack $text -fill both -expand yes
-    ScrolledWindow::setwidget $sw $text
-    pack $sw -fill both -expand yes
+#    incr _newPageCounter
+#    set pageName "Page$_newPageCounter"
+#    set filename [file tail $file]
+#    set prjFile [file join [file dirname $file] [lindex [split $filename .] 0]].prj
+#    set frame [$nb insert end $pageName -text $filename \
+#        -raisecmd "EditManager::focus_text $nb $pageName" ]
+#    set sw [ScrolledWindow::create $frame.sw -auto both]
+#    set text [text $sw.textWindow -bg white -wrap none \
+#        -font $EditorData(options,fonts,editorFont) -height 20 -width 80]
+#    pack $text -fill both -expand yes
+#    ScrolledWindow::setwidget $sw $text
+#    pack $sw -fill both -expand yes
     
     # init bindings for the text widget
-    set editorWindows::TxtWidget $text
-    editorWindows::setBindings
+#    set editorWindows::TxtWidget $text
+#    editorWindows::setBindings
     
-    incr Editor::index_counter
-    set Editor::index($text) $Editor::index_counter
-    set Editor::text_win($Editor::index_counter,page) $frame
-    set Editor::text_win($Editor::index_counter,path) $text
-    set Editor::text_win($Editor::index_counter,hasChanged) 0
-    set Editor::text_win($Editor::index_counter,file) $file
-    set Editor::text_win($Editor::index_counter,writable) 1
-    set Editor::text_win($Editor::index_counter,pagename) $pageName
-    set Editor::text_win($Editor::index_counter,slave) "none"
-    set Editor::text_win($Editor::index_counter,history) [list "mark1"]
-    if {[file exists $prjFile]} {
-        set fd [open $prjFile r]
-        set Editor::text_win($Editor::index_counter,project) [read $fd]
-        close $fd
-    } else  {
-        set Editor::text_win($Editor::index_counter,project) $EditorData(options,defaultProjectFile)
-    }
-    set Editor::current(initDone) 0
-    return [list $frame $pageName $text]
-}
+#    incr Editor::index_counter
+#    set Editor::index($text) $Editor::index_counter
+#    set Editor::text_win($Editor::index_counter,page) $frame
+#    set Editor::text_win($Editor::index_counter,path) $text
+#    set Editor::text_win($Editor::index_counter,hasChanged) 0
+#    set Editor::text_win($Editor::index_counter,file) $file
+#    set Editor::text_win($Editor::index_counter,writable) 1
+#    set Editor::text_win($Editor::index_counter,pagename) $pageName
+#    set Editor::text_win($Editor::index_counter,slave) "none"
+#    set Editor::text_win($Editor::index_counter,history) [list "mark1"]
+#    if {[file exists $prjFile]} {
+#        set fd [open $prjFile r]
+#        set Editor::text_win($Editor::index_counter,project) [read $fd]
+#        close $fd
+#    } else  {
+#        set Editor::text_win($Editor::index_counter,project) $EditorData(options,defaultProjectFile)
+#    }
+#    set Editor::current(initDone) 0
+#    return [list $frame $pageName $text]
+#}
 
 #to create the tabs
 proc EditManager::create_tab {nb filename} {
@@ -375,12 +375,12 @@ proc EditManager::create_treeWindow {nb } {
             -highlightthickness 0\
             -bg white  \
             -deltay 18 \
-	    -dropenabled 1 -dragenabled 1\
+	    -dropenabled 0 -dragenabled 0\
 	    -dragevent 1 \
 	    -droptypes {
 		TREE_NODE {copy {}}
 	     }\
-	    -dropcmd dropfunction \
+	    -dropcmd {} \
 	    -dragendcmd {}\
 	    -opencmd   "Editor::tmoddir 1"  \
             -closecmd  "Editor::tmoddir 0"           

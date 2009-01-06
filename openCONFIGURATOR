@@ -20,22 +20,16 @@ exec wish "$0" ${1+"$@"}
 set pwd [pwd]
 package require Tk 8.5
 
+
 global RootDir
-global search_var_string search_option_icase search_option_area search_option_match search_option_blink
 global EditorData
 global clock_var
-global textChanged
+#global textChanged
 global conWindow
 global warWindow
 global errWindow
 
 set RootDir [pwd]
-#set ASEDsRootDir [file dirname [info script]]
-# if { [file type $argv0] == "link" } {
-    # set ASEDsRootDir [file dirname [file readlink $argv0]]
-# } else {
-    # set ASEDsRootDir [file dirname $argv0]
-# }
 
 
 
@@ -49,17 +43,14 @@ namespace eval Bitmap {
     lappend path [file join $RootDir images]
 }
 source [file join $RootDir operations.tcl]
-source [file join $RootDir editor.tcl]
-source [file join $RootDir find.tcl]
-source [file join $RootDir repl.tcl]
-source [file join $RootDir undo.tcl]
+#source [file join $RootDir editor.tcl]
+#source [file join $RootDir undo.tcl]
 source [file join $RootDir console.tcl]
 source [file join $RootDir manager.tcl]
-source [file join $RootDir tclparser.tcl]
-source [file join $RootDir fifDialog.tcl]
-source [file join $RootDir xmlread.tcl]
-source $RootDir/writexml.tcl
-proc initSTB_TSUITE {argc argv} {
+#source [file join $RootDir tclparser.tcl]
+#source [file join $RootDir xmlread.tcl]
+#source $RootDir/writexml.tcl
+proc initOPN_CFGRATOR {argc argv} {
     global tcl_platform
     global auto_path
     global EditorData
@@ -107,13 +98,13 @@ proc initSTB_TSUITE {argc argv} {
         update
     }
 	# Delete all the records
-	struct::record delete record recProjectDetail
-	struct::record delete record recTestGroup
-	struct::record delete record recTestCase
-	struct::record delete record recProfile
+	#struct::record delete record recProjectDetail
+	#struct::record delete record recTestGroup
+	#struct::record delete record recTestCase
+	#struct::record delete record recProfile
 	
 	# Delete the Tree
-	$updatetree delete end root TestSuite
+	$updatetree delete end root PjtName
 	
 	set pjtFolder $EditorData(options,History)
 
@@ -135,14 +126,14 @@ proc initSTB_TSUITE {argc argv} {
 	##################################################################
   	### Reading Datas from XML File
     	##################################################################
-	DeclareStructure
-   	readxml $pjtFolder/$PjtName
+	#DeclareStructure
+   	#readxml $pjtFolder/$PjtName
     	##################################################################
-	instProject configure -memProjectName $PjtName
+	#instProject configure -memProjectName $PjtName
 	InsertTree
-	Editor::tselectObject "myboard_sshscp.exp"
+	#Editor::tselectObject "myboard_sshscp.exp"
 	#Initial status of the Pjt
 	conPuts "Initialized..."
 	conPuts "Project $filename opened"
 }
-initSTB_TSUITE $argc $argv
+initOPN_CFGRATOR $argc $argv

@@ -6,7 +6,6 @@
 #									
 # Description:	Contains the procedures for Console window.
 #
-# Version:	Version - 1.0.
 #
 ################################################################################
 
@@ -130,7 +129,8 @@ proc evalCommand {window Interp command} {
                 return
             }
             interp eval $Interp {
-                set code [catch "eval [list $evalCommand]" result]
+                #set code [catch "eval [list $evalCommand]" result ] ; #The above line also works 
+                set code [catch "eval [list $evalCommand]" result errorInfo]
                 setValues $code $result $errorInfo
             }
             update idletasks
@@ -275,6 +275,8 @@ proc onKeyBackSpace {win} {
 }
 
 
+
+
 proc onKeyHome {win} {
     $win mark set insert prompt
 }
@@ -308,16 +310,16 @@ proc errorInit {win {width 60} {height 5}} {
     $window.t insert end "$prompt % " prompt
     $window.t mark set prompt insert
     $window.t mark gravity prompt left
-    bind $window.t <KeyPress-Return> {%W mark set insert "prompt lineend"}
+    #bind $window.t <KeyPress-Return> {%W mark set insert "prompt lineend"}
     #bind $window.t <KeyRelease-Return> {evalCommand %W $Console [getCommand %W];break}
-    bind $window.t <Key-Up> {onKeyUp %W ; break}
-    bind $window.t <Key-Down> {onKeyDown %W ; break}
+    #bind $window.t <Key-Up> {onKeyUp %W ; break}
+    #bind $window.t <Key-Down> {onKeyDown %W ; break}
     bind $window.t <Key-Left> {onKeyLeft %W ; break}
     bind $window.t <Key-Right> {onKeyRight %W ; break}
     bind $window.t <Key-BackSpace> {onKeyBackSpace %W;break}
     bind $window.t <Key-Home> {onKeyHome %W ;break}
     bind $window.t <Control-c> {set dummy nothing}
-    bind $window.t <KeyPress> {onKeyPressed %W}
+    #bind $window.t <KeyPress> {onKeyPressed %W}
     pack $window.t -fill both -expand yes
     return $window.t
 }
@@ -374,16 +376,16 @@ proc warnInit {win {width 60} {height 5}} {
     $window.t insert end "$prompt % " prompt
     $window.t mark set prompt insert
     $window.t mark gravity prompt left
-    bind $window.t <KeyPress-Return> {%W mark set insert "prompt lineend"}
+    #bind $window.t <KeyPress-Return> {%W mark set insert "prompt lineend"}
     #bind $window.t <KeyRelease-Return> {evalCommand %W $Console [getCommand %W];break}
-    bind $window.t <Key-Up> {onKeyUp %W ; break}
-    bind $window.t <Key-Down> {onKeyDown %W ; break}
+    #bind $window.t <Key-Up> {onKeyUp %W ; break}
+    #bind $window.t <Key-Down> {onKeyDown %W ; break}
     bind $window.t <Key-Left> {onKeyLeft %W ; break}
     bind $window.t <Key-Right> {onKeyRight %W ; break}
     bind $window.t <Key-BackSpace> {onKeyBackSpace %W;break}
     bind $window.t <Key-Home> {onKeyHome %W ;break}
     bind $window.t <Control-c> {set dummy nothing}
-    bind $window.t <KeyPress> {onKeyPressed %W}
+    #bind $window.t <KeyPress> {onKeyPressed %W}
     pack $window.t -fill both -expand yes
     return $window.t
 }

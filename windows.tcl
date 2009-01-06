@@ -1,4 +1,17 @@
 ################################################################################
+#									
+# Script:	windows.tcl						
+#									
+# Author:	Kalycito Infotech Pvt Ltd		
+#									
+# Description:	Contains the windows displayed in application.
+#
+#
+################################################################################
+
+
+
+################################################################################
 #proc ConnectionSettingWindow
 #Input   : -
 #Output  : -
@@ -184,9 +197,9 @@ proc AddCNWindow {} {
 	set titleFrame1 [TitleFrame $winAddCN.titleFrame1 -text "Add CN" ]
 	set titleInnerFrame1 [$titleFrame1 getframe]
 	set frame1 [frame $titleInnerFrame1.fram1]
+	set frame2 [frame $titleInnerFrame1.fram2]
 	set titleFrame2 [TitleFrame $titleInnerFrame1.titleFrame2 -text "Select Node" ]
 	set titleInnerFrame2 [$titleFrame2 getframe]
-	set frame2 [frame $titleInnerFrame1.fram2]
 	set titleFrame3 [TitleFrame $titleInnerFrame1.titleFrame3 -text "CN Config" ]
 	set titleInnerFrame3 [$titleFrame3 getframe]
 
@@ -308,7 +321,7 @@ proc AddCNWindow {} {
 # proc saveProjectAsWindow
 #
 ########################################################################
-proc saveProjectAsWindow {} {
+proc SaveProjectAsWindow {} {
 	global tmpPjtName
 	global tmpPjtDir
 
@@ -395,7 +408,7 @@ proc saveProjectAsWindow {} {
 # Creates a new project
 ########################################################################
 
-proc newprojectWindow {} {
+proc NewProjectWindow {} {
 	#global PjtDir
 	#global PjtName	
 	#global tmpPjtDir

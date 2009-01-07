@@ -239,7 +239,7 @@ proc AddCNWindow {} {
 		        {"XDC Files"     {.xdc } }
 		        {"XDD Files"     {.xdd } }
 		}
-		set tmpImpDir [tk_getOpenFile -title "Import XDC/XD" -filetypes $types -parent .addCN]
+		set tmpImpDir [tk_getOpenFile -title "Import XDC/XDD" -filetypes $types -parent .addCN]
 		if {$tmpImpDir == ""} {
 			focus .addCN
 			return
@@ -271,7 +271,12 @@ proc AddCNWindow {} {
 			return
 		}
 
-		set chk [AddCN $cnName]
+
+		if {$confCn=="off"} {
+			set chk [AddCN $cnName $tmpImpDir]
+		} else {
+			set chk [AddCN $cnName 0]
+		}
 		destroy .addCN
 	}
 

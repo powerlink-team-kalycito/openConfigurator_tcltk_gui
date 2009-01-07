@@ -38,6 +38,7 @@ variable status_run
 ##variable testGroupName
 ##variable selectedProfile
 set status_run 0
+set cnCount 0
 
 ################################################################################
 #proc delete_id
@@ -1106,7 +1107,7 @@ proc Editor::tselectright {x y node} {
 	$treeWindow selection set $node 
 	set CurrentNode $node
 	if [regexp {CN-(.*)} $node == 1] {
-		tk_popup $Editor::cnMenu $x $y	
+		tk_popup $Editor::cnMenu $x $y 
 	} elseif {[regexp {MN-(.*)} $node == 1]} { 
 		tk_popup $Editor::mnMenu $x $y		
 	} else {
@@ -3474,6 +3475,8 @@ set prgindic 0
     warnPuts "testing Warn.."
     conPuts "testing console"
 
+	#CNIndexTree
+
 #EditManager::create_table $notebook "Index"
 
 }
@@ -3725,19 +3728,16 @@ proc getAbsolutePath {rel_path hom_path} {
 
 
 
-proc AddCN {Name} {
+proc AddCN {cnName tmpImpDir} {
 	global updatetree
-	global testGroupName
-	global tg_count
 	global cnCount
-
-	set TotalTestGroup $tg_count
-	incr TotalTestGroup
-	incr tg_count
 	incr cnCount
+	set child [$updatetree insert $cnCount MN-1 CN-1-$cnCount -text "$cnName" -open 1 -image [Bitmap::get cn]]
 
-	set child [$updatetree insert $cnCount MN-1 CN-1-$cnCount -text "$Name" -open 1 -image [Bitmap::get cn]]
-
+	if {$tmpImpDir!=0} {
+		puts $tmpImpDir
+		Import CN-1-$cnCount $tmpImpDir
+	}
 	return
 }
 
@@ -3798,13 +3798,13 @@ proc InsertTree { } {
 	#exec rm *~
 	#Insert Project Tree
 	incr cnCount
-
+	#puts cnCount----$cnCount
 	$updatetree insert end root PjtName -text "POWERLINK Network" -open 1 -image [Bitmap::get network]
 	$updatetree insert end PjtName MN-1 -text "openPOWERLINK MN" -open 1 -image [Bitmap::get mn]
 
 	$updatetree insert end MN-1 CN-1-$cnCount -text "CN_1" -open 1 -image [Bitmap::get cn]
-	$updatetree insert end CN-1-$cnCount Index-1-1-1  -text "NMT_CycleTime_U32 \[1006\]" -open 1 -image [Bitmap::get index]
-	$updatetree insert end Index-1-1-1 SubIndex-1-1-1-1  -text "Sub_index" -open 1 -image [Bitmap::get subindex]
+	#$updatetree insert end CN-1-$cnCount Index-1-1-1  -text "NMT_CycleTime_U32 \[1006\]" -open 1 -image [Bitmap::get index]
+	#$updatetree insert end Index-1-1-1 SubIndex-1-1-1-1  -text "Sub_index" -open 1 -image [Bitmap::get subindex]
 	$updatetree insert end CN-1-$cnCount PDO-1-1  -text "PDO" -open 1 -image [Bitmap::get pdo]
 	$updatetree insert end PDO-1-1  pdoIndex-1-1-1  -text "PDO_Index" -open 1 -image [Bitmap::get index]
 	$updatetree insert end pdoIndex-1-1-1 pdoSubIndex-1-1-1-1 -text "PDO_Sub_index" -open 1 -image [Bitmap::get subindex]

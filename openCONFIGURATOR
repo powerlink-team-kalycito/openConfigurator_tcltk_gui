@@ -47,6 +47,7 @@ source [file join $RootDir operations.tcl]
 #source [file join $RootDir undo.tcl]
 source [file join $RootDir console.tcl]
 source [file join $RootDir manager.tcl]
+source [file join $RootDir wrapper_interactions.tcl]
 #source [file join $RootDir tclparser.tcl]
 #source [file join $RootDir xmlread.tcl]
 #source $RootDir/writexml.tcl

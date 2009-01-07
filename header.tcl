@@ -16,6 +16,8 @@ set pageopened_list START
 variable csvlist
 set csvlist START
 variable updatetree
+#variable f0
+#variable f1
 variable list_notebook_update
 variable mytestcase
 #set mytestcase "Hal3Test"

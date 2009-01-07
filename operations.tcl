@@ -94,6 +94,7 @@ namespace eval Editor {
     variable mnCount
     variable cnCount
     variable serverUp 0
+    #variable f0
 }
 
 
@@ -206,6 +207,7 @@ proc Editor::CreateFonts {} {
     variable configError
     variable Font_var
     variable FontSize_var
+    #variable f0
     
     # set editor font
     if {$configError} {
@@ -239,6 +241,8 @@ proc Editor::setDefault {} {
     global tcl_platform
     global EditorData
     global RootDir
+    global f0
+    global f1
     variable current
     variable configError
     variable toolbar1
@@ -2861,6 +2865,11 @@ proc Editor::create { } {
     global clock_var
     global EditorData
     global RootDir
+    global f0
+    global f1
+    global f2
+    #global notebook
+
     variable _wfont
     variable notebook
     variable list_notebook
@@ -3003,13 +3012,17 @@ proc Editor::create { } {
 #			YetToImplement
 #		      } 
      $Editor::cnMenu add command -label "Import XDC" \
-            -command {set cursor [. cget -cursor]
-			#Call the procedure
-			set types {
-			        {"All XDC Files"     {.XDC } }
-			}
-			tk_getOpenFile -title "Import XDC" -filetypes $types -parent .
-            		}
+        -command {set cursor [. cget -cursor]
+		#Call the procedure
+		set types {
+		        {"All XDC Files"     {.xdc } }
+		}
+		set tmpImpDir [tk_getOpenFile -title "Import XDC" -filetypes $types -parent .]
+		set node [$updatetree selection get]
+		if {$tmpImpDir!=""} {
+			Import $node $tmpImpDir
+		}
+            }
 	
     
     $Editor::cnMenu add separator
@@ -3222,7 +3235,7 @@ $pw2 configure -width 250
     	# Binding on tree widget   
      	$treeWindow bindText <ButtonPress-1> selectobject
 	#$treeWindow bindText <Double-1> 
-	$treeWindow bindText <Double-1> DoubleClickNode
+	$treeWindow bindText <Double-1> Editor::DoubleClickNode
 	
     	$treeWindow bindImage <ButtonPress-1> selectobject
 	$treeWindow bindImage <Double-1> Editor::tselectObject
@@ -3291,20 +3304,20 @@ $list_notebook configure -width 10
 # dynamic-width columns and interactive sort capability
 #
 
-    set f0 [EditManager::create_tab $notebook "Index"]
+    set f0 [EditManager::create_table $notebook "Index" "ind"]
     NoteBook::compute_size $notebook
     pack $notebook -side left -fill both -expand yes -padx 4 -pady 4
-     set pane4 [lindex $f0 0]
-set tbl $pane4.tbl
+     #set pane4 [lindex $f0 0]
+#set tbl $pane4.tbl
 
-tablelist::tablelist $pane4.tbl \
-    -columns {0 "Label" left
-	      0 "Value" center} \
-    -setgrid no -width 0 -height 6 \
-    -stripebackground gray98  \
-    -labelcommand "" \
-    -resizable 0 -movablecolumns 0 -movablerows 0 \
-    -showseparators 1 -spacing 10 
+#tablelist::tablelist $pane4.tbl \
+#    -columns {0 "Label" left
+#	      0 "Value" center} \
+#    -setgrid no -width 0 -height 6 \
+#    -stripebackground gray98  \
+#    -labelcommand "" \
+#    -resizable 0 -movablecolumns 0 -movablerows 0 \
+#    -showseparators 1 -spacing 10 
 
 #label command is to disable sorting 
 #resizable doesnt allow the user to change table width 
@@ -3312,8 +3325,10 @@ tablelist::tablelist $pane4.tbl \
 #$tbl columnconfigure 0 -background #e6e6d3 -width 47
 #$tbl columnconfigure 1 -background #e1e1e1 -width 47
 
-$tbl columnconfigure 0 -background #e0e8f0 -width 47
-$tbl columnconfigure 1 -background #e0e8f0 -width 47
+$f0 configure -height 4 -width 40 -stretch all
+
+$f0 columnconfigure 0 -background #e0e8f0 
+$f0 columnconfigure 1 -background #e0e8f0 
 
 #$tbl columnconfigure 1 -formatcommand emptyStr -sortmode integer
 #$tbl columnconfigure 2 -name fileSize -sortmode integer
@@ -3322,136 +3337,111 @@ $tbl columnconfigure 1 -background #e0e8f0 -width 47
 
 proc emptyStr val { return "" }
 
-eval font create BoldFont [font actual [$tbl cget -font]] -weight bold
+eval font create BoldFont [font actual [$f0 cget -font]] -weight bold
 
 #
 # Populate the tablelist widget for taking screen shots
 #
 
-$tbl insert 0 [list Index: 1006 ""]
-$tbl insert 1 [list Name: NMT_CycleLen_U32 ""]
-$tbl insert 2 [list Object\ Type: VAR ""]
-$tbl insert 3 [list Data\ Type: Unsigned32 ""]
-$tbl insert 4 [list Access\ Type: rw ""]
-$tbl insert 5 [list Value: 0007 ""]
+$f0 insert 0 [list Index: 1006 ""]
+$f0 insert 1 [list Name: NMT_CycleLen_U32 ""]
+$f0 insert 2 [list Object\ Type: VAR ""]
+$f0 insert 3 [list Data\ Type: Unsigned32 ""]
+$f0 insert 4 [list Access\ Type: rw ""]
+$f0 insert 5 [list Value: 0007 ""]
 
-$tbl cellconfigure 1,1 -editable yes
-$tbl cellconfigure 5,1 -editable yes
+$f0 cellconfigure 1,1 -editable yes
+$f0 cellconfigure 5,1 -editable yes
 
-$tbl columnconfigure 1 -font Courier
+$f0 columnconfigure 1 -font Courier
 
 # For packing the Tablelist in the right window
 
 #pack $pane4.tbl -fill both -expand yes -padx 4 -pady 4
-pack $pane4.tbl  -padx 4 -pady 4
+#pack $pane4.tbl  -padx 4 -pady 4
 #puts [$pane4.tbl cget -height]
 #grid config $pane4.tbl -row 0 -column 0
 
-set frame4 [frame $pane4.f] 
-button $frame4.b_sav -text " Save " -command "YetToImplement"
-button $frame4.b_dis -text "Discard" -command "YetToImplement"
-pack $frame4
-grid config $frame4.b_sav -row 0 -column 0
-grid config $frame4.b_dis -row 0 -column 1
+#set frame4 [frame $pane4.f] 
+#button $frame4.b_sav -text " Save " -command "YetToImplement"
+#button $frame4.b_dis -text "Discard" -command "YetToImplement"
+#pack $frame4
+#grid config $frame4.b_sav -row 0 -column 0
+#grid config $frame4.b_dis -row 0 -column 1
 
 #forcing the frist tab Tab to be disabled
 #Widget::configure $pane4 "-state disabled"
 
 
-set f1 [EditManager::create_tab $notebook "Sub Index"]
- set pane6 [lindex $f1 0]
-set tbl2 $pane6.tbl2
-
-tablelist::tablelist $pane6.tbl2 \
-    -columns {0 "Label" left
-	      0 "Value" center} \
-    -setgrid no -width 0 -height 7 \
-    -stripebackground gray98 \
-    -labelcommand "" \
-    -resizable 0 -movablecolumns 0 -movablerows 0 \
-    -showseparators 1 -borderwidth 1 -spacing 10
+set f1 [EditManager::create_table $notebook "Sub Index" "ind"]
 
 
-#$tbl2 columnconfigure 0 -background #dbdbc9 -width 47
-#$tbl2 columnconfigure 1 -background #f9cf7e -width 47
 
-$tbl2 columnconfigure 0 -background #e0e8f0 -width 47 
-$tbl2 columnconfigure 1 -background #e0e8f0 -width 47
+#$f1 columnconfigure 0 -background #dbdbc9 -width 47
+#$f1 columnconfigure 1 -background #f9cf7e -width 47
 
-$tbl2 insert 0 [list Index: 1006]
-$tbl2 insert 1 [list Sub\ Index: 00]
-$tbl2 insert 2 [list Name: NMT_CycleLen_U32]
-$tbl2 insert 3 [list Object\ Type: VAR]
-$tbl2 insert 4 [list Data\ Type: Unsigned32]
-$tbl2 insert 5 [list Access\ Type: rw]
-$tbl2 insert 6 [list Value: 0007]
+$f1 configure -height 4 -width 40 -stretch all
 
+$f1 columnconfigure 0 -background #e0e8f0
+$f1 columnconfigure 1 -background #e0e8f0
 
-$tbl2 cellconfigure 2,1 -editable yes
-$tbl2 cellconfigure 6,1 -editable yes
+$f1 insert 0 [list Index: 1006]
+$f1 insert 1 [list Sub\ Index: 00]
+$f1 insert 2 [list Name: NMT_CycleLen_U32]
+$f1 insert 3 [list Object\ Type: VAR]
+$f1 insert 4 [list Data\ Type: Unsigned32]
+$f1 insert 5 [list Access\ Type: rw]
+$f1 insert 6 [list Value: 0007]
 
-pack $pane6.tbl2 -fill both -expand yes -padx 4 -pady 4
-set frame6 [frame $pane6.f] 
-button $frame6.b_sav -text " Save " -command "YetToImplement"
-button $frame6.b_dis -text "Discard" -command "YetToImplement"
-pack $frame6
-grid config $frame6.b_sav -row 0 -column 0
-grid config $frame6.b_dis -row 0 -column 1
+$f1 cellconfigure 2,1 -editable yes
+$f1 cellconfigure 6,1 -editable yes
 
-set f2 [EditManager::create_tab $notebook "PDO mapping"]
+#pack $pane6.tbl2 -fill both -expand yes -padx 4 -pady 4
+#set frame6 [frame $pane6.f] 
+#button $frame6.b_sav -text " Save " -command "YetToImplement"
+#button $frame6.b_dis -text "Discard" -command "YetToImplement"
+#pack $frame6
+#grid config $frame6.b_sav -row 0 -column 0
+#grid config $frame6.b_dis -row 0 -column 1
 
-     set pane5 [lindex $f2 0]
-set tbl1 $pane5.tbl1
+set f2 [EditManager::create_table $notebook "PDO mapping" "pdo"]
 
-tablelist::tablelist $pane5.tbl1 \
-    -columns {0 "No" left
-	      0 "Mapping Entries" center
-	      0 "Index" center
-	      0 "Sub Index"
-	      0 "Reserved"
-	      0 "Offset"
-	      0 "Length"} \
-    -setgrid 0 -width 0 \
-    -stripebackground gray98 \
-    -resizable 0 -movablecolumns 0 -movablerows 0 \
-    -showseparators 1 -spacing 10
-
+$f2 configure -height 4 -width 40 -stretch all
 
 # the column No has onlly integer values som sorting based on integer
-$tbl1 columnconfigure 0 -background #e0e8f0 -width 6 -sortmode integer
-$tbl1 columnconfigure 1 -background #e0e8f0 -width 23
-$tbl1 columnconfigure 2 -background #e0e8f0 -width 11
-$tbl1 columnconfigure 3 -background #e0e8f0 -width 11
-$tbl1 columnconfigure 4 -background #e0e8f0 -width 11
-$tbl1 columnconfigure 5 -background #e0e8f0 -width 11
-$tbl1 columnconfigure 6 -background #e0e8f0 -width 11
+$f2 columnconfigure 0 -background #e0e8f0 -width 6 -sortmode integer
+$f2 columnconfigure 1 -background #e0e8f0 -width 23
+$f2 columnconfigure 2 -background #e0e8f0 -width 11
+$f2 columnconfigure 3 -background #e0e8f0 -width 11
+$f2 columnconfigure 4 -background #e0e8f0 -width 11
+$f2 columnconfigure 5 -background #e0e8f0 -width 11
+$f2 columnconfigure 6 -background #e0e8f0 -width 11
+
+$f2 insert end [list 1 0010000000202106 2106 02 00 0000 0010]
+$f2 insert end [list 2 0008001000202104 2104 02 00 0001 0008]
+$f2 insert end [list 3 0010000000202106 2106 02 00 0000 0010]
+$f2 insert end [list 4 0008001000202104 2104 02 00 0001 0008]
+$f2 insert end [list 5 0010000000202106 2106 02 00 0000 0010]
+$f2 insert end [list 6 0008001000202104 2104 02 00 0001 0008]
+$f2 insert end [list 7 0010000000202106 2106 02 00 0000 0010]
+$f2 insert end [list 8 0008001000202104 2104 02 00 0001 0008]
+$f2 insert end [list 9 0010000000202106 2106 02 00 0000 0010]
+$f2 insert end [list 10 0008001000202104 2104 02 00 0001 0008]
+$f2 insert end [list 11 0010000000202106 2106 02 00 0000 0010]
+$f2 insert end [list 12 0008001000202104 2104 02 00 0001 0008]
+$f2 insert end [list 13 0010000000202106 2106 02 00 0000 0010]
+$f2 insert end [list 14 0008001000202104 2104 02 00 0001 0008]
+$f2 insert end [list 15 0010000000202106 2106 02 00 0000 0010]
+$f2 insert end [list 16 0008001000202104 2104 02 00 0001 0008]
+$f2 insert end [list 17 0010000000202106 2106 02 00 0000 0010]
+$f2 insert end [list 18 0008001000202104 2104 02 00 0001 0008]
+$f2 insert end [list 19 0010000000202106 2106 02 00 0000 0010]
+$f2 insert end [list 20 0008001000202104 2104 02 00 0001 0008]
+$f2 insert end [list 21 0010000000202106 2106 02 00 0000 0010]
+$f2 insert end [list 22 0008001000202104 2104 02 00 0001 0008]
+$f2 insert end [list 23 0010000000202106 2106 02 00 0000 0010]
 
 
-$tbl1 insert end [list 65536 0010000000202106 2106 02 00 0000 0010]
-$tbl1 insert end [list 2 0008001000202104 2104 02 00 0001 0008]
-$tbl1 insert end [list 3 0010000000202106 2106 02 00 0000 0010]
-$tbl1 insert end [list 4 0008001000202104 2104 02 00 0001 0008]
-$tbl1 insert end [list 5 0010000000202106 2106 02 00 0000 0010]
-$tbl1 insert end [list 6 0008001000202104 2104 02 00 0001 0008]
-$tbl1 insert end [list 7 0010000000202106 2106 02 00 0000 0010]
-$tbl1 insert end [list 8 0008001000202104 2104 02 00 0001 0008]
-$tbl1 insert end [list 9 0010000000202106 2106 02 00 0000 0010]
-$tbl1 insert end [list 10 0008001000202104 2104 02 00 0001 0008]
-$tbl1 insert end [list 11 0010000000202106 2106 02 00 0000 0010]
-$tbl1 insert end [list 12 0008001000202104 2104 02 00 0001 0008]
-$tbl1 insert end [list 13 0010000000202106 2106 02 00 0000 0010]
-$tbl1 insert end [list 14 0008001000202104 2104 02 00 0001 0008]
-$tbl1 insert end [list 15 0010000000202106 2106 02 00 0000 0010]
-$tbl1 insert end [list 16 0008001000202104 2104 02 00 0001 0008]
-$tbl1 insert end [list 17 0010000000202106 2106 02 00 0000 0010]
-$tbl1 insert end [list 18 0008001000202104 2104 02 00 0001 0008]
-$tbl1 insert end [list 19 0010000000202106 2106 02 00 0000 0010]
-$tbl1 insert end [list 20 0008001000202104 2104 02 00 0001 0008]
-$tbl1 insert end [list 21 0010000000202106 2106 02 00 0000 0010]
-$tbl1 insert end [list 22 0008001000202104 2104 02 00 0001 0008]
-$tbl1 insert end [list 23 0010000000202106 2106 02 00 0000 0010]
-
-pack $pane5.tbl1 -fill both -expand yes -padx 4 -pady 4
 
 
     
@@ -3484,7 +3474,7 @@ set prgindic 0
     warnPuts "testing Warn.."
     conPuts "testing console"
 
-EditManager::create_table $notebook "Index"
+#EditManager::create_table $notebook "Index"
 
 }
 
@@ -3569,12 +3559,15 @@ close $fileId
 #  To edit the testgroup name
 ################################################################################
 
-proc DoubleClickNode {node} {
+proc Editor::DoubleClickNode {node} {
 	global updatetree
-	set node [$updatetree selection get]
-	#puts "node in doubleclick------------->$node"
+	global f0
+	global f1
+	global f2
+	variable notebook
 
-	if {[string match "PDO*" $node]||[string match "pdo*" $node]} {
+	set node [$updatetree selection get]
+	if {[string match "PDO-*" $node]||[string match "pdo*" $node]} {
 		pack .mainframe.topf.tb0.f.ra_dec -side left -padx 5
 		pack .mainframe.topf.tb0.f.ra_hex -side left -padx 5
 		pack forget .mainframe.topf.tb0.f.ra_dec
@@ -3583,6 +3576,38 @@ proc DoubleClickNode {node} {
 		pack .mainframe.topf.tb0.f.ra_dec -side left -padx 5
 		pack .mainframe.topf.tb0.f.ra_hex -side left -padx 5
 	}
+	if {[string match "*SubIndex*" $node]} {
+		set tmpName [$updatetree itemcget $node -text]
+		$f0 delete 0
+		$f0 insert 0 [list Index: $tmpName]
+		$notebook itemconfigure Page2 -state normal
+		$notebook raise Page2
+		$notebook itemconfigure Page1 -state disabled
+		$notebook itemconfigure Page3 -state disabled
+		#$f0 insert 0,1 $tmpName
+	} elseif {[string match "*Index*" $node]} {
+		set tmpName [$updatetree itemcget $node -text]
+		$f0 delete 0
+		$f0 insert 0 [list Index: $tmpName]
+		#$notebook hide Page2
+		#$notebook hide Page3
+		#puts [$notebook pages]
+		$notebook itemconfigure Page1 -state normal
+		$notebook raise Page1
+		$notebook itemconfigure Page2 -state disabled
+		$notebook itemconfigure Page3 -state disabled
+		#$f0 insert 0,1 $tmpName
+	} elseif {[string match "PDO-*" $node]} {
+		$notebook itemconfigure Page3 -state normal
+		$notebook raise Page3
+		$notebook itemconfigure Page1 -state disabled
+		$notebook itemconfigure Page2 -state disabled
+	} else {
+		$notebook itemconfigure Page1 -state disabled
+		$notebook itemconfigure Page2 -state disabled
+		$notebook itemconfigure Page3 -state disabled
+	}
+	return
 }
 
 
@@ -3784,7 +3809,6 @@ proc InsertTree { } {
 	$updatetree insert end PDO-1-1  pdoIndex-1-1-1  -text "PDO_Index" -open 1 -image [Bitmap::get index]
 	$updatetree insert end pdoIndex-1-1-1 pdoSubIndex-1-1-1-1 -text "PDO_Sub_index" -open 1 -image [Bitmap::get subindex]
 }
-
 
 
 

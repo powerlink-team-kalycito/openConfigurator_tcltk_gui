@@ -165,7 +165,7 @@ proc EditManager::create_tab {nb filename} {
 
 
 
-proc EditManager::create_table {nb filename} {
+proc EditManager::create_table {nb filename choice} {
     global EditorData
     variable TxtWidget
     variable _newPageCounter
@@ -175,63 +175,85 @@ proc EditManager::create_table {nb filename} {
     set frame [$nb insert end $pageName -text $filename ]
 
     set sw [ScrolledWindow $frame.sw]
-
     pack $sw -fill both -expand true
+    set st $frame.st
+    #set vsb $frame.vsb
+    #set hsb $frame.hsb
 
+    if {$choice=="ind"} {
+	set st [tablelist::tablelist $st \
+	    -columns {0 "Label" left
+		      0 "Value" center} \
+	    -setgrid no -width 0 -height 1 \
+	    -stripebackground gray98  \
+	    -labelcommand "" \
+	    -resizable 1 -movablecolumns 0 -movablerows 0 \
+	    -showseparators 1 -spacing 10 ]
+            ##-xscrollcommand [list $hsb set] -yscrollcommand [list $vsb set]
 
-set st [tablelist::tablelist $sw.st \
-    -columns {0 "Label" left
-	      0 "Value" center} \
-    -setgrid no -width 0 -height 1 \
-    -stripebackground gray98  \
-    -labelcommand "" \
-    -resizable 0 -movablecolumns 0 -movablerows 0 \
-    -showseparators 1 -spacing 10 ]
+	set fram [frame $frame.f1]  
+	label $fram.l_empty -text "  " -height 1 
+	button $fram.b_sav -text " Save " -command "YetToImplement"
+	label $fram.l_empty1 -text "  "
+	button $fram.b_dis -text "Discard" -command "YetToImplement"
+	grid config $fram.l_empty -row 0 -column 0 -columnspan 2
+	grid config $fram.b_sav -row 1 -column 0 -sticky s
+	grid config $fram.l_empty1 -row 1 -column 1 -sticky s
+	grid config $fram.b_dis -row 1 -column 2 -sticky s
+	pack $fram -side bottom
+    } elseif {$choice=="pdo"} {
+	set st [tablelist::tablelist $st \
+	    -columns {0 "No" left
+		      0 "Mapping Entries" center
+		      0 "Index" center
+		      0 "Sub Index"
+		      0 "Reserved"
+		      0 "Offset"
+		      0 "Length"} \
+	    -setgrid 0 -width 0 \
+	    -stripebackground gray98 \
+	    -resizable 1 -movablecolumns 0 -movablerows 0 \
+	    -showseparators 1 -spacing 10 ]
+            ##-xscrollcommand [list $hsb set] -yscrollcommand [list $vsb set]
+   }
+        ##scrollbar $vsb -orient vertical   -command [list $st yview]
+        ##scrollbar $hsb -orient horizontal -command [list $st xview]
+   #$st columnconfigure 0 -background #e0e8f0 -width 47
+   #$st columnconfigure 1 -background #e0e8f0 -width 47
 
+   #$st insert 0 [list Index: 1006 ""]
+   #$st insert 1 [list Name: NMT_CycleLen_U32 ""]
+   #$st insert 2 [list Object\ Type: VAR ""]
+   #$st insert 3 [list Data\ Type: Unsigned32 ""]
+   #$st insert 4 [list Access\ Type: rw ""]
+   #$st insert 5 [list Value: 0007 ""]
 
-$st columnconfigure 0 -background #e0e8f0 -width 47
-$st columnconfigure 1 -background #e0e8f0 -width 47
-
-$st insert 0 [list Index: 1006 ""]
-$st insert 1 [list Name: NMT_CycleLen_U32 ""]
-$st insert 2 [list Object\ Type: VAR ""]
-$st insert 3 [list Data\ Type: Unsigned32 ""]
-$st insert 4 [list Access\ Type: rw ""]
-$st insert 5 [list Value: 0007 ""]
-
-
-
+    $sw setwidget $st
+    pack $st -fill both -expand true
+    ##pack $vsb -side right 
+    ##pack $hsb 
+    $nb itemconfigure $pageName -state disabled
 
     #set sf [ScrollableFrame $sw.sf]
     #$sf configure -bg white
-    $sw setwidget $st
+
 
     #pack $sf -fill both -expand true
 
     #set uf [$sf getframe]
     #$uf configure -height 20 
-    pack $st -fill both -expand true
+
     #$uf config -bg blue
 
-#set frame6 [frame $st.f]
-#set frame5 [frame $frame.f]
-#pack $frame5 -side bottom -ipady 4
-set frame6 [frame $frame.f1]  
-label $frame6.l_empty -text "  " -height 1 
-button $frame6.b_sav -text " Save " -command "YetToImplement"
-label $frame6.l_empty1 -text "  "
-button $frame6.b_dis -text "Discard" -command "YetToImplement"
-grid config $frame6.l_empty -row 0 -column 0 -columnspan 2
-grid config $frame6.b_sav -row 1 -column 0 -sticky s
-grid config $frame6.l_empty1 -row 1 -column 1 -sticky s
-grid config $frame6.b_dis -row 1 -column 2 -sticky s
-#pack $frame6 -pady 4
-pack $frame6 -side bottom
-#pack $frame6 -side bottom -ipady 4
+    #set frame6 [frame $st.f]
+    #set frame5 [frame $frame.f]
+    #pack $frame5 -side bottom -ipady 4
+
+    #pack $frame6 -side bottom -ipady 4
     incr Editor::index_counter
     #return [list $frame $pageName]
     #return [list $uf $pageName]
-    #return [list $sf $pageName]
+    return  $st
 }
 
 ###########################################################################							

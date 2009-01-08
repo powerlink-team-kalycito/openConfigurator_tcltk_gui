@@ -39,7 +39,7 @@ variable status_run
 ##variable selectedProfile
 set status_run 0
 set cnCount 0
-
+set mnCount 0
 ################################################################################
 #proc delete_id
 #called when a editorwindow is closed to delete the correspondend undo_id
@@ -92,6 +92,7 @@ namespace eval Editor {
     variable procMarks
     variable mnMenu
     variable cnMenu
+    variable projMenu    
     variable mnCount
     variable cnCount
     variable serverUp 0
@@ -1106,7 +1107,9 @@ proc Editor::tselectright {x y node} {
 	$treeWindow selection clear
 	$treeWindow selection set $node 
 	set CurrentNode $node
-	if [regexp {CN-(.*)} $node == 1] {
+	if [regexp {PjtName(.*)} $node == 1] {
+		tk_popup $Editor::projMenu $x $y 
+	} elseif [regexp {CN-(.*)} $node == 1] {
 		tk_popup $Editor::cnMenu $x $y 
 	} elseif {[regexp {MN-(.*)} $node == 1]} { 
 		tk_popup $Editor::mnMenu $x $y		
@@ -2871,8 +2874,9 @@ proc Editor::create { } {
     global f2
     global ra_dec
     global ra_hex
-    #global notebook
 
+    variable bb_connect
+    variable mainframe
     variable _wfont
     variable notebook
     variable list_notebook
@@ -2939,8 +2943,8 @@ proc Editor::create { } {
             {command "Project Settings" {}  "Project Settings" {} -command YetToImplement }
         }
         "&Connection" all options 0 {
-            {command "Connect to POWERLINK network" {connect} "Establish connection with POWERLINK network" {} -command Connect }
-            {command "Disconnect from POWERLINK network" {disconnect} "Disconnect from POWERLINK network" {} -command Disconnect -state disabled }
+            {command "Connect to POWERLINK network" {connect} "Establish connection with POWERLINK network" {} -command Editor::Connect }
+            {command "Disconnect from POWERLINK network" {disconnect} "Disconnect from POWERLINK network" {} -command Editor::Disconnect -state disabled }
 	    {separator}
             {command "Connection Settings" {}  "Connection Settings" {} -command ConnectionSettingWindow -state normal}
         }
@@ -2992,7 +2996,6 @@ proc Editor::create { } {
 #shortcut keys for project
     bind . <Key-F7> "YetToImplement"
     bind . <Control-Key-F7> "YetToImplement"
-
     bind . <Control-Key-F5> "YetToImplement"
     bind . <Control-Key-F6> "YetToImplement"
 #############################################################################
@@ -3023,7 +3026,8 @@ proc Editor::create { } {
 		set tmpImpDir [tk_getOpenFile -title "Import XDC" -filetypes $types -parent .]
 		set node [$updatetree selection get]
 		if {$tmpImpDir!=""} {
-			Import $node $tmpImpDir
+			# pass node Id  and node type instead of 1 and cn
+			Import $node $tmpImpDir cn 1
 		}
             }
 	
@@ -3041,6 +3045,15 @@ proc Editor::create { } {
      $Editor::mnMenu add separator
      $Editor::mnMenu add command -label "Auto Generate" -command {YetToImplement} 
 
+   
+#############################################################################
+# Menu for the Porject
+#############################################################################
+
+    set Editor::projMenu [menu  .projMenu -tearoff 0]
+     $Editor::projMenu add command -label "Sample Project" -command "YetToImplement" 
+     $Editor::projMenu add command -label "New Project" -command "NewProjectWindow" 
+     $Editor::projMenu add command -label "Open Project" -command "YetToImplement" 
 
     
     set Editor::prgindic -1
@@ -3053,6 +3066,8 @@ proc Editor::create { } {
             #-progresstype normal \
             #-progressfg blue ]
     #$mainframe showstatusbar progression
+
+	#puts $mainframe
  
    
 
@@ -3080,7 +3095,7 @@ proc Editor::create { } {
     set sep0 [Separator::create $tb1.sep0 -orient vertical]
     pack $sep0 -side left -fill y -padx 4 -anchor w
     
-    set bbox [ButtonBox::create $tb1.bbox1b -spacing 0 -padx 4 -pady 1]
+    set bbox [ButtonBox::create $tb1.bbox2 -spacing 0 -padx 4 -pady 1]
     set bb_start [ButtonBox::add $bbox -image [Bitmap::get start] \
             -height 21\
             -width 21\
@@ -3089,7 +3104,7 @@ proc Editor::create { } {
     pack $bb_start -side left -padx 4
     pack $bbox -side left -anchor w -padx 2
     
-    set bbox [ButtonBox::create $tb1.bbox1c -spacing 1 -padx 1 -pady 1]
+    set bbox [ButtonBox::create $tb1.bbox3 -spacing 1 -padx 1 -pady 1]
     
     set bb_stop [ButtonBox::add $bbox -image [Bitmap::get stop]\
             -height 21\
@@ -3114,10 +3129,10 @@ proc Editor::create { } {
     
  
     
-    set sep4 [Separator::create $tb1.sep4 -orient vertical]
-    pack $sep4 -side left -fill y -padx 4 -anchor w
+    set sep1 [Separator::create $tb1.sep1 -orient vertical]
+    pack $sep1 -side left -fill y -padx 4 -anchor w
     
-    set bbox [ButtonBox::create $tb1.bbox6 -spacing 1 -padx 1 -pady 1]
+    set bbox [ButtonBox::create $tb1.bbox4 -spacing 1 -padx 1 -pady 1]
     pack $bbox -side left -anchor w
     set bb_cdc [ButtonBox::add $bbox -image [Bitmap::get transfercdc]\
             -height 21\
@@ -3136,10 +3151,10 @@ proc Editor::create { } {
     	    -command "YetToImplement"]
         pack $bb_xml -side left -padx 4
     #incr prgindic
-    set sep6 [Separator::create $tb1.sep6 -orient vertical]
-    pack $sep6 -side left -fill y -padx 4 -anchor w
+    set sep2 [Separator::create $tb1.sep2 -orient vertical]
+    pack $sep2 -side left -fill y -padx 4 -anchor w
 
-    set bbox [ButtonBox::create $tb1.bbox7 -spacing 1 -padx 1 -pady 1]
+    set bbox [ButtonBox::create $tb1.bbox5 -spacing 1 -padx 1 -pady 1]
     pack $bbox -side left -anchor w
     set bb_build [ButtonBox::add $bbox -image [Bitmap::get build]\
             -height 21\
@@ -3166,21 +3181,21 @@ proc Editor::create { } {
     	    -command "YetToImplement"]
     pack $bb_clean -side left -padx 4
     #incr prgindic
-    set sep7 [Separator::create $tb1.sep7 -orient vertical]
-    pack $sep7 -side left -fill y -padx 4 -anchor w
+    set sep3 [Separator::create $tb1.sep3 -orient vertical]
+    pack $sep3 -side left -fill y -padx 4 -anchor w
     
-    set bbox [ButtonBox::create $tb1.bbox8 -spacing 1 -padx 1 -pady 1]
+    set bbox [ButtonBox::create $tb1.bbox6 -spacing 1 -padx 1 -pady 1]
     pack $bbox -side left -anchor w
     set bb_connect [ButtonBox::add $bbox -image [Bitmap::get connect]\
             -height 21\
             -width 21\
             -helptype balloon\
             -helptext "connection"\
-            -command TogConnect ]
+            -command Editor::TogConnect ]
     pack $bb_connect -side left -padx 4  
 
-    set sep8 [Separator::create $tb1.sep8 -orient vertical]
-    pack $sep8 -side left -fill y -padx 4 -anchor w 
+    set sep4 [Separator::create $tb1.sep4 -orient vertical]
+    pack $sep4 -side left -fill y -padx 4 -anchor w 
 
     set f_tb1 [frame $tb1.f]
     label $f_tb1.l_empty -text ""
@@ -3206,20 +3221,28 @@ proc Editor::create { } {
     #incr prgindic
     set frame    [$mainframe getframe]
     
-    set pw1 [PanedWindow::create $frame.pw -side left]
-    set pane [PanedWindow::add $pw1 -minsize 200]
-    set pw2 [PanedWindow::create $pane.pw -side top]
+    set pw1 [PanedWindow::create $frame.pw1 -side left]
+    set pane [PanedWindow::add $pw1 ]
+    set pw2 [PanedWindow::create $pane.pw2 -side top]
     
-# TODO: Improper Way of implementation. Done to get screenshot of the GUI
-    set pane1 [PanedWindow::add $pw2 -minsize 250]
-    $pane1 configure -width 1
+    set pane1 [PanedWindow::add $pw2 -minsize 250 ]
+    # to reduce the size of tree window
+#puts [$pw2 configure]	
+ #   $pane1 configure -width 1
+#pack $pane1 -side left
+#label $pane1.l_test -text "testing"
+#pack $pane1.l_test -side right
+    #$pw2 configure -width 1
+	#$pw2 paneconfigure $pane1 -width 250 
+
     set pane2 [PanedWindow::add $pw2 -minsize 100]
     set pane3 [PanedWindow::add $pw1 -minsize 100]
-
 
     set list_notebook [NoteBook::create $pane1.nb]
     set notebook [NoteBook::create $pane2.nb]	
     set con_notebook [NoteBook::create $pane3.nb]
+
+
     
     #set myWin [NoteBook::create $pane4.nb]
     
@@ -3247,6 +3270,7 @@ proc Editor::create { } {
 
     #$list_notebook configure -width 10    
     NoteBook::compute_size $list_notebook
+    $list_notebook configure -width 250
     #pack $pane -side left -expand yes
     #pack $list_notebook -side left -padx 2 -pady 4
     pack $list_notebook -side left -fill both -expand yes -padx 2 -pady 4
@@ -3268,147 +3292,143 @@ proc Editor::create { } {
 
     pack $pw1 -fill both -expand yes
     catch {font create TkFixedFont -family Courier -size -12 -weight bold}
-#
-# Create an image to be displayed in buttons embedded in a tablelist widget
-#
-	set openImg [image create photo -file [file join ./images/open.gif]]
+    #
+    # Create an image to be displayed in buttons embedded in a tablelist widget
+    #
+    set openImg [image create photo -file [file join ./images/open.gif]]
 
-#
-# Create a vertically scrolled tablelist widget with 5
-# dynamic-width columns and interactive sort capability
-#
+    #
+    # Create a vertically scrolled tablelist widget with 5
+    # dynamic-width columns and interactive sort capability
+    #
 
     set f0 [EditManager::create_table $notebook "Index" "ind"]
 
-#tablelist::tablelist $pane4.tbl \
-#    -columns {0 "Label" left
-#	      0 "Value" center} \
-#    -setgrid no -width 0 -height 6 \
-#    -stripebackground gray98  \
-#    -labelcommand "" \
-#    -resizable 0 -movablecolumns 0 -movablerows 0 \
-#    -showseparators 1 -spacing 10 
+    #tablelist::tablelist $pane4.tbl \
+    #    -columns {0 "Label" left
+    #	      0 "Value" center} \
+    #    -setgrid no -width 0 -height 6 \
+    #    -stripebackground gray98  \
+    #    -labelcommand "" \
+    #    -resizable 0 -movablecolumns 0 -movablerows 0 \
+    #    -showseparators 1 -spacing 10 
 
-#label command is to disable sorting 
-#resizable doesnt allow the user to change table width 
+    #label command is to disable sorting 
+    #resizable doesnt allow the user to change table width 
 
-#$tbl columnconfigure 0 -background #e6e6d3 -width 47
-#$tbl columnconfigure 1 -background #e1e1e1 -width 47
+    #$tbl columnconfigure 0 -background #e6e6d3 -width 47
+    #$tbl columnconfigure 1 -background #e1e1e1 -width 47
 
-#$f0 configure -height 4 -width 40 -stretch all
+    #$f0 configure -height 4 -width 40 -stretch all
 
-$f0 columnconfigure 0 -background #e0e8f0 
-$f0 columnconfigure 1 -background #e0e8f0 
+    $f0 columnconfigure 0 -background #e0e8f0 
+    $f0 columnconfigure 1 -background #e0e8f0 
 
-#$tbl columnconfigure 1 -formatcommand emptyStr -sortmode integer
-#$tbl columnconfigure 2 -name fileSize -sortmode integer
-#$tbl columnconfigure 4 -name seen
+    #$tbl columnconfigure 1 -formatcommand emptyStr -sortmode integer
+    #$tbl columnconfigure 2 -name fileSize -sortmode integer
+    #$tbl columnconfigure 4 -name seen
 
-proc emptyStr val { return "" }
-
-
-#
-# Populate the tablelist widget for taking screen shots
-#
-
-$f0 insert 0 [list Index: 1006 ""]
-$f0 insert 1 [list Name: NMT_CycleLen_U32 ""]
-$f0 insert 2 [list Object\ Type: VAR ""]
-$f0 insert 3 [list Data\ Type: Unsigned32 ""]
-$f0 insert 4 [list Access\ Type: rw ""]
-$f0 insert 5 [list Value: 0007 ""]
-
-$f0 cellconfigure 1,1 -editable yes
-$f0 cellconfigure 5,1 -editable yes
+    proc emptyStr val { return "" }
 
 
+    #
+    # Populate the tablelist widget for taking screen shots
+    #
 
-# For packing the Tablelist in the right window
+    $f0 insert 0 [list Index: 1006 ""]
+    $f0 insert 1 [list Name: NMT_CycleLen_U32 ""]
+    $f0 insert 2 [list Object\ Type: VAR ""]
+    $f0 insert 3 [list Data\ Type: Unsigned32 ""]
+    $f0 insert 4 [list Access\ Type: rw ""]
+    $f0 insert 5 [list Value: 0007 ""]
 
-#pack $pane4.tbl -fill both -expand yes -padx 4 -pady 4
-#pack $pane4.tbl  -padx 4 -pady 4
-#puts [$pane4.tbl cget -height]
-#grid config $pane4.tbl -row 0 -column 0
+    $f0 cellconfigure 1,1 -editable yes
+    $f0 cellconfigure 5,1 -editable yes
 
-#set frame4 [frame $pane4.f] 
-#button $frame4.b_sav -text " Save " -command "YetToImplement"
-#button $frame4.b_dis -text "Discard" -command "YetToImplement"
-#pack $frame4
-#grid config $frame4.b_sav -row 0 -column 0
-#grid config $frame4.b_dis -row 0 -column 1
+    # For packing the Tablelist in the right window
 
-#forcing the frist tab Tab to be disabled
-#Widget::configure $pane4 "-state disabled"
+    #pack $pane4.tbl -fill both -expand yes -padx 4 -pady 4
+    #pack $pane4.tbl  -padx 4 -pady 4
+    #puts [$pane4.tbl cget -height]
+    #grid config $pane4.tbl -row 0 -column 0
 
+    #set frame4 [frame $pane4.f] 
+    #button $frame4.b_sav -text " Save " -command "YetToImplement"
+    #button $frame4.b_dis -text "Discard" -command "YetToImplement"
+    #pack $frame4
+    #grid config $frame4.b_sav -row 0 -column 0
+    #grid config $frame4.b_dis -row 0 -column 1
 
-set f1 [EditManager::create_table $notebook "Sub Index" "ind"]
+    #forcing the frist tab Tab to be disabled
+    #Widget::configure $pane4 "-state disabled"
 
+    set f1 [EditManager::create_table $notebook "Sub Index" "ind"]
 
+    #$f1 columnconfigure 0 -background #dbdbc9 -width 47
+    #$f1 columnconfigure 1 -background #f9cf7e -width 47
 
-#$f1 columnconfigure 0 -background #dbdbc9 -width 47
-#$f1 columnconfigure 1 -background #f9cf7e -width 47
+    #$f1 configure -height 4 -width 40 -stretch all
 
-#$f1 configure -height 4 -width 40 -stretch all
+    $f1 columnconfigure 0 -background #e0e8f0
+    $f1 columnconfigure 1 -background #e0e8f0
+    
+    $f1 insert 0 [list Index: 1006]
+    $f1 insert 1 [list Sub\ Index: 00]
+    $f1 insert 2 [list Name: NMT_CycleLen_U32]
+    $f1 insert 3 [list Object\ Type: VAR]
+    $f1 insert 4 [list Data\ Type: Unsigned32]
+    $f1 insert 5 [list Access\ Type: rw]
+    $f1 insert 6 [list Value: 0007]
 
-$f1 columnconfigure 0 -background #e0e8f0
-$f1 columnconfigure 1 -background #e0e8f0
+    $f1 cellconfigure 2,1 -editable yes
+    $f1 cellconfigure 6,1 -editable yes
 
-$f1 insert 0 [list Index: 1006]
-$f1 insert 1 [list Sub\ Index: 00]
-$f1 insert 2 [list Name: NMT_CycleLen_U32]
-$f1 insert 3 [list Object\ Type: VAR]
-$f1 insert 4 [list Data\ Type: Unsigned32]
-$f1 insert 5 [list Access\ Type: rw]
-$f1 insert 6 [list Value: 0007]
+    #pack $pane6.tbl2 -fill both -expand yes -padx 4 -pady 4
+    #set frame6 [frame $pane6.f] 
+    #button $frame6.b_sav -text " Save " -command "YetToImplement"
+    #button $frame6.b_dis -text "Discard" -command "YetToImplement"
+    #pack $frame6
+    #grid config $frame6.b_sav -row 0 -column 0
+    #grid config $frame6.b_dis -row 0 -column 1
 
-$f1 cellconfigure 2,1 -editable yes
-$f1 cellconfigure 6,1 -editable yes
+    set f2 [EditManager::create_table $notebook "PDO mapping" "pdo"]
 
-#pack $pane6.tbl2 -fill both -expand yes -padx 4 -pady 4
-#set frame6 [frame $pane6.f] 
-#button $frame6.b_sav -text " Save " -command "YetToImplement"
-#button $frame6.b_dis -text "Discard" -command "YetToImplement"
-#pack $frame6
-#grid config $frame6.b_sav -row 0 -column 0
-#grid config $frame6.b_dis -row 0 -column 1
+    #$f2 configure -height 4 -width 40 -stretch all
 
-set f2 [EditManager::create_table $notebook "PDO mapping" "pdo"]
+    # the column No has onlly integer values som sorting based on integer
+    $f2 columnconfigure 0 -background #e0e8f0 -width 6 -sortmode integer
+    $f2 columnconfigure 1 -background #e0e8f0 -width 23
+    $f2 columnconfigure 2 -background #e0e8f0 -width 11
+    $f2 columnconfigure 3 -background #e0e8f0 -width 11
+    $f2 columnconfigure 4 -background #e0e8f0 -width 11
+    $f2 columnconfigure 5 -background #e0e8f0 -width 11
+    $f2 columnconfigure 6 -background #e0e8f0 -width 11
 
-#$f2 configure -height 4 -width 40 -stretch all
-
-# the column No has onlly integer values som sorting based on integer
-$f2 columnconfigure 0 -background #e0e8f0 -width 6 -sortmode integer
-$f2 columnconfigure 1 -background #e0e8f0 -width 23
-$f2 columnconfigure 2 -background #e0e8f0 -width 11
-$f2 columnconfigure 3 -background #e0e8f0 -width 11
-$f2 columnconfigure 4 -background #e0e8f0 -width 11
-$f2 columnconfigure 5 -background #e0e8f0 -width 11
-$f2 columnconfigure 6 -background #e0e8f0 -width 11
-
-$f2 insert end [list 1 0010000000202106 2106 02 00 0000 0010]
-$f2 insert end [list 2 0008001000202104 2104 02 00 0001 0008]
-$f2 insert end [list 3 0010000000202106 2106 02 00 0000 0010]
-$f2 insert end [list 4 0008001000202104 2104 02 00 0001 0008]
-$f2 insert end [list 5 0010000000202106 2106 02 00 0000 0010]
-$f2 insert end [list 6 0008001000202104 2104 02 00 0001 0008]
-$f2 insert end [list 7 0010000000202106 2106 02 00 0000 0010]
-$f2 insert end [list 8 0008001000202104 2104 02 00 0001 0008]
-$f2 insert end [list 9 0010000000202106 2106 02 00 0000 0010]
-$f2 insert end [list 10 0008001000202104 2104 02 00 0001 0008]
-$f2 insert end [list 11 0010000000202106 2106 02 00 0000 0010]
-$f2 insert end [list 12 0008001000202104 2104 02 00 0001 0008]
-$f2 insert end [list 13 0010000000202106 2106 02 00 0000 0010]
-$f2 insert end [list 14 0008001000202104 2104 02 00 0001 0008]
-$f2 insert end [list 15 0010000000202106 2106 02 00 0000 0010]
-$f2 insert end [list 16 0008001000202104 2104 02 00 0001 0008]
-$f2 insert end [list 17 0010000000202106 2106 02 00 0000 0010]
-$f2 insert end [list 18 0008001000202104 2104 02 00 0001 0008]
-$f2 insert end [list 19 0010000000202106 2106 02 00 0000 0010]
-$f2 insert end [list 20 0008001000202104 2104 02 00 0001 0008]
-$f2 insert end [list 21 0010000000202106 2106 02 00 0000 0010]
-$f2 insert end [list 22 0008001000202104 2104 02 00 0001 0008]
-$f2 insert end [list 23 0010000000202106 2106 02 00 0000 0010]
-        NoteBook::compute_size $notebook
+    $f2 insert end [list 1 0010000000202106 2106 02 00 0000 0010]
+    $f2 insert end [list 2 0008001000202104 2104 02 00 0001 0008]
+    $f2 insert end [list 3 0010000000202106 2106 02 00 0000 0010]
+    $f2 insert end [list 4 0008001000202104 2104 02 00 0001 0008]
+    $f2 insert end [list 5 0010000000202106 2106 02 00 0000 0010]
+    $f2 insert end [list 6 0008001000202104 2104 02 00 0001 0008]
+    $f2 insert end [list 7 0010000000202106 2106 02 00 0000 0010]
+    $f2 insert end [list 8 0008001000202104 2104 02 00 0001 0008]
+    $f2 insert end [list 9 0010000000202106 2106 02 00 0000 0010]
+    $f2 insert end [list 10 0008001000202104 2104 02 00 0001 0008]
+    $f2 insert end [list 11 0010000000202106 2106 02 00 0000 0010]
+    $f2 insert end [list 12 0008001000202104 2104 02 00 0001 0008]
+    $f2 insert end [list 13 0010000000202106 2106 02 00 0000 0010]
+    $f2 insert end [list 14 0008001000202104 2104 02 00 0001 0008]
+    $f2 insert end [list 15 0010000000202106 2106 02 00 0000 0010]
+    $f2 insert end [list 16 0008001000202104 2104 02 00 0001 0008]
+    $f2 insert end [list 17 0010000000202106 2106 02 00 0000 0010]
+    $f2 insert end [list 18 0008001000202104 2104 02 00 0001 0008]
+    $f2 insert end [list 19 0010000000202106 2106 02 00 0000 0010]
+    $f2 insert end [list 20 0008001000202104 2104 02 00 0001 0008]
+    $f2 insert end [list 21 0010000000202106 2106 02 00 0000 0010]
+    $f2 insert end [list 22 0008001000202104 2104 02 00 0001 0008]
+    $f2 insert end [list 23 0010000000202106 2106 02 00 0000 0010]
+    NoteBook::compute_size $notebook
+    $notebook configure -width 750
     pack $notebook -side left -fill both -expand yes -padx 4 -pady 4
     pack $pw2 -fill both -expand yes
 
@@ -3431,7 +3451,7 @@ $f2 insert end [list 23 0010000000202106 2106 02 00 0000 0010]
     #set prgindic -1
     set prgindic 0
 
-    update idletasks
+
     destroy .intro
     wm protocol . WM_DELETE_WINDOW Editor::exit_app
       	if {!$configError} {catch Editor::restoreWindowPositions}
@@ -3440,7 +3460,9 @@ $f2 insert end [list 23 0010000000202106 2106 02 00 0000 0010]
     #errorPuts "testing Error.."
     #warnPuts "testing Warn.."
     #conPuts "testing console"
-
+    update idletasks
+    #StartUp
+    return 1
 }
 
 
@@ -3531,6 +3553,7 @@ proc Editor::DoubleClickNode {node} {
 	global f2
 	global ra_dec
 	global ra_hex
+	global xdcFile
 	variable notebook
 
 
@@ -3570,26 +3593,38 @@ proc Editor::DoubleClickNode {node} {
 		pack $ra_hex -side left -padx 5
 	}
 	if {[string match "*SubIndex*" $node]} {
+		puts node-->$node
+		set tmpSplit [split $node -]
+		set xdcId [lrange $tmpSplit 1 end]
+		set xdcId [join $xdcId -]
+		puts xdcId-->$xdcId
+		puts xdcFile------------->$xdcFile($xdcId)
+		set xdcIcxId [lrange $tmpSplit 1 [expr [llength $tmpSplit] - 2]]
+		set xdcIcxId [join $xdcIcxId -]
+		#puts xdcIcxId-->$xdcIcxId
+		#puts xdcIndexFile------------->$xdcFile($xdcIcxId)
+		set errorString []
 		set NodeID 1
 		set NodeType 1
-		set TclObj [new_CNodeCollection]
-		set TclNodeObj [new_CNode]
-		set TclNodeObj [CNodeCollection_getNode $TclObj $NodeType $NodeID]
-		set TclIndexCollection [new_CIndexCollection]
-		set TclIndexCollection  [CNode_getIndexCollection $TclNodeObj]
-		set tmpSplit [split $node -]
+		#Tcl_ImportXML "$xdcFile($xdcId)" $errorString $NodeType $NodeID
+		#set TclObj [new_CNodeCollection]
+		#set TclNodeObj [new_CNode]
+		#set TclNodeObj [CNodeCollection_getNode $TclObj $NodeType $NodeID]
+		#set TclIndexCollection [new_CIndexCollection]
+		#set TclIndexCollection  [CNode_getIndexCollection $TclNodeObj]
 		set indx [lindex $tmpSplit [expr [llength $tmpSplit] - 2]]
 		set subId [lindex $tmpSplit end]
 		puts indx-->$indx===subId-->$subId
-		set ObjIndex [CIndexCollection_getIndex $TclIndexCollection $indx]
-		set indexValue [CBaseIndex_getIndexValue $ObjIndex]
-		set ObjSIdx [CIndex_getSubIndex $ObjIndex $subId]
-		set sIdxValue [CBaseIndex_getIndexValue $ObjSIdx]
-		set IndexName [CBaseIndex_getName $ObjSIdx]
-		set IndexObjType [CBaseIndex_getObjectType $ObjSIdx]
-		set IndexDataType [CBaseIndex_getDataType $ObjSIdx]
-		set IndexAccessType [CBaseIndex_getAccessType $ObjSIdx]
-		set IndexDefaultValue [CBaseIndex_getDefaultValue $ObjSIdx]
+		#set ObjIndex [CIndexCollection_getIndex $TclIndexCollection $indx]
+		set indexValue [CBaseIndex_getIndexValue $xdcFile($xdcIcxId)]
+		#set ObjSIdx [CIndex_getSubIndex $ObjIndex $subId]
+		#set sIdxValue [CBaseIndex_getIndexValue $ObjSIdx]
+		set sIdxValue [CBaseIndex_getIndexValue $xdcFile($xdcId)]
+		set IndexName [CBaseIndex_getName $xdcFile($xdcId)]
+		set IndexObjType [CBaseIndex_getObjectType $xdcFile($xdcId)]
+		set IndexDataType [CBaseIndex_getDataType $xdcFile($xdcId)]
+		set IndexAccessType [CBaseIndex_getAccessType $xdcFile($xdcId)]
+		set IndexDefaultValue [CBaseIndex_getDefaultValue $xdcFile($xdcId)]
 		$f1 delete 0
 		$f1 insert 0 [list Index: $indexValue]
 		$f1 delete 1
@@ -3611,29 +3646,37 @@ proc Editor::DoubleClickNode {node} {
 		$notebook itemconfigure Page1 -state disabled
 		$notebook itemconfigure Page3 -state disabled
 	} elseif {[string match "*Index*" $node]} {
+		puts node-->$node
+		set tmpSplit [split $node -]
+		set xdcId [lrange $tmpSplit 1 end]
+		set xdcId [join $xdcId -]
+		puts xdcId-->$xdcId
+		puts xdcFile------------->$xdcFile($xdcId)
+		set errorString []
 		set NodeID 1
 		set NodeType 1
-		set TclObj [new_CNodeCollection]
-		set TclNodeObj [new_CNode]
-		set TclNodeObj [CNodeCollection_getNode $TclObj $NodeType $NodeID]
-		set TclIndexCollection [new_CIndexCollection]
-		set TclIndexCollection  [CNode_getIndexCollection $TclNodeObj]
-		set tmpName [$updatetree itemcget $node -text]
-		set tmpSplit [split $node -]
+		#Tcl_ImportXML "$xdcFile($xdcId)" $errorString $NodeType $NodeID
+		#set TclObj [new_CNodeCollection]
+		#set TclNodeObj [new_CNode]
+		#set TclNodeObj [CNodeCollection_getNode $TclObj $NodeType $NodeID]
+		#set TclIndexCollection [new_CIndexCollection]
+		#set TclIndexCollection  [CNode_getIndexCollection $TclNodeObj]
+		#set tmpName [$updatetree itemcget $node -text]
 		set indx [lindex $tmpSplit end]
 		puts indx----->$indx
-		set ObjIndex [CIndexCollection_getIndex $TclIndexCollection $indx]
-		set indexValue [CBaseIndex_getIndexValue $ObjIndex]
+		#set ObjIndex [CIndexCollection_getIndex $TclIndexCollection $indx]
+		#set indexValue [CBaseIndex_getIndexValue $ObjIndex]
+		set indexValue [CBaseIndex_getIndexValue $xdcFile($xdcId)]
 		#puts [CBaseIndex_getIndexValue $ObjIndex]
-		set IndexName [CBaseIndex_getName $ObjIndex]
+		set IndexName [CBaseIndex_getName $xdcFile($xdcId)]
 		#puts IndexName:$IndexName
-		set IndexObjType [CBaseIndex_getObjectType $ObjIndex]
+		set IndexObjType [CBaseIndex_getObjectType $xdcFile($xdcId)]
 		#puts IndexObjType:$IndexObjType
-		set IndexDataType [CBaseIndex_getDataType $ObjIndex]
+		set IndexDataType [CBaseIndex_getDataType $xdcFile($xdcId)]
 		#puts IndexDataType:$IndexDataType
-		set IndexAccessType [CBaseIndex_getAccessType $ObjIndex]
+		set IndexAccessType [CBaseIndex_getAccessType $xdcFile($xdcId)]
 		#puts IndexAccessType:$IndexAccessType
-		set IndexDefaultValue [CBaseIndex_getDefaultValue $ObjIndex]
+		set IndexDefaultValue [CBaseIndex_getDefaultValue $xdcFile($xdcId)]
 		#puts IndexDefaultValue:$IndexDefaultValue
 		$f0 delete 0
 		$f0 insert 0 [list Index: $indexValue]
@@ -3782,15 +3825,20 @@ proc getAbsolutePath {rel_path hom_path} {
 
 
 
-proc AddCN {cnName tmpImpDir} {
+proc AddCN {cnName tmpImpDir nodeId} {
 	global updatetree
 	global cnCount
+	global mnCount
 	incr cnCount
+	#puts "node value CN-1-$cnCount $nodeId"
 	set child [$updatetree insert $cnCount MN-1 CN-1-$cnCount -text "$cnName" -open 1 -image [Bitmap::get cn]]
 
 	if {$tmpImpDir!=0} {
 		puts $tmpImpDir
-		Import CN-1-$cnCount $tmpImpDir
+		#set NodeID 1
+		#set NodeType 1
+		#Tcl_CreateNode $NodeID $NodeType
+		Import CN-1-$cnCount $tmpImpDir cn $nodeId
 	}
 	return
 }
@@ -3808,29 +3856,36 @@ tk_messageBox -message "Yet to be Implemented !" -title Info -icon info
 
 
 
-proc TogConnect {} {
-	set tog [.mainframe.topf.tb0.bbox8.b0 cget -image]
+proc Editor::TogConnect {} {
+	variable bb_connect
+	set tog [$bb_connect cget -image]
 	#puts $tog
 	#to toggle image the value varies according to images added 
 	if {$tog=="image15"} {
-		Connect	       
+		Editor::Connect	       
 		# .mainframe.topf.tb0.bbox8.b0 configure -image [Bitmap::get connect]
 	} else {
-		Disconnect
+		Editor::Disconnect
 	        #.mainframe.topf.tb0.bbox8.b0 configure -image [Bitmap::get disconnect]
 	}
 }
-proc Connect {} {
-	.mainframe.topf.tb0.bbox8.b0 configure -image [Bitmap::get disconnect]
-	.mainframe setmenustate connect disabled
-	.mainframe setmenustate disconnect normal
+proc Editor::Connect {} {
+	variable bb_connect
+        variable mainframe
+	#puts $mainframe
+	$bb_connect configure -image [Bitmap::get disconnect]
+	$mainframe setmenustate connect disabled
+	$mainframe setmenustate disconnect normal
 	YetToImplement
 }
 
-proc Disconnect {} {
-	.mainframe.topf.tb0.bbox8.b0 configure -image [Bitmap::get connect]
-	.mainframe setmenustate disconnect disabled
-	.mainframe setmenustate connect normal
+proc Editor::Disconnect {} {
+	variable bb_connect
+        variable mainframe
+	#puts $mainframe
+	$bb_connect configure -image [Bitmap::get connect]
+	$mainframe setmenustate disconnect disabled
+	$mainframe setmenustate connect normal
 	YetToImplement
 }
 
@@ -3844,6 +3899,7 @@ proc Disconnect {} {
 proc InsertTree { } {
 	global updatetree
 	global cnCount
+	global mnCount
 	# Get the Project Details from instProject
 	#set ProjectName [instProject cget -memProjectName]
 	#set TotalTestGroup $tg_count
@@ -3852,16 +3908,17 @@ proc InsertTree { } {
 	#exec rm *~
 	#Insert Project Tree
 	incr cnCount
+	incr mnCount
 	#puts cnCount----$cnCount
 	$updatetree insert end root PjtName -text "POWERLINK Network" -open 1 -image [Bitmap::get network]
-	$updatetree insert end PjtName MN-1 -text "openPOWERLINK MN" -open 1 -image [Bitmap::get mn]
+	#$updatetree insert end PjtName MN-$mnCount -text "openPOWERLINK MN" -open 1 -image [Bitmap::get mn]
 
-	$updatetree insert end MN-1 CN-1-$cnCount -text "CN_1" -open 1 -image [Bitmap::get cn]
+	#$updatetree insert end MN-1 CN-$mnCount-$cnCount -text "CN_1" -open 1 -image [Bitmap::get cn]
 	#$updatetree insert end CN-1-$cnCount Index-1-1-1  -text "NMT_CycleTime_U32 \[1006\]" -open 1 -image [Bitmap::get index]
 	#$updatetree insert end Index-1-1-1 SubIndex-1-1-1-1  -text "Sub_index" -open 1 -image [Bitmap::get subindex]
-	$updatetree insert end CN-1-$cnCount PDO-1-1  -text "PDO" -open 1 -image [Bitmap::get pdo]
-	$updatetree insert end PDO-1-1  pdoIndex-1-1-1  -text "PDO_Index" -open 1 -image [Bitmap::get index]
-	$updatetree insert end pdoIndex-1-1-1 pdoSubIndex-1-1-1-1 -text "PDO_Sub_index" -open 1 -image [Bitmap::get subindex]
+	#$updatetree insert end CN-$mnCount-$cnCount PDO-$mnCount-$cnCount  -text "PDO" -open 1 -image [Bitmap::get pdo]
+	#$updatetree insert end PDO-$mnCount-$cnCount  pdoIndex-$mnCount-$cnCount-1  -text "PDO_Index" -open 1 -image [Bitmap::get index]
+	#$updatetree insert end pdoIndex-$mnCount-$cnCount-1 pdoSubIndex-$mnCount-$cnCount-1-1 -text "PDO_Sub_index" -open 1 -image [Bitmap::get subindex]
 }
 
 

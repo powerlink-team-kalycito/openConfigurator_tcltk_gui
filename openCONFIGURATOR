@@ -69,21 +69,29 @@ proc initOPN_CFGRATOR {argc argv} {
     
     wm withdraw .
     wm title . "openCONFIGURATOR"
-    Editor::create
+    set chk [Editor::create]
     BWidget::place . 0 0 center
     
+    #StartUp
+
     update idletasks
+
+  
+
     if {[info exists EditorData(options,mainWinSize)]} {
         wm geom . $EditorData(options,mainWinSize)
         update
     }
     
+
     after idle {
         wm deiconify .
         raise .
         focus .
         set Editor::initDone 1
     }
+
+	StartUp
     if {$argc >= 1} {
         set cursor [. cget -cursor]
         . configure -cursor watch
@@ -98,6 +106,7 @@ proc initOPN_CFGRATOR {argc argv} {
         . configure -cursor $cursor
         update
     }
+	#StartUp
 	# Delete all the records
 	#struct::record delete record recProjectDetail
 	#struct::record delete record recTestGroup
@@ -124,6 +133,15 @@ proc initOPN_CFGRATOR {argc argv} {
 		set tmpsplit [split $pjtFolder /]
 			set filename [lindex $tmpsplit [expr [llength $tmpsplit] - 1]]
 			set PjtName $filename.pjt
+
+
+
+	##################################################################
+  	### Calling Wrapper function
+    	##################################################################
+	load ./Tcl_WrapperMain.so
+    	##################################################################
+
 	##################################################################
   	### Reading Datas from XML File
     	##################################################################

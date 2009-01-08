@@ -188,7 +188,7 @@ proc EditManager::create_table {nb filename choice} {
 	    -setgrid no -width 0 -height 1 \
 	    -stripebackground gray98  \
 	    -labelcommand "" \
-	    -resizable 0 -movablecolumns 0 -movablerows 0 \
+	    -resizable 1 -movablecolumns 0 -movablerows 0 \
 	    -showseparators 1 -spacing 10 -font custom1]
 
 	set fram [frame $frame.f1]  
@@ -212,7 +212,7 @@ proc EditManager::create_table {nb filename choice} {
 		      0 "Length"} \
 	    -setgrid 0 -width 0 \
 	    -stripebackground gray98 \
-	    -resizable 0 -movablecolumns 0 -movablerows 0 \
+	    -resizable 1 -movablecolumns 0 -movablerows 0 \
 	    -showseparators 1 -spacing 10 -font custom1]
    }
         ##scrollbar $vsb -orient vertical   -command [list $st yview]
@@ -402,7 +402,8 @@ proc EditManager::create_treeWindow {nb } {
             -width 15\
             -highlightthickness 0\
             -bg white  \
-            -deltay 18 \
+            -deltay 14 \
+	    -padx 15 \
 	    -dropenabled 0 -dragenabled 0\
 	    -dragevent 1 \
 	    -droptypes {
@@ -415,6 +416,8 @@ proc EditManager::create_treeWindow {nb } {
     	]
 	$sw setwidget $objTree
 	set updatetree $objTree
+	#$objTree configure -ipady 15
+#puts [$updatetree configure]
 
 	# Call procedure to the read the Project file
 	#readxml "output.xml"

@@ -9,7 +9,111 @@
 #
 ################################################################################
 
+################################################################################
+#proc StartUpWindow
+#Input   : -
+#Output  : -
+#Description : Gui during start up
+################################################################################
+proc StartUp {} {
+	global startVar
+	set winStartUp .startUp
+	catch "destroy $winStartUp"
+	catch "font delete custom2"
+        font create custom2 -size 9 -family TkDefaultFont
+	toplevel     $winStartUp -takefocus 1
+	wm title     $winStartUp "openCONGFIGURATOR"
+	wm resizable $winStartUp 0 0
+	wm transient $winStartUp .
+	wm deiconify $winStartUp
+	#wm minsize   $winStartUp 100 100
+	#wm topmost  $winStartUp 
+	grab $winStartUp	
 
+	#set titleFrame1 [TitleFrame $winStartUp.titleFrame1 -text "Select Project" ]
+	#set frame1 [$titleFrame1 getframe]
+	set frame1 [frame $winStartUp.fram1]
+	set frame2 [frame $frame1.fram2]
+
+	label $frame1.l_empty1 -text ""
+	label $frame1.l_empty2 -text ""
+	label $frame1.l_empty3 -text ""
+	label $frame1.l_desc -text "Description"
+	
+	text $frame1.t_desc -height 5 -width 40 -state disabled -background white
+
+	radiobutton $frame1.ra_default  -text "Open Sample Project"   -variable startVar -value 1 -font custom2 -command "SampleText $frame1.t_desc"
+	radiobutton $frame1.ra_newProj  -text "Create New Project"    -variable startVar -value 2 -font custom2 -command "NewText $frame1.t_desc" -state disabled
+	radiobutton $frame1.ra_openProj -text "Open Existing Project" -variable startVar -value 3 -font custom2 -command "OpenText $frame1.t_desc" -state disabled
+	$frame1.ra_default select
+	SampleText $frame1.t_desc
+	 
+	button $frame2.b_ok -text "  Ok  " -command { 
+		puts $startVar
+		if {$startVar==1} {
+			YetToImplement;
+		} elseif {$startVar==2} {
+			NewProjectWindow
+		} elseif {$startVar==3} {
+			YetToImplement;
+		}
+		destroy .startUp
+	}
+	button $frame2.b_cancel -text "Cancel" -command {
+		destroy .startUp
+		Editor::exit_app
+	}
+	#grid config $titleFrame1 -row 0 -column 0 -padx 35 -pady 10
+	#grid config $frame1 -row 0 -column 0 
+
+	grid config $frame1 -row 0 -column 0 -padx 35 -pady 10
+
+	#grid config $frame1.ra_default -row 0 -column 0 -sticky w 
+	#grid config $frame1.l_empty1 -row 1 -column 0 -sticky w 	
+	#grid config $frame1.ra_newProj -row 2 -column 0 -sticky w 
+	#grid config $frame1.l_empty2 -row 3 -column 0 -sticky w 
+	#grid config $frame1.ra_openProj -row 4 -column 0 -sticky w 
+	#grid config $frame1.l_empty3 -row 5 -column 0 -sticky w 
+	#grid config $frame2 -row 6 -column 0  -padx 5 -pady 5
+
+	grid config $frame1.ra_default -row 0 -column 0 -sticky w -padx 5 -pady 5
+	grid config $frame1.ra_newProj -row 1 -column 0 -sticky w  -padx 5 -pady 5
+	grid config $frame1.ra_openProj -row 2 -column 0 -sticky w -padx 5 -pady 5
+	grid config $frame1.l_desc -row 3 -column 0 -sticky w -padx 5 -pady 5
+	grid config $frame1.t_desc -row 4 -column 0 -sticky w -padx 5 -pady 5
+	grid config $frame2 -row 5 -column 0  -padx 5 -pady 5
+	grid config $frame2.b_ok -row 0 -column 0
+	grid config $frame2.b_cancel -row 0 -column 1
+
+	wm protocol .startUp WM_DELETE_WINDOW "$frame2.b_cancel invoke"
+	bind $winStartUp <KeyPress-Return> "$frame2.b_ok invoke"
+	bind $winStartUp <KeyPress-Escape> "$frame2.b_cancel invoke"
+
+	$winStartUp configure -takefocus 1
+	centerW $winStartUp
+}
+
+
+proc SampleText {t_desc} {
+	$t_desc configure -state normal
+	$t_desc delete 1.0 end
+	$t_desc insert end "Open the sample Project"
+	$t_desc configure -state disabled
+}
+
+proc NewText {t_desc} {
+	$t_desc configure -state normal
+	$t_desc delete 1.0 end
+	$t_desc insert end "Create a new Project"
+	$t_desc configure -state disabled
+}
+
+proc OpenText {t_desc} {
+	$t_desc configure -state normal
+	$t_desc delete 1.0 end
+	$t_desc insert end "Open Existing Project"
+	$t_desc configure -state disabled
+}
 
 ################################################################################
 #proc ConnectionSettingWindow
@@ -27,6 +131,7 @@ proc ConnectionSettingWindow {} {
 	wm transient $winConnSett .
 	wm deiconify $winConnSett
 	grab $winConnSett
+
 
 	set frame1 [frame $winConnSett.fram1]
 	set frame2 [frame $winConnSett.fram2]
@@ -183,6 +288,7 @@ proc AddPDOWindow {} {
 proc AddCNWindow {} {
 	global cnName
 	global nodeId
+	global tmpImpCnDir
 
 	set winAddCN .addCN
 	catch "destroy $winAddCN"
@@ -232,7 +338,8 @@ proc AddCNWindow {} {
 	set cnName ""	
 	entry $frame2.en_node -textvariable nodeId -background white -relief ridge -validate key -vcmd "IsInt %P %V"
 	set nodeId ""
-	entry $titleInnerFrame3.en_imppath -textvariable tmpImpDir -background white -relief ridge -width 35
+	entry $titleInnerFrame3.en_imppath -textvariable tmpImpCnDir -background white -relief ridge -width 35
+	set tmpImpCnDir ""
 	$titleInnerFrame3.en_imppath config -state disabled
 
 	button $titleInnerFrame3.bt_imppath -text Browse -command {
@@ -240,11 +347,8 @@ proc AddCNWindow {} {
 		        {"XDC Files"     {.xdc } }
 		        {"XDD Files"     {.xdd } }
 		}
-		set tmpImpDir [tk_getOpenFile -title "Import XDC/XDD" -filetypes $types -parent .addCN]
-		if {$tmpImpDir == ""} {
-			focus .addCN
-			return
-		}
+		set tmpImpCnDir [tk_getOpenFile -title "Import XDC/XDD" -filetypes $types -parent .addCN]
+
 	}
  	$titleInnerFrame3.bt_imppath config -state disabled 
 
@@ -266,7 +370,7 @@ proc AddCNWindow {} {
 			return
 		}
 		
-		if {$confCn=="off" && ![file isfile $tmpImpDir]} {
+		if {$confCn=="off" && ![file isfile $tmpImpCnDir]} {
 			tk_messageBox -message "Entered path for Import XDC/XDD not exist " -icon error -parent .addCN
 			focus .addCN
 			return
@@ -274,9 +378,9 @@ proc AddCNWindow {} {
 
 
 		if {$confCn=="off"} {
-			set chk [AddCN $cnName $tmpImpDir]
+			set chk [AddCN $cnName $tmpImpCnDir $nodeId]
 		} else {
-			set chk [AddCN $cnName 0]
+			set chk [AddCN $cnName 0 $nodeId]
 		}
 		destroy .addCN
 	}
@@ -449,6 +553,7 @@ proc NewProjectWindow {} {
 	global tmpPjtName
 	global tmpPjtDir
 	global tmpImpDir
+	global updatetree
 
 	set winNewProj .newprj
 	catch "destroy $winNewProj"
@@ -535,6 +640,9 @@ proc NewProjectWindow {} {
 		#	focus .newprj
 		#	return
 		#}
+		$Editor::projMenu add command -label "Close Project" -command "YetToImplement" 
+		$updatetree itemconfigure PjtName -text $tmpPjtName
+		$updatetree insert end PjtName MN-$mnCount -text "openPOWERLINK MN" -open 1 -image [Bitmap::get mn]
 		destroy .newprj
 	}
 	button $frame1.bt_cancel -text Cancel -command { 

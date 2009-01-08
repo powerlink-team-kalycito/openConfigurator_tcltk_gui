@@ -36,7 +36,7 @@ proc Import {cn tmpImpDir} {
 
 			set SIdxDefaultValue [CBaseIndex_getDefaultValue $ObjSIdx]
 			puts SIdxDefaultValue:$SIdxDefaultValue
-			$updatetree insert end IndexValue-1-$cnId-$i SIdxValue-1-$cnId-$i-$tmpCount -text $SIdxValue -open 1 -image [Bitmap::get subindex]
+			$updatetree insert end IndexValue-1-$cnId-$i SubIndexValue-1-$cnId-$i-$tmpCount -text $SIdxValue -open 1 -image [Bitmap::get subindex]
 		}
 	}
 

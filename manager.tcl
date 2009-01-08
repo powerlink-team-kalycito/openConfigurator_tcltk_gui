@@ -177,8 +177,9 @@ proc EditManager::create_table {nb filename choice} {
     set sw [ScrolledWindow $frame.sw]
     pack $sw -fill both -expand true
     set st $frame.st
-    #set vsb $frame.vsb
-    #set hsb $frame.hsb
+
+    catch "font delete custom1"
+    font create custom1 -weight bold -size 9 -family TkDefaultFont
 
     if {$choice=="ind"} {
 	set st [tablelist::tablelist $st \
@@ -187,9 +188,8 @@ proc EditManager::create_table {nb filename choice} {
 	    -setgrid no -width 0 -height 1 \
 	    -stripebackground gray98  \
 	    -labelcommand "" \
-	    -resizable 1 -movablecolumns 0 -movablerows 0 \
-	    -showseparators 1 -spacing 10 ]
-            ##-xscrollcommand [list $hsb set] -yscrollcommand [list $vsb set]
+	    -resizable 0 -movablecolumns 0 -movablerows 0 \
+	    -showseparators 1 -spacing 10 -font custom1]
 
 	set fram [frame $frame.f1]  
 	label $fram.l_empty -text "  " -height 1 
@@ -212,9 +212,8 @@ proc EditManager::create_table {nb filename choice} {
 		      0 "Length"} \
 	    -setgrid 0 -width 0 \
 	    -stripebackground gray98 \
-	    -resizable 1 -movablecolumns 0 -movablerows 0 \
-	    -showseparators 1 -spacing 10 ]
-            ##-xscrollcommand [list $hsb set] -yscrollcommand [list $vsb set]
+	    -resizable 0 -movablecolumns 0 -movablerows 0 \
+	    -showseparators 1 -spacing 10 -font custom1]
    }
         ##scrollbar $vsb -orient vertical   -command [list $st yview]
         ##scrollbar $hsb -orient horizontal -command [list $st xview]
@@ -233,7 +232,11 @@ proc EditManager::create_table {nb filename choice} {
     ##pack $vsb -side right 
     ##pack $hsb 
     $nb itemconfigure $pageName -state disabled
-
+    $st configure -height 4 -width 40 -stretch all	
+    #puts [$st cget -font]
+    #eval font create BoldFont [font actual [$st cget -font]] -weight bold
+    #$st columnconfigure 1 -font Courier
+    #$st columnconfigure 2 -font Courier
     #set sf [ScrollableFrame $sw.sf]
     #$sf configure -bg white
 

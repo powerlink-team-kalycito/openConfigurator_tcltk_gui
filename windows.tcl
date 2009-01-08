@@ -65,6 +65,8 @@ proc ConnectionSettingWindow {} {
 	wm protocol .connSett WM_DELETE_WINDOW "$frame2.b_cancel invoke"
 	bind $winConnSett <KeyPress-Return> "$frame2.b_ok invoke"
 	bind $winConnSett <KeyPress-Escape> "$frame2.b_cancel invoke"
+	
+	centerW $winConnSett
 
 }
 
@@ -90,8 +92,7 @@ proc AddPDOWindow {} {
 	wm deiconify $winAddPDO
 	grab $winAddPDO
 
-	font create custom1 -weight bold
-
+	
 	set titleFrame1 [TitleFrame $winAddPDO.titleFrame1 -text "PDO Configuration" ]
 	set titleInnerFrame2 [$titleFrame1 getframe]
 	set frame1 [frame $titleInnerFrame2.fram1]
@@ -133,12 +134,10 @@ proc AddPDOWindow {} {
 			focus .addPDO
 			return
 		}
-		font delete custom1
 		destroy .addPDO
 	}
 	button $frame3.b_cancel -text "Cancel" -command {
 		destroy .addPDO
-		font delete custom1
 	}
 
 	grid config $winAddPDO.l_empty1 -row 0 -column 0 -sticky "news"
@@ -172,6 +171,8 @@ proc AddPDOWindow {} {
 	wm protocol .addPDO WM_DELETE_WINDOW "$frame3.b_cancel invoke"
 	bind $winAddPDO <KeyPress-Return> "$frame3.b_ok invoke"
 	bind $winAddPDO <KeyPress-Escape> "$frame3.b_cancel invoke"
+
+	centerW $winAddPDO
 }
 
 #################################################################################################################
@@ -319,6 +320,8 @@ proc AddCNWindow {} {
 	wm protocol .addCN WM_DELETE_WINDOW "$frame1.bt_cancel invoke"
 	bind $winAddCN <KeyPress-Return> "$frame1.bt_ok invoke"
 	bind $winAddCN <KeyPress-Escape> "$frame1.bt_cancel invoke"
+
+	centerW $winAddCN
 }
 
 
@@ -407,6 +410,8 @@ proc SaveProjectAsWindow {} {
 	wm protocol .savProjAs WM_DELETE_WINDOW "$frame1.bt_cancel invoke"
 	bind $winSavProjAs <KeyPress-Return> "$frame1.bt_ok invoke"
 	bind $winSavProjAs <KeyPress-Escape> "$frame1.bt_cancel invoke"
+
+	centerW $winSavProjAs
 }
 #######################################################################
 # proc newprojectwindow
@@ -566,6 +571,8 @@ proc NewProjectWindow {} {
 	wm protocol .newprj WM_DELETE_WINDOW "$frame1.bt_cancel invoke"
 	bind $winNewProj <KeyPress-Return> "$frame1.bt_ok invoke"
 	bind $winNewProj <KeyPress-Escape> "$frame1.bt_cancel invoke"
+
+	centerW $winNewProj
 }
 
 #######################################################################
@@ -592,15 +599,15 @@ proc closeproject {} {
    		}	
 	global updatetree
 	#Editor::tselectObject "TargetConfig"
-	Editor::closeFile
+	#Editor::closeFile
 	# Delete all the records
-	struct::record delete record recProjectDetail
-	struct::record delete record recTestGroup
-	struct::record delete record recTestCase
-	struct::record delete record recProfile
+	#struct::record delete record recProjectDetail
+	#struct::record delete record recTestGroup
+	#struct::record delete record recTestCase
+	#struct::record delete record recProfile
 	# Delete the Tree
-	$updatetree delete end root TestSuite
-	set PjtDir None
+	$updatetree delete end root PjtName
+	#set PjtDir None
 		
 	##################################################################
   	### Reading Datas from XML File

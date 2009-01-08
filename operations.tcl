@@ -3326,7 +3326,7 @@ $list_notebook configure -width 10
 #$tbl columnconfigure 0 -background #e6e6d3 -width 47
 #$tbl columnconfigure 1 -background #e1e1e1 -width 47
 
-$f0 configure -height 4 -width 40 -stretch all
+#$f0 configure -height 4 -width 40 -stretch all
 
 $f0 columnconfigure 0 -background #e0e8f0 
 $f0 columnconfigure 1 -background #e0e8f0 
@@ -3338,7 +3338,7 @@ $f0 columnconfigure 1 -background #e0e8f0
 
 proc emptyStr val { return "" }
 
-eval font create BoldFont [font actual [$f0 cget -font]] -weight bold
+
 
 #
 # Populate the tablelist widget for taking screen shots
@@ -3354,7 +3354,7 @@ $f0 insert 5 [list Value: 0007 ""]
 $f0 cellconfigure 1,1 -editable yes
 $f0 cellconfigure 5,1 -editable yes
 
-$f0 columnconfigure 1 -font Courier
+
 
 # For packing the Tablelist in the right window
 
@@ -3381,7 +3381,7 @@ set f1 [EditManager::create_table $notebook "Sub Index" "ind"]
 #$f1 columnconfigure 0 -background #dbdbc9 -width 47
 #$f1 columnconfigure 1 -background #f9cf7e -width 47
 
-$f1 configure -height 4 -width 40 -stretch all
+#$f1 configure -height 4 -width 40 -stretch all
 
 $f1 columnconfigure 0 -background #e0e8f0
 $f1 columnconfigure 1 -background #e0e8f0
@@ -3407,7 +3407,7 @@ $f1 cellconfigure 6,1 -editable yes
 
 set f2 [EditManager::create_table $notebook "PDO mapping" "pdo"]
 
-$f2 configure -height 4 -width 40 -stretch all
+#$f2 configure -height 4 -width 40 -stretch all
 
 # the column No has onlly integer values som sorting based on integer
 $f2 columnconfigure 0 -background #e0e8f0 -width 6 -sortmode integer
@@ -3581,8 +3581,8 @@ proc Editor::DoubleClickNode {node} {
 	}
 	if {[string match "*SubIndex*" $node]} {
 		set tmpName [$updatetree itemcget $node -text]
-		$f0 delete 0
-		$f0 insert 0 [list Index: $tmpName]
+		$f1 delete 0
+		$f1 insert 0 [list Index: $tmpName]
 		$notebook itemconfigure Page2 -state normal
 		$notebook raise Page2
 		$notebook itemconfigure Page1 -state disabled

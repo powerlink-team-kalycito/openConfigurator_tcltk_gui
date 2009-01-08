@@ -134,7 +134,7 @@ proc initOPN_CFGRATOR {argc argv} {
 	InsertTree
 	#Editor::tselectObject "myboard_sshscp.exp"
 	#Initial status of the Pjt
-	conPuts "Initialized..."
-	conPuts "Project $filename opened"
+	#conPuts "Initialized..."
+	#conPuts "Project $filename opened"
 }
 initOPN_CFGRATOR $argc $argv

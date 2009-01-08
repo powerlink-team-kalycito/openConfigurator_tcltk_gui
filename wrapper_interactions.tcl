@@ -25,14 +25,14 @@ proc Import {cn tmpImpDir} {
 	for { set i 0 } { $i < $count } { incr i } {
 		set ObjIndex [CIndexCollection_getIndex $TclIndexCollection $i]
 		set IndexValue [CBaseIndex_getIndexValue $ObjIndex]
-		
+		puts i---->$i
 		$updatetree insert end $cn IndexValue-1-$cnId-$i -text $IndexValue -open 1 -image [Bitmap::get index]
 		set SIdxCount [CIndex_getNumberofSubIndexes $ObjIndex]
 		for { set tmpCount 0 } { $tmpCount < $SIdxCount } { incr tmpCount } {
 			set ObjSIdx [CIndex_getSubIndex $ObjIndex $tmpCount]
 
 			set SIdxValue [CBaseIndex_getIndexValue $ObjSIdx]
-			puts SIdxValue:$SIdxValue
+			puts SIdxValue:$SIdxValue=======tmpCount:$tmpCount
 
 			set SIdxDefaultValue [CBaseIndex_getDefaultValue $ObjSIdx]
 			puts SIdxDefaultValue:$SIdxDefaultValue

@@ -2869,6 +2869,8 @@ proc Editor::create { } {
     global f0
     global f1
     global f2
+    global ra_dec
+    global ra_hex
     #global notebook
 
     variable _wfont
@@ -3083,7 +3085,7 @@ proc Editor::create { } {
             -height 21\
             -width 21\
             -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
-            -helptext "Start" -command {YetToImplement}]
+            -helptext "Start stack" -command {YetToImplement}]
     pack $bb_start -side left -padx 4
     pack $bbox -side left -anchor w -padx 2
     
@@ -3094,7 +3096,7 @@ proc Editor::create { } {
             -width 21\
             -helptype balloon\
             -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
-            -helptext "Stop"\
+            -helptext "Stop stack"\
 	    -command "YetToImplement"]
     #puts [$tb1.bbox itemcget -image]
     pack $bb_stop -side left -padx 4
@@ -3104,7 +3106,7 @@ proc Editor::create { } {
             -width 21\
             -helptype balloon\
             -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
-            -helptext "Reconfigure"\
+            -helptext "Reconfigure stack"\
     	    -command "YetToImplement"]
     pack $bb_reconfig -side left -padx 4
  
@@ -3182,8 +3184,8 @@ proc Editor::create { } {
 
     set f_tb1 [frame $tb1.f]
     label $f_tb1.l_empty -text ""
-    radiobutton $f_tb1.ra_dec -text "Dec" -variable hexDec -value on
-    radiobutton $f_tb1.ra_hex -text "Hex" -variable hexDec -value off
+    set ra_dec [radiobutton $f_tb1.ra_dec -text "Dec" -variable hexDec -value on]
+    set ra_hex [radiobutton $f_tb1.ra_hex -text "Hex" -variable hexDec -value off]
     pack $f_tb1 -side right -anchor e -expand 1 -padx 100
     grid config $f_tb1.ra_dec -row 0 -column 1 -sticky "w" -padx 5
     grid config $f_tb1.ra_hex -row 0 -column 2 -sticky "w" -padx 5
@@ -3206,20 +3208,11 @@ proc Editor::create { } {
     
     set pw1 [PanedWindow::create $frame.pw -side left]
     set pane [PanedWindow::add $pw1 -minsize 200]
-#$pane configure -width 200	
-#$pw1 configure -width 200	
     set pw2 [PanedWindow::create $pane.pw -side top]
     
 # TODO: Improper Way of implementation. Done to get screenshot of the GUI
-    set pw3 [PanedWindow::create $pane.pw1 -side top]
-	
-
     set pane1 [PanedWindow::add $pw2 -minsize 250]
-
-#PanedWindow::configure $pane1 "-width 250"
-#PanedWindow $pane1 configure -width 250
-$pane1 configure -width 250
-$pw2 configure -width 250  
+    $pane1 configure -width 1
     set pane2 [PanedWindow::add $pw2 -minsize 100]
     set pane3 [PanedWindow::add $pw1 -minsize 100]
 
@@ -3232,69 +3225,49 @@ $pw2 configure -width 250
     
     set pf1 [EditManager::create_treeWindow $list_notebook]
     set treeWindow $pf1.sw.objTree
-   # Editor::openNewPage
-    	# Binding on tree widget   
-     	$treeWindow bindText <ButtonPress-1> selectobject
-	#$treeWindow bindText <Double-1> 
-	$treeWindow bindText <Double-1> Editor::DoubleClickNode
-	
-    	$treeWindow bindImage <ButtonPress-1> selectobject
-	$treeWindow bindImage <Double-1> Editor::tselectObject
+    # Editor::openNewPage
+    # Binding on tree widget   
+    $treeWindow bindText <ButtonPress-1> selectobject
+    #$treeWindow bindText <Double-1> 
+    $treeWindow bindText <Double-1> Editor::DoubleClickNode
+    #$treeWindow bindImage <ButtonPress-1> selectobject
+    #$treeWindow bindImage <Double-1> Editor::tselectObject
+    #$treeWindow bindWindow_userdef <ButtonPress-1> CheckObject
+    #$treeWindow bindImage <ButtonPress-3> {Editor::tselectright %X %Y}
+    $treeWindow bindText <ButtonPress-3> {Editor::tselectright %X %Y}
+    #$treeWindow configure -width 10
 
-	#$treeWindow bindWindow_userdef <ButtonPress-1> CheckObject
-	$treeWindow bindImage <ButtonPress-3> {Editor::tselectright %X %Y}
-	$treeWindow bindText <ButtonPress-3> {Editor::tselectright %X %Y}
-	$treeWindow configure -width 10
     global EditorData
     global PjtDir
     set PjtDir $EditorData(options,History)
     incr prgindic
 
-#    set f0 [EditManager::create_tab $notebook "Index"]
+    #    set f0 [EditManager::create_tab $notebook "Index"]
 
 
-$list_notebook configure -width 10    
+    #$list_notebook configure -width 10    
     NoteBook::compute_size $list_notebook
-#pack $pane -side left -expand yes
+    #pack $pane -side left -expand yes
     #pack $list_notebook -side left -padx 2 -pady 4
     pack $list_notebook -side left -fill both -expand yes -padx 2 -pady 4
  
 
     # Commented out to remove Editor window    
-#    NoteBook::compute_size $notebook
+    #    NoteBook::compute_size $notebook
 
     set cf0 [EditManager::create_conWindow $con_notebook "Console" 1]
-
-
-#TODO hard coded to bring image
-#code for adding image in console
-
-    $con_notebook itemconfigure Console1 -image [Bitmap::get file]
     set cf1 [EditManager::create_conWindow $con_notebook "Error" 2]
-   $con_notebook itemconfigure Console2 -image [Bitmap::get error_small]
     set cf2 [EditManager::create_conWindow $con_notebook "Warning" 3]
-   $con_notebook itemconfigure Console3 -image [Bitmap::get warning_small]
 
 
 
     NoteBook::compute_size $con_notebook
-    #pack $con_notebook -side bottom -padx 4 -pady 4
     pack $con_notebook -side bottom -fill both -expand yes -padx 4 -pady 4
-    
-#pack $con_notebook1 -side bottom -fill both -expand yes -padx 4 -pady 4
+
+ 
 
     pack $pw1 -fill both -expand yes
-
-
-#    pack $notebook -side left -fill both -expand yes -padx 4 -pady 4
-    
-    #alternate way of creating tab in right note book
-
-
-#
-# Create the font TkFixedFont if not yet present
-#
-	catch {font create TkFixedFont -family Courier -size -12 -weight bold}
+    catch {font create TkFixedFont -family Courier -size -12 -weight bold}
 #
 # Create an image to be displayed in buttons embedded in a tablelist widget
 #
@@ -3306,10 +3279,6 @@ $list_notebook configure -width 10
 #
 
     set f0 [EditManager::create_table $notebook "Index" "ind"]
-    NoteBook::compute_size $notebook
-    pack $notebook -side left -fill both -expand yes -padx 4 -pady 4
-     #set pane4 [lindex $f0 0]
-#set tbl $pane4.tbl
 
 #tablelist::tablelist $pane4.tbl \
 #    -columns {0 "Label" left
@@ -3335,9 +3304,7 @@ $f0 columnconfigure 1 -background #e0e8f0
 #$tbl columnconfigure 2 -name fileSize -sortmode integer
 #$tbl columnconfigure 4 -name seen
 
-
 proc emptyStr val { return "" }
-
 
 
 #
@@ -3441,12 +3408,11 @@ $f2 insert end [list 20 0008001000202104 2104 02 00 0001 0008]
 $f2 insert end [list 21 0010000000202106 2106 02 00 0000 0010]
 $f2 insert end [list 22 0008001000202104 2104 02 00 0001 0008]
 $f2 insert end [list 23 0010000000202106 2106 02 00 0000 0010]
-
-
-
-
-    
+        NoteBook::compute_size $notebook
+    pack $notebook -side left -fill both -expand yes -padx 4 -pady 4
     pack $pw2 -fill both -expand yes
+
+
 
      #incr prgindic
 
@@ -3462,8 +3428,8 @@ $f2 insert end [list 23 0010000000202106 2106 02 00 0000 0010]
 
     pack $mainframe -fill both -expand yes
 
-#set prgindic -1
-set prgindic 0
+    #set prgindic -1
+    set prgindic 0
 
     update idletasks
     destroy .intro
@@ -3471,13 +3437,9 @@ set prgindic 0
       	if {!$configError} {catch Editor::restoreWindowPositions}
 
 
-    errorPuts "testing Error.."
-    warnPuts "testing Warn.."
-    conPuts "testing console"
-
-	#CNIndexTree
-
-#EditManager::create_table $notebook "Index"
+    #errorPuts "testing Error.."
+    #warnPuts "testing Warn.."
+    #conPuts "testing console"
 
 }
 
@@ -3567,34 +3529,126 @@ proc Editor::DoubleClickNode {node} {
 	global f0
 	global f1
 	global f2
+	global ra_dec
+	global ra_hex
 	variable notebook
+
+
 
 	set node [$updatetree selection get]
 	if {[string match "PDO-*" $node]||[string match "pdo*" $node]} {
-		pack .mainframe.topf.tb0.f.ra_dec -side left -padx 5
-		pack .mainframe.topf.tb0.f.ra_hex -side left -padx 5
-		pack forget .mainframe.topf.tb0.f.ra_dec
-		pack forget .mainframe.topf.tb0.f.ra_hex
+		pack $ra_dec -side left -padx 5
+		pack $ra_hex -side left -padx 5
+		if {[string match "*SubIndex*" $node]} {
+			set tmpName [$updatetree itemcget $node -text]
+			$f1 delete 0
+			$f1 insert 0 [list Index: $tmpName]
+			$notebook itemconfigure Page2 -state normal
+			$notebook raise Page2
+			$notebook itemconfigure Page1 -state disabled
+			$notebook itemconfigure Page3 -state disabled
+			return
+		}
+		if {[string match "*Index*" $node]} {
+			set tmpName [$updatetree itemcget $node -text]
+			$f0 delete 0
+			$f0 insert 0 [list Index: $tmpName]
+			$notebook itemconfigure Page1 -state normal
+			$notebook raise Page1
+			$notebook itemconfigure Page2 -state disabled
+			$notebook itemconfigure Page3 -state disabled
+			return
+		}
+		pack forget $ra_dec
+		pack forget $ra_hex
+		$notebook itemconfigure Page3 -state normal
+		$notebook raise Page3
+		$notebook itemconfigure Page1 -state disabled
+		$notebook itemconfigure Page2 -state disabled
 	} else {
-		pack .mainframe.topf.tb0.f.ra_dec -side left -padx 5
-		pack .mainframe.topf.tb0.f.ra_hex -side left -padx 5
+		pack $ra_dec -side left -padx 5
+		pack $ra_hex -side left -padx 5
 	}
 	if {[string match "*SubIndex*" $node]} {
-		set tmpName [$updatetree itemcget $node -text]
+		set NodeID 1
+		set NodeType 1
+		set TclObj [new_CNodeCollection]
+		set TclNodeObj [new_CNode]
+		set TclNodeObj [CNodeCollection_getNode $TclObj $NodeType $NodeID]
+		set TclIndexCollection [new_CIndexCollection]
+		set TclIndexCollection  [CNode_getIndexCollection $TclNodeObj]
+		set tmpSplit [split $node -]
+		set indx [lindex $tmpSplit [expr [llength $tmpSplit] - 2]]
+		set subId [lindex $tmpSplit end]
+		puts indx-->$indx===subId-->$subId
+		set ObjIndex [CIndexCollection_getIndex $TclIndexCollection $indx]
+		set indexValue [CBaseIndex_getIndexValue $ObjIndex]
+		set ObjSIdx [CIndex_getSubIndex $ObjIndex $subId]
+		set sIdxValue [CBaseIndex_getIndexValue $ObjSIdx]
+		set IndexName [CBaseIndex_getName $ObjSIdx]
+		set IndexObjType [CBaseIndex_getObjectType $ObjSIdx]
+		set IndexDataType [CBaseIndex_getDataType $ObjSIdx]
+		set IndexAccessType [CBaseIndex_getAccessType $ObjSIdx]
+		set IndexDefaultValue [CBaseIndex_getDefaultValue $ObjSIdx]
 		$f1 delete 0
-		$f1 insert 0 [list Index: $tmpName]
+		$f1 insert 0 [list Index: $indexValue]
+		$f1 delete 1
+		$f1 insert 1 [list Sub\ Index: $sIdxValue]
+		$f1 delete 2
+		$f1 insert 2 [list Name: $IndexName]
+		$f1 delete 3
+		$f1 insert 3 [list Object\ Type: $IndexObjType]
+		$f1 delete 4
+		$f1 insert 4 [list Data\ Type: $IndexDataType]
+		$f1 delete 5
+		$f1 insert 5 [list Access\ Type: $IndexAccessType]
+		$f1 delete 6
+		$f1 insert 6 [list Value: $IndexDefaultValue]
+		$f1 cellconfigure 2,1 -editable yes
+		$f1 cellconfigure 6,1 -editable yes
 		$notebook itemconfigure Page2 -state normal
 		$notebook raise Page2
 		$notebook itemconfigure Page1 -state disabled
 		$notebook itemconfigure Page3 -state disabled
-		#$f0 insert 0,1 $tmpName
 	} elseif {[string match "*Index*" $node]} {
+		set NodeID 1
+		set NodeType 1
+		set TclObj [new_CNodeCollection]
+		set TclNodeObj [new_CNode]
+		set TclNodeObj [CNodeCollection_getNode $TclObj $NodeType $NodeID]
+		set TclIndexCollection [new_CIndexCollection]
+		set TclIndexCollection  [CNode_getIndexCollection $TclNodeObj]
 		set tmpName [$updatetree itemcget $node -text]
+		set tmpSplit [split $node -]
+		set indx [lindex $tmpSplit end]
+		puts indx----->$indx
+		set ObjIndex [CIndexCollection_getIndex $TclIndexCollection $indx]
+		set indexValue [CBaseIndex_getIndexValue $ObjIndex]
+		#puts [CBaseIndex_getIndexValue $ObjIndex]
+		set IndexName [CBaseIndex_getName $ObjIndex]
+		#puts IndexName:$IndexName
+		set IndexObjType [CBaseIndex_getObjectType $ObjIndex]
+		#puts IndexObjType:$IndexObjType
+		set IndexDataType [CBaseIndex_getDataType $ObjIndex]
+		#puts IndexDataType:$IndexDataType
+		set IndexAccessType [CBaseIndex_getAccessType $ObjIndex]
+		#puts IndexAccessType:$IndexAccessType
+		set IndexDefaultValue [CBaseIndex_getDefaultValue $ObjIndex]
+		#puts IndexDefaultValue:$IndexDefaultValue
 		$f0 delete 0
-		$f0 insert 0 [list Index: $tmpName]
-		#$notebook hide Page2
-		#$notebook hide Page3
-		#puts [$notebook pages]
+		$f0 insert 0 [list Index: $indexValue]
+		$f0 delete 1
+		$f0 insert 1 [list Name: $IndexName]
+		$f0 delete 2
+		$f0 insert 2 [list Object\ Type: $IndexObjType]
+		$f0 delete 3
+		$f0 insert 3 [list Data\ Type: $IndexDataType]
+		$f0 delete 4
+		$f0 insert 4 [list Access\ Type: $IndexAccessType]
+		$f0 delete 5
+		$f0 insert 5 [list Value: $IndexDefaultValue]
+		$f0 cellconfigure 1,1 -editable yes
+		$f0 cellconfigure 5,1 -editable yes
 		$notebook itemconfigure Page1 -state normal
 		$notebook raise Page1
 		$notebook itemconfigure Page2 -state disabled

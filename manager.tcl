@@ -179,7 +179,7 @@ proc EditManager::create_table {nb filename choice} {
     set st $frame.st
 
     catch "font delete custom1"
-    font create custom1 -weight bold -size 9 -family TkDefaultFont
+    font create custom1 -size 9 -family TkDefaultFont
 
     if {$choice=="ind"} {
 	set st [tablelist::tablelist $st \
@@ -338,12 +338,15 @@ proc EditManager::create_conWindow {nb text choice} {
     if {$choice==1} {
 	set conWindow [consoleInit $sw]
 	set window $conWindow
+	$nb itemconfigure $pagename -image [Bitmap::get file]
     } elseif {$choice==2} {    
 	set errWindow [errorInit $sw]
 	set window $errWindow
+	$nb itemconfigure $pagename -image [Bitmap::get error_small]
     } elseif {$choice==3} {    
 	set warWindow [warnInit $sw]
 	set window $warWindow
+	$nb itemconfigure $pagename -image [Bitmap::get warning_small]
     } else {
 	#invalid selection
 	return

@@ -139,7 +139,9 @@ proc initOPN_CFGRATOR {argc argv} {
 	##################################################################
   	### Calling Wrapper function
     	##################################################################
-	load ./Tcl_WrapperMain.so
+	catch {load ./Tcl_WrapperMain.so}
+	load openCONFIGURATOR.dll openCONFIGURATOR
+	puts "Successfully loaded dll"
     	##################################################################
 
 	##################################################################

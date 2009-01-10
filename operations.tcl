@@ -3380,8 +3380,8 @@ proc Editor::create { } {
     $f0 insert 4 [list Access\ Type: rw ""]
     $f0 insert 5 [list Value: 0007 ""]
 
-    $f0 cellconfigure 1,1 -editable yes
-    $f0 cellconfigure 5,1 -editable yes
+    $f0 cellconfigure 1,1 -editable yes -image [Bitmap::get pencil] 
+    $f0 cellconfigure 5,1 -editable yes -image [Bitmap::get pencil]
 
     # For packing the Tablelist in the right window
 
@@ -3418,8 +3418,8 @@ proc Editor::create { } {
     $f1 insert 5 [list Access\ Type: rw]
     $f1 insert 6 [list Value: 0007]
 
-    $f1 cellconfigure 2,1 -editable yes
-    $f1 cellconfigure 6,1 -editable yes
+    $f1 cellconfigure 2,1 -editable yes -image [Bitmap::get pencil]
+    $f1 cellconfigure 6,1 -editable yes -image [Bitmap::get pencil]
 
     #pack $pane6.tbl2 -fill both -expand yes -padx 4 -pady 4
     #set frame6 [frame $pane6.f] 
@@ -3677,8 +3677,8 @@ proc Editor::DoubleClickNode {node} {
 		$f1 insert 5 [list Access\ Type: $IndexAccessType]
 		$f1 delete 6
 		$f1 insert 6 [list Value: $IndexDefaultValue]
-		$f1 cellconfigure 2,1 -editable yes
-		$f1 cellconfigure 6,1 -editable yes
+		$f1 cellconfigure 2,1 -editable yes -image [Bitmap::get pencil]
+		$f1 cellconfigure 6,1 -editable yes -image [Bitmap::get pencil]
 		$notebook itemconfigure Page2 -state normal
 		$notebook raise Page2
 		$notebook itemconfigure Page1 -state disabled
@@ -3728,8 +3728,8 @@ proc Editor::DoubleClickNode {node} {
 		$f0 insert 4 [list Access\ Type: $IndexAccessType]
 		$f0 delete 5
 		$f0 insert 5 [list Value: $IndexDefaultValue]
-		$f0 cellconfigure 1,1 -editable yes
-		$f0 cellconfigure 5,1 -editable yes
+		$f0 cellconfigure 1,1 -editable yes -image [Bitmap::get pencil]
+		$f0 cellconfigure 5,1 -editable yes -image [Bitmap::get pencil]
 		$notebook itemconfigure Page1 -state normal
 		$notebook raise Page1
 		$notebook itemconfigure Page2 -state disabled
@@ -3897,7 +3897,7 @@ tk_messageBox -message "Yet to be Implemented !" -title Info -icon info
 proc Editor::TogConnect {} {
 	variable bb_connect
 	set tog [$bb_connect cget -image]
-	#puts $tog
+	puts $tog
 	#to toggle image the value varies according to images added 
 	if {$tog=="image15"} {
 		Editor::Connect	       

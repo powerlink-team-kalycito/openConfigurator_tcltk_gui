@@ -93,6 +93,8 @@ namespace eval Editor {
     variable mnMenu
     variable cnMenu
     variable projMenu    
+    variable obdMenu    
+    variable idxMenu    
     variable mnCount
     variable cnCount
     variable serverUp 0
@@ -1112,7 +1114,11 @@ proc Editor::tselectright {x y node} {
 	} elseif [regexp {CN-(.*)} $node == 1] {
 		tk_popup $Editor::cnMenu $x $y 
 	} elseif {[regexp {MN-(.*)} $node == 1]} { 
-		tk_popup $Editor::mnMenu $x $y		
+		tk_popup $Editor::mnMenu $x $y	
+	} elseif {[regexp {OBD-(.*)} $node == 1]} { 
+		tk_popup $Editor::obdMenu $x $y	
+	} elseif {[string match "IndexValue-*" $node] == 1} { 
+		tk_popup $Editor::idxMenu $x $y		
 	} else {
 		return 
 	}   
@@ -2930,7 +2936,7 @@ proc Editor::create { } {
 	    {command "Open Project" {}  "Open Project" {Ctrl o} -command openproject}
             {command "Save Project" {noFile}  "Save Project" {Ctrl s} -command YetToImplement}
             {command "Save Project as" {noFile}  "Save Project as" {} -command SaveProjectAsWindow}
-	    {command "Close Project" {}  "Close Project" {} -command YetToImplement}                 
+	    {command "Close Project" {}  "Close Project" {} -command closeproject}                 
 	    {separator}
             {command "E&xit" {}  "Exit openCONFIGURATOR" {Alt x} -command Editor::exit_app}
         }
@@ -3017,18 +3023,20 @@ proc Editor::create { } {
 #	     -command {set cursor [. cget -cursor]
 #			YetToImplement
 #		      } 
-     $Editor::cnMenu add command -label "Import XDC" \
-        -command {set cursor [. cget -cursor]
+     $Editor::cnMenu add command -label "Import XDC/XDD" \
+        -command {YetToImplement
+		#set cursor [. cget -cursor]
 		#Call the procedure
-		set types {
-		        {"All XDC Files"     {.xdc } }
-		}
-		set tmpImpDir [tk_getOpenFile -title "Import XDC" -filetypes $types -parent .]
-		set node [$updatetree selection get]
-		if {$tmpImpDir!=""} {
+		#set types {
+		#        {"XDC Files"     {.xdc } }
+		#        {"XDD Files"     {.xdd } }
+		#}
+		#set tmpImpDir [tk_getOpenFile -title "Import XDC" -filetypes $types -parent .]
+		#set node [$updatetree selection get]
+		#if {$tmpImpDir!=""} {
 			# pass node Id  and node type instead of 1 and cn
-			Import $node $tmpImpDir cn 1
-		}
+		#	Import $node $tmpImpDir cn 1
+		#}
             }
 	
     
@@ -3042,12 +3050,27 @@ proc Editor::create { } {
     set Editor::mnMenu [menu  .mnMenu -tearoff 0]
 
      $Editor::mnMenu add command -label "Add CN" -command "AddCNWindow" 
+     $Editor::mnMenu add command -label "Import XDC/XDD" \
+        -command {YetToImplement
+		#set cursor [. cget -cursor]
+		#Call the procedure
+		#set types {
+		#        {"XDC Files"     {.xdc } }
+		#        {"XDD Files"     {.xdd } }
+		#}
+		#set tmpImpDir [tk_getOpenFile -title "Import XDC" -filetypes $types -parent .]
+		#set node [$updatetree selection get]
+		#if {$tmpImpDir!=""} {
+			# pass node Id  and node type instead of 1 and cn
+		#	Import $node $tmpImpDir mn 1
+		#}
+            }
      $Editor::mnMenu add separator
      $Editor::mnMenu add command -label "Auto Generate" -command {YetToImplement} 
 
    
 #############################################################################
-# Menu for the Porject
+# Menu for the Project
 #############################################################################
 
     set Editor::projMenu [menu  .projMenu -tearoff 0]
@@ -3055,7 +3078,22 @@ proc Editor::create { } {
      $Editor::projMenu add command -label "New Project" -command "NewProjectWindow" 
      $Editor::projMenu add command -label "Open Project" -command "YetToImplement" 
 
-    
+#############################################################################
+# Menu for the object dictionary
+#############################################################################
+    set Editor::obdMenu [menu .obdMenu -tearoff 0]
+     $Editor::obdMenu add separator 
+     $Editor::obdMenu add command -label "Add Index" -command "YetToImplement"   
+     $Editor::obdMenu add separator  
+
+#############################################################################
+# Menu for the index
+#############################################################################
+    set Editor::idxMenu [menu .idxMenu -tearoff 0]
+     $Editor::idxMenu add separator
+     $Editor::idxMenu add command -label "Add SubIndex" -command "YetToImplement"   
+     $Editor::idxMenu add separator
+
     set Editor::prgindic -1
     set Editor::status ""
     set mainframe [MainFrame::create .mainframe \
@@ -3831,8 +3869,8 @@ proc AddCN {cnName tmpImpDir nodeId} {
 	global mnCount
 	incr cnCount
 	#puts "node value CN-1-$cnCount $nodeId"
-	set child [$updatetree insert $cnCount MN-1 CN-1-$cnCount -text "$cnName" -open 1 -image [Bitmap::get cn]]
-
+	#set child [$updatetree insert $cnCount MN-1 CN-1-$cnCount -text "$cnName" -open 1 -image [Bitmap::get cn]]
+	set child [$updatetree insert end MN-1 CN-1-$cnCount -text "$cnName" -open 1 -image [Bitmap::get cn]]
 	if {$tmpImpDir!=0} {
 		puts $tmpImpDir
 		#set NodeID 1
@@ -3920,6 +3958,5 @@ proc InsertTree { } {
 	#$updatetree insert end PDO-$mnCount-$cnCount  pdoIndex-$mnCount-$cnCount-1  -text "PDO_Index" -open 1 -image [Bitmap::get index]
 	#$updatetree insert end pdoIndex-$mnCount-$cnCount-1 pdoSubIndex-$mnCount-$cnCount-1-1 -text "PDO_Sub_index" -open 1 -image [Bitmap::get subindex]
 }
-
 
 

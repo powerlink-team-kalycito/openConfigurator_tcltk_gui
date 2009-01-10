@@ -42,11 +42,11 @@ proc StartUp {} {
 	
 	text $frame1.t_desc -height 5 -width 40 -state disabled -background white
 
-	radiobutton $frame1.ra_default  -text "Open Sample Project"   -variable startVar -value 1 -font custom2 -command "SampleText $frame1.t_desc"
-	radiobutton $frame1.ra_newProj  -text "Create New Project"    -variable startVar -value 2 -font custom2 -command "NewText $frame1.t_desc" -state disabled
+	radiobutton $frame1.ra_default  -text "Open Sample Project"   -variable startVar -value 1 -font custom2 -command "SampleText $frame1.t_desc" -state disabled
+	radiobutton $frame1.ra_newProj  -text "Create New Project"    -variable startVar -value 2 -font custom2 -command "NewText $frame1.t_desc" 
 	radiobutton $frame1.ra_openProj -text "Open Existing Project" -variable startVar -value 3 -font custom2 -command "OpenText $frame1.t_desc" -state disabled
-	$frame1.ra_default select
-	SampleText $frame1.t_desc
+	$frame1.ra_newProj select
+	NewText $frame1.t_desc
 	 
 	button $frame2.b_ok -text "  Ok  " -command { 
 		puts $startVar
@@ -553,6 +553,7 @@ proc NewProjectWindow {} {
 	global tmpPjtName
 	global tmpPjtDir
 	global tmpImpDir
+	#global mn
 	global updatetree
 
 	set winNewProj .newprj
@@ -640,9 +641,14 @@ proc NewProjectWindow {} {
 		#	focus .newprj
 		#	return
 		#}
-		$Editor::projMenu add command -label "Close Project" -command "YetToImplement" 
+		$Editor::projMenu add command -label "Close Project" -command "closeproject" 
 		$updatetree itemconfigure PjtName -text $tmpPjtName
+		catch {$updatetree delete MN-$mnCount}
 		$updatetree insert end PjtName MN-$mnCount -text "openPOWERLINK MN" -open 1 -image [Bitmap::get mn]
+		if {$conf=="off"} {
+			$updatetree insert end MN-$mnCount OBD-$mnCount -text "OBD" -open 1 -image [Bitmap::get pdo]
+			Import OBD-$mnCount $tmpImpDir mn 1
+		}
 		destroy .newprj
 	}
 	button $frame1.bt_cancel -text Cancel -command { 
@@ -714,7 +720,11 @@ proc closeproject {} {
 	#struct::record delete record recTestCase
 	#struct::record delete record recProfile
 	# Delete the Tree
-	$updatetree delete end root PjtName
+	$updatetree delete PjtName
+	$updatetree insert end root PjtName -text "POWERLINK Network" -open 1 -image [Bitmap::get network]
+	#$updatetree itemconfigure PjtName -text "POWERLINK Network"
+	#catch {$updatetree delete MN-$mnCount}
+
 	#set PjtDir None
 		
 	##################################################################

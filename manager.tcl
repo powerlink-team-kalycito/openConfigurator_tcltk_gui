@@ -402,7 +402,7 @@ proc EditManager::create_treeWindow {nb } {
             -width 15\
             -highlightthickness 0\
             -bg white  \
-            -deltay 14 \
+            -deltay 15 \
 	    -padx 15 \
 	    -dropenabled 0 -dragenabled 0\
 	    -dragevent 1 \

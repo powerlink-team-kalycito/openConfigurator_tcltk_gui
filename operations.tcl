@@ -2956,7 +2956,7 @@ proc Editor::create { } {
         }
         "&Actions" all options 0 {
             {command "SDO Read/Write" {noFile} "Do SDO Read or Write" {} -command YetToImplement -state disabled}
-            {command "Transfer CDC   Ctrl+F5" {noFile} "Transfer CDC" {} -command YetToImplement }
+            {command "Transfer CDC   Ctrl+F5" {noFile} "Transfer CDC" {} -command TransferCDC }
             {command "Transfer XML   Ctrl+F6" {noFile} "Transfer XML" {} -command YetToImplement }
 	    {separator}
             {command "Start MN" {noFile} "Start the Managing Node" {} -command YetToImplement }
@@ -3178,7 +3178,7 @@ proc Editor::create { } {
             -helptype balloon\
             -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
             -helptext "Transfer CDC"\
-    	    -command "YetToImplement"]
+    	    -command TransferCDC]
     pack $bb_cdc -side left -padx 4
     set bb_xml [ButtonBox::add $bbox -image [Bitmap::get transferxml]\
             -height 21\
@@ -3968,3 +3968,22 @@ proc InsertTree { } {
 }
 
 
+proc TransferCDC {} {
+
+	set types {
+        {"All Project Files"     {*.cdc } }
+	}
+	########### Before Closing Write the Data to the file ##########
+
+	#set file [tk_getSaveFile -filetypes $filePatternList -initialdir $EditorData(opti	ons,workingDir) \
+    #        -initialfile $filename -defaultextension $defaultExt -title "Save File"]
+
+
+	# Validate filename
+	set fileLocation_CDC [tk_getSaveFile -filetypes $types -title "Transfer CDC"]
+        if {$fileLocation_CDC == ""} {
+                return
+        }
+	puts fileLocation_CDC:$fileLocation_CDC
+	Tcl_TransferCDC $fileLocation_CDC
+}

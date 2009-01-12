@@ -3709,21 +3709,43 @@ proc Editor::DoubleClickNode {node} {
 		#set ObjIndex [CIndexCollection_getIndex $TclIndexCollection $indx]
 		#set indexValue [CBaseIndex_getIndexValue $ObjIndex]
 		set indexValue [CBaseIndex_getIndexValue $xdcFile($xdcId)]
+		puts indexValue:$indexValue
 		#puts [CBaseIndex_getIndexValue $ObjIndex]
 		set IndexName [CBaseIndex_getName $xdcFile($xdcId)]
-		#puts IndexName:$IndexName
+		puts IndexName:$IndexName
 		set IndexObjType [CBaseIndex_getObjectType $xdcFile($xdcId)]
-		#puts IndexObjType:$IndexObjType
+		puts IndexObjType:$IndexObjType
 		#set IndexDataType [CBaseIndex_getDataType $xdcFile($xdcId)]
 		#Monica code starts			
 		set objIndexDataType [CBaseIndex_getDataType $xdcFile($xdcId)]
+		puts objIndexDataType:$objIndexDataType
 		set IndexDataType [DataType_getName $objIndexDataType]
 		#Monice code ends
-		#puts IndexDataType:$IndexDataType
+		
 		set IndexAccessType [CBaseIndex_getAccessType $xdcFile($xdcId)]
+		#Check for hex data. If not hex, make it null.
+		set IndexAccessType [string trimleft $IndexAccessType 0x]
+		set IndexAccessType [string trimleft $IndexAccessType 0X]
 		#puts IndexAccessType:$IndexAccessType
+		if {![string is ascii $IndexAccessType]} {
+		
+			puts ErrorStr:$IndexAccessType
+			set IndexAccessType []
+		
+		}
+
+	
 		set IndexDefaultValue [CBaseIndex_getDefaultValue $xdcFile($xdcId)]
-		#puts IndexDefaultValue:$IndexDefaultValue
+		#Check for hex data. If not hex, make it null.
+		set IndexDefaultValue [string trimleft $IndexDefaultValue 0x]
+		set IndexDefaultValue [string trimleft $IndexDefaultValue 0X]
+		if {![string is xdigit $IndexDefaultValue]} {
+		
+			puts ErrorStr:$IndexDefaultValue
+			set IndexDefaultValue []
+		
+		}
+		
 		$f0 delete 0
 		$f0 insert 0 [list Index: $indexValue]
 		$f0 delete 1

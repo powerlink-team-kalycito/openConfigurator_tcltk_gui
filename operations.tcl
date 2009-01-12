@@ -112,7 +112,7 @@ proc Editor::aboutBox {} {\
     grab $aboutWindow
     wm title	 $aboutWindow	"About"
     wm protocol $aboutWindow WM_DELETE_WINDOW "destroy $aboutWindow"
-    label $aboutWindow.l_msg -image [Bitmap::get info] -compound left -text "\n      OpenConfigurator Tool       \n       Designed by       \nKalycito Infotech Private Limited.  \n"
+    label $aboutWindow.l_msg -image [Bitmap::get info] -compound left -text "\n      openCONFIGURATOR Tool       \n       Designed by       \nKalycito Infotech Private Limited.  \n"
     button $aboutWindow.bt_ok -text Ok -command "destroy $aboutWindow"
     grid config $aboutWindow.l_msg -row 0 -column 0 
     grid config $aboutWindow.bt_ok -row 1 -column 0
@@ -533,7 +533,8 @@ proc Editor::updateObjects {{range {}}} {
         catch {
             editorWindows::deleteMarks "1.0" "end -1c"
         }
-        Editor::tdelNode $current(file)
+	#this procedure not needed
+        #Editor::tdelNode $current(file)
     } else  {
         set current(checkRootNode) 1
     }
@@ -2130,8 +2131,8 @@ proc Editor::showTreeWin {show} {
         grid $panedWin.sash1
         grid $win
         grid columnconfigure $panedWin 0 -minsize 200
-        Editor::updateObjects
-        Editor::selectObject
+        #Editor::updateObjects
+        #Editor::selectObject
     } else  {
         grid remove $win
         grid remove $panedWin.sash1
@@ -3113,6 +3114,7 @@ proc Editor::create { } {
     #incr prgindic 
    # toolbar 1 creation
     set tb1  [MainFrame::addtoolbar $mainframe]
+	pack $tb1 -expand yes -fill x
     set bbox [ButtonBox::create $tb1.bbox1 -spacing 0 -padx 1 -pady 1]
     set toolbarButtons(new) [ButtonBox::add $bbox -image [Bitmap::get page_white] \
             -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
@@ -3232,6 +3234,17 @@ proc Editor::create { } {
             -command Editor::TogConnect ]
     pack $bb_connect -side left -padx 4  
 
+    set bbox [ButtonBox::create $tb1.bbox7 -spacing 1 -padx 1 -pady 1]
+    pack $bbox -side right
+    set bb_kaly [ButtonBox::add $bbox -image [Bitmap::get kalycito_icon]\
+            -height 21\
+            -width 40\
+            -helptype balloon\
+            -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
+            -helptext "kalycito" \
+            -command Editor::aboutBox ]
+    pack $bb_kaly -side right  -padx 4
+
     set sep4 [Separator::create $tb1.sep4 -orient vertical]
     pack $sep4 -side left -fill y -padx 4 -anchor w 
 
@@ -3239,7 +3252,7 @@ proc Editor::create { } {
     label $f_tb1.l_empty -text ""
     set ra_dec [radiobutton $f_tb1.ra_dec -text "Dec" -variable hexDec -value on]
     set ra_hex [radiobutton $f_tb1.ra_hex -text "Hex" -variable hexDec -value off]
-    pack $f_tb1 -side right -anchor e -expand 1 -padx 100
+    pack $f_tb1 -side left -anchor w -expand 1 -padx 100
     grid config $f_tb1.ra_dec -row 0 -column 1 -sticky "w" -padx 5
     grid config $f_tb1.ra_hex -row 0 -column 2 -sticky "w" -padx 5
     $f_tb1.ra_dec select

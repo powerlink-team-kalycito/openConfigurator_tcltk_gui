@@ -3660,7 +3660,11 @@ proc Editor::DoubleClickNode {node} {
 		set sIdxValue [CBaseIndex_getIndexValue $xdcFile($xdcId)]
 		set IndexName [CBaseIndex_getName $xdcFile($xdcId)]
 		set IndexObjType [CBaseIndex_getObjectType $xdcFile($xdcId)]
-		set IndexDataType [CBaseIndex_getDataType $xdcFile($xdcId)]
+		#set IndexDataType [CBaseIndex_getDataType $xdcFile($xdcId)]
+		#Monica code starts			
+		set objIndexDataType [CBaseIndex_getDataType $xdcFile($xdcId)]
+		set IndexDataType [DataType_getName $objIndexDataType]
+		#Monice code ends
 		set IndexAccessType [CBaseIndex_getAccessType $xdcFile($xdcId)]
 		set IndexDefaultValue [CBaseIndex_getDefaultValue $xdcFile($xdcId)]
 		$f1 delete 0
@@ -3710,7 +3714,11 @@ proc Editor::DoubleClickNode {node} {
 		#puts IndexName:$IndexName
 		set IndexObjType [CBaseIndex_getObjectType $xdcFile($xdcId)]
 		#puts IndexObjType:$IndexObjType
-		set IndexDataType [CBaseIndex_getDataType $xdcFile($xdcId)]
+		#set IndexDataType [CBaseIndex_getDataType $xdcFile($xdcId)]
+		#Monica code starts			
+		set objIndexDataType [CBaseIndex_getDataType $xdcFile($xdcId)]
+		set IndexDataType [DataType_getName $objIndexDataType]
+		#Monice code ends
 		#puts IndexDataType:$IndexDataType
 		set IndexAccessType [CBaseIndex_getAccessType $xdcFile($xdcId)]
 		#puts IndexAccessType:$IndexAccessType

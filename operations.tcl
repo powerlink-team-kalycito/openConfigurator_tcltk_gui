@@ -2941,7 +2941,7 @@ proc Editor::create { } {
             {command "E&xit" {}  "Exit openCONFIGURATOR" {Alt x} -command Editor::exit_app}
         }
         "&Project" {} {} 0 {
-            {command "Build Project    F7" {noFile} "Generate CDC and XML" {} -command YetToImplement }
+            {command "Build Project    F7" {noFile} "Generate CDC and XML" {} -command BuildProject }
             {command "Rebuild Project  Ctrl+F7" {noFile} "Clean and Build" {} -command YetToImplement }
 	    {command "Clean Project" {noFile} "Clean" {} -command YetToImplement }
 	    {command "Stop Build" {}  "Reserved" {} -command YetToImplement -state disabled}
@@ -3000,7 +3000,7 @@ proc Editor::create { } {
     }
 
 #shortcut keys for project
-    bind . <Key-F7> "YetToImplement"
+    bind . <Key-F7> "BuildProject"
     bind . <Control-Key-F7> "YetToImplement"
     bind . <Control-Key-F5> "YetToImplement"
     bind . <Control-Key-F6> "YetToImplement"
@@ -3200,7 +3200,7 @@ proc Editor::create { } {
             -helptype balloon\
             -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
             -helptext "Build Project"\
-    	    -command "YetToImplement"]
+    	    -command "BuildProject"]
     pack $bb_build -side left -padx 4
     set bb_rebuild [ButtonBox::add $bbox -image [Bitmap::get rebuild]\
             -height 21\
@@ -4059,3 +4059,10 @@ proc TransferCDC {} {
 	puts fileLocation_CDC:$fileLocation_CDC
 	Tcl_TransferCDC $fileLocation_CDC
 }
+
+proc BuildProject {} {
+	conPuts "generating CDC"
+	conPuts "generating XML"
+	#Tcl_GenerateCDC
+}
+

@@ -3441,30 +3441,7 @@ proc Editor::create { } {
     $f2 columnconfigure 4 -background #e0e8f0 -width 11
     $f2 columnconfigure 5 -background #e0e8f0 -width 11
     $f2 columnconfigure 6 -background #e0e8f0 -width 11
-
-    $f2 insert end [list 1 0010000000202106 2106 02 00 0000 0010]
-    $f2 insert end [list 2 0008001000202104 2104 02 00 0001 0008]
-    $f2 insert end [list 3 0010000000202106 2106 02 00 0000 0010]
-    $f2 insert end [list 4 0008001000202104 2104 02 00 0001 0008]
-    $f2 insert end [list 5 0010000000202106 2106 02 00 0000 0010]
-    $f2 insert end [list 6 0008001000202104 2104 02 00 0001 0008]
-    $f2 insert end [list 7 0010000000202106 2106 02 00 0000 0010]
-    $f2 insert end [list 8 0008001000202104 2104 02 00 0001 0008]
-    $f2 insert end [list 9 0010000000202106 2106 02 00 0000 0010]
-    $f2 insert end [list 10 0008001000202104 2104 02 00 0001 0008]
-    $f2 insert end [list 11 0010000000202106 2106 02 00 0000 0010]
-    $f2 insert end [list 12 0008001000202104 2104 02 00 0001 0008]
-    $f2 insert end [list 13 0010000000202106 2106 02 00 0000 0010]
-    $f2 insert end [list 14 0008001000202104 2104 02 00 0001 0008]
-    $f2 insert end [list 15 0010000000202106 2106 02 00 0000 0010]
-    $f2 insert end [list 16 0008001000202104 2104 02 00 0001 0008]
-    $f2 insert end [list 17 0010000000202106 2106 02 00 0000 0010]
-    $f2 insert end [list 18 0008001000202104 2104 02 00 0001 0008]
-    $f2 insert end [list 19 0010000000202106 2106 02 00 0000 0010]
-    $f2 insert end [list 20 0008001000202104 2104 02 00 0001 0008]
-    $f2 insert end [list 21 0010000000202106 2106 02 00 0000 0010]
-    $f2 insert end [list 22 0008001000202104 2104 02 00 0001 0008]
-    $f2 insert end [list 23 0010000000202106 2106 02 00 0000 0010]
+	
     NoteBook::compute_size $notebook
     $notebook configure -width 750
     pack $notebook -side left -fill both -expand yes -padx 4 -pady 4
@@ -3597,35 +3574,113 @@ proc Editor::DoubleClickNode {node} {
 
 
 	set node [$updatetree selection get]
-	if {[string match "PDO-*" $node]||[string match "pdo*" $node]} {
+	if {[string match "TPDO-*" $node] || [string match "RPDO-*" $node]} {
 		pack $ra_dec -side left -padx 5
 		pack $ra_hex -side left -padx 5
-		if {[string match "*SubIndex*" $node]} {
-			set tmpName [$updatetree itemcget $node -text]
-			$f1 delete 0
-			$f1 insert 0 [list Index: $tmpName]
-			$notebook itemconfigure Page2 -state normal
-			$notebook raise Page2
-			$notebook itemconfigure Page1 -state disabled
-			$notebook itemconfigure Page3 -state disabled
-			return
+		set idx [$updatetree nodes $node]
+		set popCount 0 
+		foreach tempIdx $idx {
+					#puts idx-->[$updatetree itemcget $tempIdx -text]
+			set sidx [$updatetree nodes $tempIdx]
+					#puts sidx-->$sidx
+
+			foreach tempSidx $sidx { 
+				puts tempSidx->$tempSidx						
+				set tmpnode $tempSidx
+				set tmpSplit [split $tmpnode -]
+				set xdcId [lrange $tmpSplit 1 end]
+				set xdcId [join $xdcId -]
+				puts xdcId-->$xdcId
+				puts xdcFile------------->$xdcFile($xdcId)
+				set xdcIcxId [lrange $tmpSplit 1 [expr [llength $tmpSplit] - 2]]
+				set xdcIcxId [join $xdcIcxId -]
+		#puts xdcIcxId-->$xdcIcxId
+		#puts xdcIndexFile------------->$xdcFile($xdcIcxId)
+				set errorString []
+				set NodeID 1
+				set NodeType 1
+		#Tcl_ImportXML "$xdcFile($xdcId)" $errorString $NodeType $NodeID
+		#set TclObj [new_CNodeCollection]
+		#set TclNodeObj [new_CNode]
+		#set TclNodeObj [CNodeCollection_getNode $TclObj $NodeType $NodeID]
+		#set TclIndexCollection [new_CIndexCollection]
+		#set TclIndexCollection  [CNode_getIndexCollection $TclNodeObj]
+				set indx [lindex $tmpSplit [expr [llength $tmpSplit] - 2]]
+				set subId [lindex $tmpSplit end]
+		#set ObjIndex [CIndexCollection_getIndex $TclIndexCollection $indx]
+				set indexValue [CBaseIndex_getIndexValue $xdcFile($xdcIcxId)]
+		#set ObjSIdx [CIndex_getSubIndex $ObjIndex $subId]
+		#set sIdxValue [CBaseIndex_getIndexValue $ObjSIdx]
+				set sIdxValue [CBaseIndex_getIndexValue $xdcFile($xdcId)]
+				set IndexName [CBaseIndex_getName $xdcFile($xdcId)]
+				set IndexObjType [CBaseIndex_getObjectType $xdcFile($xdcId)]
+				set IndexDataType [CBaseIndex_getDataType $xdcFile($xdcId)]
+				set IndexAccessType [CBaseIndex_getAccessType $xdcFile($xdcId)]
+				set IndexDefaultValue [CBaseIndex_getDefaultValue $xdcFile($xdcId)]
+				puts indx-->$indx===subId-->$subId===popCount-->$popCount===IndexDefaultValue-->$IndexDefaultValue
+				if {[string match "00" $sIdxValue]==0 } {
+					catch {$f2 delete $popCount }
+					set DataSize [string range $IndexDefaultValue 2 5]
+					set Offset [string range $IndexDefaultValue 6 9]
+					set Reserved [string range $IndexDefaultValue 10 11]
+					set listSubIndex [string range $IndexDefaultValue 12 13]
+					set listIndex [string range $IndexDefaultValue 14 17]
+					$f2 insert $popCount [list $popCount $IndexDefaultValue $listIndex $listSubIndex $Reserved $Offset $DataSize]
+					incr popCount 1 
+				}
+		#$f1 insert 0 [list Index: $indexValue]
+		#$f1 delete 1
+		#$f1 insert 1 [list Sub\ Index: $sIdxValue]
+		#$f1 delete 2
+		#$f1 insert 2 [list Name: $IndexName]
+		#$f1 delete 3
+		#$f1 insert 3 [list Object\ Type: $IndexObjType]
+		#$f1 delete 4
+		#$f1 insert 4 [list Data\ Type: $IndexDataType]
+		#$f1 delete 5
+		#$f1 insert 5 [list Access\ Type: $IndexAccessType]
+		#$f1 delete 6
+		#$f1 insert 6 [list Value: $IndexDefaultValue]
+		#$f1 cellconfigure 2,1 -editable yes -image [Bitmap::get pencil]
+		#$f1 cellconfigure 6,1 -editable yes -image [Bitmap::get pencil]
+		#$notebook itemconfigure Page2 -state normal
+		#$notebook raise Page2
+		#$notebook itemconfigure Page1 -state disabled
+		#$notebook itemconfigure Page3 -state disabled
+				
+			}
 		}
-		if {[string match "*Index*" $node]} {
-			set tmpName [$updatetree itemcget $node -text]
-			$f0 delete 0
-			$f0 insert 0 [list Index: $tmpName]
-			$notebook itemconfigure Page1 -state normal
-			$notebook raise Page1
-			$notebook itemconfigure Page2 -state disabled
-			$notebook itemconfigure Page3 -state disabled
-			return
-		}
+		#if {[string match "*SubIndex*" $node]} {
+		#	set tmpName [$updatetree itemcget $node -text]
+		#	$f1 delete 0
+		#	$f1 insert 0 [list Index: $tmpName]
+		#	$notebook itemconfigure Page2 -state normal
+		#	$notebook raise Page2
+		#	$notebook itemconfigure Page1 -state disabled
+		#	$notebook itemconfigure Page3 -state disabled
+		#	return
+		#}
+		#if {[string match "*Index*" $node]} {
+		#	set tmpName [$updatetree itemcget $node -text]
+		#	$f0 delete 0
+		#	$f0 insert 0 [list Index: $tmpName]
+		#	$notebook itemconfigure Page1 -state normal
+		#	$notebook raise Page1
+		#	$notebook itemconfigure Page2 -state disabled
+		#	$notebook itemconfigure Page3 -state disabled
+		#	return
+		#}
 		pack forget $ra_dec
 		pack forget $ra_hex
-		$notebook itemconfigure Page3 -state normal
+		if {[string match "TPDO-*" $node]} {
+		$notebook itemconfigure Page3 -state normal -text "TPDO mapping"
+		} else {
+		$notebook itemconfigure Page3 -state normal -text "RPDO mapping"
+		}
 		$notebook raise Page3
 		$notebook itemconfigure Page1 -state disabled
 		$notebook itemconfigure Page2 -state disabled
+		return 
 	} else {
 		pack $ra_dec -side left -padx 5
 		pack $ra_hex -side left -padx 5
@@ -3765,11 +3820,6 @@ proc Editor::DoubleClickNode {node} {
 		$notebook itemconfigure Page2 -state disabled
 		$notebook itemconfigure Page3 -state disabled
 		#$f0 insert 0,1 $tmpName
-	} elseif {[string match "PDO-*" $node]} {
-		$notebook itemconfigure Page3 -state normal
-		$notebook raise Page3
-		$notebook itemconfigure Page1 -state disabled
-		$notebook itemconfigure Page2 -state disabled
 	} else {
 		$notebook itemconfigure Page1 -state disabled
 		$notebook itemconfigure Page2 -state disabled

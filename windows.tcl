@@ -49,7 +49,6 @@ proc StartUp {} {
 	NewText $frame1.t_desc
 	 
 	button $frame2.b_ok -text "  Ok  " -command { 
-		puts $startVar
 		if {$startVar==1} {
 			YetToImplement;
 		} elseif {$startVar==2} {

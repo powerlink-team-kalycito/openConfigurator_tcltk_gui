@@ -314,6 +314,7 @@ proc errorInit {win {width 60} {height 5}} {
     #bind $window.t <KeyRelease-Return> {evalCommand %W $Console [getCommand %W];break}
     #bind $window.t <Key-Up> {onKeyUp %W ; break}
     #bind $window.t <Key-Down> {onKeyDown %W ; break}
+    #bind $window.t <Key-Return> {errorPuts ""}
     bind $window.t <Key-Left> {onKeyLeft %W ; break}
     bind $window.t <Key-Right> {onKeyRight %W ; break}
     bind $window.t <Key-BackSpace> {onKeyBackSpace %W;break}

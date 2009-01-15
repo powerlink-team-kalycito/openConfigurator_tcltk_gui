@@ -104,7 +104,7 @@ proc Editor::aboutBox {} {\
     grab $aboutWindow
     wm title	 $aboutWindow	"About"
     wm protocol $aboutWindow WM_DELETE_WINDOW "destroy $aboutWindow"
-    label $aboutWindow.l_msg -image [Bitmap::get info] -compound left -text "\n      openCONFIGURATOR Tool       \n       Designed by       \nKalycito Infotech Private Limited.  \n"
+    label $aboutWindow.l_msg -image [Bitmap::get info] -compound left -text "\n      openMANAGER Tool           \n       Designed by       \nKalycito Infotech Private Limited.  \n"
     button $aboutWindow.bt_ok -text Ok -command "destroy $aboutWindow"
     grid config $aboutWindow.l_msg -row 0 -column 0 
     grid config $aboutWindow.bt_ok -row 1 -column 0
@@ -176,26 +176,7 @@ proc Editor::restoreWindowPositions {} {
 #saves only "EditorData(options,...)"
 #but might be easily enhanced with other options
 ################################################################################
-proc Editor::saveOptions {} {
-    global EditorData
-    global RootDir
-    
-    Editor::getWindowPositions
-    
-    set configData "#PLK_CONFIGTOOL Configuration File\n\n"
-    set configFile [file join $RootDir/plk_configtool.cfg]
-    set optionlist [array names EditorData]
-    foreach option $optionlist {
-        set optiontext EditorData($option)
-        if {![string match "*(options*" $optiontext]} {
-            continue
-        }
-        set value \"[subst \$[subst {$optiontext}]]\"
-        append configData "set EditorData($option) $value\n"
-        
-    }
-    set result [Editor::_saveFile $configFile $configData]
-}
+
 
 proc Editor::setDefault {} {
     global tcl_platform
@@ -290,7 +271,7 @@ proc Editor::setDefault {} {
         set EditorData(options,useTemplatesForQuoteDbl) 1
         set options(useQuotesTemplates) 1
         set EditorData(options,showToolbar1) $toolbar1
-        set EditorData(options,showToolbar2) $toolbar2
+        #set EditorData(options,showToolbar2) $toolbar2
         set options(showConsole) 1
         set EditorData(options,showConsole) $showConsoleWindow
         set options(showProcs) 1
@@ -312,7 +293,7 @@ proc Editor::setDefault {} {
         set EditorData(options,useDefaultExtension) 1
     } else  {
         set toolbar1 $EditorData(options,showToolbar1)
-        set toolbar2 $EditorData(options,showToolbar2)
+        #set toolbar2 $EditorData(options,showToolbar2)
         #set options(useEvalServer) $EditorData(options,useEvalServer)
         #set options(serverPort) $EditorData(options,serverPort)
         set options(useIndent) $EditorData(options,useIndent)
@@ -639,24 +620,7 @@ proc Editor::tclose {} {
     $treeWindow closetree $node
 }
 
-################################################################################
-#
-#  proc Editor::tselectObject
-#
-#  selects the objects choosen from the tree
-################################################################################
-proc Editor::tselectObject {node} {
-    
-   	variable current
-   	variable treeWindow
-   	variable notebook
-   	global PjtDir
 
-	$treeWindow selection clear
-	$treeWindow selection set $node
-
-}
-################################################################################
 ################################################################################
 #
 #  proc Editor::tselectright
@@ -684,21 +648,6 @@ proc Editor::tselectright {x y node} {
 		return 
 	}   
 }
-################################################################################
-#
-#  proc selectobject
-#
-#  Single Click select the object on the tree
-################################################################################
-proc selectobject {node} {
-    
-   	global updatetree
-    	
-	$updatetree selection clear
-	$updatetree selection set $node
-
-}
-
 
 ################################################################################
 #
@@ -793,172 +742,6 @@ proc Editor::torder {node} {
     }
 }
 
-################################################################################
-#proc Editor::evalMain
-#will be called from within a slave-interpreter to do something within the main-interpreter
-################################################################################
-proc Editor::evalMain {args} {
-    
-    uplevel #0 eval $args
-}
-
-proc Editor::setTestTermBinding {sock terminal} {
-    variable current
-    set current(sock) $sock
-    bind $terminal <KeyPress-Return> {%W mark set insert "prompt lineend"}
-    bind $terminal <KeyRelease-Return> {
-        set command [getCommand %W]
-        #%W tag configure output -foreground blue
-        interp eval $Editor::current(slave) set command [list $command]
-        interp eval $Editor::current(slave) {
-            eval puts $sock [list $command]
-        }
-        break
-    }
-    
-}
-
-proc Editor::deleteTestTerminal {pagename} {
-    variable con_notebook
-    
-    $con_notebook delete $pagename
-    $con_notebook raise Console
-}
-
-proc Editor::chooseWish {} {
-    global tcl_platform
-    global EditorData
-    global RootDir
-    variable serverUp
-    
-    if {$serverUp} {
-        switch [tk_messageBox \
-                -message "Restart Server ?\nThis will shutdown currently running applications!" \
-                -icon warning \
-                -title "Restart Server ?" \
-                -type yesnocancel] {
-                    yes {
-                        foreach slaveInterp [interp slaves] {
-                            # don�t delete console interpreter
-                            if {$slaveInterp != "Console"} {
-                                Editor::exitSlave $slaveInterp
-                            }
-                }
-                set slave [interp create exitInterp]
-                interp eval $slave set RootDir [list $RootDir]
-                interp eval $slave {set argv0 "shutdown Server"}
-                interp eval $slave {load {} Tk}
-                #interp eval $slave source [list [file join $RootDir evalClient.tcl]]
-                $slave alias _exitSlave Editor::exitSlave
-                interp eval $slave set slave $slave
-                interp eval $slave {
-                    proc _exitProc {} {
-                        global slave
-                        after 500 {_exitSlave $slave}
-                    }
-                    interp alias {} exit {} _exitProc
-                    wm protocol . WM_DELETE_WINDOW _exitProc
-                }
-                interp eval $slave Client::exitExecutionServer $EditorData(options,serverPort)
-                interp delete $slave
-            }
-            default {
-                return
-            }
-        }
-    }
-    if {$tcl_platform(platform) == "windows"} {
-        set filePatternList [list "Executables {*.exe}" "All-Files {*.*}"]
-    } else  {
-        set filePatternList [list "All-Files {*}"]
-    }
-    eval set initialFile $EditorData(options,serverWish)
-    set initialDir [file dirname [info nameofexecutable]]
-    set serverWish [tk_getOpenFile \
-            -filetypes $filePatternList \
-            -initialdir $initialDir \
-            -initialfile $initialFile \
-            -title "Choose Server Wish"]
-    if {$serverWish != ""} {
-        set EditorData(options,serverWish) [list $serverWish]
-    }
-    return
-}
-
-
-proc Editor::exitSlave {slave} {
-    if {[interp exists $slave]} {
-        interp eval $slave {
-            set taskList [after info]
-            foreach id $taskList {
-                after cancel $id
-            }
-        }
-        catch {$Editor::notebook raise $Editor::slaves($slave)}
-        catch {Editor::deleteTestTerminal $Editor::current(pagename)}
-        catch {interp delete $slave}
-        update
-        catch {$Editor::con_notebook delete $current(pagename)}
-    }
-    . configure -cursor {}
-    return
-}
-
-
-proc Editor::file_copy {in out} {\
-    
-    if {[file exists $in]} {
-        file copy -force $in $out
-        return 0
-    } else {
-        return 1
-    }
-}
-################################################################################
-# proc Editor::getFile
-# openfile dialog
-# returns filename and content of the file
-################################################################################
-proc Editor::getFile {{filename {}}} {
-    global EditorData
-    variable treeWindow
-    
-    # workaround to avoid button1 events to the procWindow while
-    # double clicking a file
-    bind $treeWindow <Button-1> { }
-      if {$filename == {}} {
-        if {$EditorData(options,useDefaultExtension)} {
-            # set defaultExt .tcl
-            set filePatternList [list "C-Files {*.c *.C}" "All {*.* *}"]
-        } else  {
-            # set defaultExt ""
-            set filePatternList [list "All {*.* *}" "C-Files {*.c *.C}" ]
-        }
-        set defaultExt ""
-        set initialFile ""
-        set filename [tk_getOpenFile -filetypes $filePatternList -initialdir $EditorData(options,workingDir) -title "Open File"]
-    }
-    
-    if {[file exists $filename]} {
-        set cursor [. cget -cursor]
-        . configure -cursor watch
-        update
-        if {[file writable $filename]} {
-            set fd [open $filename r+]
-        } elseif {[file readable $filename]}  {
-            tk_messageBox -message "File is write protected!\nOpen file as read only!"
-            set fd [open $filename r]
-        } else  {
-            tk_messageBox -message "Permission denied!"
-            return ""
-        }
-        set data [read $fd]
-        close $fd
-        . configure -cursor $cursor
-        set EditorData(options,workingDir) [file dirname $filename]
-        return [list $filename $data]
-    }
-}
 
 
 ################################################################################
@@ -1005,228 +788,7 @@ proc Editor::setDefaultProject {{filename {}}} {
     }
 }
 
-################################################################################
-#proc Editor::associateProject
-#if there is a projectfile associated to the current file,
-#this file will be started by pressing the test button.
-#This overrides the option for the default project file
-################################################################################
-proc Editor::associateProject {} {
-    global EditorData
-    variable current
-    
-    if {$EditorData(options,useDefaultExtension)} {
-        # set defaultExt .tcl
-        set filePatternList [list "Tcl-Files {*.tcl *.tk *.itcl *.itk}" "All {*.* *}"]
-    } else  {
-        # set defaultExt ""
-        set filePatternList [list "All {*.* *}" "Tcl-Files {*.tcl *.tk *.itcl *.itk}" ]
-    }
-    set defaultExt ""
-    set initialFile ""
-    set filename [tk_getOpenFile -filetypes $filePatternList -initialdir $EditorData(options,workingDir) -title "Select Project File"]
-    if {$filename != ""} {
-        set current(project) $filename
-        set prjFile [file rootname $current(file)].prj
-        set result [Editor::_saveFile $prjFile $current(project)]
-    }
-}
 
-proc Editor::unsetProjectAssociation {} {
-    global EditorData
-    variable current
-    
-    set prjFile [file rootname $current(file)].prj
-    if {[file exists $prjFile]} {
-        file delete $prjFile
-    }
-    set current(project) $EditorData(options,defaultProjectFile)
-}
-
-
-proc Editor::saveAll {} {
-    
-    global PjtDir
-    if { $PjtDir == "" || $PjtDir == "None" } {
-	conPuts "No Project selected" error
-	return
-    }
-    foreach textWin [array names ::Editor::index] {
-        set idx $Editor::index($textWin)
-        if {$Editor::text_win($idx,writable) == 0} {
-            set filename $Editor::text_win($idx,file)
-            tk_messageBox -message "File is write protected!\nCan�t save $filename !"
-            continue
-        }
-        set data [$textWin get 1.0 "end -1c"]
-        set filename $Editor::text_win($idx,file)
-        Editor::file_copy $filename [concat "$filename" "~"]
-        Editor::_saveFile $filename $data
-        set Editor::text_win($idx,hasChanged) 0
-        $Editor::notebook itemconfigure $Editor::text_win($idx,pagename) -image ""
-    }
-    set Editor::current(hasChanged) 0
-}
-
-proc Editor::_saveFile {filename data} {
-    variable current
-    
-    if {$filename == "Untitled"} {
-        Editor::_saveFileas $filename $data
-        return
-    }
-    set cursor [. cget -cursor]
-    . configure -cursor watch
-    update
-    if {[catch {set fd [open $filename w+]}]} {
-        tk_messageBox -message "$filename is write protected!\nUse SAVE AS.. instead!"
-        return
-    }
-    puts -nonewline $fd $data
-    close $fd
-    . configure -cursor $cursor
-    return
-}
-
-proc Editor::saveFile {} {
-    variable notebook
-    variable current
-    variable index
-    global PjtDir
-    if { $PjtDir == "" || $PjtDir == "None" } {
-	conPuts "No Project selected" error
-	return
-    }
-    if {[$notebook pages] == {}} {
-        return ;# No open file
-    }
-    
-    set filename $current(file)
-    if {$filename == "Untitled"} {
-        Editor::saveFileas
-        return
-    }
-    if {[file writable $filename] == 0} {
-        tk_messageBox -message "File \"$filename\" is write protected!\nUse SAVE AS .. instead!"
-        return
-    }
-    
-    set data [$current(text) get 1.0 end-1c]
-    catch {Editor::file_copy $filename [concat "$filename" "~"]}
-    set result [Editor::_saveFile $current(file) $data]
-    set current(hasChanged) 0
-    $Editor::notebook itemconfigure $current(pagename) -image ""
-    set idx $index($current(text))
-    set Editor::text_win($idx,hasChanged) $current(hasChanged)
-    if {$current(project) != "none"} {
-        set prjFile [file rootname $current(file)].prj
-        set result [Editor::_saveFile $prjFile $current(project)]
-    }
-}
-
-proc Editor::_saveFileas {filename data} {
-    global EditorData
-    
-    set filePatternList {
-        {"All C Files"     {*.c } }
-        {"All Header Files"     {*.h } }
-	}
-    if {$EditorData(options,useDefaultExtension)} {
-        # set defaultExt .tcl
-        set filePatternList {
-        {"All C Files"     {*.c } }
-        {"All Header Files"     {*.h } }
-	}
-    } else  {
-        # set defaultExt ""
-        set filePatternList {
-        {"All C Files"     {*.c } }
-        {"All Header Files"     {*.h } }
-	}
-    }
-    set defaultExt ""
-    set initialFile $filename
-    set file [tk_getSaveFile -filetypes $filePatternList -initialdir $EditorData(options,workingDir) \
-            -initialfile $filename -defaultextension $defaultExt -title "Save File"]
-    if {$file != ""} {
-        if {[file exists $file]} {
-            if {[file writable $file]} {
-                set cursor [. cget -cursor]
-                . configure -cursor watch
-                update
-                set fd [open $file w+]
-                puts -nonewline $fd $data
-                close $fd
-                . configure -cursor $cursor
-            } else  {
-                tk_messageBox -message "No write permission!"
-                set file ""
-            }
-        } else  {
-            # new filename
-            if {[catch {\
-                    set cursor [. cget -cursor]
-                    . configure -cursor watch
-                    update
-                    set fd [open $file w+]
-                    puts -nonewline $fd $data
-                    close $fd
-                    . configure -cursor $cursor
-                    }]} {
-                tk_messageBox -message "Can�t save file $file\nMaybe no write permission!"
-                set file ""
-            }
-        }
-    }
-	
-	global pageopened_list
-	# Remove the Untitled and appened the saved file instead.
-   	set fileindex [lsearch -exact $pageopened_list Untitled]
-	if {$fileindex >= 0} {
-        	set pageopened_list [lreplace $pageopened_list $fileindex $fileindex]
-        } 
-	lappend pageopened_list $file
-	set EditorData(options,workingDir) [file dirname $file]
-   	return $file
-	
-}
-
-proc Editor::saveFileas {} {
-    variable notebook
-    variable current
-    
-    if {[$notebook pages] == {}} {
-        return ;# no open file
-    }
- 
-    set filename $current(file)
-    set data [$current(text) get 1.0 end-1c]
-    set result [Editor::_saveFileas $current(file) $data]
-    if {$result == ""} {
-        return 1
-    }
-    set insertCursor [$current(text) index insert]
-    editorWindows::deleteMarks 1.0 "end -1c"
-    tdelNode $current(file)
-    set current(hasChanged) 0
-    $Editor::notebook itemconfigure $current(pagename) -image ""
-    
-    set current(file) $result
-    set current(writable) 1
-    set idx $Editor::index($current(text))
-    set Editor::text_win($idx,file) $current(file)
-    $notebook itemconfigure $current(pagename) -text [file tail $result]
-    ##$current(text) mark set insert $insertCursor
-    Editor::updateObjects
-    Editor::selectObject 0
-    
-    #if there was already a .prj-File then copy to new name too
-    if {[file exists [file rootname $filename].prj]} {
-        set prjFile [file rootname $current(file)].prj
-        set result [Editor::_saveFile $prjFile $current(project)]
-    }
-    Editor::file_copy $current(file) [concat "$current(file)" "~"]
-}
 
 proc Editor::showConsole {show} {
     variable con_notebook
@@ -1299,74 +861,6 @@ proc Editor::showSolelyConsole {show} {
         grid $frame
         grid rowconfigure $panedWin 2 -minsize 100
     }
-}
-################################################################################
-#proc Editor::close_dialog
-#called whenever the user wants to exit openCONFIGURATOR and there are files
-#that have changed and are still not saved yet
-################################################################################
-proc Editor::close_dialog {} {\
-    variable notebook
-    variable current
-    variable index
-    variable text_win
-    set result [tk_messageBox -message "File <$current(file)> has changed!\n Save it ?" -type yesnocancel -icon warning -title "Question"]
-    switch -- $result {
-        yes {
-            if {[file writable $current(file)]} {
-                Editor::saveFile
-                return 0
-            } else  {
-                return [Editor::saveFileas]
-            }
-        }
-        no  {return 0}
-        cancel {return 1}
-    }
-}
-
-proc Editor::closeFile {{exit 0}} {
-    
-    variable notebook
-    variable current
-    variable index
-    variable last
-    variable text_win
-    global pageopened_list	
-    # Is there an open window
-    if {[$notebook pages] == {}} {
-        return
-    }
-    if {$current(hasChanged)} {
-        set result [Editor::close_dialog]
-        if {$result} {return $result}
-    }
-    ## Remove the closed file from the list
-    set fileindex [lsearch -exact $pageopened_list $current(file)]
-    if {$fileindex >= 0} {
-            set pageopened_list [lreplace $pageopened_list $fileindex $fileindex]
-        } else {
-            return 0
-        }    
-    catch {if {[info exists current(undo_id)]} {delete_id}}
-    # if current file is running terminate execution
-    Editor::terminate    
-    
-    NoteBook::delete $notebook $current(pagename)
-    set idx $Editor::index($current(text))
-    foreach entry [array names Editor::text_win "$idx,*"] {
-        unset Editor::text_win($entry)
-    }
-    unset index($current(text))          
-    #delete node
-    tdelNode $current(file)
-    set indexList [NoteBook::pages $notebook]
-    if {[llength $indexList] != 0} {
-        NoteBook::raise $notebook [lindex $indexList end]
-    } else {
-        if {$exit == 0} {Editor::newFile}
-    }   
-    return 0
 }
 
 
@@ -1468,38 +962,6 @@ proc openproject { } {
 
 }
 
-#######################################################################
-# proc saveProject
-# Saves the current project.
-########################################################################
-proc saveproject { } {
-	global PjtName
-	global PjtDir
-	if {$PjtDir == "" || $PjtDir == "None"} {
-		conPuts "No Project Selected" error
-		return
-	}
-	foreach textWin [array names ::Editor::index] {
-        	set idx $Editor::index($textWin)
-        	if {$Editor::text_win($idx,writable) == 0} {
-            		set filename $Editor::text_win($idx,file)
-            		tk_messageBox -message "File is write protected!\nCan�t save $filename !"
-            		continue
-        	}
-        set data [$textWin get 1.0 "end -1c"]
-        set filename $Editor::text_win($idx,file)
-        Editor::file_copy $filename [concat "$filename" "~"]
-        Editor::_saveFile $filename $data
-        set Editor::text_win($idx,hasChanged) 0
-        $Editor::notebook itemconfigure $Editor::text_win($idx,pagename) -image ""
-    	}
-	set Editor::current(hasChanged) 0
-	
-	#set ret_writexml [initwritexml "$PjtDir/$PjtName"]
-	conPuts "Project $PjtName saved" info
-	
-}
-
 
 ###############################################################################
 # proc Editor::create
@@ -1513,8 +975,8 @@ proc Editor::create { } {
     global f0
     global f1
     global f2
-    global ra_dec
-    global ra_hex
+    #global ra_dec
+    #global ra_hex
 
     variable bb_connect
     variable mainframe
@@ -1558,10 +1020,10 @@ proc Editor::create { } {
     
     
     # use default values
-    if {[catch {Editor::setDefault}]} {
-        set configError 1
+    #if {[catch {Editor::setDefault}]} {
+    #    set configError 1
         #Editor::setDefault
-    }
+    #}
 
     
     # Menu description
@@ -1573,7 +1035,7 @@ proc Editor::create { } {
             {command "Save Project as" {noFile}  "Save Project as" {} -command SaveProjectAsWindow}
 	    {command "Close Project" {}  "Close Project" {} -command closeproject}                 
 	    {separator}
-            {command "E&xit" {}  "Exit openCONFIGURATOR" {Alt x} -command Editor::exit_app}
+            {command "E&xit" {}  "Exit openMANAGER" {Alt x} -command Editor::exit_app}
         }
         "&Project" {} {} 0 {
             {command "Build Project    F7" {noFile} "Generate CDC and XML" {} -command BuildProject }
@@ -1646,7 +1108,7 @@ proc Editor::create { } {
 #############################################################################
 
     set Editor::cnMenu [menu  .cnMenu -tearoff 0]
-    set Editor::IndexaddMenu .cnMenu.cascade
+    set Editor::IndexaddMenu .cnMenu.indexaddMenu
     $Editor::cnMenu add command -label "Rename" \
 	     -command {set cursor [. cget -cursor]
 			YetToImplement
@@ -1734,13 +1196,13 @@ proc Editor::create { } {
     set Editor::prgindic -1
     set Editor::status ""
     set mainframe [MainFrame::create .mainframe \
-            -menu $descmenu \
+            -menu $descmenu  \
             -textvariable Editor::status ]
             #-progressvar  Editor::prgindic \
             #-progressmax 100 \
             #-progresstype normal \
             #-progressfg blue ]
-    #$mainframe showstatusbar progression
+    $mainframe showstatusbar status
 
 
     #incr prgindic 
@@ -1880,14 +1342,14 @@ proc Editor::create { } {
     set sep4 [Separator::create $tb1.sep4 -orient vertical]
     pack $sep4 -side left -fill y -padx 4 -anchor w 
 
-    set f_tb1 [frame $tb1.f]
-    label $f_tb1.l_empty -text ""
-    set ra_dec [radiobutton $f_tb1.ra_dec -text "Dec" -variable hexDec -value on]
-    set ra_hex [radiobutton $f_tb1.ra_hex -text "Hex" -variable hexDec -value off]
-    pack $f_tb1 -side left -anchor w -expand 1 -padx 100
-    grid config $f_tb1.ra_dec -row 0 -column 1 -sticky "w" -padx 5
-    grid config $f_tb1.ra_hex -row 0 -column 2 -sticky "w" -padx 5
-    $f_tb1.ra_dec select
+    #set f_tb1 [frame $tb1.f]
+    #label $f_tb1.l_empty -text ""
+    #set ra_dec [radiobutton $f_tb1.ra_dec -text "Dec" -variable hexDec -value on]
+    #set ra_hex [radiobutton $f_tb1.ra_hex -text "Hex" -variable hexDec -value off]
+    #pack $f_tb1 -side left -anchor w -expand 1 -padx 100
+    #grid config $f_tb1.ra_dec -row 0 -column 1 -sticky "w" -padx 5
+    #grid config $f_tb1.ra_hex -row 0 -column 2 -sticky "w" -padx 5
+    #$f_tb1.ra_dec select
 
     incr prgindic
       
@@ -1899,7 +1361,8 @@ proc Editor::create { } {
     #set temp [MainFrame::addindicator $mainframe -textvariable Editor::current(file) ]
     #set temp [MainFrame::addindicator $mainframe -textvariable EditorData(cursorPos)]
     #set temp [MainFrame::addindicator $mainframe -textvariable clock_var]
-    
+    set temp [MainFrame::addindicator $mainframe -textvariable Editor::connect_status ]
+    $temp configure -relief flat 
     # NoteBook creation
     #incr prgindic
     set frame    [$mainframe getframe]
@@ -2012,6 +1475,17 @@ proc Editor::create { } {
     $f2 columnconfigure 5 -background #e0e8f0 -width 11
     $f2 columnconfigure 6 -background #e0e8f0 -width 11
 	
+
+#testing
+	set tf0 [EditManager::create_tab $notebook "Index Test" ind ]
+	set tabf0 [lindex $tf0 0]
+	set tf1 [EditManager::create_tab $notebook "Sub index Test" sub ]
+
+#.mainframe.frame.pw1.f0.frame.pw2.f1.frame.nb.fPage4.sf.frame.tabTitlef1.f.en_value1 delete 0 10
+
+
+####################
+
     NoteBook::compute_size $notebook
     $notebook configure -width 750
     pack $notebook -side left -fill both -expand yes -padx 4 -pady 4
@@ -2056,7 +1530,7 @@ proc Editor::_create_intro { } {
     set image [image create photo -file [file join $RootDir Kalycito.gif]]
     set splashscreen  [label $top.x -image $image]
     set frame [frame $splashscreen.f -background white]
-    set lab1  [label $frame.lab1 -text "Loading Test Suite" -background white -font {times 8}]
+    set lab1  [label $frame.lab1 -text "Loading openMANAGER" -background white -font {times 8}]
     set lab2  [label $frame.lab2 -textvariable Editor::prgtext -background red -font {times 8} -width 35]
     set prg   [ProgressBar $frame.prg -width 50 -height 10 -background  black \
                    -variable Editor::prgindic -maximum 10]
@@ -2069,53 +1543,7 @@ proc Editor::_create_intro { } {
 ##################
 # Many of the below Procs may not be needed.
 ##################
-#######################################################################
-# proc xmltocsv
-#
-# converts the xml file to a csv file.
-#######################################################################
-proc xmltocsv {} {
-global PjtDir
-global csvlist
-global RootDir
 
-set cmd "$RootDir/xml2csv.sh"
-set inputfile "$PjtDir/logs/testrun.xml"
-set outputfile "$PjtDir/logs/temptestrun.xml"
-set runcmd [list exec $cmd $inputfile $outputfile]
-
-if {[catch $runcmd res]} {	
-	return 1
-}		
-
-set filename "$PjtDir/logs/testrun.csv"
-set fileId [open $filename "w"]
-set csvlist START
-set result [createcsv]
-set csvlistlength [llength $csvlist]
-
-#puts -nonewline $fileId $data
-set flagcount 1
-set data2 "Testcase Name, Result\n"
-for { set tmpcount 1 } { $tmpcount <= $csvlistlength } {incr tmpcount } {	
-		
-		if { $flagcount == 1 } {
-			#puts -nonewline $fileId "$data2"
-			set data1 [lindex $csvlist $tmpcount]
-			set data1 "$data1\n"
-			incr flagcount
-		} else {
-			set data2 [lindex $csvlist $tmpcount]
-			set data2 "$data2,"
-			puts -nonewline $fileId "$data2"
-			puts -nonewline $fileId "$data1"
-			set flagcount 1
-		}
-}
-### Write this to csv file
-#set data $newcsvlist
-close $fileId
-}
 ################################################################################
 #
 #  proc DoubleClickNode
@@ -2135,8 +1563,8 @@ proc Editor::DoubleClickNode {node} {
 
 
 	if {[string match "TPDO-*" $node] || [string match "RPDO-*" $node]} {
-		pack $ra_dec -side left -padx 5
-		pack $ra_hex -side left -padx 5
+		#pack $ra_dec -side left -padx 5
+		#pack $ra_hex -side left -padx 5
 		set idx [$updatetree nodes $node]
 		set popCount 0 
 		foreach tempIdx $idx {
@@ -2191,8 +1619,8 @@ proc Editor::DoubleClickNode {node} {
 				
 			}
 		}
-		pack forget $ra_dec
-		pack forget $ra_hex
+		#pack forget $ra_dec
+		#pack forget $ra_hex
 		if {[string match "TPDO-*" $node]} {
 			$notebook itemconfigure Page3 -state normal -text "TPDO mapping"
 		} else {
@@ -2203,8 +1631,8 @@ proc Editor::DoubleClickNode {node} {
 		$notebook itemconfigure Page2 -state disabled
 		return 
 	} else {
-		pack $ra_dec -side left -padx 5
-		pack $ra_hex -side left -padx 5
+		#pack $ra_dec -side left -padx 5
+		#pack $ra_hex -side left -padx 5
 	}
 	if {[string match "*SubIndex*" $node]} {
 		puts node-->$node
@@ -2342,127 +1770,14 @@ proc Editor::DoubleClickNode {node} {
 		$notebook itemconfigure Page3 -state disabled
 		#$f0 insert 0,1 $tmpName
 	} else {
-		pack forget $ra_dec
-		pack forget $ra_hex
+		#pack forget $ra_dec
+		#pack forget $ra_hex
 		$notebook itemconfigure Page1 -state disabled
 		$notebook itemconfigure Page2 -state disabled
 		$notebook itemconfigure Page3 -state disabled
 	}
 	return
 }
-
-
-################################################################################
-#
-#  proc GetCurrentNodeNum
-#
-#  This function returns the TestGroup or TestCase number.
-################################################################################
-proc GetCurrentNodeNum {} {
-	global updatetree
-	set CurNode [$updatetree selection get]
-	set tmpsplit [split $CurNode "-"]
-	set nodeNum [lindex $tmpsplit [expr [llength $tmpsplit] -1]]
-	return $nodeNum
-}
-
-####################################################################################
-#
-#  proc GetPreviousNum
-#
-# This function returns the TestGroup number of the TestCase or the TestGroup name.
-####################################################################################
-
-proc GetPreviousNum {} {
-	global updatetree
-	set CurNode [$updatetree selection get]
-	set tmpsplit [split $CurNode "-"]
-	set nodeNum [lindex $tmpsplit [expr [llength $tmpsplit] -2]]
-	return $nodeNum
-}
-
-################################################################################
-#
-#  proc getRelativePath
-#  Input:absolute path,home directory path
-#  Output: relative path
-#  Returns the relative path of abs_path to the corresponding hom_path
-################################################################################
-proc getRelativePath {abs_path hom_path} {
-	#####one extra space is got when converting to list so using this logic it is removed#####
-	set abs_list [lrange [split $abs_path /] 1 end]
-	#set hom_path [pwd]
-	#puts "The Current path is :\n$hom_path"
-	#####one extra space is got when converting to list so using this logic it is removed#####
-	set hom_list [lrange [split $hom_path /] 1 end]
-	set abs_size [llength $abs_list]
-	set hom_size [llength $hom_list]
-	#####to detemine whether home or user path is the shortest#####
-	if {$hom_size<$abs_size} {
-		set small $hom_size
-	} else {
-		set small $abs_size
-	}
-	set tempcount 0
-	while {(([string compare [lindex $hom_list $tempcount] [lindex $abs_list $tempcount]])==0)&&($tempcount<=$small) } {
-		incr tempcount +1
-	}
-	#####to find out whether the paths are mismatched or the shortest path is completely matched##### 
-	if {$small<$tempcount} {
-		set count [incr tempcount -1]
-	} else {
-		set count $tempcount
-	}
-	set output ./
-	#####generating output such that it brings to the directory where till user path and current path matches#####  
-	for {set f1 $count} {$f1<$hom_size} {incr f1} {
-		append output ../
-	}
-	#####generating output such that it moves the directory from matched path till complete user given path#####
-	for {set f2 $count} {$f2<$abs_size} {incr f2} {
-		append output [lindex $abs_list $f2] 
-		append output / 
-	}
-	return $output
-}
-
-
-
-#######################################################################
-# proc getAbsolutePath
-# Convert the Relative path to Exact path from the present working dir
-# Input:Relative path 
-# Output:Exact path from PWD.
-#######################################################################
-proc getAbsolutePath {rel_path hom_path} {
-	#####To remove extra space#####
-	set rel_list [lrange [split $rel_path /] 1 end]
-	#####To remove extra space#####
-	set hom_list [lrange [split $hom_path /] 1 end]
-	set rel_size [llength $rel_list]
-	set hom_size [llength $hom_list]
-	set count 0
-	#####generating output such that it brings to the directory where till user path and current path matches#####  
-	for {set f1 0} {$f1<$rel_size} {incr f1 } {
-		if { ([string compare [lindex $rel_list $f1] "."])==0} {
-		} elseif {([string compare [lindex $rel_list $f1] ".."])==0} {
-			incr count
-		} else {
-			break
-		}
-	}
-	set tempCount [expr $hom_size-$count]
-	set output [lrange $hom_list 0 [expr $tempCount-1]]
-	#####generating output such that it moves the directory from matched path till complete user given path#####
-	incr rel_size -1
-	for {set f2 $count} {$f2<$rel_size} {incr f2 } {
-		lappend output [lindex $rel_list $f2]
-	}
-	set strOutput /
-	append strOutput [join $output {/}]
-	return $strOutput
-}
-
 
 
 
@@ -2500,7 +1815,7 @@ tk_messageBox -message "Yet to be Implemented !" -title Info -icon info
 proc Editor::TogConnect {} {
 	variable bb_connect
 	set tog [$bb_connect cget -image]
-	puts $tog
+	#puts $tog
 	#to toggle image the value varies according to images added 
 	if {$tog=="image15"} {
 		Editor::Connect	       
@@ -2513,10 +1828,12 @@ proc Editor::TogConnect {} {
 proc Editor::Connect {} {
 	variable bb_connect
         variable mainframe
+        #variable 
 	#puts $mainframe
 	$bb_connect configure -image [Bitmap::get disconnect]
 	$mainframe setmenustate connect disabled
 	$mainframe setmenustate disconnect normal
+	set Editor::connect_status "Connected to IP :"
 	YetToImplement
 }
 
@@ -2527,6 +1844,7 @@ proc Editor::Disconnect {} {
 	$bb_connect configure -image [Bitmap::get connect]
 	$mainframe setmenustate disconnect disabled
 	$mainframe setmenustate connect normal
+	set Editor::connect_status "Disconnected from IP :"
 	YetToImplement
 }
 
@@ -2541,25 +1859,9 @@ proc InsertTree { } {
 	global updatetree
 	global cnCount
 	global mnCount
-	# Get the Project Details from instProject
-	#set ProjectName [instProject cget -memProjectName]
-	#set TotalTestGroup $tg_count
-	#puts "TotalTestGroup->$tg_count"	
-        #set toolBoxDir [instProject cget -memTollbox_path]
-	#exec rm *~
-	#Insert Project Tree
 	incr cnCount
 	incr mnCount
-	#puts cnCount----$cnCount
 	$updatetree insert end root PjtName -text "POWERLINK Network" -open 1 -image [Bitmap::get network]
-	#$updatetree insert end PjtName MN-$mnCount -text "openPOWERLINK MN" -open 1 -image [Bitmap::get mn]
-
-	#$updatetree insert end MN-1 CN-$mnCount-$cnCount -text "CN_1" -open 1 -image [Bitmap::get cn]
-	#$updatetree insert end CN-1-$cnCount Index-1-1-1  -text "NMT_CycleTime_U32 \[1006\]" -open 1 -image [Bitmap::get index]
-	#$updatetree insert end Index-1-1-1 SubIndex-1-1-1-1  -text "Sub_index" -open 1 -image [Bitmap::get subindex]
-	#$updatetree insert end CN-$mnCount-$cnCount PDO-$mnCount-$cnCount  -text "PDO" -open 1 -image [Bitmap::get pdo]
-	#$updatetree insert end PDO-$mnCount-$cnCount  pdoIndex-$mnCount-$cnCount-1  -text "PDO_Index" -open 1 -image [Bitmap::get index]
-	#$updatetree insert end pdoIndex-$mnCount-$cnCount-1 pdoSubIndex-$mnCount-$cnCount-1-1 -text "PDO_Sub_index" -open 1 -image [Bitmap::get subindex]
 }
 #############################################################
 namespace eval FindSpace {

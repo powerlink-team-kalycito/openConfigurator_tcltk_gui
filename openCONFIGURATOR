@@ -63,7 +63,7 @@ proc initOPN_CFGRATOR {argc argv} {
     }
     
     wm withdraw .
-    wm title . "openCONFIGURATOR"
+    wm title . "openMANAGER"
     set chk [Editor::create]
     BWidget::place . 0 0 center
     
@@ -86,7 +86,8 @@ proc initOPN_CFGRATOR {argc argv} {
         set Editor::initDone 1
     }
 
-	StartUp
+	StartUp 
+
     if {$argc >= 1} {
         set cursor [. cget -cursor]
         . configure -cursor watch

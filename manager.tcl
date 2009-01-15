@@ -24,7 +24,7 @@ namespace eval EditManager {
 
 
 #to create the tabs
-proc EditManager::create_tab {nb filename} {
+proc EditManager::create_tab {nb filename choice} {
     global EditorData
     variable TxtWidget
     variable _newPageCounter
@@ -36,26 +36,163 @@ proc EditManager::create_tab {nb filename} {
     set sw [ScrolledWindow $frame.sw]
 
     pack $sw -fill both -expand true
-
-
-    set sf [ScrollableFrame $sw.sf]
-    #$sf configure -bg white
+    #set uf [$sw getframe]
+    #set sf [ScrollableFrame $sw.sf]
+    set sf [ScrollableFrame $frame.sf]
+    #$sf configure -bg white 
+    ####configuring scrolled window with borderwidth more than 0 
+    ####and relief other than flat displays border for scrolled window 
+    #$sw configure -borderwidth 1 -relief ridge
     $sw setwidget $sf
-
+    #$sf.frame config -borderwidth 1
     #pack $sf -fill both -expand true
-
+    #set uf [frame $frame.uf]
+    #set uf [frame $sf.uf]
     set uf [$sf getframe]
-    $uf configure -height 20 
+    ##puts uf->$uf
+    #$sw setwidget $uf
+    #$uf configure -height 20 -background white
+    #### if the frame is packed scrolled window is not appearing
     #pack $uf -fill both -expand true
-    #$uf config -bg blue
+    #grid config $uf -row 0 -column 0 -sticky news
+    $uf config -padx 10 -pady 10 -relief flat
 
+	set tabTitlef0 [TitleFrame $uf.tabTitlef0 -text "Sub Index" ]
+	set tabInnerf0 [$tabTitlef0 getframe]
+	set tabTitlef1 [TitleFrame $uf.tabTitlef1 -text "Properties" ]
+	set tabInnerf1 [$tabTitlef1 getframe]
+
+#puts "frame in tab :$frame==tabInnerf0:$tabInnerf0"
+
+	label $tabInnerf0.l_idx     -text "Index  " 
+        label $tabInnerf0.l_empty1 -text "" 
+	#label $tabInnerf0.l_sidx    -text "Sub Index  "  
+        label $tabInnerf0.l_empty2 -text "" 
+	label $tabInnerf0.l_nam     -text "Name           " 
+        label $tabInnerf0.l_empty3 -text ""  
+	label $tabInnerf1.l_obj     -text "Object Type" 
+        label $tabInnerf1.l_empty4 -text "" 
+	label $tabInnerf1.l_data    -text "Data Type"  
+        label $tabInnerf1.l_empty5 -text "" 
+	label $tabInnerf1.l_access  -text "Access Type"  
+        label $tabInnerf1.l_empty6 -text "" 
+	label $tabInnerf1.l_value   -text "Value" 
+	label $tabInnerf1.l_upper   -text "Upper Limit" 
+	label $tabInnerf1.l_lower   -text "Lower Limit" 
+	label $tabInnerf1.l_pdo   -text "PDO Mapping" 
+	entry $tabInnerf0.en_idx1    
+	$tabInnerf0.en_idx1 insert 0 "1006"
+	$tabInnerf0.en_idx1 config -state disabled -bg white
+	global tmpNam$_newPageCounter
+	entry $tabInnerf0.en_nam1 -textvariable tmpNam$_newPageCounter -relief ridge -justify center -bg white -width 30
+	$tabInnerf0.en_nam1 insert 0 "NMT_CycleLen_U32"
+	#entry $tabInnerf0.en_sidx1   
+	#$tabInnerf0.en_sidx1 insert 0 "00"
+	#$tabInnerf0.en_sidx1 config -state disabled
+	entry $tabInnerf1.en_obj1    
+	$tabInnerf1.en_obj1 insert 0 "VAR"
+	$tabInnerf1.en_obj1 config -state disabled
+	entry $tabInnerf1.en_data1 
+	$tabInnerf1.en_data1 insert 0 "Unsigned32"
+	$tabInnerf1.en_data1 config -state disabled
+	entry $tabInnerf1.en_access1 
+	$tabInnerf1.en_access1 insert 0 "rw"
+	$tabInnerf1.en_access1 config -state disabled
+	entry $tabInnerf1.en_upper1 
+	$tabInnerf1.en_upper1 insert 0 "FF"
+	$tabInnerf1.en_upper1 config -state disabled
+	entry $tabInnerf1.en_lower1 
+	$tabInnerf1.en_lower1 insert 0 "00"
+	$tabInnerf1.en_lower1 config -state disabled
+	entry $tabInnerf1.en_pdo1 
+	$tabInnerf1.en_pdo1 insert 0 "no"
+	$tabInnerf1.en_pdo1 config -state disabled
+
+	global tmpValue$_newPageCounter
+	set value1 [entry $tabInnerf1.en_value1 -textvariable tmpValue$_newPageCounter  -relief ridge -justify center -bg white]
+	$tabInnerf1.en_value1 insert 0 "0007"
+        set frame1 [frame $tabInnerf1.frame1]
+        set ra_dec [radiobutton $frame1.ra_dec -text "Dec" -variable hexDec -value on]
+        set ra_hex [radiobutton $frame1.ra_hex -text "Hex" -variable hexDec -value off]
+        $frame1.ra_dec select
+	grid config $tabTitlef0 -row 0 -column 0 -sticky ew
+	label $uf.l_empty -text ""
+	grid config $uf.l_empty -row 1 -column 0
+	grid config $tabTitlef1 -row 2 -column 0 -sticky ew
+
+	grid config $tabInnerf0.l_idx -row 0 -column 0 -sticky w
+	grid config $tabInnerf0.en_idx1 -row 0 -column 1 -padx 5
+	grid config $tabInnerf0.l_empty1 -row 1 -column 0 -columnspan 2
+	#grid config $tabInnerf0.l_sidx -row 2 -column 0 -sticky w 
+	#grid config $tabInnerf0.en_sidx1 -row 2 -column 2 -padx 5
+	#grid config $tabInnerf0.l_nam -row 2 -column 3 -sticky w 
+	#grid config $tabInnerf0.en_nam1 -row 2 -column 4  -sticky e
+	grid config $tabInnerf0.l_empty2 -row 3 -column 0 -columnspan 2
+	grid config $tabInnerf1.l_data -row 0 -column 0 -sticky w 
+	grid config $tabInnerf1.en_data1 -row 0 -column 1 -padx 5
+	grid config $tabInnerf1.l_upper -row 0 -column 2 -sticky w
+	grid config $tabInnerf1.en_upper1 -row 0 -column 3 -padx 5
+	grid config $tabInnerf1.l_access -row 0 -column 4 -sticky w 
+	grid config $tabInnerf1.en_access1 -row 0 -column 5 -padx 5 
+	grid config $tabInnerf1.l_empty4 -row 1 -column 0 -columnspan 2
+	grid config $tabInnerf1.l_obj -row 2 -column 0 -sticky w 
+	grid config $tabInnerf1.en_obj1 -row 2 -column 1 -padx 5
+	grid config $tabInnerf1.l_lower -row 2 -column 2 -sticky w
+	grid config $tabInnerf1.en_lower1 -row 2 -column 3 -padx 5
+	grid config $tabInnerf1.l_pdo -row 2 -column 4 -sticky w
+	grid config $tabInnerf1.en_pdo1 -row 2 -column 5 -padx 5
+	grid config $tabInnerf1.l_empty5 -row 3 -column 0 -columnspan 2
+	grid config $tabInnerf1.l_value -row 4 -column 0 -sticky w
+	grid config $tabInnerf1.en_value1 -row 4 -column 1 -padx 5 
+	grid config $frame1 -row 4 -column 3 -padx 5 -columnspan 2 -sticky w
+	grid config $tabInnerf1.l_empty6 -row 5 -column 0 -columnspan 2
+
+	grid config $ra_dec -row 0 -column 0 -sticky w
+	grid config $ra_hex -row 0 -column 1 -sticky w
+   if {$choice=="ind"} {
+	$tabTitlef0 configure -text "Index" 
+	$tabTitlef1 configure -text "Properties" 
+	#set tmpValue$_newPageCounter test
+	#$tabInnerf1.en_value1 insert 0 test123
+	#$tabInnerf1.en_value$_newPageCounter configure -bg green
+	grid config $tabInnerf0.l_idx -row 0 -column 0 -sticky w
+	grid config $tabInnerf0.en_idx1 -row 0 -column 1 -sticky w -padx 0
+	grid config $tabInnerf0.l_nam -row 2 -column 0 -sticky w 
+	grid config $tabInnerf0.en_nam1 -row 2 -column 1  -sticky w -columnspan 1
+
+   } elseif {$choice=="sub"} {
+	$tabTitlef0 configure -text "Sub Index" 
+	$tabTitlef1 configure -text "Properties" 
+	label $tabInnerf0.l_sidx    -text "Sub Index  "  
+	entry $tabInnerf0.en_sidx1   
+
+        #$tabInnerf1.en_value1 insert 0 "0008"
+	#$tabInnerf0.en_nam1 insert 0 "test"
+	$tabInnerf0.en_sidx1 insert 0 "00"
+	$tabInnerf0.en_sidx1 config -state disabled
+	grid config $tabInnerf0.l_sidx -row 2 -column 0 -sticky w 
+	grid config $tabInnerf0.en_sidx1 -row 2 -column 1 -padx 5
+	grid config $tabInnerf0.l_nam -row 2 -column 2 -sticky w 
+	grid config $tabInnerf0.en_nam1 -row 2 -column 3  -sticky e -columnspan 1
+   }
+
+   set fram [frame $frame.f1]  
+   label $fram.l_empty -text "  " -height 1 
+   button $fram.b_sav -text " Save " -command "YetToImplement"
+   label $fram.l_empty1 -text "  "
+   button $fram.b_dis -text "Discard" -command "YetToImplement"
+   grid config $fram.l_empty -row 0 -column 0 -columnspan 2
+   grid config $fram.b_sav -row 1 -column 0 -sticky s
+   grid config $fram.l_empty1 -row 1 -column 1 -sticky s
+   grid config $fram.b_dis -row 1 -column 2 -sticky s
+   pack $fram -side bottom
+
+    $nb raise $pageName
     incr Editor::index_counter
     #return [list $frame $pageName]
     return [list $uf $pageName]
     #return [list $sf $pageName]
 }
-
-
 
 proc EditManager::create_table {nb filename choice} {
     global EditorData

@@ -83,7 +83,7 @@ proc EditManager::create_tab {nb filename choice} {
 	entry $tabInnerf0.en_idx1    
 	$tabInnerf0.en_idx1 insert 0 "1006"
 	$tabInnerf0.en_idx1 config -state disabled -bg white
-	global tmpNam$_newPageCounter
+	#global tmpNam$_newPageCounter
 	entry $tabInnerf0.en_nam1 -textvariable tmpNam$_newPageCounter -relief ridge -justify center -bg white -width 30
 	$tabInnerf0.en_nam1 insert 0 "NMT_CycleLen_U32"
 	#entry $tabInnerf0.en_sidx1   
@@ -108,7 +108,7 @@ proc EditManager::create_tab {nb filename choice} {
 	$tabInnerf1.en_pdo1 insert 0 "no"
 	$tabInnerf1.en_pdo1 config -state disabled
 
-	global tmpValue$_newPageCounter
+	#global tmpValue$_newPageCounter
 	set value1 [entry $tabInnerf1.en_value1 -textvariable tmpValue$_newPageCounter  -relief ridge -justify center -bg white]
 	$tabInnerf1.en_value1 insert 0 "0007"
         set frame1 [frame $tabInnerf1.frame1]
@@ -187,10 +187,11 @@ proc EditManager::create_tab {nb filename choice} {
    grid config $fram.b_dis -row 1 -column 2 -sticky s
    pack $fram -side bottom
 
-    $nb raise $pageName
+    $nb itemconfigure $pageName -state disabled
+    #$nb raise $pageName
     incr Editor::index_counter
     #return [list $frame $pageName]
-    return [list $uf $pageName]
+    return [list $uf $pageName $tabInnerf0 $tabInnerf1 ]
     #return [list $sf $pageName]
 }
 
@@ -206,6 +207,7 @@ proc EditManager::create_table {nb filename choice} {
     set sw [ScrolledWindow $frame.sw]
     pack $sw -fill both -expand true
     set st $frame.st
+#$sw configure -bg blue
 
     catch "font delete custom1"
     font create custom1 -size 9 -family TkDefaultFont

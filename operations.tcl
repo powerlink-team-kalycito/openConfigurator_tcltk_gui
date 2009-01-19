@@ -975,6 +975,8 @@ proc Editor::create { } {
     global f0
     global f1
     global f2
+    global tf0
+    global tf1
     #global ra_dec
     #global ra_hex
 
@@ -1420,49 +1422,52 @@ proc Editor::create { } {
     # dynamic-width columns and interactive sort capability
     #
 
-    set f0 [EditManager::create_table $notebook "Index" "ind"]
+    #set f0 [EditManager::create_table $notebook "Index" "ind"]
 
     #$f0 configure -height 4 -width 40 -stretch all
 
-    $f0 columnconfigure 0 -background #e0e8f0 
-    $f0 columnconfigure 1 -background #e0e8f0 
+    #$f0 columnconfigure 0 -background #e0e8f0 
+    #$f0 columnconfigure 1 -background #e0e8f0 
 
 
     #
     # Populate the tablelist widget for taking screen shots
     #
 
-    $f0 insert 0 [list Index: 1006 ""]
-    $f0 insert 1 [list Name: NMT_CycleLen_U32 ""]
-    $f0 insert 2 [list Object\ Type: VAR ""]
-    $f0 insert 3 [list Data\ Type: Unsigned32 ""]
-    $f0 insert 4 [list Access\ Type: rw ""]
-    $f0 insert 5 [list Value: 0007 ""]
+    #$f0 insert 0 [list Index: 1006 ""]
+    #$f0 insert 1 [list Name: NMT_CycleLen_U32 ""]
+    #$f0 insert 2 [list Object\ Type: VAR ""]
+    #$f0 insert 3 [list Data\ Type: Unsigned32 ""]
+    #$f0 insert 4 [list Access\ Type: rw ""]
+    #$f0 insert 5 [list Value: 0007 ""]
 
-    $f0 cellconfigure 1,1 -editable yes -image [Bitmap::get pencil] 
-    $f0 cellconfigure 5,1 -editable yes -image [Bitmap::get pencil]
+    #$f0 cellconfigure 1,1 -editable yes -image [Bitmap::get pencil] 
+    #$f0 cellconfigure 5,1 -editable yes -image [Bitmap::get pencil]
 
 
     #forcing the frist tab Tab to be disabled
     #Widget::configure $pane4 "-state disabled"
 
-    set f1 [EditManager::create_table $notebook "Sub Index" "ind"]
+    #set f1 [EditManager::create_table $notebook "Sub Index" "ind"]
 
 
     #$f1 configure -height 4 -width 40 -stretch all
-    $f1 columnconfigure 0 -background #e0e8f0
-    $f1 columnconfigure 1 -background #e0e8f0
+    #$f1 columnconfigure 0 -background #e0e8f0
+    #$f1 columnconfigure 1 -background #e0e8f0
     
-    $f1 insert 0 [list Index: 1006]
-    $f1 insert 1 [list Sub\ Index: 00]
-    $f1 insert 2 [list Name: NMT_CycleLen_U32]
-    $f1 insert 3 [list Object\ Type: VAR]
-    $f1 insert 4 [list Data\ Type: Unsigned32]
-    $f1 insert 5 [list Access\ Type: rw]
-    $f1 insert 6 [list Value: 0007]
+    #$f1 insert 0 [list Index: 1006]
+    #$f1 insert 1 [list Sub\ Index: 00]
+    #$f1 insert 2 [list Name: NMT_CycleLen_U32]
+    #$f1 insert 3 [list Object\ Type: VAR]
+    #$f1 insert 4 [list Data\ Type: Unsigned32]
+    #$f1 insert 5 [list Access\ Type: rw]
+    #$f1 insert 6 [list Value: 0007]
 
-    $f1 cellconfigure 2,1 -editable yes -image [Bitmap::get pencil]
-    $f1 cellconfigure 6,1 -editable yes -image [Bitmap::get pencil]
+    #$f1 cellconfigure 2,1 -editable yes -image [Bitmap::get pencil]
+    #$f1 cellconfigure 6,1 -editable yes -image [Bitmap::get pencil]
+
+    set f0 [EditManager::create_tab $notebook "Index Test" ind ]
+    set f1 [EditManager::create_tab $notebook "Sub index Test" sub ]
 
     set f2 [EditManager::create_table $notebook "PDO mapping" "pdo"]
     #$f2 configure -height 4 -width 40 -stretch all
@@ -1477,9 +1482,7 @@ proc Editor::create { } {
 	
 
 #testing
-	set tf0 [EditManager::create_tab $notebook "Index Test" ind ]
-	set tabf0 [lindex $tf0 0]
-	set tf1 [EditManager::create_tab $notebook "Sub index Test" sub ]
+
 
 #.mainframe.frame.pw1.f0.frame.pw2.f1.frame.nb.fPage4.sf.frame.tabTitlef1.f.en_value1 delete 0 10
 
@@ -1556,10 +1559,15 @@ proc Editor::DoubleClickNode {node} {
 	global f0
 	global f1
 	global f2
+	#global tf0
+	#global tf1
 	global ra_dec
 	global ra_hex
 	global xdcFile
 	variable notebook
+
+
+
 
 
 	if {[string match "TPDO-*" $node] || [string match "RPDO-*" $node]} {
@@ -1619,8 +1627,6 @@ proc Editor::DoubleClickNode {node} {
 				
 			}
 		}
-		#pack forget $ra_dec
-		#pack forget $ra_hex
 		if {[string match "TPDO-*" $node]} {
 			$notebook itemconfigure Page3 -state normal -text "TPDO mapping"
 		} else {
@@ -1631,10 +1637,10 @@ proc Editor::DoubleClickNode {node} {
 		$notebook itemconfigure Page2 -state disabled
 		return 
 	} else {
-		#pack $ra_dec -side left -padx 5
-		#pack $ra_hex -side left -padx 5
 	}
 	if {[string match "*SubIndex*" $node]} {
+		set tmpInnerf0 [lindex $f1 2]
+		set tmpInnerf1 [lindex $f1 3]
 		puts node-->$node
 		set tmpSplit [split $node -]
 		set xdcId [lrange $tmpSplit 1 end]
@@ -1671,27 +1677,55 @@ proc Editor::DoubleClickNode {node} {
 		#Monice code ends
 		set IndexAccessType [CBaseIndex_getAccessType $xdcFile($xdcId)]
 		set IndexDefaultValue [CBaseIndex_getDefaultValue $xdcFile($xdcId)]
-		$f1 delete 0
-		$f1 insert 0 [list Index: $indexValue]
-		$f1 delete 1
-		$f1 insert 1 [list Sub\ Index: $sIdxValue]
-		$f1 delete 2
-		$f1 insert 2 [list Name: $IndexName]
-		$f1 delete 3
-		$f1 insert 3 [list Object\ Type: $IndexObjType]
-		$f1 delete 4
-		$f1 insert 4 [list Data\ Type: $IndexDataType]
-		$f1 delete 5
-		$f1 insert 5 [list Access\ Type: $IndexAccessType]
-		$f1 delete 6
-		$f1 insert 6 [list Value: $IndexDefaultValue]
-		$f1 cellconfigure 2,1 -editable yes -image [Bitmap::get pencil]
-		$f1 cellconfigure 6,1 -editable yes -image [Bitmap::get pencil]
+		#$f1 delete 0
+		#$f1 insert 0 [list Index: $indexValue]
+		$tmpInnerf0.en_idx1 configure -state normal
+		$tmpInnerf0.en_idx1 delete 0 end
+		$tmpInnerf0.en_idx1 insert 0 $indexValue
+		$tmpInnerf0.en_idx1 configure -state disabled
+		#$f1 delete 1
+		#$f1 insert 1 [list Sub\ Index: $sIdxValue]
+		$tmpInnerf0.en_sidx1 configure -state normal
+		$tmpInnerf0.en_sidx1 delete 0 end
+		$tmpInnerf0.en_sidx1 insert 0 $sIdxValue
+		$tmpInnerf0.en_sidx1 configure -state disabled
+		#$f1 delete 2
+		#$f1 insert 2 [list Name: $IndexName]
+		$tmpInnerf0.en_nam1 delete 0 end
+		$tmpInnerf0.en_nam1 insert 0 $IndexName
+		#$f1 delete 3
+		#$f1 insert 3 [list Object\ Type: $IndexObjType]
+		$tmpInnerf1.en_obj1 configure -state normal
+		$tmpInnerf1.en_obj1 delete 0 end
+		$tmpInnerf1.en_obj1 insert 0 $IndexObjType
+		$tmpInnerf1.en_obj1 configure -state disabled
+		#$f1 delete 4
+		#$f1 insert 4 [list Data\ Type: $IndexDataType]
+		$tmpInnerf1.en_data1 configure -state normal
+		$tmpInnerf1.en_data1 delete 0 end
+		$tmpInnerf1.en_data1 insert 0 $IndexDataType
+		$tmpInnerf1.en_data1 configure -state disabled
+		#$f1 delete 5
+		#$f1 insert 5 [list Access\ Type: $IndexAccessType]
+		$tmpInnerf1.en_access1 configure -state normal
+		$tmpInnerf1.en_access1 delete 0 end
+		$tmpInnerf1.en_access1 insert 0 $IndexAccessType
+		$tmpInnerf1.en_access1 configure -state disabled
+		#$f1 delete 6
+		#$f1 insert 6 [list Value: $IndexDefaultValue]
+		$tmpInnerf1.en_value1 delete 0 end
+		$tmpInnerf1.en_value1 insert 0 $IndexDefaultValue
+		#$f1 cellconfigure 2,1 -editable yes -image [Bitmap::get pencil]
+		#$f1 cellconfigure 6,1 -editable yes -image [Bitmap::get pencil]
 		$notebook itemconfigure Page2 -state normal
 		$notebook raise Page2
 		$notebook itemconfigure Page1 -state disabled
 		$notebook itemconfigure Page3 -state disabled
 	} elseif {[string match "*Index*" $node]} {
+		set tmpInnerf0 [lindex $f0 2]
+		set tmpInnerf1 [lindex $f0 3]
+		#set tmpVar [$tmpf0Innerf0.en_nam1 cget -textvariable]
+		#global $tmpVar
 		#puts node-->$node
 		set tmpSplit [split $node -]
 		set xdcId [lrange $tmpSplit 1 end]
@@ -1750,20 +1784,43 @@ proc Editor::DoubleClickNode {node} {
 		
 		}
 		
-		$f0 delete 0
-		$f0 insert 0 [list Index: $indexValue]
-		$f0 delete 1
-		$f0 insert 1 [list Name: $IndexName]
-		$f0 delete 2
-		$f0 insert 2 [list Object\ Type: $IndexObjType]
-		$f0 delete 3
-		$f0 insert 3 [list Data\ Type: $IndexDataType]
-		$f0 delete 4
-		$f0 insert 4 [list Access\ Type: $IndexAccessType]
-		$f0 delete 5
-		$f0 insert 5 [list Value: $IndexDefaultValue]
-		$f0 cellconfigure 1,1 -editable yes -image [Bitmap::get pencil]
-		$f0 cellconfigure 5,1 -editable yes -image [Bitmap::get pencil]
+		#$f0 delete 0
+		#$f0 insert 0 [list Index: $indexValue]
+		$tmpInnerf0.en_idx1 configure -state normal
+		$tmpInnerf0.en_idx1 delete 0 end
+		$tmpInnerf0.en_idx1 insert 0 $indexValue
+		$tmpInnerf0.en_idx1 configure -state disabled
+		#$f0 delete 1
+		#$f0 insert 1 [list Name: $IndexName]
+		#puts $tmpVar
+		$tmpInnerf0.en_nam1 delete 0 end
+		$tmpInnerf0.en_nam1 insert 0 $IndexName
+		#set $tmpVar $IndexName
+		#$f0 delete 2
+		#$f0 insert 2 [list Object\ Type: $IndexObjType]
+		$tmpInnerf1.en_obj1 configure -state normal
+		$tmpInnerf1.en_obj1 delete 0 end
+		$tmpInnerf1.en_obj1 insert 0 $IndexObjType
+		$tmpInnerf1.en_obj1 configure -state disabled
+		#$f0 delete 3
+		#$f0 insert 3 [list Data\ Type: $IndexDataType]
+		$tmpInnerf1.en_data1 configure -state normal
+		$tmpInnerf1.en_data1 delete 0 end
+		$tmpInnerf1.en_data1 insert 0 $IndexDataType
+		$tmpInnerf1.en_data1 configure -state disabled
+		#$f0 delete 4
+		#$f0 insert 4 [list Access\ Type: $IndexAccessType]
+		$tmpInnerf1.en_access1 configure -state normal
+		$tmpInnerf1.en_access1 delete 0 end
+		$tmpInnerf1.en_access1 insert 0 $IndexAccessType
+		$tmpInnerf1.en_access1 configure -state disabled
+		#$f0 delete 5
+		#$f0 insert 5 [list Value: $IndexDefaultValue]
+		$tmpInnerf1.en_value1 delete 0 end
+		$tmpInnerf1.en_value1 insert 0 $IndexDefaultValue
+
+		#$f0 cellconfigure 1,1 -editable yes -image [Bitmap::get pencil]
+		#$f0 cellconfigure 5,1 -editable yes -image [Bitmap::get pencil]
 		$notebook itemconfigure Page1 -state normal
 		$notebook raise Page1
 		$notebook itemconfigure Page2 -state disabled
@@ -1804,7 +1861,7 @@ proc AddCN {cnName tmpImpDir nodeId} {
 
 
 proc YetToImplement {} {
-tk_messageBox -message "Yet to be Implemented !" -title Info -icon info
+	tk_messageBox -message "Yet to be Implemented !" -title Info -icon info
 }
 
 

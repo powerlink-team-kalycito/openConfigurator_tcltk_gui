@@ -886,7 +886,7 @@ proc Editor::exit_app {} {
 		set result [tk_messageBox -message "Save Project $PjtName ?" -type yesnocancel -icon question -title 			"Question"]
    		 switch -- $result {
    		     yes {			 
-   		         saveproject
+   		         #saveproject
    		     }
    		     no  {conPuts "Project $PjtName not saved" info}
    		     cancel {

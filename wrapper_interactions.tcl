@@ -48,12 +48,12 @@ puts COUNT$count
 	
 	for { set i 0 } { $i < $count } { incr i } {
 	
-	set ObjIndex [new_CIndex]
+	#set ObjIndex [new_CIndex]
 	
 		#set ObjIndex [CIndexCollection_getIndex $TclIndexCollection $i]
 		set ObjIndex [CIndexCollection_getIndex $obj $i]
 		set xdcFile(1-$cnId-$i) $ObjIndex
-		#puts ObjIndex-->$ObjIndex
+		puts ObjIndex-->$ObjIndex
 		set IndexValue [CBaseIndex_getIndexValue $ObjIndex]
 		set IndexName [CBaseIndex_getName $ObjIndex]
 		#puts i---->$i
@@ -61,7 +61,7 @@ puts COUNT$count
 		set SIdxCount [CIndex_getNumberofSubIndexes $ObjIndex]
 		for { set tmpCount 0 } { $tmpCount < $SIdxCount } { incr tmpCount } {
 			set ObjSIdx [CIndex_getSubIndex $ObjIndex $tmpCount]
-			#puts ObjSIdx-->$ObjSIdx
+			puts ObjSIdx-->$ObjSIdx=======tmpCount:$tmpCount
 			set xdcFile(1-$cnId-$i-$tmpCount) $ObjSIdx
 			set SIdxValue [CBaseIndex_getIndexValue $ObjSIdx]
 			#puts SIdxValue:$SIdxValue=======tmpCount:$tmpCount

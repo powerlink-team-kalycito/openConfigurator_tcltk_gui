@@ -735,3 +735,35 @@ proc closeproject {} {
 	#Editor::tselectObject "TargetConfig"
 	}
 }
+#######################################################################
+# proc saveProjectAsWindow
+#
+########################################################################
+proc ImportProgress {stat} {
+
+global impPro
+
+	if {$stat=="start"} {
+		set winImpoProg .impoProg
+		catch "destroy $winImpoProg"
+		toplevel $winImpoProg
+		wm title     $winImpoProg	"Project Wizard"
+		wm resizable $winImpoProg 0 0
+		wm transient $winImpoProg .
+		wm deiconify $winImpoProg
+		#wm minsize   $winImpoProg 50 200
+		grab $winImpoProg
+		ProgressBar $winImpoProg.prog -orient horizontal -width 200 -maximum 100 -height 10 -variable impPro -type infinite -bg white -fg blue
+		grid config $winImpoProg.prog -row 0 -column 0 -padx 10 -pady 10
+		#$winImpoProg.prog start
+	} elseif {$stat=="stop" } { 
+		#$winImpoProg.prog stop		
+		destroy .impoProg
+	} elseif {$stat=="incr"} {
+		incr impPro
+		after 1000
+		ImportProgress incr
+	}
+
+
+}

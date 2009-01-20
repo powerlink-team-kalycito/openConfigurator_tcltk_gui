@@ -22,8 +22,6 @@ namespace eval EditManager {
     variable lastPage ""
 }
 
-
-#to create the tabs
 proc EditManager::create_tab {nb filename choice} {
     global EditorData
     variable TxtWidget
@@ -34,29 +32,13 @@ proc EditManager::create_tab {nb filename choice} {
     set frame [$nb insert end $pageName -text $filename ]
 
     set sw [ScrolledWindow $frame.sw]
-
     pack $sw -fill both -expand true
-    #set uf [$sw getframe]
-    #set sf [ScrollableFrame $sw.sf]
-    set sf [ScrollableFrame $frame.sf]
-    #$sf configure -bg white 
-    ####configuring scrolled window with borderwidth more than 0 
-    ####and relief other than flat displays border for scrolled window 
-    #$sw configure -borderwidth 1 -relief ridge
-    $sw setwidget $sf
-    #$sf.frame config -borderwidth 1
-    #pack $sf -fill both -expand true
-    #set uf [frame $frame.uf]
-    #set uf [frame $sf.uf]
-    set uf [$sf getframe]
-    ##puts uf->$uf
-    #$sw setwidget $uf
-    #$uf configure -height 20 -background white
-    #### if the frame is packed scrolled window is not appearing
-    #pack $uf -fill both -expand true
-    #grid config $uf -row 0 -column 0 -sticky news
-    $uf config -padx 10 -pady 10 -relief flat
 
+    set sf [ScrollableFrame $sw.sf]
+    $sw setwidget $sf
+
+    set uf [$sf getframe]
+    $uf configure -height 20 
 	set tabTitlef0 [TitleFrame $uf.tabTitlef0 -text "Sub Index" ]
 	set tabInnerf0 [$tabTitlef0 getframe]
 	set tabTitlef1 [TitleFrame $uf.tabTitlef1 -text "Properties" ]
@@ -193,7 +175,10 @@ proc EditManager::create_tab {nb filename choice} {
     #return [list $frame $pageName]
     return [list $uf $pageName $tabInnerf0 $tabInnerf1 ]
     #return [list $sf $pageName]
+
 }
+
+
 
 proc EditManager::create_table {nb filename choice} {
     global EditorData
@@ -207,7 +192,6 @@ proc EditManager::create_table {nb filename choice} {
     set sw [ScrolledWindow $frame.sw]
     pack $sw -fill both -expand true
     set st $frame.st
-#$sw configure -bg blue
 
     catch "font delete custom1"
     font create custom1 -size 9 -family TkDefaultFont
@@ -246,105 +230,15 @@ proc EditManager::create_table {nb filename choice} {
 	    -resizable 1 -movablecolumns 0 -movablerows 0 \
 	    -showseparators 1 -spacing 10 -font custom1]
    }
-        ##scrollbar $vsb -orient vertical   -command [list $st yview]
-        ##scrollbar $hsb -orient horizontal -command [list $st xview]
-   #$st columnconfigure 0 -background #e0e8f0 -width 47
-   #$st columnconfigure 1 -background #e0e8f0 -width 47
-
-   #$st insert 0 [list Index: 1006 ""]
-   #$st insert 1 [list Name: NMT_CycleLen_U32 ""]
-   #$st insert 2 [list Object\ Type: VAR ""]
-   #$st insert 3 [list Data\ Type: Unsigned32 ""]
-   #$st insert 4 [list Access\ Type: rw ""]
-   #$st insert 5 [list Value: 0007 ""]
 
     $sw setwidget $st
     pack $st -fill both -expand true
-    ##pack $vsb -side right 
-    ##pack $hsb 
     $nb itemconfigure $pageName -state disabled
     $st configure -height 4 -width 40 -stretch all	
-    #puts [$st cget -font]
-    #eval font create BoldFont [font actual [$st cget -font]] -weight bold
-    #$st columnconfigure 1 -font Courier
-    #$st columnconfigure 2 -font Courier
-    #set sf [ScrollableFrame $sw.sf]
-    #$sf configure -bg white
-
-
-    #pack $sf -fill both -expand true
-
-    #set uf [$sf getframe]
-    #$uf configure -height 20 
-
-    #$uf config -bg blue
-
-    #set frame6 [frame $st.f]
-    #set frame5 [frame $frame.f]
-    #pack $frame5 -side bottom -ipady 4
-
-    #pack $frame6 -side bottom -ipady 4
     incr Editor::index_counter
-    #return [list $frame $pageName]
-    #return [list $uf $pageName]
     return  $st
 }
 
-###########################################################################							
-# Proc Name:	create_procWindow					
-# Inputs:	nb
-# Outputs:	frame.
-# Description:	Create the procedure window for the procedures in
-#		the selected file.  
-###########################################################################
-
-#proc EditManager::create_procWindow {nb } {
-#    variable TxtWidget
-#    
-#    set pagename Proclist
-#    set frame [$nb insert end $pagename -text "Procs"]
-    
-#    set sw [ScrolledWindow::create $frame.sw -auto both]
-#    set procList [listbox $sw.proc -bg white]
-#    $procList configure -exportselection false
-#    set item "<none>"
-#    $procList insert end $item
-#    pack $procList -fill both -expand yes
-#    ScrolledWindow::setwidget $sw $procList
-#    pack $sw -fill both -expand yes
-#    set buttonFrame [frame $frame.buttonFrame -relief sunken -borderwidth 2]
-#    set button_prev [Button::create $buttonFrame.bp \
-#        -image [Bitmap::get left] \
-#        -relief raised\
-#        -helptext "Goto previous Position"\
-#        -command {Editor::procList_history_get_prev}]
-#    set button_next [Button::create $buttonFrame.bn\
-#        -image [Bitmap::get right] \
-#        -relief raised\
-#        -helptext "Goto next Position"\
-#    set entryFrame [frame $frame.entryFrame -relief sunken -borderwidth 2]
-#    
-#    set Editor::lineEntryCombo [ComboBox::create $entryFrame.combo -label "" -labelwidth 0 -labelanchor w \
-#        -textvariable Editor::lineNo\
-#        -values {""} \
-#        -helptext "Enter Linenumber" \
-#        -entrybg white\
-#        -width 6]
-#    set button_go [Button::create $entryFrame.go\
-#        -image [Bitmap::get go] \
-#        -relief raised\
-#        -helptext "Goto Line"\
-#        -command {Editor::lineNo_history_add ; Editor::gotoLine $Editor::lineNo}]
-#    pack $button_prev -side left -expand yes -padx 2 -pady 5
-#    pack $button_next -side left -expand yes -padx 2 -pady 5
-#    pack $Editor::lineEntryCombo -side left -fill both -expand yes -pady 0 -ipady 0
-#    pack $button_go -side left -expand yes
-#    pack $entryFrame -side left -fill both -expand yes -ipadx 2 -padx 1
-#    set childList [winfo children $Editor::lineEntryCombo]
-#    foreach w $childList {if {[winfo class $w] == "Entry"} { set lineEntry $w ; break}}
-#    bind $lineEntry <KeyRelease-Return> {Editor::lineNo_history_add ; Editor::gotoLine $Editor::lineNo}
-#    return $frame
-#}
 
 ###########################################################################							
 # Proc Name:	create_conWindow					
@@ -390,26 +284,6 @@ proc EditManager::create_conWindow {nb text choice} {
     #return [$frame $pagename]
 	return $frame
 }
-###########################################################################							
-# Proc Name:	create_testTerminal					
-# Inputs:	nb, pagename, title
-# Outputs:	terminal window.
-# Description:	
-###########################################################################
-#proc EditManager::create_testTerminal {nb pagename title} {
-#    
-#    set frame [$nb insert end $pagename \
-#            -text "$title" \
-#            -raisecmd "$Editor::notebook raise $pagename" ]
-#    
-#    set sw [ScrolledWindow::create $frame.sw -auto both]
-#    set termWindow [testTermInit $sw]
-#    $termWindow configure -wrap word
-#    ScrolledWindow::setwidget $sw $termWindow
-#    pack $sw -fill both -expand yes
-#    
-#    return $termWindow
-#}
 
 ################################################################################
 # 
@@ -422,11 +296,11 @@ proc EditManager::create_conWindow {nb text choice} {
 
 proc EditManager::create_treeWindow {nb } {
     	global RootDir
-	global treeFrame
 	variable TxtWidget
 	global updatetree
 	set pagename objtree
     	set frame [$nb insert end $pagename -text "Tree Browser"]
+   
    	set sw [ScrolledWindow::create $frame.sw -auto both]
    	set objTree [Tree $frame.sw.objTree \
             -width 15\
@@ -440,37 +314,11 @@ proc EditManager::create_treeWindow {nb } {
     	]
 	$sw setwidget $objTree
 	set updatetree $objTree
-	#$objTree configure -ipady 15
-#puts [$updatetree configure]
-
-	# Call procedure to the read the Project file
-	#readxml "output.xml"
-	#DeclareStructure
-	#readxml $RootDir/NewProject.pjt
-	# Call procedure to draw the tree view
-	#inserttree
-	#set targetconfig myboard_sshscp.exp
-	#$objTree insert end root TestSuite -text TestSuite -open 1 -image [Bitmap::get openfold]
-    	#set child [$objTree insert end TestSuite TargetConfig -text BoardConfig -open 1 -image [Bitmap::get file]]
 	
-
-    
     pack $sw -side top -fill both -expand yes -pady 1
-    set treeFrame [frame $frame.f1]  
-    #bind $frame <KeyPress-Escape> "puts {escape for tree is pressed}"
-    entry $treeFrame.en_find -textvariable FindSpace::txtFindDym -width 10 -background white -validate key -vcmd "FindSpace::Find %P"
-    button $treeFrame.b_next -text " Next " -command "FindSpace::Next" -image [Bitmap::get right]
-    button $treeFrame.b_prev -text " Prev " -command "FindSpace::Prev" -image [Bitmap::get left]
-    grid config $treeFrame.en_find -row 0 -column 0 -sticky ew
-    grid config $treeFrame.b_prev -row 0 -column 1 -sticky s -padx 5
-    grid config $treeFrame.b_next -row 0 -column 2 -sticky s
-    
-    #bind $treeFrame.en_find <Configure> "puts {entry key focused}"
-        #bind $updatetree <ButtonPress-1> "FindDynWindow"
-        #bind . <KeyPress-Escape> "EscapeTree"
-
     return $frame
 }
+
 
 ############################For Testing############################
 

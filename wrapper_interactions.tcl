@@ -4,6 +4,9 @@ proc Import {cn tmpDir NodeType NodeID} {
 	global xdcFile
 
 
+	#ImportProgress start
+	#ImportProgress incr
+
 	set errorString []
 	set NodeID 1
 	set NodeType 1
@@ -66,10 +69,9 @@ puts COUNT$count
 			set SIdxValue [CBaseIndex_getIndexValue $ObjSIdx]
 			#puts SIdxValue:$SIdxValue=======tmpCount:$tmpCount
 			set SIdxName [CBaseIndex_getName $ObjIndex]
-			set SIdxDefaultValue [CBaseIndex_getDefaultValue $ObjSIdx]
+			#set SIdxDefaultValue [CBaseIndex_getDefaultValue $ObjSIdx]
 			#puts SIdxDefaultValue:$SIdxDefaultValue
 			$updatetree insert end IndexValue-1-$cnId-$i SubIndexValue-1-$cnId-$i-$tmpCount -text $SIdxName\($SIdxValue\) -open 1 -image [Bitmap::get subindex]
-			
 		}
 	}
 
@@ -138,6 +140,8 @@ puts COUNT$count
 #			$updatetree insert end RPdoIndexValue-1-RPdo$cnId-$i RPdoSubIndexValue-1-RPdo$cnId-$i-$tmpCount -text $SIdxName\($SIdxValue\) -open 1 -image [Bitmap::get subindex]
 #		}
 #	}
+
+	#ImportProgress stop
 
 }
 

@@ -41,4 +41,12 @@ proc IsInt {input type} {
 	} 
 }
 
-
+##################################################
+proc tIsValidStr {input} {
+	if { [string is wordchar $input]==0 } {
+		return 0
+	} else {
+		return 1
+	}
+}
+##################################################

@@ -1466,8 +1466,8 @@ proc Editor::create { } {
     #$f1 cellconfigure 2,1 -editable yes -image [Bitmap::get pencil]
     #$f1 cellconfigure 6,1 -editable yes -image [Bitmap::get pencil]
 
-    set f0 [EditManager::create_tab $notebook "Index Test" ind ]
-    set f1 [EditManager::create_tab $notebook "Sub index Test" sub ]
+    set f0 [EditManager::create_tab $notebook "Index" ind ]
+    set f1 [EditManager::create_tab $notebook "Sub index" sub ]
 
     set f2 [EditManager::create_table $notebook "PDO mapping" "pdo"]
     #$f2 configure -height 4 -width 40 -stretch all
@@ -1567,7 +1567,7 @@ proc Editor::DoubleClickNode {node} {
 	variable notebook
 
 
-
+	$updatetree selection set $node
 
 
 	if {[string match "TPDO-*" $node] || [string match "RPDO-*" $node]} {
@@ -1575,6 +1575,7 @@ proc Editor::DoubleClickNode {node} {
 		#pack $ra_hex -side left -padx 5
 		set idx [$updatetree nodes $node]
 		set popCount 0 
+		$f2 delete 0 end
 		foreach tempIdx $idx {
 					#puts idx-->[$updatetree itemcget $tempIdx -text]
 			set sidx [$updatetree nodes $tempIdx]
@@ -1615,7 +1616,6 @@ proc Editor::DoubleClickNode {node} {
 				set IndexDefaultValue [CBaseIndex_getDefaultValue $xdcFile($xdcId)]
 				#puts indx-->$indx===subId-->$subId===popCount-->$popCount===IndexDefaultValue-->$IndexDefaultValue
 				if {[string match "00" $sIdxValue]==0 } {
-					catch {$f2 delete $popCount }
 					set DataSize [string range $IndexDefaultValue 2 5]
 					set Offset [string range $IndexDefaultValue 6 9]
 					set Reserved [string range $IndexDefaultValue 10 11]
@@ -1975,11 +1975,10 @@ proc FindSpace::Find { searchStr } {
 					#puts sidx-->$sidx
 					#puts [string length $sidx]
 					foreach tempSidx $sidx { 
-						#puts "subindex entered"
 						if {[string match "*$searchStr*" [$updatetree itemcget $tempSidx -text]]} {
 							#puts [$updatetree itemcget $tempSidx -text]
-							#puts $tempSidx
-							lappend findList $tempSidx
+							#puts match->$tempSidx
+							lappend FindSpace::findList $tempSidx
 						}
 					}
 				}

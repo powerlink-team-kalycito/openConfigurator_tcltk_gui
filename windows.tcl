@@ -8,6 +8,7 @@
 #
 #
 ################################################################################
+#global varProgbar
 
 ################################################################################
 #proc StartUpWindow
@@ -22,7 +23,7 @@ proc StartUp {} {
 	catch "font delete custom2"
         font create custom2 -size 9 -family TkDefaultFont
 	toplevel     $winStartUp -takefocus 1
-	wm title     $winStartUp "openCONGFIGURATOR"
+	wm title     $winStartUp "openMANAGER"
 	wm resizable $winStartUp 0 0
 	wm transient $winStartUp .
 	wm deiconify $winStartUp
@@ -741,7 +742,7 @@ proc closeproject {} {
 ########################################################################
 proc ImportProgress {stat} {
 
-global impPro
+global LocvarProgbar
 
 	if {$stat=="start"} {
 		set winImpoProg .impoProg
@@ -753,17 +754,93 @@ global impPro
 		wm deiconify $winImpoProg
 		#wm minsize   $winImpoProg 50 200
 		grab $winImpoProg
-		ProgressBar $winImpoProg.prog -orient horizontal -width 200 -maximum 100 -height 10 -variable impPro -type infinite -bg white -fg blue
+		set LocvarProgbar 0
+		#ProgressBar $winImpoProg.prog -orient horizontal -width 200 -maximum 100 -height 10 -variable impPro -type infinite -bg white -fg blue
+		ProgressBar $winImpoProg.prog -orient horizontal -width 200 -maximum 100 -height 10 -variable LocvarProgbar -type infinite -bg white -fg blue
 		grid config $winImpoProg.prog -row 0 -column 0 -padx 10 -pady 10
+		return  $winImpoProg.prog
 		#$winImpoProg.prog start
 	} elseif {$stat=="stop" } { 
-		#$winImpoProg.prog stop		
 		destroy .impoProg
 	} elseif {$stat=="incr"} {
 		incr impPro
-		after 1000
-		ImportProgress incr
+		#after 500
+		#ImportProgress incr
+		#IncrProgressIndicator
 	}
 
 
+}
+
+proc IncrProgressIndicator {} {
+	global impPro
+	puts "incr.."
+	#ImportProgress incr
+	incr impPro
+	update idletasks
+	after 15
+	IncrProgressIndicator
+}
+
+proc progressbar_incr1 {stat} {
+	global varProgbar
+	global LocvarProgbar
+	#global ExecTime
+	#global LineOfExecStop
+#after 100
+	if {$stat=="start"} {
+		incr varProgbar
+		puts "varProgbar->$varProgbar"
+		if {$varProgbar} {
+			set LocvarProgbar $varProgbar
+			if {$varProgbar == 100} {
+				set LocvarProgbar $varProgbar
+				#set varProgbar 0
+				return
+			}
+			update idletasks		
+		} 
+		#update idletasks
+		after 1 progressbar_incr start
+	} else {
+		puts "stop is invoked"
+		set varProgbar 99
+		return
+	}
+}
+
+##########for test #############
+proc progressbar_incr {} {
+	global varProgbar
+	global LocvarProgbar
+	#global ExecTime
+	#global LineOfExecStop
+
+	incr varProgbar
+	#puts "varProgbar->$varProgbar"
+	if {$varProgbar} {
+		set LocvarProgbar $varProgbar
+		if {$varProgbar == 100} {
+			set LocvarProgbar $varProgbar
+			#set LineOfExecStop 0	
+			#if {[string compare $ExecTime ""] } {
+			#	conPuts $ExecTime
+			#	set ExecTime ""
+			#} else {
+			#	
+			#}	
+			#.mainframe.frame.pw1.butTrans configure -state normal
+			#.mainframe.frame.pw1.butGo configure -state disabled -text "     Go    " -command {GoProc}
+			#.mainframe.frame.pw1.butStop configure -state disabled
+			#.mainframe.frame.pw1.butNext configure -state disabled
+			#set LocvarProgbar 0
+			#set varProgbar 0
+			#puts "call to stop progress"
+			ImportProgress stop
+			return
+		}
+		update idletasks		
+	} 
+	#puts "cmd with delay"
+	after 15 progressbar_incr
 }

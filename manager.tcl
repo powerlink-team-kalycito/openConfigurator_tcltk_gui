@@ -24,10 +24,15 @@ namespace eval EditManager {
 
 proc EditManager::create_tab {nb filename choice} {
     global EditorData
+
+
     variable TxtWidget
     variable _newPageCounter
     
     incr _newPageCounter
+    global tmpNam$_newPageCounter
+    global tmpValue$_newPageCounter
+    global hexDec$_newPageCounter
     set pageName "Page$_newPageCounter"
     set frame [$nb insert end $pageName -text $filename ]
 
@@ -66,7 +71,7 @@ proc EditManager::create_tab {nb filename choice} {
 	$tabInnerf0.en_idx1 insert 0 "1006"
 	$tabInnerf0.en_idx1 config -state disabled -bg white
 	#global tmpNam$_newPageCounter
-	entry $tabInnerf0.en_nam1 -textvariable tmpNam$_newPageCounter -relief ridge -justify center -bg white -width 30
+	entry $tabInnerf0.en_nam1 -textvariable tmpNam$_newPageCounter -relief ridge -justify center -bg white -width 30 -validate key -vcmd "IsValidStr %P"
 	$tabInnerf0.en_nam1 insert 0 "NMT_CycleLen_U32"
 	#entry $tabInnerf0.en_sidx1   
 	#$tabInnerf0.en_sidx1 insert 0 "00"
@@ -91,11 +96,12 @@ proc EditManager::create_tab {nb filename choice} {
 	$tabInnerf1.en_pdo1 config -state disabled
 
 	#global tmpValue$_newPageCounter
-	set value1 [entry $tabInnerf1.en_value1 -textvariable tmpValue$_newPageCounter  -relief ridge -justify center -bg white]
+	#entry $tabInnerf1.en_value1 -textvariable tmpValue$_newPageCounter  -relief ridge -justify center -bg white
+	entry $tabInnerf1.en_value1 -textvariable tmpValue$_newPageCounter  -relief ridge -justify center -bg white -validate key -vcmd "IsDec %P"
 	$tabInnerf1.en_value1 insert 0 "0007"
         set frame1 [frame $tabInnerf1.frame1]
-        set ra_dec [radiobutton $frame1.ra_dec -text "Dec" -variable hexDec -value on]
-        set ra_hex [radiobutton $frame1.ra_hex -text "Hex" -variable hexDec -value off]
+        set ra_dec [radiobutton $frame1.ra_dec -text "Dec" -variable hexDec$_newPageCounter -value on -command "ConvertDec $tabInnerf1.en_value1"]
+        set ra_hex [radiobutton $frame1.ra_hex -text "Hex" -variable hexDec$_newPageCounter -value off -command "ConvertHex $tabInnerf1.en_value1"]
         $frame1.ra_dec select
 	grid config $tabTitlef0 -row 0 -column 0 -sticky ew
 	label $uf.l_empty -text ""
@@ -296,8 +302,10 @@ proc EditManager::create_conWindow {nb text choice} {
 
 proc EditManager::create_treeWindow {nb } {
     	global RootDir
-	variable TxtWidget
+	global treeFrame
 	global updatetree
+
+	variable TxtWidget
 	set pagename objtree
     	set frame [$nb insert end $pagename -text "Tree Browser"]
    
@@ -316,7 +324,37 @@ proc EditManager::create_treeWindow {nb } {
 	set updatetree $objTree
 	
     pack $sw -side top -fill both -expand yes -pady 1
+    set treeFrame [frame $frame.f1]  
+    #bind $frame <KeyPress-Escape> "puts {escape for tree is pressed}"
+    entry $treeFrame.en_find -textvariable FindSpace::txtFindDym -width 10 -background white -validate key -vcmd "FindSpace::Find %P"
+    button $treeFrame.b_next -text " Next " -command "FindSpace::Next" -image [Bitmap::get right]
+    button $treeFrame.b_prev -text " Prev " -command "FindSpace::Prev" -image [Bitmap::get left]
+    grid config $treeFrame.en_find -row 0 -column 0 -sticky ew
+    grid config $treeFrame.b_prev -row 0 -column 1 -sticky s -padx 5
+    grid config $treeFrame.b_next -row 0 -column 2 -sticky s
     return $frame
+}
+
+proc ConvertDec {tmpValue} {
+	#puts DectmpValue->$tmpValue
+	set tmpVar [$tmpValue cget -textvariable]
+	global $tmpVar
+	#puts "value in convertdec->[subst $[subst $tmpVar]] "
+	set $tmpVar [expr 0x[subst $[subst $tmpVar]] ]
+	$tmpValue configure -validate key -vcmd "IsDec %P"
+	puts tmpVar->$tmpVar
+	#set $tmpVar check
+}
+
+proc ConvertHex {tmpValue} {
+	puts HextmpValue->$tmpValue
+	set tmpVar [$tmpValue cget -textvariable]
+	global $tmpVar	
+	#puts "value in converthex->[subst $[subst $tmpVar]] "
+	set $tmpVar [format %X [subst $[subst $tmpVar]] ]
+	$tmpValue configure -validate key -vcmd "IsHex %P $tmpVar"
+	puts tmpVar->$tmpVar
+	#set $tmpVar test
 }
 
 

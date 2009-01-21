@@ -42,7 +42,7 @@ proc IsInt {input type} {
 }
 
 ##################################################
-proc tIsValidStr {input} {
+proc IsValidStr {input} {
 	if { [string is wordchar $input]==0 } {
 		return 0
 	} else {
@@ -50,3 +50,18 @@ proc tIsValidStr {input} {
 	}
 }
 ##################################################
+proc IsDec {input} {
+	if { [string is int $input]==0 } {
+		return 0
+	} else {
+		return 1
+	}
+}
+##################################################
+proc IsHex {input tempVar} {
+	if { [string is xdigit $input]==0 } {
+		return 0
+	} else {
+		return 1
+	}
+}

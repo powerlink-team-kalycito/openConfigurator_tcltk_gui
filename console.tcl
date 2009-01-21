@@ -49,8 +49,8 @@ proc conPuts {var {tag output} {win {}} {flash 0} {see 1}} {
     if {[string index $var [expr [string length $var]-1]] != "\n"} {
         $win insert end "\n"
     }
-    set prompt OUTPUT
-    $win insert end "$prompt : " prompt
+    set prompt $
+    $win insert end "$prompt " prompt
     $win mark gravity prompt left
     if $see {$win see insert}
     update
@@ -290,7 +290,7 @@ proc errorInit {win {width 60} {height 5}} {
     
     #set historyIndex 0
     set window $win
-    set prompt ERROR
+    set prompt $
     
     if {$window == "."} {
         set window ""
@@ -307,7 +307,7 @@ proc errorInit {win {width 60} {height 5}} {
     $window.t tag configure output -foreground blue
     $window.t tag configure prompt -foreground grey40
     $window.t tag configure error -foreground red
-    $window.t insert end "$prompt % " prompt
+    $window.t insert end "$prompt " prompt
     $window.t mark set prompt insert
     $window.t mark gravity prompt left
     #bind $window.t <KeyPress-Return> {%W mark set insert "prompt lineend"}
@@ -337,8 +337,8 @@ proc errorPuts {var {tag output} {win {}} {flash 0} {see 1}} {
     if {[string index $var [expr [string length $var]-1]] != "\n"} {
         $win insert end "\n"
     }
-    set prompt ERROR
-    $win insert end "$prompt : " prompt
+    set prompt $
+    $win insert end "$prompt " prompt
     $win mark gravity prompt left
     if $see {$win see insert}
     update
@@ -357,7 +357,7 @@ proc warnInit {win {width 60} {height 5}} {
     
     #set historyIndex 0
     set window $win
-    set prompt WARN
+    set prompt $
     
     if {$window == "."} {
         set window ""
@@ -374,7 +374,7 @@ proc warnInit {win {width 60} {height 5}} {
     $window.t tag configure output -foreground blue
     $window.t tag configure prompt -foreground grey40
     $window.t tag configure error -foreground red
-    $window.t insert end "$prompt % " prompt
+    $window.t insert end "$prompt " prompt
     $window.t mark set prompt insert
     $window.t mark gravity prompt left
     #bind $window.t <KeyPress-Return> {%W mark set insert "prompt lineend"}
@@ -403,8 +403,8 @@ proc warnPuts {var {tag output} {win {}} {flash 0} {see 1}} {
     if {[string index $var [expr [string length $var]-1]] != "\n"} {
         $win insert end "\n"
     }
-    set prompt WARN
-    $win insert end "$prompt : " prompt
+    set prompt $
+    $win insert end "$prompt " prompt
     $win mark gravity prompt left
     if $see {$win see insert}
     update
@@ -425,7 +425,7 @@ proc consoleInit {win {width 60} {height 5}} {
     
     set historyIndex 0
     set window $win
-    set prompt OUTPUT
+    set prompt $
     
     if {$window == "."} {
         set window ""
@@ -442,19 +442,19 @@ proc consoleInit {win {width 60} {height 5}} {
     $window.t tag configure output -foreground blue
     $window.t tag configure prompt -foreground grey40
     $window.t tag configure error -foreground red
-    $window.t insert end "$prompt % " prompt
+    $window.t insert end "$prompt " prompt
     $window.t mark set prompt insert
     $window.t mark gravity prompt left
-    bind $window.t <KeyPress-Return> {%W mark set insert "prompt lineend"}
-    bind $window.t <KeyRelease-Return> {evalCommand %W $Console [getCommand %W];break}
-    bind $window.t <Key-Up> {onKeyUp %W ; break}
-    bind $window.t <Key-Down> {onKeyDown %W ; break}
+    #bind $window.t <KeyPress-Return> {%W mark set insert "prompt lineend"}
+    #bind $window.t <KeyRelease-Return> {evalCommand %W $Console [getCommand %W];break}
+    #bind $window.t <Key-Up> {onKeyUp %W ; break}
+    #bind $window.t <Key-Down> {onKeyDown %W ; break}
     bind $window.t <Key-Left> {onKeyLeft %W ; break}
     bind $window.t <Key-Right> {onKeyRight %W ; break}
     bind $window.t <Key-BackSpace> {onKeyBackSpace %W;break}
     bind $window.t <Key-Home> {onKeyHome %W ;break}
     bind $window.t <Control-c> {set dummy nothing}
-    bind $window.t <KeyPress> {onKeyPressed %W}
+    #bind $window.t <KeyPress> {onKeyPressed %W}
     pack $window.t -fill both -expand yes
     return $window.t
 }

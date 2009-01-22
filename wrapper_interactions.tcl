@@ -41,7 +41,7 @@ proc Import {cn tmpDir NodeType {NodeID 1}} {
 
 	set obj [new_CIndexCollection]
 	set objNode [CNodeCollection_getNode $objNodeCollection $NodeType $NodeID]
-	set obj [CNode_getIndexCollection $objNode]
+	set obj [CNode_getIndexCollectionWithoutPDO $objNode]
 	puts "**"
 
 	set count [CIndexCollection_getNumberofIndexes $obj]

@@ -64,37 +64,31 @@ proc EditManager::create_tab {nb filename choice} {
 	label $tabInnerf1.l_access  -text "Access Type"  
         label $tabInnerf1.l_empty6 -text "" 
 	label $tabInnerf1.l_value   -text "Value" 
+	label $tabInnerf1.l_default -text "Default Value" 
 	label $tabInnerf1.l_upper   -text "Upper Limit" 
 	label $tabInnerf1.l_lower   -text "Lower Limit" 
 	label $tabInnerf1.l_pdo   -text "PDO Mapping" 
 	entry $tabInnerf0.en_idx1    
-	$tabInnerf0.en_idx1 insert 0 "1006"
-	$tabInnerf0.en_idx1 config -state disabled -bg white
+	$tabInnerf0.en_idx1 config -state disabled 
 	#global tmpNam$_newPageCounter
 	entry $tabInnerf0.en_nam1 -textvariable tmpNam$_newPageCounter -relief ridge -justify center -bg white -width 30 -validate key -vcmd "IsValidStr %P"
-	$tabInnerf0.en_nam1 insert 0 "NMT_CycleLen_U32"
 	#entry $tabInnerf0.en_sidx1   
 	#$tabInnerf0.en_sidx1 insert 0 "00"
 	#$tabInnerf0.en_sidx1 config -state disabled
 	entry $tabInnerf1.en_obj1    
-	$tabInnerf1.en_obj1 insert 0 "VAR"
 	$tabInnerf1.en_obj1 config -state disabled
 	entry $tabInnerf1.en_data1 
-	$tabInnerf1.en_data1 insert 0 "Unsigned32"
 	$tabInnerf1.en_data1 config -state disabled
 	entry $tabInnerf1.en_access1 
-	$tabInnerf1.en_access1 insert 0 "rw"
 	$tabInnerf1.en_access1 config -state disabled
 	entry $tabInnerf1.en_upper1 
-	$tabInnerf1.en_upper1 insert 0 "FF"
 	$tabInnerf1.en_upper1 config -state disabled
 	entry $tabInnerf1.en_lower1 
-	$tabInnerf1.en_lower1 insert 0 "00"
 	$tabInnerf1.en_lower1 config -state disabled
 	entry $tabInnerf1.en_pdo1 
-	$tabInnerf1.en_pdo1 insert 0 "no"
 	$tabInnerf1.en_pdo1 config -state disabled
-
+	entry $tabInnerf1.en_default1 
+	$tabInnerf1.en_default1 config -state disabled
 	#global tmpValue$_newPageCounter
 	#entry $tabInnerf1.en_value1 -textvariable tmpValue$_newPageCounter  -relief ridge -justify center -bg white
 	entry $tabInnerf1.en_value1 -textvariable tmpValue$_newPageCounter  -relief ridge -justify center -bg white -validate key -vcmd "IsDec %P"
@@ -132,7 +126,9 @@ proc EditManager::create_tab {nb filename choice} {
 	grid config $tabInnerf1.l_empty5 -row 3 -column 0 -columnspan 2
 	grid config $tabInnerf1.l_value -row 4 -column 0 -sticky w
 	grid config $tabInnerf1.en_value1 -row 4 -column 1 -padx 5 
-	grid config $frame1 -row 4 -column 3 -padx 5 -columnspan 2 -sticky w
+	grid config $frame1 -row 4 -column 2 -padx 5 -columnspan 2 -sticky w
+	grid config $tabInnerf1.l_default -row 4 -column 4 -sticky w
+	grid config $tabInnerf1.en_default1 -row 4 -column 5 -padx 5 
 	grid config $tabInnerf1.l_empty6 -row 5 -column 0 -columnspan 2
 
 	grid config $ra_dec -row 0 -column 0 -sticky w
@@ -340,20 +336,21 @@ proc ConvertDec {tmpValue} {
 	set tmpVar [$tmpValue cget -textvariable]
 	global $tmpVar
 	#puts "value in convertdec->[subst $[subst $tmpVar]] "
-	set $tmpVar [expr 0x[subst $[subst $tmpVar]] ]
+	set $tmpVar [string range [subst $[subst $tmpVar]] 2 end]
+	catch {set $tmpVar [expr 0x[subst $[subst $tmpVar]]]}
 	$tmpValue configure -validate key -vcmd "IsDec %P"
-	puts tmpVar->$tmpVar
 	#set $tmpVar check
 }
 
 proc ConvertHex {tmpValue} {
-	puts HextmpValue->$tmpValue
+	#puts HextmpValue->$tmpValue
 	set tmpVar [$tmpValue cget -textvariable]
 	global $tmpVar	
 	#puts "value in converthex->[subst $[subst $tmpVar]] "
-	set $tmpVar [format %X [subst $[subst $tmpVar]] ]
+	#set $tmpVar 0x
+	catch {set $tmpVar [format %X [subst $[subst $tmpVar]]]}
+	set $tmpVar 0x[subst $[subst $tmpVar]]
 	$tmpValue configure -validate key -vcmd "IsHex %P $tmpVar"
-	puts tmpVar->$tmpVar
 	#set $tmpVar test
 }
 

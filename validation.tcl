@@ -59,7 +59,7 @@ proc IsDec {input} {
 }
 ##################################################
 proc IsHex {input tempVar} {
-	if { [string is xdigit $input]==0 } {
+	if { [string match "0x*" $input]==0 || [string is xdigit [string range $input 2 end]]==0 } {
 		return 0
 	} else {
 		return 1

@@ -646,7 +646,7 @@ proc NewProjectWindow {} {
 		catch {$updatetree delete MN-$mnCount}
 		$updatetree insert end PjtName MN-$mnCount -text "openPOWERLINK MN" -open 1 -image [Bitmap::get mn]
 		if {$conf=="off"} {
-			$updatetree insert end MN-$mnCount OBD-$mnCount -text "OBD" -open 1 -image [Bitmap::get pdo]
+			$updatetree insert end MN-$mnCount OBD-$mnCount -text "OBD" -open 0 -image [Bitmap::get pdo]
 			Import OBD-$mnCount $tmpImpDir mn 1
 		}
 		destroy .newprj
@@ -743,6 +743,7 @@ proc closeproject {} {
 proc ImportProgress {stat} {
 
 global LocvarProgbar
+global prog
 
 	if {$stat=="start"} {
 		set winImpoProg .impoProg
@@ -755,15 +756,26 @@ global LocvarProgbar
 		#wm minsize   $winImpoProg 50 200
 		grab $winImpoProg
 		set LocvarProgbar 0
-		#ProgressBar $winImpoProg.prog -orient horizontal -width 200 -maximum 100 -height 10 -variable impPro -type infinite -bg white -fg blue
-		ProgressBar $winImpoProg.prog -orient horizontal -width 200 -maximum 100 -height 10 -variable LocvarProgbar -type infinite -bg white -fg blue
+		#ProgressBar $winImpoProg.prog -orient horizontal -width 200 -maximum 100 -height 10 -variable LocvarProgbar -type infinite -bg white -fg blue
+		set prog [ProgressBar $winImpoProg.prog -orient horizontal -width 200 -maximum 100 -height 10 -variable LocvarProgbar -type incremental -bg white -fg blue]
+		#label $winImpoProg.l_test -text "TEST"
+		#set prog [ttk::progressbar $winImpoProg.prog -mode indeterminate]
 		grid config $winImpoProg.prog -row 0 -column 0 -padx 10 -pady 10
+		#grid config $winImpoProg.l_test -row 1 -column 0 -padx 10 -pady 10
+		#puts "Import Progress....................................................................."
+                #ttk::progressbar::start $prog
+		update idletasks
 		return  $winImpoProg.prog
 		#$winImpoProg.prog start
 	} elseif {$stat=="stop" } { 
+                #ttk::progressbar::stop $prog
+		#puts endcount->[.impoProg.prog cget -maximum]
+		set LocvarProgbar 100
 		destroy .impoProg
 	} elseif {$stat=="incr"} {
-		incr impPro
+		incr LocvarProgbar
+		#update idletasks
+		puts -nonewline "$LocvarProgbar "
 		#after 500
 		#ImportProgress incr
 		#IncrProgressIndicator

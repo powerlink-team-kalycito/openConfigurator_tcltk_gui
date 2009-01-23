@@ -1,21 +1,74 @@
-################################################################################
-#									
-# Script:	windows.tcl						
-#									
-# Author:	Kalycito Infotech Pvt Ltd		
-#									
-# Description:	Contains the windows displayed in application.
+###############################################################################################
 #
 #
-################################################################################
-#global varProgbar
+# NAME:     windows.tcl
+#
+# PURPOSE:  purpose description
+#
+# AUTHOR:   Kalycito Infotech Pvt Ltd
+#
+# COPYRIGHT NOTICE:
+#
+#********************************************************************************
+# (c) Kalycito Infotech Private Limited
+#
+#  Project:      openCONFIGURATOR 
+#
+#  Description:  Contains the child window displayed in application
+#
+#
+#  License:
+#
+#    Redistribution and use in source and binary forms, with or without
+#    modification, are permitted provided that the following conditions
+#    are met:
+#
+#    1. Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#
+#    2. Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#
+#    3. Neither the name of Kalycito Infotech Private Limited nor the names of 
+#       its contributors may be used to endorse or promote products derived
+#       from this software without prior written permission. For written
+#       permission, please contact info@kalycito.com.
+#
+#    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+#    "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+#    LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+#    FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+#    COPYRIGHT HOLDERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+#    INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+#    BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+#    LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+#    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+#    LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+#    ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#    POSSIBILITY OF SUCH DAMAGE.
+#
+#    Severability Clause:
+#
+#        If a provision of this License is or becomes illegal, invalid or
+#        unenforceable in any jurisdiction, that shall not affect:
+#        1. the validity or enforceability in that jurisdiction of any other
+#           provision of this License; or
+#        2. the validity or enforceability in other jurisdictions of that or
+#           any other provision of this License.
+#
+#********************************************************************************
+#
+#  REVISION HISTORY:
+# $Log:      $
+###############################################################################################
 
-################################################################################
-#proc StartUpWindow
-#Input   : -
-#Output  : -
-#Description : Gui during start up
-################################################################################
+###############################################################################################
+#proc StartUp
+#Input       : -
+#Output      : -
+#Description : Creates the GUI during startup
+###############################################################################################
 proc StartUp {} {
 	global startVar
 	set winStartUp .startUp
@@ -23,16 +76,12 @@ proc StartUp {} {
 	catch "font delete custom2"
         font create custom2 -size 9 -family TkDefaultFont
 	toplevel     $winStartUp -takefocus 1
-	wm title     $winStartUp "openMANAGER"
+	wm title     $winStartUp "openCONFIGURATOR"
 	wm resizable $winStartUp 0 0
 	wm transient $winStartUp .
 	wm deiconify $winStartUp
-	#wm minsize   $winStartUp 100 100
-	#wm topmost  $winStartUp 
 	grab $winStartUp	
 
-	#set titleFrame1 [TitleFrame $winStartUp.titleFrame1 -text "Select Project" ]
-	#set frame1 [$titleFrame1 getframe]
 	set frame1 [frame $winStartUp.fram1]
 	set frame2 [frame $frame1.fram2]
 
@@ -43,18 +92,18 @@ proc StartUp {} {
 	
 	text $frame1.t_desc -height 5 -width 40 -state disabled -background white
 
-	radiobutton $frame1.ra_default  -text "Open Sample Project"   -variable startVar -value 1 -font custom2 -command "SampleText $frame1.t_desc" -state disabled
-	radiobutton $frame1.ra_newProj  -text "Create New Project"    -variable startVar -value 2 -font custom2 -command "NewText $frame1.t_desc" 
-	radiobutton $frame1.ra_openProj -text "Open Existing Project" -variable startVar -value 3 -font custom2 -command "OpenText $frame1.t_desc" -state disabled
+	radiobutton $frame1.ra_default  -text "Open Sample Project"   -variable startVar -value 1 -font custom2 -command "SampleProjectText $frame1.t_desc" -state disabled
+	radiobutton $frame1.ra_newProj  -text "Create New Project"    -variable startVar -value 2 -font custom2 -command "NewProjectText $frame1.t_desc" 
+	radiobutton $frame1.ra_openProj -text "Open Existing Project" -variable startVar -value 3 -font custom2 -command "OpenProjectText $frame1.t_desc" -state disabled
 	$frame1.ra_newProj select
-	NewText $frame1.t_desc
+	NewProjectText $frame1.t_desc
 	 
 	button $frame2.b_ok -text "  Ok  " -command { 
-		if {$startVar==1} {
+		if {$startVar == 1} {
 			YetToImplement;
-		} elseif {$startVar==2} {
+		} elseif {$startVar == 2} {
 			NewProjectWindow
-		} elseif {$startVar==3} {
+		} elseif {$startVar == 3} {
 			YetToImplement;
 		}
 		destroy .startUp
@@ -63,18 +112,8 @@ proc StartUp {} {
 		destroy .startUp
 		Editor::exit_app
 	}
-	#grid config $titleFrame1 -row 0 -column 0 -padx 35 -pady 10
-	#grid config $frame1 -row 0 -column 0 
 
 	grid config $frame1 -row 0 -column 0 -padx 35 -pady 10
-
-	#grid config $frame1.ra_default -row 0 -column 0 -sticky w 
-	#grid config $frame1.l_empty1 -row 1 -column 0 -sticky w 	
-	#grid config $frame1.ra_newProj -row 2 -column 0 -sticky w 
-	#grid config $frame1.l_empty2 -row 3 -column 0 -sticky w 
-	#grid config $frame1.ra_openProj -row 4 -column 0 -sticky w 
-	#grid config $frame1.l_empty3 -row 5 -column 0 -sticky w 
-	#grid config $frame2 -row 6 -column 0  -padx 5 -pady 5
 
 	grid config $frame1.ra_default -row 0 -column 0 -sticky w -padx 5 -pady 5
 	grid config $frame1.ra_newProj -row 1 -column 0 -sticky w  -padx 5 -pady 5
@@ -93,34 +132,51 @@ proc StartUp {} {
 	centerW $winStartUp
 }
 
-
-proc SampleText {t_desc} {
+###############################################################################################
+#proc SampleProjectText
+#Input       : text widget path
+#Output      : -
+#Description : Displays text when Sample project is selected in start up
+###############################################################################################
+proc SampleProjectText {t_desc} {
 	$t_desc configure -state normal
 	$t_desc delete 1.0 end
 	$t_desc insert end "Open the sample Project"
 	$t_desc configure -state disabled
 }
 
-proc NewText {t_desc} {
+###############################################################################################
+#proc NewProjectText
+#Input       : text widget path
+#Output      : -
+#Description : Displays text when New project is selected in start up
+###############################################################################################
+proc NewProjectText {t_desc} {
 	$t_desc configure -state normal
 	$t_desc delete 1.0 end
 	$t_desc insert end "Create a new Project"
 	$t_desc configure -state disabled
 }
 
-proc OpenText {t_desc} {
+###############################################################################################
+#proc OpenProjectText
+#Input       : text widget path
+#Output      : -
+#Description : Displays text when Open project is selected in start up
+###############################################################################################
+proc OpenProjectText {t_desc} {
 	$t_desc configure -state normal
 	$t_desc delete 1.0 end
 	$t_desc insert end "Open Existing Project"
 	$t_desc configure -state disabled
 }
 
-################################################################################
+###############################################################################################
 #proc ConnectionSettingWindow
-#Input   : -
-#Output  : -
-#Description : Gui for connection Settings
-################################################################################
+#Input       : -
+#Output      : -
+#Description : Creates the GUI for connection Settings
+###############################################################################################
 proc ConnectionSettingWindow {} {
 	global connectionIpAddr
 	set winConnSett .connSett
@@ -132,7 +188,6 @@ proc ConnectionSettingWindow {} {
 	wm deiconify $winConnSett
 	grab $winConnSett
 
-
 	set frame1 [frame $winConnSett.fram1]
 	set frame2 [frame $winConnSett.fram2]
 
@@ -142,7 +197,7 @@ proc ConnectionSettingWindow {} {
 	label $winConnSett.l_empty3 -text ""
 
 	set connectionIpAddr ""
-	entry $frame1.en_ip -textvariable connectionIpAddr -background white -relief ridge -validate all -vcmd "isIP %P %V"
+	entry $frame1.en_ip -textvariable connectionIpAddr -background white -relief ridge -validate all -vcmd "IsIP %P %V"
 
 	button $frame2.b_ok -text "  Ok  " -command { 
 		YetToImplement
@@ -164,25 +219,20 @@ proc ConnectionSettingWindow {} {
 	grid config $frame2.b_ok -row 0 -column 0
 	grid config $frame2.b_cancel -row 0 -column 1
 
-	#wm protocol .connSett WM_DELETE_WINDOW {
-	#	destroy .connSett
-	#}
 	wm protocol .connSett WM_DELETE_WINDOW "$frame2.b_cancel invoke"
 	bind $winConnSett <KeyPress-Return> "$frame2.b_ok invoke"
 	bind $winConnSett <KeyPress-Escape> "$frame2.b_cancel invoke"
-	
-	centerW $winConnSett
 
+	centerW $winConnSett
 }
 
-################################################################################
+###############################################################################################
 #proc AddPDOWindow
-#Input   : -
-#Output  : -
-#Description : Gui for adding PDO to CN
-################################################################################
+#Input       : -
+#Output      : -
+#Description : Creates the GUI for adding PDO to CN
+###############################################################################################
 proc AddPDOWindow {} {
-
 	global pdoStartValue
 	global mapEntValue
 	global noPDOValue
@@ -280,11 +330,12 @@ proc AddPDOWindow {} {
 	centerW $winAddPDO
 }
 
-#################################################################################################################
-# proc AddCNWindow
-#
-# pops up a window and gets all the details for a testgroup and calls AddTestGroup procedure to update in tree window # and in structure
-#####################################################################################################################
+###############################################################################################
+#proc AddCNWindow
+#Input       : -
+#Output      : -
+#Description : Creates the GUI for adding CN to MN
+###############################################################################################
 proc AddCNWindow {} {
 	global cnName
 	global nodeId
@@ -322,14 +373,14 @@ proc AddCNWindow {} {
 	radiobutton $titleInnerFrame2.ra_cn -text "Controlled Node" -variable mncn -value off 
 	$titleInnerFrame2.ra_mn select
 	radiobutton $titleInnerFrame3.ra_def -text "Default" -variable confCn -value on  -command {
-			.addCN.titleFrame1.f.titleFrame3.f.en_imppath config -state disabled 
-			.addCN.titleFrame1.f.titleFrame3.f.bt_imppath config -state disabled 
+		.addCN.titleFrame1.f.titleFrame3.f.en_imppath config -state disabled 
+		.addCN.titleFrame1.f.titleFrame3.f.bt_imppath config -state disabled 
 	}		
 
 	
 	radiobutton $titleInnerFrame3.ra_imp -text "Import XDC/XDD" -variable confCn -value off -command {
-			.addCN.titleFrame1.f.titleFrame3.f.en_imppath config -state normal 
-			.addCN.titleFrame1.f.titleFrame3.f.bt_imppath config -state normal 
+		.addCN.titleFrame1.f.titleFrame3.f.en_imppath config -state normal 
+		.addCN.titleFrame1.f.titleFrame3.f.bt_imppath config -state normal 
 	}
 	$titleInnerFrame3.ra_def select
 
@@ -364,7 +415,7 @@ proc AddCNWindow {} {
 			focus .addCN
 			return
 		}
-		if {$nodeId < 1 ||$nodeId > 239 } {
+		if {$nodeId < 1 || $nodeId > 239 } {
 			tk_messageBox -message "Node id value range is 1 to 239" -parent .addCN -icon error
 			focus .addCN
 			return
@@ -377,7 +428,7 @@ proc AddCNWindow {} {
 		}
 
 
-		if {$confCn=="off"} {
+		if {$confCn == "off"} {
 			set chk [AddCN $cnName $tmpImpCnDir $nodeId]
 		} else {
 			set chk [AddCN $cnName 0 $nodeId]
@@ -428,11 +479,12 @@ proc AddCNWindow {} {
 	centerW $winAddCN
 }
 
-
-#######################################################################
-# proc saveProjectAsWindow
-#
-########################################################################
+###############################################################################################
+#proc SaveProjectAsWindow
+#Input       : -
+#Output      : -
+#Description : Creates the GUI when Project is to be saved at different location and name
+###############################################################################################
 proc SaveProjectAsWindow {} {
 	global tmpPjtName
 	global tmpPjtDir
@@ -493,8 +545,6 @@ proc SaveProjectAsWindow {} {
 	grid config $winSavProjAs.l_empty -row 0 -column 0 
 	
 	grid config $titleFrame1 -row 1 -column 0 -sticky "news" -ipadx 10 -padx 10 -ipady 10
-	#grid config $winNewProj.l_empty1 -row 2 -column 0 
-	#grid config $titleInnerFrame1.l_empty2 -row 0 -column 0 
 	grid config $titleInnerFrame1.l_pjname -row 1 -column 0 
 	grid config $titleInnerFrame1.en_pjname -row 1 -column 1 -sticky "w"
 	grid config $titleInnerFrame1.l_pjpath -row 2 -column 0 
@@ -508,52 +558,23 @@ proc SaveProjectAsWindow {} {
 
 	grid config $winSavProjAs.l_empty4 -row 2 -column 0 
 
-	#wm protocol .savProjAs WM_DELETE_WINDOW { 
-	#	 destroy .savProjAs
-        #}
 	wm protocol .savProjAs WM_DELETE_WINDOW "$frame1.bt_cancel invoke"
 	bind $winSavProjAs <KeyPress-Return> "$frame1.bt_ok invoke"
 	bind $winSavProjAs <KeyPress-Escape> "$frame1.bt_cancel invoke"
 
 	centerW $winSavProjAs
 }
-#######################################################################
-# proc newprojectwindow
-# Creates a new project
-########################################################################
 
+###############################################################################################
+#proc NewProjectWindow
+#Input       : -
+#Output      : -
+#Description : Creates the GUI when New Project is to be created
+###############################################################################################
 proc NewProjectWindow {} {
-	#global PjtDir
-	#global PjtName	
-	#global tmpPjtDir
-	#global status_run
-	#global tg_count
-	#global profileName
-	#global pjtToolBoxPath
-	#global pjtTimeOut
-	#global pjtUserInclPath
-	#if { $status_run == 1 } {
-	#	Editor::RunStatusInfo
-	#}
-	#if {$PjtDir != "None"} {
-		#Prompt for Saving the Existing Project
-		#set result [tk_messageBox -message "Save Project $PjtName ?" -type yesnocancel -icon question -title 			#"Question"]
-			 #switch -- $result {
-	 		   #  yes {			 
-	   		   #      saveproject
-	   		    # }
-	   		    # no  {conPuts "Project $PjtName not saved" info}
-	   		    # cancel {
-					#set PjtDir None
-				#	conPuts "Create New Project Canceled" info
-				#	return
-				#}
-	   		#}
-	#}
 	global tmpPjtName
 	global tmpPjtDir
 	global tmpImpDir
-	#global mn
 	global updatetree
 
 	set winNewProj .newprj
@@ -589,12 +610,12 @@ proc NewProjectWindow {} {
 	$titleInnerFrame2.en_imppath config -state disabled 
 
 	radiobutton $titleInnerFrame2.ra_def -text "Default" -variable conf -value on -command {
-			.newprj.titleFrame1.f.titleFrame2.f.en_imppath config -state disabled 
-			.newprj.titleFrame1.f.titleFrame2.f.bt_imppath config -state disabled 
+		.newprj.titleFrame1.f.titleFrame2.f.en_imppath config -state disabled 
+		.newprj.titleFrame1.f.titleFrame2.f.bt_imppath config -state disabled 
 	}
 	radiobutton $titleInnerFrame2.ra_imp -text "Import XDC/XDD" -variable conf -value off -command {
-			.newprj.titleFrame1.f.titleFrame2.f.en_imppath config -state normal 
-			.newprj.titleFrame1.f.titleFrame2.f.bt_imppath config -state normal 
+		.newprj.titleFrame1.f.titleFrame2.f.en_imppath config -state normal 
+		.newprj.titleFrame1.f.titleFrame2.f.bt_imppath config -state normal 
 	} 
 	$titleInnerFrame2.ra_def select
 
@@ -635,12 +656,6 @@ proc NewProjectWindow {} {
 			focus .newprj
 			return
 		}
-
-		#if {![file isdirectory $tmpPjtDir]} {
-		#	tk_messageBox -message "Entered path for project is not a Directory" -icon error
-		#	focus .newprj
-		#	return
-		#}
 		$Editor::projMenu add command -label "Close Project" -command "closeproject" 
 		$updatetree itemconfigure PjtName -text $tmpPjtName
 		catch {$updatetree delete MN-$mnCount}
@@ -658,8 +673,7 @@ proc NewProjectWindow {} {
 	grid config $winNewProj.l_empty -row 0 -column 0 
 	
 	grid config $titleFrame1 -row 1 -column 0 -sticky "news" -ipadx 10 -padx 10 -ipady 10
-	#grid config $winNewProj.l_empty1 -row 2 -column 0 
-	#grid config $titleInnerFrame1.l_empty2 -row 0 -column 0 
+
 	grid config $titleInnerFrame1.l_pjname -row 1 -column 0 
 	grid config $titleInnerFrame1.en_pjname -row 1 -column 1 -sticky "w"
 	grid config $titleInnerFrame1.l_pjpath -row 2 -column 0 
@@ -674,7 +688,6 @@ proc NewProjectWindow {} {
 	grid config $titleInnerFrame2.en_imppath -row 1 -column 1
 	grid config $titleInnerFrame2.bt_imppath -row 1 -column 2
  
-
 	grid config $titleInnerFrame1.l_empty4 -row 5 -column 0 
 	
 	grid config $frame1 -row 6 -column 1 
@@ -689,12 +702,13 @@ proc NewProjectWindow {} {
 	centerW $winNewProj
 }
 
-#######################################################################
-# proc closeproject
-# Saves the project if user selects the clears the structure
-########################################################################
-
-proc closeproject {} {
+###############################################################################################
+#proc CloseProject
+#Input       : -
+#Output      : -
+#Description : Creates the GUI when existing Project is to be closed
+###############################################################################################
+proc CloseProject {} {
 	global PjtDir
 	global PjtName
 	if {$PjtDir == "" || $PjtDir == "None"} {
@@ -704,7 +718,7 @@ proc closeproject {} {
 	set result [tk_messageBox -message "Save Project $PjtName ?" -type yesnocancel -icon question -title 			"Question"]
    		 switch -- $result {
    		     yes {			 
-   		         saveproject
+   		         #saveproject
    		     }
    		     no  {conPuts "Project $PjtName not saved" info}
    		     cancel {
@@ -712,40 +726,24 @@ proc closeproject {} {
 				return}
    		}	
 	global updatetree
-	#Editor::tselectObject "TargetConfig"
-	#Editor::closeFile
-	# Delete all the records
-	#struct::record delete record recProjectDetail
-	#struct::record delete record recTestGroup
-	#struct::record delete record recTestCase
-	#struct::record delete record recProfile
+
 	# Delete the Tree
 	$updatetree delete PjtName
 	$updatetree insert end root PjtName -text "POWERLINK Network" -open 1 -image [Bitmap::get network]
-	#$updatetree itemconfigure PjtName -text "POWERLINK Network"
-	#catch {$updatetree delete MN-$mnCount}
-
-	#set PjtDir None
-		
-	##################################################################
-  	### Reading Datas from XML File
-    	##################################################################
-   	#readxml $filename
-    	##################################################################
-	#InsertTree
-	#Editor::tselectObject "TargetConfig"
 	}
 }
-#######################################################################
-# proc saveProjectAsWindow
-#
-########################################################################
+
+################################################################################################
+#proc ImportProgress
+#Input       : choice
+#Output      : progressbar path
+#Description : Creates the GUI displaying progress when XDC/XDD is imported
+################################################################################################
 proc ImportProgress {stat} {
+	global LocvarProgbar
+	global prog
 
-global LocvarProgbar
-global prog
-
-	if {$stat=="start"} {
+	if {$stat == "start"} {
 		set winImpoProg .impoProg
 		catch "destroy $winImpoProg"
 		toplevel $winImpoProg
@@ -753,106 +751,20 @@ global prog
 		wm resizable $winImpoProg 0 0
 		wm transient $winImpoProg .
 		wm deiconify $winImpoProg
-		#wm minsize   $winImpoProg 50 200
 		grab $winImpoProg
 		set LocvarProgbar 0
-		#ProgressBar $winImpoProg.prog -orient horizontal -width 200 -maximum 100 -height 10 -variable LocvarProgbar -type infinite -bg white -fg blue
 		set prog [ProgressBar $winImpoProg.prog -orient horizontal -width 200 -maximum 100 -height 10 -variable LocvarProgbar -type incremental -bg white -fg blue]
-		#label $winImpoProg.l_test -text "TEST"
-		#set prog [ttk::progressbar $winImpoProg.prog -mode indeterminate]
 		grid config $winImpoProg.prog -row 0 -column 0 -padx 10 -pady 10
-		#grid config $winImpoProg.l_test -row 1 -column 0 -padx 10 -pady 10
-		#puts "Import Progress....................................................................."
-                #ttk::progressbar::start $prog
+		centerW $winImpoProg
 		update idletasks
 		return  $winImpoProg.prog
-		#$winImpoProg.prog start
-	} elseif {$stat=="stop" } { 
-                #ttk::progressbar::stop $prog
-		#puts endcount->[.impoProg.prog cget -maximum]
+	} elseif {$stat == "stop" } { 
 		set LocvarProgbar 100
 		destroy .impoProg
-	} elseif {$stat=="incr"} {
+	} elseif {$stat == "incr"} {
 		incr LocvarProgbar
-		#update idletasks
-		puts -nonewline "$LocvarProgbar "
-		#after 500
-		#ImportProgress incr
-		#IncrProgressIndicator
 	}
 
-
 }
 
-proc IncrProgressIndicator {} {
-	global impPro
-	puts "incr.."
-	#ImportProgress incr
-	incr impPro
-	update idletasks
-	after 15
-	IncrProgressIndicator
-}
 
-proc progressbar_incr1 {stat} {
-	global varProgbar
-	global LocvarProgbar
-	#global ExecTime
-	#global LineOfExecStop
-#after 100
-	if {$stat=="start"} {
-		incr varProgbar
-		puts "varProgbar->$varProgbar"
-		if {$varProgbar} {
-			set LocvarProgbar $varProgbar
-			if {$varProgbar == 100} {
-				set LocvarProgbar $varProgbar
-				#set varProgbar 0
-				return
-			}
-			update idletasks		
-		} 
-		#update idletasks
-		after 1 progressbar_incr start
-	} else {
-		puts "stop is invoked"
-		set varProgbar 99
-		return
-	}
-}
-
-##########for test #############
-proc progressbar_incr {} {
-	global varProgbar
-	global LocvarProgbar
-	#global ExecTime
-	#global LineOfExecStop
-
-	incr varProgbar
-	#puts "varProgbar->$varProgbar"
-	if {$varProgbar} {
-		set LocvarProgbar $varProgbar
-		if {$varProgbar == 100} {
-			set LocvarProgbar $varProgbar
-			#set LineOfExecStop 0	
-			#if {[string compare $ExecTime ""] } {
-			#	conPuts $ExecTime
-			#	set ExecTime ""
-			#} else {
-			#	
-			#}	
-			#.mainframe.frame.pw1.butTrans configure -state normal
-			#.mainframe.frame.pw1.butGo configure -state disabled -text "     Go    " -command {GoProc}
-			#.mainframe.frame.pw1.butStop configure -state disabled
-			#.mainframe.frame.pw1.butNext configure -state disabled
-			#set LocvarProgbar 0
-			#set varProgbar 0
-			#puts "call to stop progress"
-			ImportProgress stop
-			return
-		}
-		update idletasks		
-	} 
-	#puts "cmd with delay"
-	after 15 progressbar_incr
-}

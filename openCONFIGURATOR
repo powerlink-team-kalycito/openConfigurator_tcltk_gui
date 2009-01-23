@@ -1,16 +1,67 @@
-################################################################################
-#									
-# Script:	TestSuite						
-#									
-# Author:	Kalycito Infotech Pvt Ltd		
-#									
-# Description:	Sources all required files and Initializes the TestSuite.
+###############################################################################################
 #
-# Version:	Version - 1.2.
-# 
-# Version Change Log:
-# 		Version 1.2 includes interactive testing [between User and STB]
-################################################################################
+#
+# NAME:     openCONFIGURATOR
+#
+# PURPOSE:  purpose description
+#
+# AUTHOR:   Kalycito Infotech Pvt Ltd
+#
+# COPYRIGHT NOTICE:
+#
+#********************************************************************************
+# (c) Kalycito Infotech Private Limited
+#
+#  Project:      openCONFIGURATOR 
+#
+#  Description:  Sources all required files and Initializes the openCONFIGURATOR.
+#
+#
+#  License:
+#
+#    Redistribution and use in source and binary forms, with or without
+#    modification, are permitted provided that the following conditions
+#    are met:
+#
+#    1. Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#
+#    2. Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#
+#    3. Neither the name of Kalycito Infotech Private Limited nor the names of 
+#       its contributors may be used to endorse or promote products derived
+#       from this software without prior written permission. For written
+#       permission, please contact info@kalycito.com.
+#
+#    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+#    "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+#    LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+#    FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+#    COPYRIGHT HOLDERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+#    INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+#    BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+#    LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+#    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+#    LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+#    ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#    POSSIBILITY OF SUCH DAMAGE.
+#
+#    Severability Clause:
+#
+#        If a provision of this License is or becomes illegal, invalid or
+#        unenforceable in any jurisdiction, that shall not affect:
+#        1. the validity or enforceability in that jurisdiction of any other
+#           provision of this License; or
+#        2. the validity or enforceability in other jurisdictions of that or
+#           any other provision of this License.
+#
+#********************************************************************************
+#
+#  REVISION HISTORY:
+# $Log:      $
+###############################################################################################
 
 
 #!/bin/sh
@@ -20,96 +71,81 @@ exec wish "$0" ${1+"$@"}
 set pwd [pwd]
 package require Tk 8.5
 
-
 global RootDir
 global EditorData
-global clock_var
-#global textChanged
 global conWindow
 global warWindow
 global errWindow
 
 set RootDir [pwd]
 
-
-
 set path_to_BWidget [file join $RootDir BWidget-1.2.1]
 lappend auto_path $path_to_BWidget
-
+	
 package require -exact BWidget 1.2.1
 Bitmap::get cut
 # this used for loading Bitmap namespace into the interpetator
 namespace eval Bitmap {
-    lappend path [file join $RootDir images]
+	lappend path [file join $RootDir images]
 }
 source [file join $RootDir operations.tcl]
 source [file join $RootDir console.tcl]
 source [file join $RootDir manager.tcl]
 source [file join $RootDir wrapper_interactions.tcl]
+
+###############################################################################################
+#proc initOPN_CFGRATOR
+#Input       : argc, argv
+#Output      : -
+#Description : Calls the GUI of the application loads the so and dll
+###############################################################################################
 proc initOPN_CFGRATOR {argc argv} {
-    global tcl_platform
-    global auto_path
-    global EditorData
-    global updatetree
-    global PjtDir
-    global PjtName
-    global RootDir
-    lappend auto_path ..
-
-     
-    option add *TitleFrame.font {helvetica 11 bold italic}
-    if {"$tcl_platform(platform)" != "windows"} {
-        option add *background #d7d5d3 userDefault
-    }
-    
-    wm withdraw .
-    wm title . "openMANAGER"
-    set chk [Editor::create]
-    BWidget::place . 0 0 center
-    
-    #StartUp
-
-    update idletasks
-
-  
-
-    if {[info exists EditorData(options,mainWinSize)]} {
-        wm geom . $EditorData(options,mainWinSize)
-        update
-    }
-    
-
-    after idle {
-        wm deiconify .
-        raise .
-        focus .
-        set Editor::initDone 1
-    }
-
+	global tcl_platform
+	global auto_path
+	global EditorData
+	global updatetree
+	global PjtDir
+	global PjtName
+	global RootDir
+	lappend auto_path ..
+	 
+	option add *TitleFrame.font {helvetica 11 bold italic}
+	if {"$tcl_platform(platform)" != "windows"} {
+		option add *background #d7d5d3 userDefault
+	}
+	
+	wm withdraw .
+	wm title . "openCONFIGURATOR"
+	set chk [Editor::create]
+	BWidget::place . 0 0 center
+	update idletasks
+	if {[info exists EditorData(options,mainWinSize)]} {
+		wm geom . $EditorData(options,mainWinSize)
+		update
+	}
+	after idle {
+		wm deiconify .
+		raise .
+		focus .
+		set Editor::initDone 1
+	}
 	StartUp 
 
-    if {$argc >= 1} {
-        set cursor [. cget -cursor]
-        . configure -cursor watch
-        update
-        foreach filename $argv {
-            if {[file exists $filename]} {
-                Editor::openFile $filename
-            } elseif {[file exists [file join $EditorData(options,workingDir) $filename]]} {
-                Editor::openFile [file join $EditorData(options,workingDir) $filename]
-            }
-        }
-        . configure -cursor $cursor
-        update
-    }
-	#StartUp
-	# Delete all the records
-	#struct::record delete record recProjectDetail
-	#struct::record delete record recTestGroup
-	#struct::record delete record recTestCase
-	#struct::record delete record recProfile
+	if {$argc >= 1} {
+		set cursor [. cget -cursor]
+		. configure -cursor watch
+		update
+		foreach filename $argv {
+			if {[file exists $filename]} {
+				Editor::openFile $filename
+			} elseif {[file exists [file join $EditorData(options,workingDir) $filename]]} {
+				Editor::openFile [file join $EditorData(options,workingDir) $filename]
+			}
+		}
+		. configure -cursor $cursor
+		update
+	}
 	
-	# Delete the Tree
 	$updatetree delete end root PjtName
 	
 	set pjtFolder $EditorData(options,History)
@@ -135,21 +171,13 @@ proc initOPN_CFGRATOR {argc argv} {
 	##################################################################
   	### Calling Wrapper function
     	##################################################################
+	catch {load ./Tcl_WrapperMain.so}
 	catch {load openCONFIGURATORwrapper.dll openCONFIGURATORwrapper}
 	puts "Successfully loaded dll"
     	##################################################################
 
-	##################################################################
-  	### Reading Datas from XML File
-    	##################################################################
-	#DeclareStructure
-   	#readxml $pjtFolder/$PjtName
-    	##################################################################
-	#instProject configure -memProjectName $PjtName
+
 	InsertTree
-	#Editor::tselectObject "myboard_sshscp.exp"
-	#Initial status of the Pjt
-	#conPuts "Initialized..."
-	#conPuts "Project $filename opened"
+
 }
 initOPN_CFGRATOR $argc $argv

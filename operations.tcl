@@ -239,6 +239,18 @@ proc Editor::restoreWindowPositions {} {
 }
 
 ################################################################################################
+#proc Editor::tselect
+#Input       : node
+#Output      : -
+#Description : Selects a node in tree when clicked
+################################################################################################
+proc Editor::tselect {node} {
+   	variable treeWindow
+	$treeWindow selection clear
+	$treeWindow selection set $node 
+}
+
+################################################################################################
 #proc Editor::tselectright
 #Input       : x position, y position, node
 #Output      : -
@@ -802,8 +814,11 @@ proc Editor::create { } {
 	set pf1 [EditManager::create_treeWindow $list_notebook]
 	set treeWindow $pf1.sw.objTree
 	# Binding on tree widget   
+	$treeWindow bindText <ButtonPress-1> Editor::tselect
 	$treeWindow bindText <Double-1> Editor::DoubleClickNode
 	$treeWindow bindText <ButtonPress-3> {Editor::tselectright %X %Y}
+	bind $treeWindow <Button-4> {.mainframe.frame.pw1.f0.frame.pw2.f0.frame.nb.fobjtree.sw.objTree yview scroll -5 units}
+	bind $treeWindow <Button-5> {.mainframe.frame.pw1.f0.frame.pw2.f0.frame.nb.fobjtree.sw.objTree yview scroll 5 units}
    
 	global EditorData
 	global PjtDir
@@ -984,45 +999,60 @@ proc Editor::DoubleClickNode {node} {
 		set IndexActualValue [CBaseIndex_getActualValue $xdcFile($xdcId)]
 		set IndexHighLimit [CBaseIndex_getHighLimit $xdcFile($xdcId)]
 		set IndexLowLimit [CBaseIndex_getLowLimit $xdcFile($xdcId)]	
-		#set IndexPdoMap [CBaseIndex_getLowLimit $xdcFile($xdcId)]
+		set IndexPdoMap [CBaseIndex_getPDOMapping $xdcFile($xdcId)]
 		$tmpInnerf0.en_idx1 configure -state normal
 		$tmpInnerf0.en_idx1 delete 0 end
 		$tmpInnerf0.en_idx1 insert 0 $indexValue
 		$tmpInnerf0.en_idx1 configure -state disabled
+
 		$tmpInnerf0.en_sidx1 configure -state normal
 		$tmpInnerf0.en_sidx1 delete 0 end
 		$tmpInnerf0.en_sidx1 insert 0 $sIdxValue
 		$tmpInnerf0.en_sidx1 configure -state disabled
+
 		$tmpInnerf0.en_nam1 delete 0 end
 		$tmpInnerf0.en_nam1 insert 0 $IndexName
+
 		$tmpInnerf1.en_obj1 configure -state normal
 		$tmpInnerf1.en_obj1 delete 0 end
 		$tmpInnerf1.en_obj1 insert 0 $IndexObjType
 		$tmpInnerf1.en_obj1 configure -state disabled
+
 		$tmpInnerf1.en_data1 configure -state normal
 		$tmpInnerf1.en_data1 delete 0 end
 		$tmpInnerf1.en_data1 insert 0 $IndexDataType
 		$tmpInnerf1.en_data1 configure -state disabled
+
 		$tmpInnerf1.en_access1 configure -state normal
 		$tmpInnerf1.en_access1 delete 0 end
 		$tmpInnerf1.en_access1 insert 0 $IndexAccessType
 		$tmpInnerf1.en_access1 configure -state disabled
+
 		$tmpInnerf1.en_default1 configure -state normal
 		$tmpInnerf1.en_default1 delete 0 end
 		$tmpInnerf1.en_default1 insert 0 $IndexDefaultValue
 		$tmpInnerf1.en_default1 configure -state disabled
+
 		$tmpInnerf1.en_value1 configure -validate none 
 		$tmpInnerf1.en_value1 delete 0 end
 		$tmpInnerf1.en_value1 insert 0 $IndexActualValue
 		$tmpInnerf1.en_value1 configure -validate key
+
 		$tmpInnerf1.en_lower1 configure -state normal
 		$tmpInnerf1.en_lower1 delete 0 end
 		$tmpInnerf1.en_lower1 insert 0 $IndexLowLimit
 		$tmpInnerf1.en_lower1 configure -state disabled
+
 		$tmpInnerf1.en_upper1 configure -state normal
 		$tmpInnerf1.en_upper1 delete 0 end
 		$tmpInnerf1.en_upper1 insert 0 $IndexHighLimit
 		$tmpInnerf1.en_upper1 configure -state disabled
+
+		$tmpInnerf1.en_pdo1 configure -state normal
+		$tmpInnerf1.en_pdo1 delete 0 end
+		$tmpInnerf1.en_pdo1 insert 0 $IndexPdoMap
+		$tmpInnerf1.en_pdo1 configure -state disabled
+
 		$notebook itemconfigure Page2 -state normal
 		$notebook raise Page2
 		$notebook itemconfigure Page1 -state disabled
@@ -1061,41 +1091,56 @@ proc Editor::DoubleClickNode {node} {
 		set IndexActualValue [CBaseIndex_getActualValue $xdcFile($xdcId)]
 		set IndexHighLimit [CBaseIndex_getHighLimit $xdcFile($xdcId)]
 		set IndexLowLimit [CBaseIndex_getLowLimit $xdcFile($xdcId)]	
+		set IndexPdoMap [CBaseIndex_getPDOMapping $xdcFile($xdcId)]
+
 		$tmpInnerf0.en_idx1 configure -state normal
 		$tmpInnerf0.en_idx1 delete 0 end
 		$tmpInnerf0.en_idx1 insert 0 $indexValue
 		$tmpInnerf0.en_idx1 configure -state disabled
+
 		$tmpInnerf0.en_nam1 delete 0 end
 		$tmpInnerf0.en_nam1 insert 0 $IndexName
+
 		$tmpInnerf1.en_obj1 configure -state normal
 		$tmpInnerf1.en_obj1 delete 0 end
 		$tmpInnerf1.en_obj1 insert 0 $IndexObjType
 		$tmpInnerf1.en_obj1 configure -state disabled
+
 		$tmpInnerf1.en_data1 configure -state normal
 		$tmpInnerf1.en_data1 delete 0 end
 		$tmpInnerf1.en_data1 insert 0 $IndexDataType
 		$tmpInnerf1.en_data1 configure -state disabled
+
 		$tmpInnerf1.en_access1 configure -state normal
 		$tmpInnerf1.en_access1 delete 0 end
 		$tmpInnerf1.en_access1 insert 0 $IndexAccessType
 		$tmpInnerf1.en_access1 configure -state disabled
+
 		$tmpInnerf1.en_default1 configure -state normal
 		$tmpInnerf1.en_default1 delete 0 end
 		$tmpInnerf1.en_default1 insert 0 $IndexDefaultValue
 		$tmpInnerf1.en_default1 configure -state disabled
+
 		$tmpInnerf1.en_value1 configure -validate none 
 		$tmpInnerf1.en_value1 delete 0 end
 		$tmpInnerf1.en_value1 insert 0 $IndexActualValue
 		$tmpInnerf1.en_value1 configure -validate key
+
 		$tmpInnerf1.en_lower1 configure -state normal
 		$tmpInnerf1.en_lower1 delete 0 end
 		$tmpInnerf1.en_lower1 insert 0 $IndexLowLimit
 		$tmpInnerf1.en_lower1 configure -state disabled
+
 		$tmpInnerf1.en_upper1 configure -state normal
 		$tmpInnerf1.en_upper1 delete 0 end
 		$tmpInnerf1.en_upper1 insert 0 $IndexHighLimit
 		$tmpInnerf1.en_upper1 configure -state disabled
-		$tmpInnerf1.en_value1 configure -validate key
+
+		$tmpInnerf1.en_pdo1 configure -state normal
+		$tmpInnerf1.en_pdo1 delete 0 end
+		$tmpInnerf1.en_pdo1 insert 0 $IndexPdoMap
+		$tmpInnerf1.en_pdo1 configure -state disabled
+
 		$notebook itemconfigure Page1 -state normal
 		$notebook raise Page1
 		$notebook itemconfigure Page2 -state disabled
@@ -1277,6 +1322,7 @@ proc FindSpace::Find { searchStr } {
 			}
 	}
 	$updatetree selection clear
+	#puts FindSpace::findList->$FindSpace::findList
 	if {[llength $FindSpace::findList]!=0} {
 		catch { set parent [$updatetree parent [lindex $FindSpace::findList 0] ]
 			$updatetree itemconfigure [$updatetree parent [lindex $FindSpace::findList 0] ] -open 1

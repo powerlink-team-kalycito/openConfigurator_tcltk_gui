@@ -656,7 +656,7 @@ proc NewProjectWindow {} {
 			focus .newprj
 			return
 		}
-		$Editor::projMenu add command -label "Close Project" -command "closeproject" 
+		$Editor::projMenu add command -label "Close Project" -command "CloseProject" 
 		$updatetree itemconfigure PjtName -text $tmpPjtName
 		catch {$updatetree delete MN-$mnCount}
 		$updatetree insert end PjtName MN-$mnCount -text "openPOWERLINK MN" -open 1 -image [Bitmap::get mn]

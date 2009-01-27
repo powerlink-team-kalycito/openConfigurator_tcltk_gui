@@ -82,8 +82,8 @@ proc Import {cn tmpDir NodeType NodeID } {
 	set objNodeCollection [new_CNodeCollection]
 	set objNodeCollection [CNodeCollection_getNodeColObjectPointer]
 	puts "errorString->$errorString...NodeType->$NodeType...NodeID->$NodeID..."
-	Tcl_CreateNode $NodeID $NodeType
-	Tcl_ImportXML "$tmpDir" $errorString $NodeType $NodeID
+	SharedLib_CreateNode $NodeID $NodeType
+	SharedLib_ImportXML "$tmpDir" $errorString $NodeType $NodeID
         set LocvarProgbar 20 
 	set objNode [new_CNode]
 	set obj [new_CIndexCollection]

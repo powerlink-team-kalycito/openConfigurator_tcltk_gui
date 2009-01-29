@@ -69,29 +69,33 @@
 #Output      : -
 #Description : Reads an XDC/XDD file and populates tree
 ###############################################################################################
-proc Import {cn tmpDir NodeType NodeID } {
+proc Import {cn tmpDir NodeType NodeID obj objNode } {
 	global updatetree
 	global cnCount
-	global xdcFile
+	global nodeObj
 	ImportProgress start
 
 	global LocvarProgbar
 	set LocvarProgbar 0
 	set errorString []
-	set NodeType 1
-	set objNodeCollection [new_CNodeCollection]
-	set objNodeCollection [CNodeCollection_getNodeColObjectPointer]
-	puts "errorString->$errorString...NodeType->$NodeType...NodeID->$NodeID..."
-	SharedLib_CreateNode $NodeID $NodeType
-	SharedLib_ImportXML "$tmpDir" $errorString $NodeType $NodeID
-        set LocvarProgbar 20 
-	set objNode [new_CNode]
-	set obj [new_CIndexCollection]
-	set objNode [CNodeCollection_getNode $objNodeCollection $NodeType $NodeID]
-	#old code 
-	set obj [CNode_getIndexCollection $objNode]
-	#currntly works only for windows
-	#set obj [CNode_getIndexCollectionWithoutPDO $objNode]
+	#set NodeType 1
+#+++++++++++++++++++++++++++
+	#set objNodeCollection [new_CNodeCollection]
+	#set objNodeCollection [CNodeCollection_getNodeColObjectPointer]
+	#puts "errorString->$errorString...NodeType->$NodeType...NodeID->$NodeID..."
+	#CreateNode $NodeID $NodeType
+	#ImportXML "$tmpDir" $errorString $NodeType $NodeID
+        #set LocvarProgbar 20 
+	#set objNode [new_CNode]
+	#set obj [new_CIndexCollection]
+	#set objNode [CNodeCollection_getNode $objNodeCollection $NodeType $NodeID]
+	##old code 
+	#set obj [CNode_getIndexCollection $objNode]
+	##currntly works only for windows
+	##set obj [CNode_getIndexCollectionWithoutPDO $objNode]
+	puts "******Import*****"
+#++++++++++++++++++++++++++++++
+	puts obj->$obj
 	puts "**"
 	set count [CIndexCollection_getNumberofIndexes $obj]
 	puts COUNT$count
@@ -103,14 +107,14 @@ proc Import {cn tmpDir NodeType NodeID } {
 	puts cnId-->$cnId
 	for { set inc 0 } { $inc < $count } { incr inc } {
 		set ObjIndex [CIndexCollection_getIndex $obj $inc]
-		set xdcFile(1-$cnId-$inc) $ObjIndex
+		set nodeObj(1-$cnId-$inc) $ObjIndex
 		set IndexValue [CBaseIndex_getIndexValue $ObjIndex]
 		set IndexName [CBaseIndex_getName $ObjIndex]
 		$updatetree insert $inc $cn IndexValue-1-$cnId-$inc -text $IndexName\($IndexValue\) -open 0 -image [Bitmap::get index]
 		set SIdxCount [CIndex_getNumberofSubIndexes $ObjIndex]
 		for { set tmpCount 0 } { $tmpCount < $SIdxCount } { incr tmpCount } {
 			set ObjSIdx [CIndex_getSubIndex $ObjIndex $tmpCount]
-			set xdcFile(1-$cnId-$inc-$tmpCount) $ObjSIdx
+			set nodeObj(1-$cnId-$inc-$tmpCount) $ObjSIdx
 			set SIdxValue [CBaseIndex_getIndexValue $ObjSIdx]
 			set SIdxName [CBaseIndex_getName $ObjIndex]
 			$updatetree insert end IndexValue-1-$cnId-$inc SubIndexValue-1-$cnId-$inc-$tmpCount -text $SIdxName\($SIdxValue\) -open 0 -image [Bitmap::get subindex]
@@ -127,14 +131,14 @@ proc Import {cn tmpDir NodeType NodeID } {
 	$updatetree insert end PDO-1-$cnId TPDO-1-$cnId -text "TPDO" -open 0 -image [Bitmap::get pdo]
 	for { set inc 0 } { $inc < $count } { incr inc } {
 		set ObjIndex [CIndexCollection_getIndex $TclIndexCollection $inc]
-		set xdcFile(1-TPdo$cnId-$inc) $ObjIndex
+		set nodeObj(1-TPdo$cnId-$inc) $ObjIndex
 		set IndexValue [CBaseIndex_getIndexValue $ObjIndex]
 		set IndexName [CBaseIndex_getName $ObjIndex]
 		$updatetree insert $inc TPDO-1-$cnId TPdoIndexValue-1-TPdo$cnId-$inc -text $IndexName\($IndexValue\) -open 0 -image [Bitmap::get index]
 		set SIdxCount [CIndex_getNumberofSubIndexes $ObjIndex]
 		for { set tmpCount 0 } { $tmpCount < $SIdxCount } { incr tmpCount } {
 			set ObjSIdx [CIndex_getSubIndex $ObjIndex $tmpCount]
-			set xdcFile(1-TPdo$cnId-$inc-$tmpCount) $ObjSIdx
+			set nodeObj(1-TPdo$cnId-$inc-$tmpCount) $ObjSIdx
 			set SIdxValue [CBaseIndex_getIndexValue $ObjSIdx]
 			set SIdxName [CBaseIndex_getName $ObjIndex]
 			$updatetree insert end TPdoIndexValue-1-TPdo$cnId-$inc TPdoSubIndexValue-1-TPdo$cnId-$inc-$tmpCount -text $SIdxName\($SIdxValue\) -open 0 -image [Bitmap::get subindex]
@@ -150,14 +154,14 @@ proc Import {cn tmpDir NodeType NodeID } {
 	$updatetree insert end PDO-1-$cnId RPDO-1-$cnId -text "RPDO" -open 0 -image [Bitmap::get pdo]
 	for { set inc 0 } { $inc < $count } { incr inc } {
 		set ObjIndex [CIndexCollection_getIndex $TclIndexCollection $inc]
-		set xdcFile(1-RPdo$cnId-$inc) $ObjIndex
+		set nodeObj(1-RPdo$cnId-$inc) $ObjIndex
 		set IndexValue [CBaseIndex_getIndexValue $ObjIndex]
 		set IndexName [CBaseIndex_getName $ObjIndex]
 		$updatetree insert $inc RPDO-1-$cnId RPdoIndexValue-1-RPdo$cnId-$inc -text $IndexName\($IndexValue\) -open 0 -image [Bitmap::get index]
 		set SIdxCount [CIndex_getNumberofSubIndexes $ObjIndex]
 		for { set tmpCount 0 } { $tmpCount < $SIdxCount } { incr tmpCount } {
 			set ObjSIdx [CIndex_getSubIndex $ObjIndex $tmpCount]
-			set xdcFile(1-RPdo$cnId-$inc-$tmpCount) $ObjSIdx
+			set nodeObj(1-RPdo$cnId-$inc-$tmpCount) $ObjSIdx
 			set SIdxValue [CBaseIndex_getIndexValue $ObjSIdx]
 			set SIdxName [CBaseIndex_getName $ObjIndex]
 			$updatetree insert end RPdoIndexValue-1-RPdo$cnId-$inc RPdoSubIndexValue-1-RPdo$cnId-$inc-$tmpCount -text $SIdxName\($SIdxValue\) -open 0 -image [Bitmap::get subindex]
@@ -167,5 +171,9 @@ proc Import {cn tmpDir NodeType NodeID } {
 	puts "errorString->$errorString...NodeType->$NodeType...NodeID->$NodeID..."
 	set LocvarProgbar 80
 	ImportProgress stop
+
+######followingt lines are hard coded works only for mn#############
+#puts "no of coll -> [CNodeCollection_getNumberofNodes]"
+#puts "no of coll -> [getNumberofNodes]"
 }
 

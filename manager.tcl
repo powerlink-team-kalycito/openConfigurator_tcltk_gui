@@ -187,9 +187,9 @@ proc EditManager::create_tab {nb filename choice} {
 
    	set fram [frame $frame.f1]  
    	label $fram.l_empty -text "  " -height 1 
-   	button $fram.b_sav -text " Save " -command "YetToImplement"
+   	button $fram.b_sav -text " Save " -command "SaveValue $tabInnerf0 $tabInnerf1"
    	label $fram.l_empty1 -text "  "
-   	button $fram.b_dis -text "Discard" -command "YetToImplement"
+   	button $fram.b_dis -text "Discard" -command "DiscardValue $tabInnerf0 $tabInnerf1"
    	grid config $fram.l_empty -row 0 -column 0 -columnspan 2
    	grid config $fram.b_sav -row 1 -column 0 -sticky s
    	grid config $fram.l_empty1 -row 1 -column 1 -sticky s
@@ -372,3 +372,91 @@ proc ConvertHex {tmpValue} {
 	$tmpValue configure -validate key -vcmd "IsHex %P $tmpVar"
 }
 
+###############################################################################################
+#proc SaveValue
+#Input       : -
+#Output      : -
+#Description : Saves the user given data
+###############################################################################################
+proc SaveValue {frame0 frame1} {
+	global nodeSelect
+	global nodeObj
+	global nodeIdList
+	global updatetree
+
+	#puts "nodeSelect->$nodeSelect"
+	#puts "nodeObj->$nodeObj"
+	
+
+	foreach mnNode [$updatetree nodes PjtName] {
+		set chk 1
+		foreach cnNode [$updatetree nodes $mnNode] {
+			if {$chk == 1} {
+				if {[string match "OBD*" $cnNode]} {
+					lappend nodeList $cnNode " " " "
+				} else {
+					lappend nodeList " " " " " " $cnNode " " " "
+				}
+				set chk 0
+			} else {
+				lappend nodeList $cnNode " " " "
+			}
+		}
+	}
+
+
+
+
+	set tmpSplit [split $nodeSelect -]
+	set tmpNodeSelect [lrange $tmpSplit 1 end]
+	set tmpNodeSelect [join $tmpNodeSelect -]
+
+	#puts "tmpNodeSelect->$tmpNodeSelect"
+	#puts "nodeObj->$nodeObj($tmpNodeSelect)"
+
+	if {[string match "*SubIndexValue*" $nodeSelect]} {
+		set sIdxValue [CBaseIndex_getIndexValue $nodeObj($tmpNodeSelect)]
+		set sIdxValue [string toupper $sIdxValue]
+		puts "sIdxValue->$sIdxValue"
+		set indxId [lrange $tmpSplit 1 end-1 ]
+		set indxId [join $indxId -]
+		set indexValue [CBaseIndex_getIndexValue $nodeObj($indxId)]
+		set indexValue [string toupper $indexValue]
+		set parent [$updatetree parent $nodeSelect]
+		set parent [$updatetree parent $parent]	
+	} else {
+		set indexValue [CBaseIndex_getIndexValue $nodeObj($tmpNodeSelect)]
+		set indexValue [string toupper $indexValue]
+		set parent [$updatetree parent $nodeSelect]
+	}
+
+	set schCnt [lsearch -exact $nodeList $parent ]
+	#puts  "schCnt->$schCnt=======nodeList->$nodeList"
+	set nodeId [lindex $nodeIdList $schCnt]
+	set obj [lindex $nodeIdList [expr $schCnt+1]]
+	set objNode [lindex $nodeIdList [expr $schCnt+2]]
+
+	puts "nodeId->$nodeId"
+	puts "indexValue->$indexValue"
+
+	set tmpVar0 [$frame0.en_nam1 cget -textvariable]
+	global $tmpVar0	
+	puts "name->[subst $[subst $tmpVar0]]"
+
+	set tmpVar1 [$frame1.en_value1 cget -textvariable]
+	global $tmpVar1	
+puts "value->[subst $[subst $tmpVar1]]"
+
+}
+
+###############################################################################################
+#proc DiscardValue
+#Input       : -
+#Output      : -
+#Description : discards the user given data and restores old data
+###############################################################################################
+proc DiscardValue {frame0 frame1} {
+	global nodeSelect
+
+
+}

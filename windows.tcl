@@ -576,6 +576,7 @@ proc NewProjectWindow {} {
 	global tmpPjtDir
 	global tmpImpDir
 	global updatetree
+	global nodeIdList
 
 	set winNewProj .newprj
 	catch "destroy $winNewProj"
@@ -660,9 +661,18 @@ proc NewProjectWindow {} {
 		$updatetree itemconfigure PjtName -text $tmpPjtName
 		catch {$updatetree delete MN-$mnCount}
 		$updatetree insert end PjtName MN-$mnCount -text "openPOWERLINK MN" -open 1 -image [Bitmap::get mn]
+		set obj [NodeCreate 240 0]
+		puts $obj
+		lappend nodeIdList 240 [lindex $obj 0] [lindex $obj 1]
+		#puts "new project nodeIdList->$nodeIdList"
 		if {$conf=="off"} {
 			$updatetree insert end MN-$mnCount OBD-$mnCount -text "OBD" -open 0 -image [Bitmap::get pdo]
-			Import OBD-$mnCount $tmpImpDir mn 1
+			#check what is nodeId for mn
+			set errorString []
+			#API
+			ImportXML "$tmpImpDir" $errorString 1 240
+		puts "new project nodeIdList->$nodeIdList"
+			Import OBD-$mnCount $tmpImpDir 240 1 [lindex $obj 0] [lindex $obj 1] 
 		}
 		destroy .newprj
 	}
@@ -767,4 +777,148 @@ proc ImportProgress {stat} {
 
 }
 
+################################################################################################
+#proc AddIndexWindow
+#Input       : -
+#Output      : -
+#Description : -
+################################################################################################
+proc AddIndexWindow {} {
+	global updatetree
+	global indexVar
+
+	set winAddIdx .addIdx
+	catch "destroy $winAddIdx"
+	toplevel $winAddIdx
+	wm title     $winAddIdx	"Add Index"
+	wm resizable $winAddIdx 0 0
+	wm transient $winAddIdx .
+	wm deiconify $winAddIdx
+	wm minsize   $winAddIdx 50 50
+	grab $winAddIdx
+
+	set frame1 [frame $winAddIdx.fram1]
+	set frame2 [frame $winAddIdx.fram2]
+
+	label $winAddIdx.l_empty1 -text "               "	
+	label $frame1.l_index -text "Enter the Index"
+	label $winAddIdx.l_empty2 -text "               "	
+	label $winAddIdx.l_empty3 -text "               "
+
+	entry $frame1.en_index -textvariable indexVar -background white -relief ridge -validate key -vcmd "string is int %P"
+	set indexVar ""
+
+	button $frame2.bt_ok -text "  Ok  " -command {
+		set node [$updatetree selection get]
+		puts node----->$node
+		set child [$updatetree nodes $node]
+		if {[string match "*OBD*" $node]} {
+			set count [expr [llength $child] -1]
+		} else {
+			set count [llength $child]
+		}
+		
+		set nodePos [split $node -]
+		set nodePos [lindex $nodePos end]
+		puts nodePos---->$nodePos
+		if {$count != -1} {
+			$updatetree insert $count $node IndexValue-1-$nodePos-$count -text $indexVar -open 0 -image [Bitmap::get index]
+		} else {
+			$updatetree insert 0 $node IndexValue-1-$nodePos-0 -text $indexVar -open 0 -image [Bitmap::get index]
+		}
+		destroy .addIdx
+	}
+	button $frame2.bt_cancel -text Cancel -command { 
+		unset indexVar
+		destroy .addIdx	
+	}
+	grid config $winAddIdx.l_empty1 -row 0 -column 0 
+	grid config $frame1 -row 1 -column 0 
+	grid config $winAddIdx.l_empty2 -row 2 -column 0 
+	grid config $frame2 -row 3 -column 0  
+	grid config $winAddIdx.l_empty3 -row 4 -column 0 
+
+	grid config $frame1.l_index -row 0 -column 0 -padx 5
+	grid config $frame1.en_index -row 0 -column 1 -padx 5
+
+	grid config $frame2.bt_ok -row 0 -column 0 -padx 5
+	grid config $frame2.bt_cancel -row 0 -column 1 -padx 5
+
+	wm protocol .addIdx WM_DELETE_WINDOW "$frame2.bt_cancel invoke"
+	bind $winAddIdx <KeyPress-Return> "$frame2.bt_ok invoke"
+	bind $winAddIdx <KeyPress-Escape> "$frame2.bt_cancel invoke"
+
+	centerW $winAddIdx
+}
+
+################################################################################################
+#proc AddSubIndexWindow
+#Input       : -
+#Output      : -
+#Description : -
+################################################################################################
+proc AddSubIndexWindow {} {
+	global updatetree
+	global subIndexVar
+
+	set winAddSidx .addSidx
+	catch "destroy $winAddSidx"
+	toplevel $winAddSidx
+	wm title     $winAddSidx "Add SubIndex"
+	wm resizable $winAddSidx 0 0
+	wm transient $winAddSidx .
+	wm deiconify $winAddSidx
+	wm minsize   $winAddSidx 50 50
+	grab $winAddSidx
+
+	set frame1 [frame $winAddSidx.fram1]
+	set frame2 [frame $winAddSidx.fram2]
+
+	label $winAddSidx.l_empty1 -text "               "	
+	label $frame1.l_index -text "Enter the Index"
+	label $winAddSidx.l_empty2 -text "               "	
+	label $winAddSidx.l_empty3 -text "               "
+
+	entry $frame1.en_index -textvariable subIndexVar -background white -relief ridge -validate key -vcmd "string is xdigit %P"
+	set subIndexVar ""
+
+	button $frame2.bt_ok -text "  Ok  " -command {
+		set node [$updatetree selection get]
+		#puts node----->$node
+		set child [$updatetree nodes $node]
+		set count [llength $child]
+		#puts count---->$count
+		set nodePos [split $node -]
+		set nodePos [lrange $nodePos 1 end]
+		set nodePos [join $nodePos -]
+		#puts nodePos---->$nodePos
+		if {$count != -1} {
+			$updatetree insert $count $node SubIndexValue-$nodePos-$count -text $subIndexVar -open 0 -image [Bitmap::get subindex]
+		} else {
+			$updatetree insert 0 $node SubIndexValue-$nodePos-0 -text $subIndexVar -open 0 -image [Bitmap::get subindex]
+		}
+		destroy .addSidx
+	}
+	button $frame2.bt_cancel -text Cancel -command { 
+		unset subIndexVar
+		destroy .addSidx
+	}
+	grid config $winAddSidx.l_empty1 -row 0 -column 0 
+	grid config $frame1 -row 1 -column 0 
+	grid config $winAddSidx.l_empty2 -row 2 -column 0 
+	grid config $frame2 -row 3 -column 0  
+	grid config $winAddSidx.l_empty3 -row 4 -column 0 
+
+	grid config $frame1.l_index -row 0 -column 0 -padx 5
+	grid config $frame1.en_index -row 0 -column 1 -padx 5
+
+	grid config $frame2.bt_ok -row 0 -column 0 -padx 5
+	grid config $frame2.bt_cancel -row 0 -column 1 -padx 5
+
+	wm protocol .addSidx WM_DELETE_WINDOW "$frame2.bt_cancel invoke"
+	bind $winAddSidx <KeyPress-Return> "$frame2.bt_ok invoke"
+	bind $winAddSidx <KeyPress-Escape> "$frame2.bt_cancel invoke"
+
+	centerW $winAddSidx
+}
 

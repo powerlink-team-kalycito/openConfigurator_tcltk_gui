@@ -2007,6 +2007,11 @@ proc DeleteTreeNode {} {
 			set nodeType 1
 			if {[string match "*SubIndexValue*" $node]} {
 				puts "SharedLib delete sub index"
+				set errorString []				 
+				set res [DeleteSubIndex $nodeId $nodeType $idx $sidx $errorString]
+				if {$res == -1} {
+					return
+				}
 			} elseif {[string match "*IndexValue*" $node]} {
 				puts "SharedLib delete index"
 				set errorString []

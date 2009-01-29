@@ -383,6 +383,7 @@ proc SaveValue {frame0 frame1} {
 	global nodeObj
 	global nodeIdList
 	global updatetree
+	set nodeType CN
 
 	#puts "nodeSelect->$nodeSelect"
 	#puts "nodeObj->$nodeObj"
@@ -445,7 +446,9 @@ proc SaveValue {frame0 frame1} {
 
 	set tmpVar1 [$frame1.en_value1 cget -textvariable]
 	global $tmpVar1	
-puts "value->[subst $[subst $tmpVar1]]"
+	puts "value->[subst $[subst $tmpVar1]]"
+	set errStr []
+	EditIndex $nodeId 1 $indexValue [subst $[subst $tmpVar1]] [subst $[subst $tmpVar0]] $errStr
 
 }
 

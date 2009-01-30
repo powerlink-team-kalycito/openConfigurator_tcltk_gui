@@ -496,7 +496,13 @@ proc SaveValue {frame0 frame1} {
 puts "value->$value"
 	puts "value->[subst $[subst $tmpVar1]]"
 	set errStr []
-	EditIndex $nodeId 1 $indexValue [subst $[subst $tmpVar1]] [subst $[subst $tmpVar0]] $errStr
+	if {[string match "*SubIndexValue*" $nodeSelect]} {
+		EditSubIndex $nodeId 1 $indexValue $sIdxValue [subst $[subst $tmpVar1]] [subst $[subst $tmpVar0]] $errStr
+	} elseif {[string match "*IndexValue*" $nodeSelect]} {
+		EditIndex $nodeId 1 $indexValue [subst $[subst $tmpVar1]] [subst $[subst $tmpVar0]] $errStr
+	} else {
+		puts "\n\n\nShould Never Happen!!!\n\n\n"
+	}
 
 }
 

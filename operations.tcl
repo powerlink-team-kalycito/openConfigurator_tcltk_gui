@@ -908,8 +908,6 @@ proc Editor::DoubleClickNode {node} {
 	global f0
 	global f1
 	global f2
-	global ra_dec
-	global ra_hex
 	global nodeObj
 	global nodeSelect
 
@@ -1043,7 +1041,7 @@ puts "xdcId->$xdcId...xdcIcxId->$xdcIcxId"
 		$tmpInnerf1.en_value1 configure -validate none 
 		$tmpInnerf1.en_value1 delete 0 end
 		$tmpInnerf1.en_value1 insert 0 $IndexActualValue
-		$tmpInnerf1.en_value1 configure -validate key
+		$tmpInnerf1.en_value1 configure -validate key -vcmd "IsDec %P $tmpInnerf1.en_value1"
 
 		$tmpInnerf1.en_lower1 configure -state normal
 		$tmpInnerf1.en_lower1 delete 0 end
@@ -1059,6 +1057,9 @@ puts "xdcId->$xdcId...xdcIcxId->$xdcIcxId"
 		$tmpInnerf1.en_pdo1 delete 0 end
 		$tmpInnerf1.en_pdo1 insert 0 $IndexPdoMap
 		$tmpInnerf1.en_pdo1 configure -state disabled
+
+		$tmpInnerf1.frame1.ra_dec select
+		#set hexDec1 dec
 
 		$notebook itemconfigure Page2 -state normal
 		$notebook raise Page2
@@ -1132,7 +1133,7 @@ puts "xdcId->$xdcId"
 		$tmpInnerf1.en_value1 configure -validate none 
 		$tmpInnerf1.en_value1 delete 0 end
 		$tmpInnerf1.en_value1 insert 0 $IndexActualValue
-		$tmpInnerf1.en_value1 configure -validate key
+		$tmpInnerf1.en_value1 configure -validate key -vcmd "IsDec %P $tmpInnerf1.en_value1"
 
 		$tmpInnerf1.en_lower1 configure -state normal
 		$tmpInnerf1.en_lower1 delete 0 end
@@ -1148,6 +1149,8 @@ puts "xdcId->$xdcId"
 		$tmpInnerf1.en_pdo1 delete 0 end
 		$tmpInnerf1.en_pdo1 insert 0 $IndexPdoMap
 		$tmpInnerf1.en_pdo1 configure -state disabled
+
+		$tmpInnerf1.frame1.ra_dec select
 
 		$notebook itemconfigure Page1 -state normal
 		$notebook raise Page1
@@ -1187,6 +1190,9 @@ proc AddCN {cnName tmpImpDir nodeId} {
 	#lappend nodeIdList CN-1-$cnCount
 	lappend nodeIdList $nodeId [lindex $obj 0] [lindex $obj 1]
 	if {$tmpImpDir!=0} {
+		#API
+		set errorString []
+		ImportXML "$tmpImpDir" $errorString 1 $nodeId
 		#puts $tmpImpDir
 		Import CN-1-$cnCount $tmpImpDir 1 $nodeId [lindex $obj 0] [lindex $obj 1]
 	}

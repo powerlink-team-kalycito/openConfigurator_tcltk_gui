@@ -133,10 +133,15 @@ proc IsValidStr {input} {
 #Output      : 0 or 1
 #Description : Validates whether an entry is a integer and does not exceed specified range
 ###############################################################################################
-proc IsDec {input} {
-	if { [string is int $input] == 0 || $input > 65535 || [string length $input] > 5 } {
+proc IsDec {input tmpValue} {
+	puts "IsDec test"
+	set tempInput [string trimleft $input 0]		
+	
+
+	if { [string is int $tempInput] == 0 } {
 		return 0
 	} else {
+		after 1 SetValue $tmpValue $input
 		return 1
 	}
 }
@@ -147,10 +152,37 @@ proc IsDec {input} {
 #Output      : 0 or 1
 #Description : Validates whether an entry is a hexa decimal and does not exceed specified range
 ###############################################################################################
-proc IsHex {input tempVar} {
-	if { [string match "0x*" $input] == 0 || [string is xdigit [string range $input 2 end]] == 0 || [string length $input] > 6 } {
+proc IsHex {input tmpValue} {
+	puts "IsHex test"
+	puts "input->$input"
+	#set tmpVar [$tmpValue cget -textvariable]
+	if {[string match -nocase "0x*" $input]} {
+		set tempInput [string range $input 2 end]
+	} elseif {[string match -nocase "x*" $input]} {
+		set tempInput [string range $input 1 end]
+	} else {
+		set tempInput $input
+	}
+
+
+	if { [string is xdigit $tempInput ] == 0 } {
 		return 0
 	} else {
+		set tempInput 0x$tempInput
+		after 1 SetValue $tmpValue $tempInput
+		#puts "SetValue called"
 		return 1
 	}
 }
+
+############for test ########
+proc SetValue {tmpValue str } {
+	#puts "SetValue invoked"
+	set tmpVar [$tmpValue cget -textvariable]
+	$tmpValue configure -validate none
+	puts "SetValue->[$tmpValue cget -vcmd]"
+	$tmpValue delete 0 end
+	$tmpValue insert 0 $str
+	$tmpValue configure -validate key
+}
+

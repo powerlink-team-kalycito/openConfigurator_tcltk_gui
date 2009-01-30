@@ -670,7 +670,7 @@ proc NewProjectWindow {} {
 			#check what is nodeId for mn
 			set errorString []
 			#API
-			ImportXML "$tmpImpDir" $errorString 1 240
+			ImportXML "$tmpImpDir" $errorString 0 240
 		puts "new project nodeIdList->$nodeIdList"
 			Import OBD-$mnCount $tmpImpDir 240 1 [lindex $obj 0] [lindex $obj 1] 
 		}

@@ -84,7 +84,8 @@ proc EditManager::create_tab {nb filename choice} {
     	incr _newPageCounter
     	global tmpNam$_newPageCounter
     	global tmpValue$_newPageCounter
-    	global hexDec$_newPageCounter
+    	#global hexDec$_newPageCounter
+	global hexDec1
     	set pageName "Page$_newPageCounter"
     	set frame [$nb insert end $pageName -text $filename ]
 
@@ -127,11 +128,13 @@ proc EditManager::create_tab {nb filename choice} {
 	entry $tabInnerf1.en_lower1 -state disabled
 	entry $tabInnerf1.en_pdo1 -state disabled
 	entry $tabInnerf1.en_default1 -state disabled
-	entry $tabInnerf1.en_value1 -textvariable tmpValue$_newPageCounter  -relief ridge -justify center -bg white -validate key -vcmd "IsDec %P"
+	entry $tabInnerf1.en_value1 -textvariable tmpValue$_newPageCounter  -relief ridge -justify center -bg white -validate key -vcmd "IsDec %P $tabInnerf1.en_value1"
 
         set frame1 [frame $tabInnerf1.frame1]
-        set ra_dec [radiobutton $frame1.ra_dec -text "Dec" -variable hexDec$_newPageCounter -value on -command "ConvertDec $tabInnerf1.en_value1"]
-        set ra_hex [radiobutton $frame1.ra_hex -text "Hex" -variable hexDec$_newPageCounter -value off -command "ConvertHex $tabInnerf1.en_value1"]
+        #set ra_dec [radiobutton $frame1.ra_dec -text "Dec" -variable hexDec$_newPageCounter -value on -command "ConvertDec $tabInnerf1.en_value1"]
+        #set ra_hex [radiobutton $frame1.ra_hex -text "Hex" -variable hexDec$_newPageCounter -value off -command "ConvertHex $tabInnerf1.en_value1"]
+        set ra_dec [radiobutton $frame1.ra_dec -text "Dec" -variable hexDec1 -value dec -command "ConvertDec $tabInnerf1"]
+        set ra_hex [radiobutton $frame1.ra_hex -text "Hex" -variable hexDec1 -value hex -command "ConvertHex $tabInnerf1"]
         $frame1.ra_dec select
 	grid config $tabTitlef0 -row 0 -column 0 -sticky ew
 	label $uf.l_empty -text ""
@@ -351,11 +354,33 @@ proc EditManager::create_treeWindow {nb } {
 #Description : Converts to decimal value and changes validation for entry
 ###############################################################################################
 proc ConvertDec {tmpValue} {
-	set tmpVar [$tmpValue cget -textvariable]
+	#set selVar [$tmpValue.frame1.ra_dec cget -variable]
+	#global $selVar
+	#set selVar [subst $[subst $selVar]]
+	#puts "selVar->$selVar"
+	
+	puts "ConvertDec"
+	set tmpVar [$tmpValue.en_value1 cget -textvariable]
 	global $tmpVar
-	set $tmpVar [string range [subst $[subst $tmpVar]] 2 end]
-	catch {set $tmpVar [expr 0x[subst $[subst $tmpVar]]]}
-	$tmpValue configure -validate key -vcmd "IsDec %P"
+	set tmpVal [subst $[subst $tmpVar]]
+	puts "b4 trim ConvertDec->[subst $[subst $tmpVar]]--------tmpVal->$tmpVal"
+	if {[string match "0x*" $tmpVal ] == 1 } {
+		set tmpVal [string range $tmpVal 2 end]
+		puts "b4 trim 0x remov ConvertDec->$tmpVal"
+		set tmpVal [string trimleft $tmpVal 0]
+		puts "ConvertDec->$tmpVal"
+		$tmpValue.en_value1 configure -validate none
+		$tmpValue.en_value1 delete 0 end
+		catch {set tmpVal [expr 0x$tmpVal]}
+		$tmpValue.en_value1 insert 0 $tmpVal
+		#set $tmpVar " "
+		puts  "fina1 ConvertDec->$tmpVal"
+		$tmpValue.en_value1 configure -validate key -vcmd "IsDec %P $tmpValue.en_value1"
+	} else {
+		puts "ConvertDec already selected"
+		#already dec is selected
+	}
+	
 }
 
 ###############################################################################################
@@ -365,11 +390,31 @@ proc ConvertDec {tmpValue} {
 #Description : Converts to Hexadecimal value and changes validation for entry
 ###############################################################################################
 proc ConvertHex {tmpValue} {
-	set tmpVar [$tmpValue cget -textvariable]
+	#set selVar [$tmpValue.frame1.ra_dec cget -variable]
+	#global $selVar
+	#set selVar [subst $[subst $selVar]]
+	#puts "selVar->$selVar...."
+	puts "ConvertHex"
+
+	set tmpVar [$tmpValue.en_value1 cget -textvariable]
 	global $tmpVar	
-	catch {set $tmpVar [format %X [subst $[subst $tmpVar]]]}
-	set $tmpVar 0x[subst $[subst $tmpVar]]
-	$tmpValue configure -validate key -vcmd "IsHex %P $tmpVar"
+	set tmpVal [subst $[subst $tmpVar]]
+	puts "b4 trim ConvertHex->[subst $[subst $tmpVar]]--------tmpVal->$tmpVal"
+	if {[string match "0x*" $tmpVal ] == 0 } {
+		
+		set tmpVal [string trimleft $tmpVal 0]
+		puts "ConvertHex->$tmpVal"
+		$tmpValue.en_value1 configure -validate none
+		$tmpValue.en_value1 delete 0 end
+		catch {set tmpVal [format %X $tmpVal]}
+		set tmpVal 0x$tmpVal
+		$tmpValue.en_value1 insert 0 $tmpVal
+		puts  "final ConvertHex->$tmpVal"
+		$tmpValue.en_value1 configure -validate key -vcmd "IsHex %P $tmpValue.en_value1"
+	} else {
+		puts "ConvertHex already selected"
+		#already hex is selected
+	}
 }
 
 ###############################################################################################
@@ -446,6 +491,9 @@ proc SaveValue {frame0 frame1} {
 
 	set tmpVar1 [$frame1.en_value1 cget -textvariable]
 	global $tmpVar1	
+
+	set value [string toupper [subst $[subst $tmpVar1]] ]
+puts "value->$value"
 	puts "value->[subst $[subst $tmpVar1]]"
 	set errStr []
 	EditIndex $nodeId 1 $indexValue [subst $[subst $tmpVar1]] [subst $[subst $tmpVar0]] $errStr

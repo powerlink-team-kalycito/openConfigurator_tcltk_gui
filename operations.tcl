@@ -1981,7 +1981,7 @@ proc DeleteTreeNode {} {
 			set idxNode [$updatetree parent $node]
 		} elseif {[string match "*IndexValue*" $node]} {
 			#freeing the memory
-	 		foreach childIdx [$updatetree nodes $node] {
+	 		foreach childIdx [$updatetree nodes $node] {	
 				set tmpSplit [split $childIdx -]
 				set xdcId [lrange $tmpSplit 1 end]
 				set xdcId [join $xdcId -]
@@ -2004,29 +2004,32 @@ proc DeleteTreeNode {} {
 			#since it is a mn
 			set nodeId 240
 			set nodeType 0
-			puts "it is a mn"
+			puts "it is a MN"
 		} else {
 			#it is a cn
 			set nodeId [lsearch -exact $nodeList $paren]
 			set nodeId [lindex $nodeIdList $nodeId]
 			puts nodeId->$nodeId
 			set nodeType 1
-			if {[string match "*SubIndexValue*" $node]} {
-				puts "SharedLib delete sub index"
-				set errorString []				 
-				set res [DeleteSubIndex $nodeId $nodeType $idx $sidx $errorString]
-				if {$res == -1} {
-					return
-				}
-			} elseif {[string match "*IndexValue*" $node]} {
-				puts "SharedLib delete index"
-				set errorString []
-				set res [DeleteIndex $nodeId $nodeType $idx $errorString]
-				if {$res == -1} {
-					return
-				}				
+		}		
+		if {[string match "*SubIndexValue*" $node]} {
+		puts "SharedLib delete sub index"
+			puts "DeleteSubIndex $nodeId $nodeType $idx $sidx"
+			set errorString []		 
+			set res [DeleteSubIndex $nodeId $nodeType $idx $sidx $errorString]
+			if {$res == -1} {
+				return
 			}
+		} elseif {[string match "*IndexValue*" $node]} {
+		puts "SharedLib delete index"
+			puts "DeleteIndex $nodeId $nodeType $idx"
+			set errorString []
+			set res [DeleteIndex $nodeId $nodeType $idx $errorString]
+			if {$res == -1} {
+				return
+			}			
 		}
+		
 	set tmpSplit [split $node -]
 	set xdcId [lrange $tmpSplit 1 end]
 	set xdcId [join $xdcId -]

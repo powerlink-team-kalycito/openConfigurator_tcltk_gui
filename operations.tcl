@@ -596,6 +596,7 @@ proc Editor::create { } {
 	bind . <Control-Key-f> "FindDynWindow"
 	bind . <Control-Key-F> "FindDynWindow"
 	bind . <KeyPress-Escape> "EscapeTree"
+	#bind . <Delete> "puts Delete_key_pressed"
 	#############################################################################
 	# Menu for the Controlled Nodes
 	#############################################################################
@@ -797,6 +798,7 @@ proc Editor::create { } {
    
 	$Editor::mainframe showtoolbar 0 $Editor::toolbar1
 	set temp [MainFrame::addindicator $mainframe -textvariable Editor::connect_status ]
+	set Editor::connect_status "Disconnected from IP :0.0.0.0"
 	$temp configure -relief flat 
 	# NoteBook creation
 	set frame	[$mainframe getframe]
@@ -816,12 +818,16 @@ proc Editor::create { } {
 	set pf1 [EditManager::create_treeWindow $list_notebook]
 	set treeWindow $pf1.sw.objTree
 	# Binding on tree widget   
-	$treeWindow bindText <ButtonPress-1> Editor::tselect
-	$treeWindow bindText <Double-1> Editor::DoubleClickNode
+	$treeWindow bindText <ButtonPress-1> Editor::DoubleClickNode
+	#$treeWindow bindText <Delete> DeleteTreeNode
 	$treeWindow bindText <ButtonPress-3> {Editor::tselectright %X %Y}
+	#bind .mainframe.frame.pw1.f0.frame.pw2.f0.frame.nb.fobjtree.sw.objTree <Delete> "puts Delete_key_pressed"
 	bind $treeWindow <Button-4> {.mainframe.frame.pw1.f0.frame.pw2.f0.frame.nb.fobjtree.sw.objTree yview scroll -5 units}
 	bind $treeWindow <Button-5> {.mainframe.frame.pw1.f0.frame.pw2.f0.frame.nb.fobjtree.sw.objTree yview scroll 5 units}
-   
+	bind $treeWindow <Enter> { bind . <Delete> DeleteTreeNode ; .mainframe.frame.pw1.f0.frame.pw2.f0.frame.nb.fobjtree.sw.objTree configure -relief sunken }
+	bind $treeWindow <Leave> { bind . <Delete> "" ; .mainframe.frame.pw1.f0.frame.pw2.f0.frame.nb.fobjtree.sw.objTree configure -relief ridge }
+
+          
 	global EditorData
 	global PjtDir
 	set PjtDir $EditorData(options,History)
@@ -983,8 +989,9 @@ puts "xdcId->$xdcId...xdcIcxId->$xdcIcxId"
 		set sIdxValue [CBaseIndex_getIndexValue $nodeObj($xdcId)]
 		set IndexName [CBaseIndex_getName $nodeObj($xdcId)]
 		set IndexObjType [CBaseIndex_getObjectType $nodeObj($xdcId)]
-		set objIndexDataType [CBaseIndex_getDataType $nodeObj($xdcId)]
-		set IndexDataType [DataType_getName $objIndexDataType]
+		#set objIndexDataType [CBaseIndex_getDataType $nodeObj($xdcId)]
+		#set IndexDataType [DataType_getName $objIndexDataType]
+		set IndexDataType "CHECK!!!!!!"
 		set IndexAccessType [CBaseIndex_getAccessType $nodeObj($xdcId)]
 		#Check for hex data. If not hex, make it null.
 		set IndexAccessType [string trimleft $IndexAccessType 0x]
@@ -1005,6 +1012,12 @@ puts "xdcId->$xdcId...xdcIcxId->$xdcIcxId"
 		set IndexHighLimit [CBaseIndex_getHighLimit $nodeObj($xdcId)]
 		set IndexLowLimit [CBaseIndex_getLowLimit $nodeObj($xdcId)]	
 		set IndexPdoMap [CBaseIndex_getPDOMapping $nodeObj($xdcId)]
+		#set pdoMapList [list NO DEFAULT OPTIONAL RPDO TPDO ]
+		#if {$IndexPdoMap >= 0 && IndexPdoMap <= 4} {
+		#	set IndexPdoMap [lindex $pdoMapList $IndexPdoMap ]
+		#} else {
+		#	#returned value out of range
+		#}
 		$tmpInnerf0.en_idx1 configure -state normal
 		$tmpInnerf0.en_idx1 delete 0 end
 		$tmpInnerf0.en_idx1 insert 0 $indexValue
@@ -1079,8 +1092,9 @@ puts "xdcId->$xdcId"
 		set indexValue [CBaseIndex_getIndexValue $nodeObj($xdcId)]
 		set IndexName [CBaseIndex_getName $nodeObj($xdcId)]
 		set IndexObjType [CBaseIndex_getObjectType $nodeObj($xdcId)]
-		set objIndexDataType [CBaseIndex_getDataType $nodeObj($xdcId)]
-		set IndexDataType [DataType_getName $objIndexDataType]
+		#set objIndexDataType [CBaseIndex_getDataType $nodeObj($xdcId)]
+		#set IndexDataType [DataType_getName $objIndexDataType]
+		set IndexDataType "CHECK!!!!!!"
 		set IndexAccessType [CBaseIndex_getAccessType $nodeObj($xdcId)]
 		#Check for hex data. If not hex, make it null.
 		set IndexAccessType [string trimleft $IndexAccessType 0x]
@@ -1101,7 +1115,12 @@ puts "xdcId->$xdcId"
 		set IndexHighLimit [CBaseIndex_getHighLimit $nodeObj($xdcId)]
 		set IndexLowLimit [CBaseIndex_getLowLimit $nodeObj($xdcId)]	
 		set IndexPdoMap [CBaseIndex_getPDOMapping $nodeObj($xdcId)]
-
+		#set pdoMapList [list NO DEFAULT OPTIONAL RPDO TPDO ]
+		#if {$IndexPdoMap >= 0 && IndexPdoMap <= 4} {
+		#	set IndexPdoMap [lindex $pdoMapList $IndexPdoMap ]
+		#} else {
+		#	#returned value out of range
+		#}
 		$tmpInnerf0.en_idx1 configure -state normal
 		$tmpInnerf0.en_idx1 delete 0 end
 		$tmpInnerf0.en_idx1 insert 0 $indexValue
@@ -1640,7 +1659,7 @@ proc FindSpace::OpenParent { updatetree node } {
 	$updatetree selection clear
 	set tempNode $node
 	while {[$updatetree parent $tempNode] != "PjtName"} {
-puts "open parent tempNode->$tempNode"
+		#puts "open parent tempNode->$tempNode"
 		set tempNode [$updatetree parent $tempNode]
 		$updatetree itemconfigure $tempNode -open 1
 	}
@@ -1648,70 +1667,7 @@ puts "open parent tempNode->$tempNode"
 	$updatetree see $node
 
 }
-################################################################################################
-#proc FindSpace::Calc
-#Input       : -
-#Output      : -
-#Description : Calculates previous and next node containing search string from slected node
-################################################################################################
-proc FindSpace::Calc {} {
-	global updatetree
-	set node [$updatetree selection get]	
-	set tempNode [split $node -]
-	set out [lsearch -regexp $FindSpace::findList "$node"]
-	if { $out != -1 } {
-		set prev [expr $out-1]
-		set next [expr $out+1]
-		#return [list $prev $next]
-	} else {
-		set end [ expr [llength $tempNode] - 2 ]
-		if {[string match "*SubIndex*" $node]} {
-			set flag 0
-			set count 0
-			set tempSearchNode [join [lrange $tempNode 1 $end] - ]
-			puts "*-$tempSearchNode-*"
-			foreach temp $FindSpace::findList {
-				puts -nonewline "$temp  ..."
-				if {[string match "*-$tempSearchNode" $temp]} {
-					puts -nonewline ".........MATCH......"
-					set flag0 1
-				} elseif { $flag0 == 1 } {
-					puts count->$count
-					return $count
-				} else {
-					#continue the process
-				}
-				incr count 
-			}
-			puts tempSearchNode->$tempSearchNode
-			incr end -1
-		}
-		set flag 0
-		set count 0
-		set tempSearchNode [join [lrange $tempNode 1 $end] - ]
-		puts "*-$tempSearchNode-*"
-		foreach temp $FindSpace::findList {
-			puts -nonewline "$temp  ..."
-			if {[string match "*-$tempSearchNode" $temp]} {
-				puts -nonewline "......MATCH......"
-				set flag0 1
-			} elseif { $flag0 == 1 } {
-				puts count->$count
-				return $count
-			} else {
-				#continue the process
-			}
-			incr count 
-		}
-		incr end -1
-		puts tempSearchNode->$tempSearchNode
-		set tempSearchNode [join [lrange $tempNode 1 $end] - ]
-		puts tempSearchNode->$tempSearchNode
-		set prev [expr $out-1]
-		set next [expr $out+1]
-		return [list $prev $next]
-	}
-}
+
 ################################################################################################
 #proc FindSpace::Prev
 #Input       : -
@@ -1724,18 +1680,23 @@ proc FindSpace::Prev {} {
 	if {![info exists FindSpace::searchString]} {
 		return
 	} 
-	set prev [FindSpace::Find $FindSpace::searchString $node prev]
-	#puts out->$out
-	#set prev [lindex $out 0]
-	puts prev->$prev
-	if { $prev == "" } {
-		puts "prev no match"
+	if {$node == ""} {
+		# if no node is selected find first match
+		FindSpace::Find $FindSpace::searchString
 	} else {
-		FindSpace::OpenParent $updatetree $prev
-		#$updatetree selection set $prev 
-		#$updatetree see $prev
+		set prev [FindSpace::Find $FindSpace::searchString $node prev]
+		#puts out->$out
+		#set prev [lindex $out 0]
+		puts prev->$prev
+		if { $prev == "" } {
+			puts "prev no match"
+		} else {
+			FindSpace::OpenParent $updatetree $prev
+			#$updatetree selection set $prev 
+			#$updatetree see $prev
+		}
+		return
 	}
-	return
 }
 
 ################################################################################################
@@ -1750,14 +1711,19 @@ proc FindSpace::Next {} {
 	if {![info exists FindSpace::searchString]} {
 		return
 	} 
-	set next [FindSpace::Find $FindSpace::searchString $node next]
-	puts next->$next
-	if { $next == "" } {
-		puts "next no match"
-	} else {
-		FindSpace::OpenParent $updatetree $next
+	if {$node == ""} {
+		# if no node is selected find first match
+		FindSpace::Find $FindSpace::searchString
+	} else {	
+		set next [FindSpace::Find $FindSpace::searchString $node next]
+		puts next->$next
+		if { $next == "" } {
+			puts "next no match"
+		} else {
+			FindSpace::OpenParent $updatetree $next
+		}
+		return
 	}
-	return
 }
 
 ################################################################################################
@@ -1826,21 +1792,22 @@ puts "Reimport nodeIdList->$nodeIdList"
 	} else {
 		set nodeList ""
 		
-		foreach mnNode [$updatetree nodes PjtName] {
-			set chk 1
-			foreach cnNode [$updatetree nodes $mnNode] {
-				if {$chk == 1} {
-					if {[string match "OBD*" $cnNode]} {
-						lappend nodeList $cnNode " " " "
-					} else {
-						lappend nodeList " " " " " " $cnNode " " " "
-					}
-					set chk 0
-				} else {
-					lappend nodeList $cnNode " " " "
-				}
-			}
-		}
+		#foreach mnNode [$updatetree nodes PjtName] {
+		#	set chk 1
+		#	foreach cnNode [$updatetree nodes $mnNode] {
+		#		if {$chk == 1} {
+		#			if {[string match "OBD*" $cnNode]} {
+		#				lappend nodeList $cnNode " " " "
+		#			} else {
+		#				lappend nodeList " " " " " " $cnNode " " " "
+		#			}
+		#			set chk 0
+		#		} else {
+		#			lappend nodeList $cnNode " " " "
+		#		}
+		#	}
+		#}
+		set nodeList [GetNodeList]
 		set schCnt [lsearch -exact $nodeList $node]
 puts  "schCnt->$schCnt=======nodeList->$nodeList"
 		set nodeId [lindex $nodeIdList $schCnt]
@@ -1856,12 +1823,13 @@ puts  "schCnt->$schCnt=======nodeList->$nodeList"
 puts  "REimport obj->$obj=====objNode->$objNode"
 	set tmpImpDir [tk_getOpenFile -title "Import XDC" -filetypes $types -parent .]
 	if {$tmpImpDir != ""} {
-		catch {$updatetree delete [$updatetree nodes $node]}
 		catch {
 			if { $res == -1} {
 				$updatetree insert 0 MN$tmpNode OBD$tmpNode -text "OBD" -open 0 -image [Bitmap::get pdo]
 			}
 		}
+		catch {FreeNodeMemory $node}
+		catch {$updatetree delete [$updatetree nodes $node]}
 		# pass node Id  and node type instead of 1 and cn
 		$updatetree itemconfigure $node -open 0
 	#parseFile(char* filename, int NodeID, ENodeType  NodeType); 
@@ -1879,28 +1847,35 @@ puts  "REimport obj->$obj=====objNode->$objNode"
 #Output      : -
 #Description : to delete a node in the tree
 ################################################################################################
-proc DeleteTreeNode {} {	
+proc DeleteTreeNode {} {
+	
 	global updatetree
 	global nodeIdList
 	global nodeObj	
 	puts nodeIdList->$nodeIdList
 	set nodeList ""
 	set node [$updatetree selection get]
-	foreach mnNode [$updatetree nodes PjtName] {
-		set chk 1
-		foreach cnNode [$updatetree nodes $mnNode] {
-			if {$chk == 1} {
-				if {[string match "OBD*" $cnNode]} {
-					lappend nodeList $cnNode " " " "
-				} else {
-					lappend nodeList " " " " " " $cnNode " " " "
-				}
-				set chk 0
-			} else {
-				lappend nodeList $cnNode " " " "
-			}
-		}
+	if { [string match "PjtName" $node] || [string match "MN*" $node] || [string match "PDO*" $node]|| [string match "?PDO*" $node] } {
+		#should not delete when pjt, mn, pdo, tpdo or rpdo is selected 
+		return
 	}
+	#procedure GetNodeList does following fun
+	#foreach mnNode [$updatetree nodes PjtName] {
+	#	set chk 1
+	#	foreach cnNode [$updatetree nodes $mnNode] {
+	#		if {$chk == 1} {
+	#			if {[string match "OBD*" $cnNode]} {
+	#				lappend nodeList $cnNode " " " "
+	#			} else {
+	#				lappend nodeList " " " " " " $cnNode " " " "
+	#			}
+	#			set chk 0
+	#		} else {
+	#			lappend nodeList $cnNode " " " "
+	#		}
+	#	}
+	#}
+	set nodeList [GetNodeList]
 	puts nodeList->$nodeList...
 	if {[lsearch -exact $nodeList $node ]!=-1} {
 		set result [tk_messageBox -message "Do you want to delete node?" -type yesno -icon question -title "Question"]
@@ -1925,35 +1900,36 @@ proc DeleteTreeNode {} {
 
 
 		#freeing memory
-	 	foreach childIdx [$updatetree nodes $node] {
-			if {[string match "*PDO*" $childIdx]} {
-				foreach childPdo [$updatetree nodes $childIdx] {
-					foreach childIdx [$updatetree nodes $childPdo] {
-						set tmpSplit [split $childIdx -]
-						set xdcId [lrange $tmpSplit 1 end]
-						set xdcId [join $xdcId -]
-						unset nodeObj($xdcId)
-						foreach childSidx [$updatetree nodes $childIdx] {
-							set tmpSplit [split $childSidx -]
-							set xdcId [lrange $tmpSplit 1 end]
-							set xdcId [join $xdcId -]
-							unset nodeObj($xdcId)
-						}
-					}
-				}
-				continue
-			}
-			set tmpSplit [split $childIdx -]
-			set xdcId [lrange $tmpSplit 1 end]
-			set xdcId [join $xdcId -]
-			unset nodeObj($xdcId)
-			foreach childSidx [$updatetree nodes $childIdx] {
-				set tmpSplit [split $childSidx -]
-				set xdcId [lrange $tmpSplit 1 end]
-				set xdcId [join $xdcId -]
-				unset nodeObj($xdcId)
-			}
-		}
+		FreeNodeMemory $node
+		#this proc does following
+	 	#foreach childIdx [$updatetree nodes $node] {
+		#	if {[string match "*PDO*" $childIdx]} {
+		#		foreach childPdo [$updatetree nodes $childIdx] {
+		#			foreach childIdx [$updatetree nodes $childPdo] {
+		#				set tmpSplit [split $childIdx -]
+		#				set xdcId [join $xdcId -]
+		#				unset nodeObj($xdcId)
+		#				foreach childSidx [$updatetree nodes $childIdx] {
+		#					set tmpSplit [split $childSidx -]
+		#					set xdcId [lrange $tmpSplit 1 end]
+		#					set xdcId [join $xdcId -]
+		#					unset nodeObj($xdcId)
+		#				}
+		#			}
+		#		}
+		#		continue
+		#	}
+		#	set tmpSplit [split $childIdx -]
+		#	set xdcId [lrange $tmpSplit 1 end]
+		#	set xdcId [join $xdcId -]
+		#	unset nodeObj($xdcId)
+		#	foreach childSidx [$updatetree nodes $childIdx] {
+		#		set tmpSplit [split $childSidx -]
+		#		set xdcId [lrange $tmpSplit 1 end]
+		#		set xdcId [join $xdcId -]
+		#		unset nodeObj($xdcId)
+		#	}
+		#}
 
 		set nodeType 1
 		#set nodeId 4
@@ -1968,8 +1944,12 @@ proc DeleteTreeNode {} {
 		#	puts tmp_NodePos:$tmp_NodePos
 		#	SharedLib_DeleteNode $tmp_NodePos
 		#}
-		set nodeIdList [DeleteList $nodeIdList $nodeId]		
-		puts "after deletion nodeIdList->$nodeIdList "		
+		if {[string match "OBD*" $node]} {
+			#should not delete nodeId, obj, objNode from list since it is mn
+		} else {
+			set nodeIdList [DeleteList $nodeIdList $nodeId]		
+			puts "after deletion nodeIdList->$nodeIdList "		
+		}
 		
 		#SharedLib delete cn node
 	} else {
@@ -2000,7 +1980,7 @@ proc DeleteTreeNode {} {
 		puts child->$child
 		set paren [$updatetree parent $child]
 		puts paren->$paren
-		if {[string match "*OBD*" $paren]} {	
+		if {[string match "OBD*" $paren]} {	
 			#since it is a mn
 			set nodeId 240
 			set nodeType 0
@@ -2034,6 +2014,25 @@ proc DeleteTreeNode {} {
 	set xdcId [lrange $tmpSplit 1 end]
 	set xdcId [join $xdcId -]
 	unset nodeObj($xdcId)
+	}
+	set parent [$updatetree parent $node]
+	set nxtSelList [$updatetree nodes $parent]
+
+	if {[llength $nxtSelList] == 1} {
+		#it is the only node so select parent
+		$updatetree selection set $parent
+	} else {
+		set nxtSelCnt [expr [lsearch $nxtSelList $node]+1]
+		if {$nxtSelCnt >= [llength $nxtSelList]} {
+			#it is the last node select previous node
+			set nxtSelCnt [expr $nxtSelCnt-2]
+		} elseif { $nxtSelCnt > 0 } {
+			#select next node since nxtSelCnt already incremented do nothing
+		} else {
+			puts "DeleteTreeNode->this cond should not occur"
+		}
+			catch {set nxtSel [lindex $nxtSelList $nxtSelCnt] }
+			catch {$updatetree selection set $nxtSel}
 	}
 	$updatetree delete $node
 	#puts "*************$xdcId"
@@ -2082,6 +2081,73 @@ proc NodeCreate {NodeID NodeType} {
 	set obj [CNode_getIndexCollection $objNode]
 	#currntly works only for windows
 	#set obj [CNode_getIndexCollectionWithoutPDO $objNode]
-	puts "obj->$obj====objNode->$objNode"
+	puts "NodeCreate :::  obj->$obj====objNode->$objNode"
 	return [list $obj $objNode]
+}
+
+################################################################################################
+#proc GetNodeList
+#Input       : -
+#Output      : pointer to object
+#Description : creates an object for node
+################################################################################################
+proc GetNodeList {} {
+	global updatetree
+	foreach mnNode [$updatetree nodes PjtName] {
+		set chk 1
+		foreach cnNode [$updatetree nodes $mnNode] {
+			if {$chk == 1} {
+				if {[string match "OBD*" $cnNode]} {
+					lappend nodeList $cnNode " " " "
+				} else {
+					lappend nodeList " " " " " " $cnNode " " " "
+				}
+				set chk 0
+			} else {
+				lappend nodeList $cnNode " " " "
+			}
+		}
+	}
+
+	return $nodeList
+}
+
+################################################################################################
+#proc FreeNodeMemory
+#Input       : -
+#Output      : pointer to object
+#Description : creates an object for node
+################################################################################################
+proc FreeNodeMemory {node} {
+	global updatetree
+	global nodeObj
+ 	foreach childIdx [$updatetree nodes $node] {
+		if {[string match "*PDO*" $childIdx]} {
+			foreach childPdo [$updatetree nodes $childIdx] {
+				foreach childIdx [$updatetree nodes $childPdo] {
+					set tmpSplit [split $childIdx -]
+					set xdcId [lrange $tmpSplit 1 end]
+					set xdcId [join $xdcId -]
+					unset nodeObj($xdcId)
+					foreach childSidx [$updatetree nodes $childIdx] {
+						set tmpSplit [split $childSidx -]
+						set xdcId [lrange $tmpSplit 1 end]
+						set xdcId [join $xdcId -]
+						unset nodeObj($xdcId)
+					}
+				}
+			}
+			continue
+		}
+		set tmpSplit [split $childIdx -]
+		set xdcId [lrange $tmpSplit 1 end]
+		set xdcId [join $xdcId -]
+		unset nodeObj($xdcId)
+		foreach childSidx [$updatetree nodes $childIdx] {
+			set tmpSplit [split $childSidx -]
+			set xdcId [lrange $tmpSplit 1 end]
+			set xdcId [join $xdcId -]
+			unset nodeObj($xdcId)
+		}
+	}
 }

@@ -141,7 +141,7 @@ proc IsDec {input tmpValue} {
 	if { [string is int $tempInput] == 0 } {
 		return 0
 	} else {
-		after 1 SetValue $tmpValue $input
+			after 1 SetValue $tmpValue $input
 		return 1
 	}
 }
@@ -175,14 +175,36 @@ proc IsHex {input tmpValue} {
 	}
 }
 
-############for test ########
-proc SetValue {tmpValue str } {
+###############################################################################################
+#proc SetValue
+#Input       : input
+#Output      : 0 or 1
+#Description : 
+###############################################################################################
+proc SetValue {tmpValue {str no_input}  } {
 	#puts "SetValue invoked"
 	set tmpVar [$tmpValue cget -textvariable]
 	$tmpValue configure -validate none
-	puts "SetValue->[$tmpValue cget -vcmd]"
+	puts SetValue->[$tmpValue cget -vcmd]
 	$tmpValue delete 0 end
-	$tmpValue insert 0 $str
+	if {$str != "no_input"} {
+		$tmpValue insert 0 $str
+	} else {
+		#entry box made empty no need to insert value	
+	}
 	$tmpValue configure -validate key
 }
 
+###############################################################################################
+#proc IsValidIdx
+#Input       : input
+#Output      : 0 or 1
+#Description : Validates whether an entry is a index and does not exceed specified range
+###############################################################################################
+proc IsValidIdx {input len} {
+	if {[string is xdigit $input] == 0 || [string length $input] > $len } {
+		return 0
+	} else {
+		return 1
+	}
+}

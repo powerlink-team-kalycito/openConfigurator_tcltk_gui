@@ -325,22 +325,37 @@ proc EditManager::create_treeWindow {nb } {
     	set frame [$nb insert end $pagename -text "Tree Browser"]
    
    	set sw [ScrolledWindow::create $frame.sw -auto both]
+    	#set sf [ScrollableFrame $sw.sf]      ;#newly added
+    	#$sw setwidget $sf		     ;#newly added
+    	#set uf [$sf getframe]		     ;#newly added
+	#$uf configure -bg white
+   	#set objTree [Tree $uf.objTree \
+        #    	-width 15\
+        #    	-highlightthickness 0\
+        #    	-bg white  \
+        #    	-deltay 15 \
+	#    	-padx 15 \
+	#    	-dropenabled 0 -dragenabled 0 \
+	#	-relief flat
+    	#]
+	#$sw setwidget $objTree
    	set objTree [Tree $frame.sw.objTree \
             	-width 15\
             	-highlightthickness 0\
             	-bg white  \
-            	-deltay 15 \
-	    	-padx 15 \
-	    	-dropenabled 0 -dragenabled 0
+           	-deltay 15 \
+	   	-padx 15 \
+	    	-dropenabled 0 -dragenabled 0 -relief ridge
     	]
 	$sw setwidget $objTree
 	set updatetree $objTree
 	
     	pack $sw -side top -fill both -expand yes -pady 1
+	#pack $updatetree -fill both -expand yes	;#newly added
     	set treeFrame [frame $frame.f1]  
     	entry $treeFrame.en_find -textvariable FindSpace::txtFindDym -width 10 -background white -validate key -vcmd "FindSpace::Find %P"
-    	button $treeFrame.b_next -text " Next " -command "FindSpace::Next" -image [Bitmap::get right]
-    	button $treeFrame.b_prev -text " Prev " -command "FindSpace::Prev" -image [Bitmap::get left]
+    	button $treeFrame.b_next -text " Next " -command "FindSpace::Next" -image [Bitmap::get right] -relief flat
+    	button $treeFrame.b_prev -text " Prev " -command "FindSpace::Prev" -image [Bitmap::get left] -relief flat
    	grid config $treeFrame.en_find -row 0 -column 0 -sticky ew
     	grid config $treeFrame.b_prev -row 0 -column 1 -sticky s -padx 5
     	grid config $treeFrame.b_next -row 0 -column 2 -sticky s
@@ -481,12 +496,21 @@ proc SaveValue {frame0 frame1} {
 	set nodeId [lindex $nodeIdList $schCnt]
 	set obj [lindex $nodeIdList [expr $schCnt+1]]
 	set objNode [lindex $nodeIdList [expr $schCnt+2]]
+	if {[string match "OBD*" $parent]} {
+		#it must be a mn
+		set nodeType 0
+	} else {
+		#it must be cn
+		set nodeType 1
+	}
 
+	puts "nodeType->$nodeType"
 	puts "nodeId->$nodeId"
 	puts "indexValue->$indexValue"
 
 	set tmpVar0 [$frame0.en_nam1 cget -textvariable]
 	global $tmpVar0	
+	set newName [subst $[subst $tmpVar0]]
 	puts "name->[subst $[subst $tmpVar0]]"
 
 	set tmpVar1 [$frame1.en_value1 cget -textvariable]
@@ -497,13 +521,17 @@ puts "value->$value"
 	puts "value->[subst $[subst $tmpVar1]]"
 	set errStr []
 	if {[string match "*SubIndexValue*" $nodeSelect]} {
-		EditSubIndex $nodeId 1 $indexValue $sIdxValue [subst $[subst $tmpVar1]] [subst $[subst $tmpVar0]] $errStr
+		EditSubIndex $nodeId $nodeType $indexValue $sIdxValue [subst $[subst $tmpVar1]] [subst $[subst $tmpVar0]] $errStr
 	} elseif {[string match "*IndexValue*" $nodeSelect]} {
-		EditIndex $nodeId 1 $indexValue [subst $[subst $tmpVar1]] [subst $[subst $tmpVar0]] $errStr
+		EditIndex $nodeId $nodeType $indexValue [subst $[subst $tmpVar1]] [subst $[subst $tmpVar0]] $errStr
 	} else {
 		puts "\n\n\nShould Never Happen!!!\n\n\n"
 	}
-
+	set oldName [$updatetree itemcget $nodeSelect -text]
+	set oldName [string range $oldName end-6 end ]
+	set newName [append newName $oldName]
+	puts "newName->$newName"
+	$updatetree itemconfigure $nodeSelect -text $newName
 }
 
 ###############################################################################################
@@ -514,6 +542,25 @@ puts "value->$value"
 ###############################################################################################
 proc DiscardValue {frame0 frame1} {
 	global nodeSelect
+	global nodeObj
+
+	set tmpSplit [split $nodeSelect -]
+	set tmpNodeSelect [lrange $tmpSplit 1 end]
+	set tmpNodeSelect [join $tmpNodeSelect -]
+
+	set IndexName [CBaseIndex_getName $nodeObj($tmpNodeSelect)]
+	set IndexActualValue [CBaseIndex_getActualValue $nodeObj($tmpNodeSelect)]
+
+	$frame0.en_nam1 delete 0 end
+	$frame0.en_nam1 insert 0 $IndexName
+
+	$frame1.en_value1 configure -validate none 
+	$frame1.en_value1 delete 0 end
+	$frame1.en_value1 insert 0 $IndexActualValue
+	$frame1.en_value1 configure -validate key
+	puts "IndexName->$IndexName"
+	puts "IndexActualValue->$IndexActualValue"
+	#after inserting value select appropriate radio button
 
 
 }

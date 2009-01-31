@@ -476,6 +476,7 @@ proc AddCNWindow {} {
 	bind $winAddCN <KeyPress-Return> "$frame1.bt_ok invoke"
 	bind $winAddCN <KeyPress-Escape> "$frame1.bt_cancel invoke"
 
+	focus $frame2.en_name
 	centerW $winAddCN
 }
 
@@ -709,6 +710,7 @@ proc NewProjectWindow {} {
 	bind $winNewProj <KeyPress-Return> "$frame1.bt_ok invoke"
 	bind $winNewProj <KeyPress-Escape> "$frame1.bt_cancel invoke"
 
+	focus $titleInnerFrame1.en_pjname
 	centerW $winNewProj
 }
 
@@ -769,7 +771,7 @@ proc ImportProgress {stat} {
 		update idletasks
 		return  $winImpoProg.prog
 	} elseif {$stat == "stop" } { 
-		set LocvarProgbar 100
+		#set LocvarProgbar 100
 		destroy .impoProg
 	} elseif {$stat == "incr"} {
 		incr LocvarProgbar
@@ -786,6 +788,8 @@ proc ImportProgress {stat} {
 proc AddIndexWindow {} {
 	global updatetree
 	global indexVar
+	global nodeIdList
+	global nodeObj	
 
 	set winAddIdx .addIdx
 	catch "destroy $winAddIdx"
@@ -805,27 +809,69 @@ proc AddIndexWindow {} {
 	label $winAddIdx.l_empty2 -text "               "	
 	label $winAddIdx.l_empty3 -text "               "
 
-	entry $frame1.en_index -textvariable indexVar -background white -relief ridge -validate key -vcmd "string is int %P"
+	entry $frame1.en_index -textvariable indexVar -background white -relief ridge -validate key -vcmd "IsValidIdx %P 4"
 	set indexVar ""
 
 	button $frame2.bt_ok -text "  Ok  " -command {
+		if {[string length $indexVar] != 4} {
+			set res [tk_messageBox -message "Invalid Index" -type ok -parent .addIdx]
+			return
+		}
 		set node [$updatetree selection get]
 		puts node----->$node
+		########finding obj
+		set nodeList [GetNodeList]			
+		set schCnt [lsearch -exact $nodeList $node]
+		puts  "AddIndexWindow schCnt->$schCnt=======nodeList->$nodeList"
+		puts "nodeIdList->$nodeIdList"
+		set nodeId [lindex $nodeIdList $schCnt]
+		set obj [lindex $nodeIdList [expr $schCnt+1]]
+		puts "obj--->$obj"
+		#set objNode [lindex $nodeIdList [expr $schCnt+2]]
+		#set nodeType 1
+	
 		set child [$updatetree nodes $node]
-		if {[string match "*OBD*" $node]} {
-			set count [expr [llength $child] -1]
-		} else {
-			set count [llength $child]
+		#puts child->$child
+		set sortChild ""
+		foreach tempChild $child {
+			if {[string match "PDO*" $tempChild]} {
+				#dont need to add it to list
+			} else {
+				set tail [split $tempChild -]
+				set tail [lindex $tail end]
+				lappend sortChild $tail
+			}
 		}
+
+		#puts sortChild->$sortChild
+		set sortChild [lsort -integer $sortChild]
+		set parent [$updatetree parent $node]
+		if {[string match "OBD*" $parent]} {
+			set nodeType 0
+		} else {
+			set nodeType 1
+		}
+		
+		if {$sortChild == ""} {
+			set count 0
+		} else {
+			set count [expr [lindex $sortChild end]+1 ]
+		}
+		puts count->$count
 		
 		set nodePos [split $node -]
 		set nodePos [lindex $nodePos end]
-		puts nodePos---->$nodePos
-		if {$count != -1} {
-			$updatetree insert $count $node IndexValue-1-$nodePos-$count -text $indexVar -open 0 -image [Bitmap::get index]
-		} else {
-			$updatetree insert 0 $node IndexValue-1-$nodePos-0 -text $indexVar -open 0 -image [Bitmap::get index]
-		}
+		puts "nodePos---->$nodePos=====nodeType---->$nodeType"
+
+		#$updatetree insert $count $node IndexValue-1-$nodePos-$count -text $indexVar -open 0 -image [Bitmap::get index]
+		$updatetree insert $count $node IndexValue-1-$nodePos-$count -text $indexVar -open 0 -image [Bitmap::get index]
+		#set nodeObj(1-$nodePos-$count) [CIndexCollection_getIndex $obj [expr [llength $sortChild]-1]]
+		#no API called for adding Index
+		AddIndex $nodeId $nodeType $indexVar
+		puts "AddIndex $nodeId $nodeType $indexVar"
+
+		set nodeObj(1-$nodePos-$count) [CIndexCollection_getIndex $obj [llength $sortChild]]
+		puts inc->[llength $sortChild]
 		destroy .addIdx
 	}
 	button $frame2.bt_cancel -text Cancel -command { 
@@ -848,6 +894,7 @@ proc AddIndexWindow {} {
 	bind $winAddIdx <KeyPress-Return> "$frame2.bt_ok invoke"
 	bind $winAddIdx <KeyPress-Escape> "$frame2.bt_cancel invoke"
 
+	focus $frame1.en_index
 	centerW $winAddIdx
 }
 
@@ -875,29 +922,91 @@ proc AddSubIndexWindow {} {
 	set frame2 [frame $winAddSidx.fram2]
 
 	label $winAddSidx.l_empty1 -text "               "	
-	label $frame1.l_index -text "Enter the Index"
+	label $frame1.l_subindex -text "Enter the SubIndex"
 	label $winAddSidx.l_empty2 -text "               "	
 	label $winAddSidx.l_empty3 -text "               "
 
-	entry $frame1.en_index -textvariable subIndexVar -background white -relief ridge -validate key -vcmd "string is xdigit %P"
+	entry $frame1.en_subindex -textvariable subIndexVar -background white -relief ridge -validate key -vcmd "IsValidIdx %P 2"
 	set subIndexVar ""
 
 	button $frame2.bt_ok -text "  Ok  " -command {
-		set node [$updatetree selection get]
+		if {[string length $subIndexVar] != 2} {
+			set res [tk_messageBox -message "Invalid SubIndex" -type ok -parent .addSidx]
+			return
+		}		
+		#set node [$updatetree selection get]
 		#puts node----->$node
-		set child [$updatetree nodes $node]
-		set count [llength $child]
+		#set child [$updatetree nodes $node]
+		#set count [llength $child]
 		#puts count---->$count
+		#set nodePos [split $node -]
+		#set nodePos [lrange $nodePos 1 end]
+		#set nodePos [join $nodePos -]
+		#puts nodePos---->$nodePos
+		#if {$count != -1} {
+		#	$updatetree insert $count $node SubIndexValue-$nodePos-$count -text $subIndexVar -open 0 -image [Bitmap::get subindex]
+		#} else {
+		#	$updatetree insert 0 $node SubIndexValue-$nodePos-0 -text $subIndexVar -open 0 -image [Bitmap::get subindex]
+		#}
+		#destroy .addSidx
+
+		set node [$updatetree selection get]
+		puts node----->$node
+		set indexVar [string range [$updatetree itemcget $node -text] end-4 end-1 ]
+		########finding obj
+		set parent [$updatetree parent $node]
+
+		set nodeList [GetNodeList]			
+		set schCnt [lsearch -exact $nodeList $parent]
+		puts  "AddSubIndexWindow schCnt->$schCnt=======nodeList->$nodeList======indexVar->$indexVar "
+		puts "nodeIdList->$nodeIdList"
+		set nodeId [lindex $nodeIdList $schCnt]
+		set obj [lindex $nodeIdList [expr $schCnt+1]]
+		puts "obj--->$obj"
+		#set objNode [lindex $nodeIdList [expr $schCnt+2]]
+		#set nodeType 1
+	
+		set child [$updatetree nodes $node]
+		puts child->$child
+		set sortChild ""
+		foreach tempChild $child {
+			set tail [split $tempChild -]
+			set tail [lindex $tail end]
+			lappend sortChild $tail
+		}
+
+		#puts sortChild->$sortChild
+		set sortChild [lsort -integer $sortChild]
+		if {[string match "OBD*" $parent]} {
+			set nodeType 0
+		} else {
+			set nodeType 1
+		}
+		
+		if {$sortChild == ""} {
+			set count 0
+		} else {
+			set count [expr [lindex $sortChild end]+1 ]
+		}
+		puts count->$count
+		
+		puts node->$node
 		set nodePos [split $node -]
 		set nodePos [lrange $nodePos 1 end]
 		set nodePos [join $nodePos -]
-		#puts nodePos---->$nodePos
-		if {$count != -1} {
-			$updatetree insert $count $node SubIndexValue-$nodePos-$count -text $subIndexVar -open 0 -image [Bitmap::get subindex]
-		} else {
-			$updatetree insert 0 $node SubIndexValue-$nodePos-0 -text $subIndexVar -open 0 -image [Bitmap::get subindex]
-		}
+		puts "nodePos---->$nodePos=====nodeType---->$nodeType======nodeId--->$nodeId"
+
+		#$updatetree insert $count $node IndexValue-1-$nodePos-$count -text $indexVar -open 0 -image [Bitmap::get index]
+		#$updatetree insert $count $node IndexValue-1-$nodePos-$count -text $indexVar -open 0 -image [Bitmap::get index]
+		$updatetree insert $count $node SubIndexValue-$nodePos-$count -text $subIndexVar -open 0 -image [Bitmap::get subindex]
+		#no API called for adding SubIndex
+		#void AddSubIndex(int NodeID, ENodeType NodeType, char* IndexID, char* SubIndexID);
+		puts "AddSubIndex $nodeId $nodeType  $indexVar $subIndexVar"
+		AddSubIndex $nodeId $nodeType  $indexVar $subIndexVar
+		set nodeObj($nodePos-$count) [CIndexCollection_getIndex $obj $count]
+		puts inc->$count
 		destroy .addSidx
+
 	}
 	button $frame2.bt_cancel -text Cancel -command { 
 		unset subIndexVar
@@ -909,8 +1018,8 @@ proc AddSubIndexWindow {} {
 	grid config $frame2 -row 3 -column 0  
 	grid config $winAddSidx.l_empty3 -row 4 -column 0 
 
-	grid config $frame1.l_index -row 0 -column 0 -padx 5
-	grid config $frame1.en_index -row 0 -column 1 -padx 5
+	grid config $frame1.l_subindex -row 0 -column 0 -padx 5
+	grid config $frame1.en_subindex -row 0 -column 1 -padx 5
 
 	grid config $frame2.bt_ok -row 0 -column 0 -padx 5
 	grid config $frame2.bt_cancel -row 0 -column 1 -padx 5
@@ -919,6 +1028,7 @@ proc AddSubIndexWindow {} {
 	bind $winAddSidx <KeyPress-Return> "$frame2.bt_ok invoke"
 	bind $winAddSidx <KeyPress-Escape> "$frame2.bt_cancel invoke"
 
+	focus $frame1.en_subindex
 	centerW $winAddSidx
 }
 

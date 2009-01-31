@@ -95,11 +95,14 @@ proc Import {cn tmpDir NodeType NodeID obj objNode } {
 	##set obj [CNode_getIndexCollectionWithoutPDO $objNode]
 	puts "******Import*****"
 #++++++++++++++++++++++++++++++
-	puts obj->$obj
+	puts "obj->$obj  objNode->$objNode"
 	puts "**"
 	set count [CIndexCollection_getNumberofIndexes $obj]
 	puts COUNT$count
-
+	if {$count == 0} {
+		ImportProgress stop
+      		return
+	}
 	set cnId [split $cn -]
 	set xdcId [lrange $cnId 1 end]
 	set xdcId [join $xdcId -]
@@ -121,7 +124,8 @@ proc Import {cn tmpDir NodeType NodeID obj objNode } {
 		}
 		update idletasks
 	}
-	set LocvarProgbar 40
+	puts "last inc->$inc"
+	set LocvarProgbar 50
 ###########################################for TPDO
 	set TclIndexCollection  [CNode_getPDOIndexCollection $objNode 1]
 	set ObjIndex [new_CIndex]
@@ -145,7 +149,7 @@ proc Import {cn tmpDir NodeType NodeID obj objNode } {
 		}
 		update idletasks
 	}
-	set LocvarProgbar 60	
+	set LocvarProgbar 75	
 ###########################################for RPDO
 	set TclIndexCollection  [CNode_getPDOIndexCollection $objNode 2]
 	set ObjIndex [new_CIndex]
@@ -169,7 +173,7 @@ proc Import {cn tmpDir NodeType NodeID obj objNode } {
 		update idletasks
 	}
 	puts "errorString->$errorString...NodeType->$NodeType...NodeID->$NodeID..."
-	set LocvarProgbar 80
+	set LocvarProgbar 100
 	ImportProgress stop
 
 ######followingt lines are hard coded works only for mn#############

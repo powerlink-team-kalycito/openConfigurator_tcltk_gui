@@ -670,8 +670,12 @@ proc NewProjectWindow {} {
 			$updatetree insert end MN-$mnCount OBD-$mnCount -text "OBD" -open 0 -image [Bitmap::get pdo]
 			#check what is nodeId for mn
 			set errorString []
-			#API
-			ImportXML "$tmpImpDir" $errorString 0 240
+			#API			
+			set catchErrCode [ImportXML "$tmpImpDir" 0 240]
+			if { $catchErrCode != 0 } {
+				tk_messageBox -message "ENUM:$catchErrCode!" -title Info -icon info
+				return
+			}
 		puts "new project nodeIdList->$nodeIdList"
 			Import OBD-$mnCount $tmpImpDir 240 1 [lindex $obj 0] [lindex $obj 1] 
 		}

@@ -521,7 +521,8 @@ puts "value->$value"
 	puts "value->[subst $[subst $tmpVar1]]"
 	set errStr []
 	if {[string match "*SubIndexValue*" $nodeSelect]} {
-		EditSubIndex $nodeId $nodeType $indexValue $sIdxValue [subst $[subst $tmpVar1]] [subst $[subst $tmpVar0]] $errStr
+		puts "----------------$nodeId $nodeType $indexValue $sIdxValue"
+		EditSubIndex $nodeId $nodeType $indexValue 11 [subst $[subst $tmpVar1]] [subst $[subst $tmpVar0]] $errStr
 	} elseif {[string match "*IndexValue*" $nodeSelect]} {
 		EditIndex $nodeId $nodeType $indexValue [subst $[subst $tmpVar1]] [subst $[subst $tmpVar0]] $errStr
 	} else {

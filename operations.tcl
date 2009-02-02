@@ -1210,8 +1210,13 @@ proc AddCN {cnName tmpImpDir nodeId} {
 	lappend nodeIdList $nodeId [lindex $obj 0] [lindex $obj 1]
 	if {$tmpImpDir!=0} {
 		#API
-		set errorString []
-		ImportXML "$tmpImpDir" $errorString 1 $nodeId
+	set errorString []
+	set catchErrCode [ImportXML "$tmpImpDir" 1 $nodeId]
+	if { $catchErrCode != 0 } {
+		tk_messageBox -message "ENUM:$catchErrCode!" -title Info -icon info
+		return
+	}
+		
 		#puts $tmpImpDir
 		Import CN-1-$cnCount $tmpImpDir 1 $nodeId [lindex $obj 0] [lindex $obj 1]
 	}
@@ -1836,7 +1841,11 @@ puts  "REimport obj->$obj=====objNode->$objNode"
 		 #ReImportXML(char* fileName, char* errorString, int NodeID, ENodeType NodeType);
 		set errorString []
 		#API 
-		ReImportXML $tmpImpDir $errorString $nodeId $nodeType
+		set catchErrCode [ReImportXML $tmpImpDir $nodeId $nodeType]
+		if { $catchErrCode != 0 } {
+			tk_messageBox -message "ENUM:$catchErrCode!" -title Info -icon info
+			return
+		}		
 		Import $node $tmpImpDir $nodeId $nodeType $obj $objNode 
 	}
 } 
@@ -1929,8 +1938,7 @@ proc DeleteTreeNode {} {
 		#		set xdcId [join $xdcId -]
 		#		unset nodeObj($xdcId)
 		#	}
-		#}
-
+		#}		
 		set nodeType 1
 		#set nodeId 4
 		set errorString []
@@ -1995,7 +2003,9 @@ proc DeleteTreeNode {} {
 		if {[string match "*SubIndexValue*" $node]} {
 		puts "SharedLib delete sub index"
 			puts "DeleteSubIndex $nodeId $nodeType $idx $sidx"
-			set errorString []		 
+			set errorString []
+				set errStruct [IfNodeExists $nodeId 1 $errorString]
+				puts TEST::[ocfmRetValError_getRetValue $errStruct] 
 			set res [DeleteSubIndex $nodeId $nodeType $idx $sidx $errorString]
 			if {$res == -1} {
 				return
@@ -2003,7 +2013,7 @@ proc DeleteTreeNode {} {
 		} elseif {[string match "*IndexValue*" $node]} {
 		puts "SharedLib delete index"
 			puts "DeleteIndex $nodeId $nodeType $idx"
-			set errorString []
+			set errorString []		
 			set res [DeleteIndex $nodeId $nodeType $idx $errorString]
 			if {$res == -1} {
 				return
@@ -2070,10 +2080,15 @@ proc DeleteList {tempList deleteVar} {
 #Description : creates an object for node
 ################################################################################################
 proc NodeCreate {NodeID NodeType} {
+	set objNode [new_CNode]
 	set objNodeCollection [new_CNodeCollection]
 	set objNodeCollection [CNodeCollection_getNodeColObjectPointer]
 	#puts "errorString->$errorString...NodeType->$NodeType...NodeID->$NodeID..."
-	CreateNode $NodeID $NodeType
+	set catchErrCode [CreateNode $NodeID $NodeType]
+	if { $catchErrCode != 0 } {
+		tk_messageBox -message "ENUM:$catchErrCode!" -title Info -icon info
+		return
+	}
 	set objNode [new_CNode]
 	set obj [new_CIndexCollection]
 	set objNode [CNodeCollection_getNode $objNodeCollection $NodeType $NodeID]

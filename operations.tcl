@@ -606,7 +606,6 @@ proc Editor::create { } {
 	$Editor::cnMenu add command -label "Rename" \
 		 -command {set cursor [. cget -cursor]
 			YetToImplement
-			#DoubleClickNode ""
 		 }
 	$Editor::cnMenu add cascade -label "Add" -menu $Editor::IndexaddMenu
 	menu $Editor::IndexaddMenu -tearoff 0
@@ -818,14 +817,14 @@ proc Editor::create { } {
 	set pf1 [EditManager::create_treeWindow $list_notebook]
 	set treeWindow $pf1.sw.objTree
 	# Binding on tree widget   
-	$treeWindow bindText <ButtonPress-1> Editor::DoubleClickNode
+	$treeWindow bindText <ButtonPress-1> Editor::SingleClickNode
 	#$treeWindow bindText <Delete> DeleteTreeNode
 	$treeWindow bindText <ButtonPress-3> {Editor::tselectright %X %Y}
 	#bind .mainframe.frame.pw1.f0.frame.pw2.f0.frame.nb.fobjtree.sw.objTree <Delete> "puts Delete_key_pressed"
 	bind $treeWindow <Button-4> {.mainframe.frame.pw1.f0.frame.pw2.f0.frame.nb.fobjtree.sw.objTree yview scroll -5 units}
 	bind $treeWindow <Button-5> {.mainframe.frame.pw1.f0.frame.pw2.f0.frame.nb.fobjtree.sw.objTree yview scroll 5 units}
-	bind $treeWindow <Enter> { bind . <Delete> DeleteTreeNode ; .mainframe.frame.pw1.f0.frame.pw2.f0.frame.nb.fobjtree.sw.objTree configure -relief sunken }
-	bind $treeWindow <Leave> { bind . <Delete> "" ; .mainframe.frame.pw1.f0.frame.pw2.f0.frame.nb.fobjtree.sw.objTree configure -relief ridge }
+	bind $treeWindow <Enter> { BindTree }
+	bind $treeWindow <Leave> { UnbindTree }
 
           
 	global EditorData
@@ -903,13 +902,35 @@ proc Editor::_create_intro { } {
 	wm deiconify $top
 }
 
+proc BindTree {} {
+	global updatetree
+	#set node [$updatetree selection get]
+	#puts "BindTree node->$node"
+	#if { $node == "" || $node == "root" } {
+
+	#} else {
+	#	$updatetree see $node
+	#	FindSpace::OpenParent $updatetree $node
+	#}
+	bind . <Delete> DeleteTreeNode 
+	.mainframe.frame.pw1.f0.frame.pw2.f0.frame.nb.fobjtree.sw.objTree configure -relief sunken 
+	bind . <Up> ArrowUp 
+	bind . <Down> ArrowDown
+}
+
+proc UnbindTree {} {
+	bind . <Delete> "" 
+	.mainframe.frame.pw1.f0.frame.pw2.f0.frame.nb.fobjtree.sw.objTree configure -relief ridge 
+	bind . <Up> ""
+	bind . <Down> ""
+}
 ################################################################################################
-#proc Editor::DoubleClickNode
+#proc Editor::SingleClickNode
 #Input       : node
 #Output      : -
 #Description : Displays required tabs when corresponding nodes are clicked
 ################################################################################################
-proc Editor::DoubleClickNode {node} {
+proc Editor::SingleClickNode {node} {
 	global updatetree
 	global f0
 	global f1
@@ -986,13 +1007,18 @@ puts "xdcId->$xdcId...xdcIcxId->$xdcIcxId"
 		set indx [lindex $tmpSplit [expr [llength $tmpSplit] - 2]]
 		set subId [lindex $tmpSplit end]
 		set indexValue [CBaseIndex_getIndexValue $nodeObj($xdcIcxId)]
+puts 0
 		set sIdxValue [CBaseIndex_getIndexValue $nodeObj($xdcId)]
+puts 1
 		set IndexName [CBaseIndex_getName $nodeObj($xdcId)]
+puts 2
 		set IndexObjType [CBaseIndex_getObjectType $nodeObj($xdcId)]
+puts 3
 		#set objIndexDataType [CBaseIndex_getDataType $nodeObj($xdcId)]
 		#set IndexDataType [DataType_getName $objIndexDataType]
 		set IndexDataType "CHECK!!!!!!"
 		set IndexAccessType [CBaseIndex_getAccessType $nodeObj($xdcId)]
+puts 4
 		#Check for hex data. If not hex, make it null.
 		set IndexAccessType [string trimleft $IndexAccessType 0x]
 		set IndexAccessType [string trimleft $IndexAccessType 0X]
@@ -1001,6 +1027,7 @@ puts "xdcId->$xdcId...xdcIcxId->$xdcIcxId"
 			set IndexAccessType []
 		}
 		set IndexDefaultValue [CBaseIndex_getDefaultValue $nodeObj($xdcId)]
+puts 5
 		#Check for hex data. If not hex, make it null.
 		set IndexDefaultValue [string trimleft $IndexDefaultValue 0x]
 		set IndexDefaultValue [string trimleft $IndexDefaultValue 0X]
@@ -1090,12 +1117,16 @@ puts "xdcId->$xdcId"
 		set NodeType 1
 		set indx [lindex $tmpSplit end]
 		set indexValue [CBaseIndex_getIndexValue $nodeObj($xdcId)]
+puts 0
 		set IndexName [CBaseIndex_getName $nodeObj($xdcId)]
+puts 1
 		set IndexObjType [CBaseIndex_getObjectType $nodeObj($xdcId)]
+puts 2
 		#set objIndexDataType [CBaseIndex_getDataType $nodeObj($xdcId)]
 		#set IndexDataType [DataType_getName $objIndexDataType]
 		set IndexDataType "CHECK!!!!!!"
 		set IndexAccessType [CBaseIndex_getAccessType $nodeObj($xdcId)]
+puts 3
 		#Check for hex data. If not hex, make it null.
 		set IndexAccessType [string trimleft $IndexAccessType 0x]
 		set IndexAccessType [string trimleft $IndexAccessType 0X]
@@ -1104,6 +1135,7 @@ puts "xdcId->$xdcId"
 			set IndexAccessType []
 		}
 		set IndexDefaultValue [CBaseIndex_getDefaultValue $nodeObj($xdcId)]
+puts 4
 		#Check for hex data. If not hex, make it null.
 		set IndexDefaultValue [string trimleft $IndexDefaultValue 0x]
 		set IndexDefaultValue [string trimleft $IndexDefaultValue 0X]
@@ -1206,19 +1238,29 @@ proc AddCN {cnName tmpImpDir nodeId} {
 	incr cnCount
 	set child [$updatetree insert end MN-1 CN-1-$cnCount -text "$cnName" -open 0 -image [Bitmap::get cn]]
 	set obj [NodeCreate $nodeId 1]
+	puts "obj->$obj"
+#puts "getRetValue->[ocfmRetValError_getRetValue [lindex $obj 0]]"
+#puts "getErrorCode->[ocfmRetValError_getErrorCode [lindex $obj 0]]"
+	if { [lindex $obj 0] != 0 } {
+		#tk_messageBox -message "ENUM:$catchErrCode!" -title Info -icon info
+		#return
+	}
 	#lappend nodeIdList CN-1-$cnCount
-	lappend nodeIdList $nodeId [lindex $obj 0] [lindex $obj 1]
+	lappend nodeIdList $nodeId [lindex $obj 1] [lindex $obj 2]
 	if {$tmpImpDir!=0} {
 		#API
 	set errorString []
 	set catchErrCode [ImportXML "$tmpImpDir" 1 $nodeId]
+puts "catchErrCode->$catchErrCode"
+#puts "getRetValue->[ocfmRetValError_getRetValue $catchErrCode]"
+#puts "getErrorCode->[ocfmRetValError_getErrorCode $catchErrCode]"
 	if { $catchErrCode != 0 } {
-		tk_messageBox -message "ENUM:$catchErrCode!" -title Info -icon info
-		return
+		#tk_messageBox -message "ENUM:$catchErrCode!" -title Info -icon info
+		#return
 	}
 		
 		#puts $tmpImpDir
-		Import CN-1-$cnCount $tmpImpDir 1 $nodeId [lindex $obj 0] [lindex $obj 1]
+		Import CN-1-$cnCount $tmpImpDir 1 $nodeId [lindex $obj 1] [lindex $obj 2]
 	}
 	return
 }
@@ -1828,6 +1870,15 @@ puts  "schCnt->$schCnt=======nodeList->$nodeList"
 puts  "REimport obj->$obj=====objNode->$objNode"
 	set tmpImpDir [tk_getOpenFile -title "Import XDC" -filetypes $types -parent .]
 	if {$tmpImpDir != ""} {
+		#API 
+		set catchErrCode [ReImportXML $tmpImpDir $nodeId $nodeType]
+puts "catchErrCode->$catchErrCode"
+#puts "getRetValue->[ocfmRetValError_getRetValue $catchErrCode]"
+#puts "getErrorCode->[ocfmRetValError_getErrorCode $catchErrCode]"
+		if { $catchErrCode != 0 } {
+			#tk_messageBox -message "ENUM:$catchErrCode!" -title Info -icon info
+			#return
+		}		
 		catch {
 			if { $res == -1} {
 				$updatetree insert 0 MN$tmpNode OBD$tmpNode -text "OBD" -open 0 -image [Bitmap::get pdo]
@@ -1837,15 +1888,9 @@ puts  "REimport obj->$obj=====objNode->$objNode"
 		catch {$updatetree delete [$updatetree nodes $node]}
 		# pass node Id  and node type instead of 1 and cn
 		$updatetree itemconfigure $node -open 0
-	#parseFile(char* filename, int NodeID, ENodeType  NodeType); 
-		 #ReImportXML(char* fileName, char* errorString, int NodeID, ENodeType NodeType);
+		#parseFile(char* filename, int NodeID, ENodeType  NodeType); 
+		#ReImportXML(char* fileName, char* errorString, int NodeID, ENodeType NodeType);
 		set errorString []
-		#API 
-		set catchErrCode [ReImportXML $tmpImpDir $nodeId $nodeType]
-		if { $catchErrCode != 0 } {
-			tk_messageBox -message "ENUM:$catchErrCode!" -title Info -icon info
-			return
-		}		
 		Import $node $tmpImpDir $nodeId $nodeType $obj $objNode 
 	}
 } 
@@ -1963,22 +2008,15 @@ proc DeleteTreeNode {} {
 	} else {
 		set idxNode [$updatetree selection get]
 		if {[string match "*SubIndexValue*" $node]} {
-			set end [string length [$updatetree itemcget $node -text] ]
-			set sidx [string range [$updatetree itemcget $node -text] [expr $end-3] [expr $end-2] ]
+			set sidx [string range [$updatetree itemcget $node -text] end-2 end-1 ]
 			puts sidx->$sidx
 			set idxNode [$updatetree parent $node]
 		} elseif {[string match "*IndexValue*" $node]} {
 			#freeing the memory
-	 		foreach childIdx [$updatetree nodes $node] {	
-				set tmpSplit [split $childIdx -]
-				set xdcId [lrange $tmpSplit 1 end]
-				set xdcId [join $xdcId -]
-				#puts -nonewline "$xdcId  "
-				unset nodeObj($xdcId)
-			}
+		} else {
+			puts "DeleteTreeNode->Invalid cond 1"
 		}
-		set end [string length [$updatetree itemcget $idxNode -text] ]
-		set idx [string range [$updatetree itemcget $idxNode -text] [expr $end-5] [expr $end-2] ]
+		set idx [string range [$updatetree itemcget $idxNode -text] end-4 end-1 ]
 		puts idx->$idx
  		set child $idxNode
 		if {[string match "*Pdo*" $node]} {	
@@ -2001,29 +2039,44 @@ proc DeleteTreeNode {} {
 			set nodeType 1
 		}		
 		if {[string match "*SubIndexValue*" $node]} {
-		puts "SharedLib delete sub index"
+			puts "SharedLib delete sub index"
 			puts "DeleteSubIndex $nodeId $nodeType $idx $sidx"
-			set errorString []
-				set errStruct [IfNodeExists $nodeId 1 $errorString]
-				puts TEST::[ocfmRetValError_getRetValue $errStruct] 
-			set res [DeleteSubIndex $nodeId $nodeType $idx $sidx $errorString]
-			if {$res == -1} {
-				return
+			#set errorString []
+			#set errStruct [IfNodeExists $nodeId $nodeType]
+			#puts TEST::[ocfmRetValError_getRetValue $errStruct] 
+			set catchErrCode [DeleteSubIndex $nodeId $nodeType $idx $sidx]
+puts "catchErrCode->$catchErrCode"
+#puts "getRetValue->[ocfmRetValError_getRetValue $catchErrCode]"
+#puts "getErrorCode->[ocfmRetValError_getErrorCode $catchErrCode]"
+			if {$catchErrCode == 0} {
+				#tk_messageBox -message "ENUM:$catchErrCode!" -title Info -icon info
+				#return
 			}
 		} elseif {[string match "*IndexValue*" $node]} {
-		puts "SharedLib delete index"
+			puts "SharedLib delete index"
 			puts "DeleteIndex $nodeId $nodeType $idx"
-			set errorString []		
-			set res [DeleteIndex $nodeId $nodeType $idx $errorString]
-			if {$res == -1} {
-				return
-			}			
+			#set errorString []		
+			set catchErrCode [DeleteIndex $nodeId $nodeType $idx]
+puts "catchErrCode->$catchErrCode"
+#puts "getRetValue->[ocfmRetValError_getRetValue $catchErrCode]"
+#puts "getErrorCode->[ocfmRetValError_getErrorCode $catchErrCode]"
+			if {$catchErrCode != 0} {
+				#tk_messageBox -message "ENUM:$catchErrCode!" -title Info -icon info
+				#return
+			}	
+	 		foreach childIdx [$updatetree nodes $node] {	
+				set tmpSplit [split $childIdx -]
+				set xdcId [lrange $tmpSplit 1 end]
+				set xdcId [join $xdcId -]
+				#puts -nonewline "$xdcId  "
+				unset nodeObj($xdcId)
+			}		
 		}
 		
-	set tmpSplit [split $node -]
-	set xdcId [lrange $tmpSplit 1 end]
-	set xdcId [join $xdcId -]
-	unset nodeObj($xdcId)
+		set tmpSplit [split $node -]
+		set xdcId [lrange $tmpSplit 1 end]
+		set xdcId [join $xdcId -]
+		unset nodeObj($xdcId)
 	}
 	set parent [$updatetree parent $node]
 	set nxtSelList [$updatetree nodes $parent]
@@ -2039,7 +2092,7 @@ proc DeleteTreeNode {} {
 		} elseif { $nxtSelCnt > 0 } {
 			#select next node since nxtSelCnt already incremented do nothing
 		} else {
-			puts "DeleteTreeNode->this cond should not occur"
+			puts "DeleteTreeNode->Inavlid cond 2"
 		}
 			catch {set nxtSel [lindex $nxtSelList $nxtSelCnt] }
 			catch {$updatetree selection set $nxtSel}
@@ -2052,7 +2105,8 @@ proc DeleteTreeNode {} {
 #proc DeleteList
 #Input       : -
 #Output      : -
-#Description : searches a variable in list if present delete it
+#Description : searches a variable in list if present delete it and next 2 variables
+#	       used mainly for deleting nodeId, obj and objNode
 ################################################################################################
 proc DeleteList {tempList deleteVar} {
 	set res [lsearch $tempList $deleteVar] 
@@ -2085,9 +2139,12 @@ proc NodeCreate {NodeID NodeType} {
 	set objNodeCollection [CNodeCollection_getNodeColObjectPointer]
 	#puts "errorString->$errorString...NodeType->$NodeType...NodeID->$NodeID..."
 	set catchErrCode [CreateNode $NodeID $NodeType]
+puts "catchErrCode->$catchErrCode"
+#puts "getRetValue->[ocfmRetValError_getRetValue $catchErrCode]"
+#puts "getErrorCode->[ocfmRetValError_getErrorCode $catchErrCode]"
 	if { $catchErrCode != 0 } {
-		tk_messageBox -message "ENUM:$catchErrCode!" -title Info -icon info
-		return
+		#tk_messageBox -message "ENUM:$catchErrCode!" -title Info -icon info
+		#return [list $catchErrCode "" ""]
 	}
 	set objNode [new_CNode]
 	set obj [new_CIndexCollection]
@@ -2097,7 +2154,7 @@ proc NodeCreate {NodeID NodeType} {
 	#currntly works only for windows
 	#set obj [CNode_getIndexCollectionWithoutPDO $objNode]
 	puts "NodeCreate :::  obj->$obj====objNode->$objNode"
-	return [list $obj $objNode]
+	return [list $catchErrCode $obj $objNode]
 }
 
 ################################################################################################
@@ -2165,4 +2222,154 @@ proc FreeNodeMemory {node} {
 			unset nodeObj($xdcId)
 		}
 	}
+}
+
+################################################################################################
+#proc ArrowUp
+#Input       : -
+#Output      : -
+#Description : Traversal for tree window
+################################################################################################
+
+proc ArrowUp {} {
+	global updatetree
+	set node [$updatetree selection get]
+	puts "node->$node"
+	if { $node == "" || $node == "root" } {
+		return
+	}
+	#if { $node == "root" } {
+		#$updatetree selection set [lindex [$updatetree nodes $node] 0]
+		#$updatetree see $node
+	#	return
+	#}
+	set parent [$updatetree parent $node]
+	set siblingList [$updatetree nodes $parent]
+	set cnt [lsearch -exact $siblingList $node]
+	if { $cnt == 0} {
+		#there is no node before it so select parent
+		$updatetree selection set $parent
+		$updatetree see $parent
+	} else {
+		set sibling  [lindex $siblingList [expr $cnt-1] ]
+		if {[$updatetree itemcget $sibling -open] == 0} {
+			$updatetree selection set $sibling
+			$updatetree see $sibling
+			return
+		} else {
+			set siblingList [$updatetree nodes $sibling]
+			if {[$updatetree itemcget [lindex $siblingList end] -open] == 1} {
+				_ArrowUp [lindex $siblingList end]
+			} else {			
+				$updatetree selection set [lindex $siblingList end]
+				$updatetree see [lindex $siblingList end]
+				return
+			}	
+		}
+	}
+}
+
+proc _ArrowUp {node} {
+	global updatetree
+	if {[$updatetree itemcget $node -open] == 0} {
+		$updatetree selection set $node
+		$updatetree see $node
+		return
+	} else {
+		
+		set siblingList [$updatetree nodes $node]
+		if {[$updatetree itemcget [lindex $siblingList end] -open] == 1} {
+			_ArrowUp [lindex $siblingList end]
+		} else {			
+			$updatetree selection set [lindex $siblingList end]
+			$updatetree see [lindex $siblingList end]
+			return
+		}	
+	}
+}
+################################################################################################
+#proc ArrowDown
+#Input       : -
+#Output      : -
+#Description : Traversal for tree window
+################################################################################################
+
+proc ArrowDown {} {
+	global updatetree
+	set node [$updatetree selection get]
+	puts "node->$node"
+	if { $node == "" || $node == "root" } {
+		return
+	}
+	#if {$node == "root" } {
+	#	return
+	#}
+	if {[$updatetree itemcget $node -open] == 0} {
+		set parent [$updatetree parent $node]
+		set siblingList [$updatetree nodes $parent]
+		set cnt [lsearch -exact $siblingList $node]
+		if { $cnt == [expr [llength $siblingList]-1 ]} {
+			_ArrowDown $parent $node
+		} else {
+			$updatetree selection set [lindex $siblingList [expr $cnt+1] ]
+			$updatetree see [lindex $siblingList [expr $cnt+1] ]
+		}
+		return
+	} else {
+		set siblingList [$updatetree nodes $node]
+		$updatetree selection set [lindex $siblingList 0]
+		$updatetree see [lindex $siblingList 0]
+		return
+	}
+
+	if { $cnt == [expr [llength $siblingList]-1 ]} {
+		set sibling  [lindex $siblingList [expr $cnt-1] ]
+		if {[$updatetree itemcget $sibling -open] == 0} {
+			$updatetree selection set $sibling
+			$updatetree see $sibling
+			return
+		} else {
+			set siblingList [$updatetree nodes $sibling]
+			$updatetree selection set [lindex $siblingList end]
+			$updatetree see [lindex $siblingList end]
+			return
+		}
+	}
+}
+
+
+
+proc _ArrowDown {node origNode} {
+	global updatetree
+	#puts "_arrowDown node->$node origNode->$origNode"
+	if { $node == "root" } {
+		$updatetree selection set $origNode
+		$updatetree see $origNode
+		return
+	}
+	set parent [$updatetree parent $node]
+
+	set siblingList [$updatetree nodes $parent]
+	set cnt [lsearch -exact $siblingList $node]
+	if { $cnt == [expr [llength $siblingList]-1 ]} {
+		_ArrowDown $parent $origNode
+	} else {
+		$updatetree selection set [lindex $siblingList [expr $cnt+1] ]
+		$updatetree see [lindex $siblingList [expr $cnt+1] ]
+		return
+	}
+	#if {[$updatetree itemcget $node -open] == 0} {
+	#	$updatetree selection set $node
+	#	$updatetree see $node
+	#	return
+	#} else {
+	#	set siblingList [$updatetree nodes $sibling]
+	#	if {[$updatetree itemcget [lindex $siblingList end] -open] == 1} {
+	#		_ArrowUp [lindex $siblingList end]
+	#	} else {			
+	#		$updatetree selection set [lindex $siblingList end]
+	#		$updatetree see [lindex $siblingList end]
+	#		return
+	#	}	
+	#}
 }

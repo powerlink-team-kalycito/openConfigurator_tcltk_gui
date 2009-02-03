@@ -663,21 +663,30 @@ proc NewProjectWindow {} {
 		catch {$updatetree delete MN-$mnCount}
 		$updatetree insert end PjtName MN-$mnCount -text "openPOWERLINK MN" -open 1 -image [Bitmap::get mn]
 		set obj [NodeCreate 240 0]
-		puts $obj
-		lappend nodeIdList 240 [lindex $obj 0] [lindex $obj 1]
+		puts "obj->$obj"
+#puts "getRetValue->[ocfmRetValError_getRetValue [lindex $obj 0]]"
+#puts "getErrorCode->[ocfmRetValError_getErrorCode [lindex $obj 0]]"
+		if { [lindex $obj 0] != 0 } {
+			#tk_messageBox -message "ENUM:$catchErrCode!" -title Info -icon info
+			#return
+		}
+		lappend nodeIdList 240 [lindex $obj 1] [lindex $obj 2]
 		#puts "new project nodeIdList->$nodeIdList"
 		if {$conf=="off"} {
-			$updatetree insert end MN-$mnCount OBD-$mnCount -text "OBD" -open 0 -image [Bitmap::get pdo]
+
 			#check what is nodeId for mn
-			set errorString []
 			#API			
 			set catchErrCode [ImportXML "$tmpImpDir" 0 240]
+puts "catchErrCode->$catchErrCode"
+#puts "getRetValue->[ocfmRetValError_getRetValue $catchErrCode]"
+#puts "getErrorCode->[ocfmRetValError_getErrorCode $catchErrCode]"
 			if { $catchErrCode != 0 } {
-				tk_messageBox -message "ENUM:$catchErrCode!" -title Info -icon info
-				return
+				#tk_messageBox -message "ENUM:$catchErrCode!" -title Info -icon info
+				#return
 			}
-		puts "new project nodeIdList->$nodeIdList"
-			Import OBD-$mnCount $tmpImpDir 240 1 [lindex $obj 0] [lindex $obj 1] 
+			puts "new project nodeIdList->$nodeIdList"
+			$updatetree insert end MN-$mnCount OBD-$mnCount -text "OBD" -open 0 -image [Bitmap::get pdo]
+			Import OBD-$mnCount $tmpImpDir 240 1 [lindex $obj 1] [lindex $obj 2] 
 		}
 		destroy .newprj
 	}
@@ -868,14 +877,38 @@ proc AddIndexWindow {} {
 		puts "nodePos---->$nodePos=====nodeType---->$nodeType"
 
 		#$updatetree insert $count $node IndexValue-1-$nodePos-$count -text $indexVar -open 0 -image [Bitmap::get index]
-		$updatetree insert $count $node IndexValue-1-$nodePos-$count -text $indexVar -open 0 -image [Bitmap::get index]
+		$updatetree insert [llength $sortChild] $node IndexValue-1-$nodePos-$count -text \($indexVar\) -open 0 -image [Bitmap::get index]
+		#previously it was
+		#$updatetree insert $count $node IndexValue-1-$nodePos-$count -text $indexVar -open 0 -image [Bitmap::get index]
 		#set nodeObj(1-$nodePos-$count) [CIndexCollection_getIndex $obj [expr [llength $sortChild]-1]]
 		#no API called for adding Index
 		AddIndex $nodeId $nodeType $indexVar
 		puts "AddIndex $nodeId $nodeType $indexVar"
 
 		set nodeObj(1-$nodePos-$count) [CIndexCollection_getIndex $obj [llength $sortChild]]
-		puts inc->[llength $sortChild]
+		#set nodeObj(1-$nodePos-$count) [CIndexCollection_getIndexbyIndexValue $obj $indexVar]
+		puts "[CBaseIndex_getIndexValue $nodeObj(1-$nodePos-$count)]"
+
+
+		for {set test 0 } {$test <= [lindex $sortChild end]} {incr test } {
+			catch {puts "nodeObj(1-$nodePos-$test)->$nodeObj(1-$nodePos-$test)=====[CIndexCollection_getIndex $obj $test]" }
+		}
+			puts "\n\n"
+		#for {set test 0 } {$test <= [ llength $sortChild ]} {incr test } {
+		#	catch {puts -nonewline "[CIndexCollection_getIndex $obj $test]  $test  " }
+		#}
+		#	puts "\n\n"
+		puts "test->$[CIndexCollection_getIndex $obj [llength $sortChild]]=====[CIndexCollection_getIndexbyIndexValue $obj $indexVar]======$[CIndexCollection_getIndex $obj [expr [lindex $sortChild end]+1] ]"
+		puts "inc->[llength $sortChild]->[expr [lindex $sortChild end]+1 ]"
+
+#set chklist [list 1006 1300 1400 1401 1402 1600 1601 1602 1800 1801 1802 1A00 1A01 1A01 1C02 1C09 1F26 1F27 1F81 1F84 1F89 1F8A 1F8B 1F8D 1F92 1F98]
+#foreach tmpchk $chklist {
+#	puts "[CIndexCollection_getIndexbyIndexValue $obj $tmpchk]"
+
+#}
+
+
+
 		destroy .addIdx
 	}
 	button $frame2.bt_cancel -text Cancel -command { 
@@ -1002,7 +1035,7 @@ proc AddSubIndexWindow {} {
 
 		#$updatetree insert $count $node IndexValue-1-$nodePos-$count -text $indexVar -open 0 -image [Bitmap::get index]
 		#$updatetree insert $count $node IndexValue-1-$nodePos-$count -text $indexVar -open 0 -image [Bitmap::get index]
-		$updatetree insert $count $node SubIndexValue-$nodePos-$count -text $subIndexVar -open 0 -image [Bitmap::get subindex]
+		$updatetree insert $count $node SubIndexValue-$nodePos-$count -text \($subIndexVar\) -open 0 -image [Bitmap::get subindex]
 		#no API called for adding SubIndex
 		#void AddSubIndex(int NodeID, ENodeType NodeType, char* IndexID, char* SubIndexID);
 		puts "AddSubIndex $nodeId $nodeType  $indexVar $subIndexVar"

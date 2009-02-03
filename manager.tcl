@@ -345,7 +345,7 @@ proc EditManager::create_treeWindow {nb } {
             	-bg white  \
            	-deltay 15 \
 	   	-padx 15 \
-	    	-dropenabled 0 -dragenabled 0 -relief ridge
+	    	-dropenabled 0 -dragenabled 0 -relief ridge 
     	]
 	$sw setwidget $objTree
 	set updatetree $objTree
@@ -474,7 +474,7 @@ proc SaveValue {frame0 frame1} {
 
 	#puts "tmpNodeSelect->$tmpNodeSelect"
 	#puts "nodeObj->$nodeObj($tmpNodeSelect)"
-
+	set oldName [$updatetree itemcget $nodeSelect -text]
 	if {[string match "*SubIndexValue*" $nodeSelect]} {
 		set sIdxValue [CBaseIndex_getIndexValue $nodeObj($tmpNodeSelect)]
 		set sIdxValue [string toupper $sIdxValue]
@@ -484,11 +484,16 @@ proc SaveValue {frame0 frame1} {
 		set indexValue [CBaseIndex_getIndexValue $nodeObj($indxId)]
 		set indexValue [string toupper $indexValue]
 		set parent [$updatetree parent $nodeSelect]
+		#set indexId [string range[$updatetree itemcget $parent -text] end-5 end]
 		set parent [$updatetree parent $parent]	
+		set oldName [string range $oldName end-3 end ]
+		#set subIndexId $oldName
 	} else {
 		set indexValue [CBaseIndex_getIndexValue $nodeObj($tmpNodeSelect)]
 		set indexValue [string toupper $indexValue]
 		set parent [$updatetree parent $nodeSelect]
+		set oldName [string range $oldName end-5 end ]
+		set indexId $oldName
 	}
 
 	set schCnt [lsearch -exact $nodeList $parent ]
@@ -522,14 +527,14 @@ puts "value->$value"
 	set errStr []
 	if {[string match "*SubIndexValue*" $nodeSelect]} {
 		puts "----------------$nodeId $nodeType $indexValue $sIdxValue"
-		EditSubIndex $nodeId $nodeType $indexValue 11 [subst $[subst $tmpVar1]] [subst $[subst $tmpVar0]] $errStr
+		#DllExport EConfiuguratorErrors EditSubIndex(int NodeID, ENodeType NodeType, char* IndexID, char* SubIndexID, char* IndexValue, char* IndexName);
+		EditSubIndex $nodeId $nodeType $indexValue $sIdxValue [subst $[subst $tmpVar1]] [subst $[subst $tmpVar0]]
 	} elseif {[string match "*IndexValue*" $nodeSelect]} {
-		EditIndex $nodeId $nodeType $indexValue [subst $[subst $tmpVar1]] [subst $[subst $tmpVar0]] $errStr
+		#DllExport EConfiuguratorErrors EditIndex(int NodeID, ENodeType NodeType, char* IndexID, char* IndexValue, char* IndexName);
+		EditIndex $nodeId $nodeType $indexValue [subst $[subst $tmpVar1]] [subst $[subst $tmpVar0]] 
 	} else {
 		puts "\n\n\nShould Never Happen!!!\n\n\n"
 	}
-	set oldName [$updatetree itemcget $nodeSelect -text]
-	set oldName [string range $oldName end-6 end ]
 	set newName [append newName $oldName]
 	puts "newName->$newName"
 	$updatetree itemconfigure $nodeSelect -text $newName

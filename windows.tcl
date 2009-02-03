@@ -830,6 +830,7 @@ proc AddIndexWindow {} {
 			set res [tk_messageBox -message "Invalid Index" -type ok -parent .addIdx]
 			return
 		}
+		set indexVar [string toupper $indexVar]
 		set node [$updatetree selection get]
 		puts node----->$node
 		########finding obj
@@ -859,7 +860,7 @@ proc AddIndexWindow {} {
 		#puts sortChild->$sortChild
 		set sortChild [lsort -integer $sortChild]
 		set parent [$updatetree parent $node]
-		if {[string match "OBD*" $parent]} {
+		if {[string match "OBD*" $node]} {
 			set nodeType 0
 		} else {
 			set nodeType 1
@@ -876,36 +877,20 @@ proc AddIndexWindow {} {
 		set nodePos [lindex $nodePos end]
 		puts "nodePos---->$nodePos=====nodeType---->$nodeType"
 
+		AddIndex $nodeId $nodeType $indexVar
+		puts "AddIndex nodeId->$nodeId nodeType->$nodeType indexVar->$indexVar"
+
+		set nodeObj(1-$nodePos-$count) [CIndexCollection_getIndex $obj [llength $sortChild]]
+		#set nodeObj(1-$nodePos-$count) [CIndexCollection_getIndexbyIndexValue $obj $indexVar]
+		puts "inc->[llength $sortChild]"
+
 		#$updatetree insert $count $node IndexValue-1-$nodePos-$count -text $indexVar -open 0 -image [Bitmap::get index]
 		$updatetree insert [llength $sortChild] $node IndexValue-1-$nodePos-$count -text \($indexVar\) -open 0 -image [Bitmap::get index]
 		#previously it was
 		#$updatetree insert $count $node IndexValue-1-$nodePos-$count -text $indexVar -open 0 -image [Bitmap::get index]
 		#set nodeObj(1-$nodePos-$count) [CIndexCollection_getIndex $obj [expr [llength $sortChild]-1]]
 		#no API called for adding Index
-		AddIndex $nodeId $nodeType $indexVar
-		puts "AddIndex $nodeId $nodeType $indexVar"
 
-		set nodeObj(1-$nodePos-$count) [CIndexCollection_getIndex $obj [llength $sortChild]]
-		#set nodeObj(1-$nodePos-$count) [CIndexCollection_getIndexbyIndexValue $obj $indexVar]
-		puts "[CBaseIndex_getIndexValue $nodeObj(1-$nodePos-$count)]"
-
-
-		for {set test 0 } {$test <= [lindex $sortChild end]} {incr test } {
-			catch {puts "nodeObj(1-$nodePos-$test)->$nodeObj(1-$nodePos-$test)=====[CIndexCollection_getIndex $obj $test]" }
-		}
-			puts "\n\n"
-		#for {set test 0 } {$test <= [ llength $sortChild ]} {incr test } {
-		#	catch {puts -nonewline "[CIndexCollection_getIndex $obj $test]  $test  " }
-		#}
-		#	puts "\n\n"
-		puts "test->$[CIndexCollection_getIndex $obj [llength $sortChild]]=====[CIndexCollection_getIndexbyIndexValue $obj $indexVar]======$[CIndexCollection_getIndex $obj [expr [lindex $sortChild end]+1] ]"
-		puts "inc->[llength $sortChild]->[expr [lindex $sortChild end]+1 ]"
-
-#set chklist [list 1006 1300 1400 1401 1402 1600 1601 1602 1800 1801 1802 1A00 1A01 1A01 1C02 1C09 1F26 1F27 1F81 1F84 1F89 1F8A 1F8B 1F8D 1F92 1F98]
-#foreach tmpchk $chklist {
-#	puts "[CIndexCollection_getIndexbyIndexValue $obj $tmpchk]"
-
-#}
 
 
 
@@ -986,10 +971,11 @@ proc AddSubIndexWindow {} {
 		#	$updatetree insert 0 $node SubIndexValue-$nodePos-0 -text $subIndexVar -open 0 -image [Bitmap::get subindex]
 		#}
 		#destroy .addSidx
-
+		set subIndexVar [string toupper $subIndexVar]
 		set node [$updatetree selection get]
 		puts node----->$node
 		set indexVar [string range [$updatetree itemcget $node -text] end-4 end-1 ]
+		set indexVar [string toupper $indexVar]
 		########finding obj
 		set parent [$updatetree parent $node]
 
@@ -1038,10 +1024,19 @@ proc AddSubIndexWindow {} {
 		$updatetree insert $count $node SubIndexValue-$nodePos-$count -text \($subIndexVar\) -open 0 -image [Bitmap::get subindex]
 		#no API called for adding SubIndex
 		#void AddSubIndex(int NodeID, ENodeType NodeType, char* IndexID, char* SubIndexID);
-		puts "AddSubIndex $nodeId $nodeType  $indexVar $subIndexVar"
-		AddSubIndex $nodeId $nodeType  $indexVar $subIndexVar
-		set nodeObj($nodePos-$count) [CIndexCollection_getIndex $obj $count]
+		puts "AddSubIndex nodeId->$nodeId nodeType->$nodeType indexVar->$indexVar subIndexVar->$subIndexVar"
+		AddSubIndex $nodeId $nodeType $indexVar $subIndexVar
+		puts "nodeObj($nodePos)->$nodeObj($nodePos)"
+		set nodeObj($nodePos-$count) [CIndex_getSubIndex $nodeObj($nodePos) $count]
 		puts inc->$count
+
+################33for testing##########################
+#puts "\n###test start###"
+#puts [CIndex_getSubIndex $nodeObj($nodePos) 0]
+#puts [CBaseIndex_getIndexValue [CIndex_getSubIndex $nodeObj($nodePos) 0] ]
+#puts "###test End###\n"
+#######################################################
+
 		destroy .addSidx
 
 	}

@@ -1001,24 +1001,21 @@ puts "node====>$node"
 		set xdcIcxId [lrange $tmpSplit 1 [expr [llength $tmpSplit] - 2]]
 		set xdcIcxId [join $xdcIcxId -]
 puts "xdcId->$xdcId...xdcIcxId->$xdcIcxId"
+puts "nodeObj($xdcId)->$nodeObj($xdcId)"
+puts "nodeObj($xdcIcxId)->$nodeObj($xdcIcxId)"
 		set errorString []
 		set NodeID 1
 		set NodeType 1
 		set indx [lindex $tmpSplit [expr [llength $tmpSplit] - 2]]
 		set subId [lindex $tmpSplit end]
 		set indexValue [CBaseIndex_getIndexValue $nodeObj($xdcIcxId)]
-puts 0
 		set sIdxValue [CBaseIndex_getIndexValue $nodeObj($xdcId)]
-puts 1
 		set IndexName [CBaseIndex_getName $nodeObj($xdcId)]
-puts 2
 		set IndexObjType [CBaseIndex_getObjectType $nodeObj($xdcId)]
-puts 3
 		#set objIndexDataType [CBaseIndex_getDataType $nodeObj($xdcId)]
 		#set IndexDataType [DataType_getName $objIndexDataType]
 		set IndexDataType "CHECK!!!!!!"
 		set IndexAccessType [CBaseIndex_getAccessType $nodeObj($xdcId)]
-puts 4
 		#Check for hex data. If not hex, make it null.
 		set IndexAccessType [string trimleft $IndexAccessType 0x]
 		set IndexAccessType [string trimleft $IndexAccessType 0X]
@@ -1027,7 +1024,6 @@ puts 4
 			set IndexAccessType []
 		}
 		set IndexDefaultValue [CBaseIndex_getDefaultValue $nodeObj($xdcId)]
-puts 5
 		#Check for hex data. If not hex, make it null.
 		set IndexDefaultValue [string trimleft $IndexDefaultValue 0x]
 		set IndexDefaultValue [string trimleft $IndexDefaultValue 0X]
@@ -1111,22 +1107,18 @@ puts 5
 		set tmpSplit [split $node -]
 		set xdcId [lrange $tmpSplit 1 end]
 		set xdcId [join $xdcId -]
-puts "xdcId->$xdcId"
+puts "xdcId->$xdcId==nodeObj($xdcId)->$nodeObj($xdcId)"
 		set errorString []
 		set NodeID 1
 		set NodeType 1
 		set indx [lindex $tmpSplit end]
 		set indexValue [CBaseIndex_getIndexValue $nodeObj($xdcId)]
-puts 0
 		set IndexName [CBaseIndex_getName $nodeObj($xdcId)]
-puts 1
 		set IndexObjType [CBaseIndex_getObjectType $nodeObj($xdcId)]
-puts 2
 		#set objIndexDataType [CBaseIndex_getDataType $nodeObj($xdcId)]
 		#set IndexDataType [DataType_getName $objIndexDataType]
 		set IndexDataType "CHECK!!!!!!"
 		set IndexAccessType [CBaseIndex_getAccessType $nodeObj($xdcId)]
-puts 3
 		#Check for hex data. If not hex, make it null.
 		set IndexAccessType [string trimleft $IndexAccessType 0x]
 		set IndexAccessType [string trimleft $IndexAccessType 0X]
@@ -1135,7 +1127,6 @@ puts 3
 			set IndexAccessType []
 		}
 		set IndexDefaultValue [CBaseIndex_getDefaultValue $nodeObj($xdcId)]
-puts 4
 		#Check for hex data. If not hex, make it null.
 		set IndexDefaultValue [string trimleft $IndexDefaultValue 0x]
 		set IndexDefaultValue [string trimleft $IndexDefaultValue 0X]
@@ -1945,15 +1936,34 @@ proc DeleteTreeNode {} {
 		set schCnt [lsearch -exact $nodeList $node]
 		set nodeId [lindex $nodeIdList $schCnt]
 		#set incNodPos [expr $nodePos+1]
-		puts "nodeId->$nodeId..."
+		#puts "nodeId->$nodeId..."
 		#set nodeList [DeleteList $nodeList $node]
 		
 		#set nodeList [lrange $nodeList $incNodPos end]
 		#set nodeIdList [lrange $nodeIdList $incNodPos end]
 
 
-
+		if {[string match "OBD*" $node]} {
+			#should not delete nodeId, obj, objNode from list since it is mn
+			set nodeType 0
+		} else {
+			set nodeType 1
+		
+		}
+		#EConfiuguratorErrors DeleteNode(int NodeID, ENodeType NodeType);
+		puts "DeleteNode nodeId->$nodeId nodeType->$nodeType"
+		set catchErrCode [DeleteNode $nodeId $nodeType]
+		if { $catchErrCode != 0 } {
+			#tk_messageBox -message "ENUM:$catchErrCode!" -title Info -icon info
+			#return
+		}
 		#freeing memory
+		if {[string match "OBD*" $node]} {
+			#should not delete nodeId, obj, objNode from list since it is mn
+		} else {
+			set nodeIdList [DeleteList $nodeIdList $nodeId]		
+			puts "after deletion nodeIdList->$nodeIdList "		
+		}
 		FreeNodeMemory $node
 		#this proc does following
 	 	#foreach childIdx [$updatetree nodes $node] {
@@ -1984,9 +1994,9 @@ proc DeleteTreeNode {} {
 		#		unset nodeObj($xdcId)
 		#	}
 		#}		
-		set nodeType 1
+
 		#set nodeId 4
-		set errorString []
+
 		#set tmp_NodePos [SharedLib_IfNodeExists $nodeId 1 $errorString]
 		#if {[expr {$tmp_NodePos < 0}]}  {
 		#	puts tmp_NodePos->$tmp_NodePos
@@ -1997,13 +2007,7 @@ proc DeleteTreeNode {} {
 		#	puts tmp_NodePos:$tmp_NodePos
 		#	SharedLib_DeleteNode $tmp_NodePos
 		#}
-		if {[string match "OBD*" $node]} {
-			#should not delete nodeId, obj, objNode from list since it is mn
-		} else {
-			set nodeIdList [DeleteList $nodeIdList $nodeId]		
-			puts "after deletion nodeIdList->$nodeIdList "		
-		}
-		
+
 		#SharedLib delete cn node
 	} else {
 		set idxNode [$updatetree selection get]
@@ -2153,7 +2157,7 @@ puts "catchErrCode->$catchErrCode"
 	set obj [CNode_getIndexCollection $objNode]
 	#currntly works only for windows
 	#set obj [CNode_getIndexCollectionWithoutPDO $objNode]
-	puts "NodeCreate :::  obj->$obj====objNode->$objNode"
+	puts "NodeCreate :::  obj->$obj====objNode->$objNode=====objNodeCollection->$objNodeCollection"
 	return [list $catchErrCode $obj $objNode]
 }
 
@@ -2234,8 +2238,10 @@ proc FreeNodeMemory {node} {
 proc ArrowUp {} {
 	global updatetree
 	set node [$updatetree selection get]
-	puts "node->$node"
-	if { $node == "" || $node == "root" } {
+	#puts "node->$node"
+	if { $node == "" || $node == "root" || $node == "PjtName" } {
+		$updatetree selection set "PjtName"
+		$updatetree see "PjtName"
 		return
 	}
 	#if { $node == "root" } {
@@ -2297,7 +2303,7 @@ proc _ArrowUp {node} {
 proc ArrowDown {} {
 	global updatetree
 	set node [$updatetree selection get]
-	puts "node->$node"
+	#puts "node->$node"
 	if { $node == "" || $node == "root" } {
 		return
 	}

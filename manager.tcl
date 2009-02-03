@@ -473,7 +473,7 @@ proc SaveValue {frame0 frame1} {
 	set tmpNodeSelect [join $tmpNodeSelect -]
 
 	#puts "tmpNodeSelect->$tmpNodeSelect"
-	#puts "nodeObj->$nodeObj($tmpNodeSelect)"
+	puts "nodeObj->$nodeObj($tmpNodeSelect)"
 	set oldName [$updatetree itemcget $nodeSelect -text]
 	if {[string match "*SubIndexValue*" $nodeSelect]} {
 		set sIdxValue [CBaseIndex_getIndexValue $nodeObj($tmpNodeSelect)]
@@ -529,9 +529,11 @@ puts "value->$value"
 		puts "----------------$nodeId $nodeType $indexValue $sIdxValue"
 		#DllExport EConfiuguratorErrors EditSubIndex(int NodeID, ENodeType NodeType, char* IndexID, char* SubIndexID, char* IndexValue, char* IndexName);
 		EditSubIndex $nodeId $nodeType $indexValue $sIdxValue [subst $[subst $tmpVar1]] [subst $[subst $tmpVar0]]
+		puts "EditSubIndex $nodeId $nodeType $indexValue $sIdxValue [subst $[subst $tmpVar1]] [subst $[subst $tmpVar0]]"
 	} elseif {[string match "*IndexValue*" $nodeSelect]} {
 		#DllExport EConfiuguratorErrors EditIndex(int NodeID, ENodeType NodeType, char* IndexID, char* IndexValue, char* IndexName);
 		EditIndex $nodeId $nodeType $indexValue [subst $[subst $tmpVar1]] [subst $[subst $tmpVar0]] 
+		puts "EditIndex $nodeId $nodeType $indexValue [subst $[subst $tmpVar1]] [subst $[subst $tmpVar0]] "
 	} else {
 		puts "\n\n\nShould Never Happen!!!\n\n\n"
 	}

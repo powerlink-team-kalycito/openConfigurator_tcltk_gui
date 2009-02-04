@@ -1787,7 +1787,7 @@ proc TransferCDC {} {
                 return
         }
 	puts fileLocation_CDC:$fileLocation_CDC
-	Tcl_TransferCDC $fileLocation_CDC
+	GenerateCDC $fileLocation_CDC
 }
 
 ################################################################################################
@@ -2142,6 +2142,7 @@ proc NodeCreate {NodeID NodeType} {
 	set objNodeCollection [new_CNodeCollection]
 	set objNodeCollection [CNodeCollection_getNodeColObjectPointer]
 	#puts "errorString->$errorString...NodeType->$NodeType...NodeID->$NodeID..."
+	puts $NodeType
 	set catchErrCode [CreateNode $NodeID $NodeType]
 puts "catchErrCode->$catchErrCode"
 #puts "getRetValue->[ocfmRetValError_getRetValue $catchErrCode]"

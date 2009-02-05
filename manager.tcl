@@ -528,12 +528,12 @@ puts "value->$value"
 	if {[string match "*SubIndexValue*" $nodeSelect]} {
 		puts "----------------$nodeId $nodeType $indexValue $sIdxValue"
 		#DllExport EConfiuguratorErrors EditSubIndex(int NodeID, ENodeType NodeType, char* IndexID, char* SubIndexID, char* IndexValue, char* IndexName);
-		EditSubIndex $nodeId $nodeType $indexValue $sIdxValue [subst $[subst $tmpVar1]] [subst $[subst $tmpVar0]]
-		puts "EditSubIndex $nodeId $nodeType $indexValue $sIdxValue [subst $[subst $tmpVar1]] [subst $[subst $tmpVar0]]"
+		SetSubIndexAttributes $nodeId $nodeType $indexValue $sIdxValue [subst $[subst $tmpVar1]] [subst $[subst $tmpVar0]]
+		puts "SetSubIndexAttributes $nodeId $nodeType $indexValue $sIdxValue [subst $[subst $tmpVar1]] [subst $[subst $tmpVar0]]"
 	} elseif {[string match "*IndexValue*" $nodeSelect]} {
 		#DllExport EConfiuguratorErrors EditIndex(int NodeID, ENodeType NodeType, char* IndexID, char* IndexValue, char* IndexName);
-		EditIndex $nodeId $nodeType $indexValue [subst $[subst $tmpVar1]] [subst $[subst $tmpVar0]] 
-		puts "EditIndex $nodeId $nodeType $indexValue [subst $[subst $tmpVar1]] [subst $[subst $tmpVar0]] "
+		SetIndexAttributes $nodeId $nodeType $indexValue [subst $[subst $tmpVar1]] [subst $[subst $tmpVar0]] 
+		puts "SetIndexAttributes $nodeId $nodeType $indexValue [subst $[subst $tmpVar1]] [subst $[subst $tmpVar0]] "
 	} else {
 		puts "\n\n\nShould Never Happen!!!\n\n\n"
 	}

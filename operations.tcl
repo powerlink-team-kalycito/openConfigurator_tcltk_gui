@@ -1203,6 +1203,41 @@ puts "xdcId->$xdcId==nodeObj($xdcId)->$nodeObj($xdcId)"
 		$notebook itemconfigure Page2 -state disabled
 		$notebook itemconfigure Page3 -state disabled
 	}
+	set cpAttrVal [new_charp]
+	#set ErrStruct [Tcl_CheckIndexAttribute 1 1 1006 0]
+	#set AttrVal []
+	
+	#GetIndexAttribute(int NodeID, ENodeType NodeType, char* IndexID, EAttributeType AttributeType, char** AttributeValue)
+	#GetIndexAttribute 1 1 1006 0 $AttrVal
+	
+	##########################################
+	# GetIndexAttributes working. Sample code
+	##########################################
+	set AttrVal []
+	set AttrVal [GetIndexAttributes 1 1 1006 0]
+	
+	puts "\n\n\n\t\t\tAttrVal->$AttrVal\n\n\n"
+	set AttrVal [lindex $AttrVal 1]
+	set AttrVal [string trimright $AttrVal]
+	puts "\n\n\n\t\t\tAttrVal->$AttrVal\n\n\n"
+	
+	set IndexPos [new_intp]
+	set retErrStuct [IfIndexExists 1 1 1600 $IndexPos]
+	
+	set ret [intp_value $IndexPos]
+	
+	puts "\n\n\n\t\t\tretErrStuct:$retErrStuct\n"
+	puts "\n\t\t\tIndexPos:$IndexPos RetValue:$ret\n\n\n"
+	##########################################
+	
+	set SubAttrValName [GetSubIndexAttributes 1 1 1601 01 0]
+	set SubAttrValName [lindex $SubAttrValName 1]
+	puts "\n\n\n\t\t\tSubAttrValName:$SubAttrValName\n\n"
+	
+	set SubAttrValAccess [GetSubIndexAttributes 1 1 1601 01 3]
+	set SubAttrValAccess [lindex $SubAttrValAccess 1]
+	puts "\n\n\n\t\t\tSubAttrValAccess:$SubAttrValAccess\n\n"
+	
 	return
 }
 

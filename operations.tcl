@@ -1230,13 +1230,21 @@ puts "xdcId->$xdcId==nodeObj($xdcId)->$nodeObj($xdcId)"
 	puts "\n\t\t\tIndexPos:$IndexPos RetValue:$ret\n\n\n"
 	##########################################
 	
+	set ErrCode [new_ocfmRetCode]
+	
 	set SubAttrValName [GetSubIndexAttributes 1 1 1601 01 0]
+	set ErrCodeStruct [lindex $SubAttrValName 0]
 	set SubAttrValName [lindex $SubAttrValName 1]
 	puts "\n\n\n\t\t\tSubAttrValName:$SubAttrValName\n\n"
 	
 	set SubAttrValAccess [GetSubIndexAttributes 1 1 1601 01 3]
 	set SubAttrValAccess [lindex $SubAttrValAccess 1]
 	puts "\n\n\n\t\t\tSubAttrValAccess:$SubAttrValAccess\n\n"
+			
+	set ErrCode [ocfmRetCode_code_get $ErrCodeStruct]
+	set ErrString [ocfmRetCode_errorString_get $ErrCodeStruct]
+	puts "ErrCode:$ErrCode"
+	puts "ErrString:$ErrString"
 	
 	return
 }
@@ -2178,8 +2186,13 @@ proc NodeCreate {NodeID NodeType} {
 	set objNodeCollection [CNodeCollection_getNodeColObjectPointer]
 	#puts "errorString->$errorString...NodeType->$NodeType...NodeID->$NodeID..."
 	puts $NodeType
+	set catchErrCode [new_ocfmRetCode]
 	set catchErrCode [CreateNode $NodeID $NodeType]
-puts "catchErrCode->$catchErrCode"
+	puts "catchErrCode->$catchErrCode"
+	set ErrCode [ocfmRetCode_code_get $catchErrCode]
+	set ErrString [ocfmRetCode_errorString_get $catchErrCode]
+	puts "ErrCode:$ErrCode"
+	puts "ErrString:$ErrString"
 #puts "getRetValue->[ocfmRetValError_getRetValue $catchErrCode]"
 #puts "getErrorCode->[ocfmRetValError_getErrorCode $catchErrCode]"
 	if { $catchErrCode != 0 } {

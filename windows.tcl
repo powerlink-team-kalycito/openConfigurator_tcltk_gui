@@ -227,107 +227,194 @@ proc ConnectionSettingWindow {} {
 }
 
 ###############################################################################################
+#proc InterCNWindow
+#Input       : -
+#Output      : -
+#Description : Creates the GUI for adding PDO to CN
+###############################################################################################
+proc InterCNWindow {} {
+	global updatetree
+	set node [$updatetree selection get]
+	set siblingList ""
+	set dispList ""
+	foreach sibling [$updatetree nodes [$updatetree parent $node]] {
+		if {[string match "OBD*" $sibling] || [string match $node $sibling]} {
+			# should not add it to the list
+		} else {
+			lappend siblingList $sibling
+			lappend dispList [$updatetree itemcget $sibling -text]
+		}
+
+	}
+	if {$siblingList == ""} {
+		tk_messageBox -message "It is the only CN present in that MN" -icon info
+		return
+	}
+	
+
+	set winInterCN .interCN
+	catch "destroy $winInterCN"
+	toplevel     $winInterCN
+	wm title     $winInterCN "Inter CN Communication"
+	wm resizable $winInterCN 0 0
+	wm transient $winInterCN .
+	wm deiconify $winInterCN
+	grab $winInterCN
+
+	set titleFrame1 [TitleFrame $winInterCN.titleFrame1 -text "PDO Configuration" ]
+	set titleInnerFrame1 [$titleFrame1 getframe]
+	set frame1 [frame $titleInnerFrame1.fram1 -bg green]
+	set frame2 [frame $titleInnerFrame1.fram2]
+	set frame3 [frame $titleInnerFrame1.fram3]
+
+	label $winInterCN.l_empty1 -text ""	
+	label $winInterCN.l_empty2 -text ""
+	label $frame1.l_cn -text "CN 's :  "
+	label $frame1.l_noRpdo -text "Number of RPDO :  "
+	label $frame1.l_dispRpdo -text ""
+	
+	ComboBox $frame1.co_cn -values $dispList -modifycmd "dispRpdo $frame1 [list $siblingList] [list $dispList]" -editable no
+ 	
+	button $frame2.bt_ok -text "  Ok  " -command {
+		destroy .interCN
+	}
+
+	button $frame2.bt_cancel -text "Cancel" -command {
+		destroy .interCN
+	}
+
+	grid config $winInterCN.l_empty1 -row 0 -column 0 -sticky "news"
+	grid config $titleFrame1 -row 1 -column 0 -ipadx 20 -padx 5 -sticky "news"
+	grid config $winInterCN.l_empty2 -row 2 -column 0 -sticky "news"
+
+	#grid config $titleInnerFrame1 -row 0 -column 0 
+
+	grid config $frame1 -row 0 -column 0 
+	grid config $frame1.l_cn  -row 0 -column 0 -sticky e 
+	grid config $frame1.co_cn -row 0 -column 1 -sticky w
+	grid config $frame1.l_noRpdo  -row 1 -column 0 -sticky e
+	grid config $frame1.l_dispRpdo -row 1 -column 1 -sticky w
+
+	grid config $frame2 -row 1 -column 0 
+	grid config $frame2.bt_ok  -row 0 -column 0 
+	grid config $frame2.bt_cancel -row 0 -column 1
+
+	wm protocol .interCN WM_DELETE_WINDOW "$frame2.bt_cancel invoke"
+	bind $winInterCN <KeyPress-Return> "$frame2.bt_ok invoke"
+	bind $winInterCN <KeyPress-Escape> "$frame2.bt_cancel invoke"
+
+	centerW $winInterCN
+
+}
+
+proc dispRpdo {frame1 siblingList dispList} {
+	puts "frame->$frame1==siblingList->$siblingList==dispList->$dispList"
+	puts [$frame1.co_cn getvalue]
+
+}
+###############################################################################################
 #proc AddPDOWindow
 #Input       : -
 #Output      : -
 #Description : Creates the GUI for adding PDO to CN
 ###############################################################################################
 proc AddPDOWindow {} {
-	global pdoStartValue
-	global mapEntValue
-	global noPDOValue
-	global pdoType
+#	global pdoStartValue
+#	global mapEntValue
+#	global noPDOValue
+#	global pdoType
 
-	set winAddPDO .addPDO
-	catch "destroy $winAddPDO"
-	toplevel     $winAddPDO
-	wm title     $winAddPDO "Add PDOs"
-	wm resizable $winAddPDO 0 0
-	wm transient $winAddPDO .
-	wm deiconify $winAddPDO
-	grab $winAddPDO
+#	set winAddPDO .addPDO
+#	catch "destroy $winAddPDO"
+#	toplevel     $winAddPDO
+#	wm title     $winAddPDO "Add PDOs"
+#	wm resizable $winAddPDO 0 0
+#	wm transient $winAddPDO .
+#	wm deiconify $winAddPDO
+#	grab $winAddPDO
 
 	
-	set titleFrame1 [TitleFrame $winAddPDO.titleFrame1 -text "PDO Configuration" ]
-	set titleInnerFrame2 [$titleFrame1 getframe]
-	set frame1 [frame $titleInnerFrame2.fram1]
-	set frame2 [frame $titleInnerFrame2.fram2]
-	set frame3 [frame $titleInnerFrame2.fram3]
+#	set titleFrame1 [TitleFrame $winAddPDO.titleFrame1 -text "PDO Configuration" ]
+#	set titleInnerFrame2 [$titleFrame1 getframe]
+#	set frame1 [frame $titleInnerFrame2.fram1]
+#	set frame2 [frame $titleInnerFrame2.fram2]
+#	set frame3 [frame $titleInnerFrame2.fram3]
 
-	label $winAddPDO.l_empty1 -text ""	
-	label $winAddPDO.l_empty2 -text ""
-	label $frame1.l_pdostart -text "PDO Starting number \[1-255\] :"
-	label $frame1.l_MapEnt -text   "Mapping Entries \[1-254\] :"
-	label $frame1.l_NoPDO -text    "Number of PDOs \[1-255\] :"
-	label $titleInnerFrame2.l_empty5 -text "    "
-	label $titleInnerFrame2.l_type -text "PDO type"
-	label $titleInnerFrame2.l_empty9 -text ""
-	label $winAddPDO.l_empty8 -text ""
+#	label $winAddPDO.l_empty1 -text ""	
+#	label $winAddPDO.l_empty2 -text ""
+#	label $frame1.l_pdostart -text "PDO Starting number \[1-255\] :"
+#	label $frame1.l_MapEnt -text   "Mapping Entries \[1-254\] :"
+#	label $frame1.l_NoPDO -text    "Number of PDOs \[1-255\] :"
+#	label $titleInnerFrame2.l_empty5 -text "    "
+#	label $titleInnerFrame2.l_type -text "PDO type"
+#	label $titleInnerFrame2.l_empty9 -text ""
+#	label $winAddPDO.l_empty8 -text ""
 
-	entry $frame1.en_pdostart -textvariable pdoStartValue -background white -validate key -vcmd "IsInt %P %V"
-	entry $frame1.en_MapEnt -textvariable mapEntValue -background white -validate key -vcmd {expr {[string len %P] <= 3} && {[string is int %P]}}
-	entry $frame1.en_NoPDO -textvariable noPDOValue -background white -validate key -vcmd {expr {[string len %P] <= 3} && {[string is int %P]}}
+#	entry $frame1.en_pdostart -textvariable pdoStartValue -background white -validate key -vcmd "IsInt %P %V"
+#	entry $frame1.en_MapEnt -textvariable mapEntValue -background white -validate key -vcmd {expr {[string len %P] <= 3} && {[string is int %P]}}
+#	entry $frame1.en_NoPDO -textvariable noPDOValue -background white -validate key -vcmd {expr {[string len %P] <= 3} && {[string is int %P]}}
 
-	set pdoType off
-	radiobutton $frame2.ra_tran -text "Transmit PDO" -variable pdoType   -value on 
-	radiobutton $frame2.ra_rece   -text "Receive PDO"  -variable pdoType   -value off 
-	$frame2.ra_rece select
+#	set pdoType off
+#	radiobutton $frame2.ra_tran -text "Transmit PDO" -variable pdoType   -value on 
+#	radiobutton $frame2.ra_rece   -text "Receive PDO"  -variable pdoType   -value off 
+#	$frame2.ra_rece select
+#
+#	button $frame3.b_ok -text "  Add  " -command { 
+#		if {$pdoStartValue < 1 ||$pdoStartValue > 255 } {
+#			tk_messageBox -message "PDO Starting number value range is 1 to 255" -parent .addPDO -icon error
+#			focus .addPDO
+#			return
+#		}
+#		if {$mapEntValue < 1 ||$mapEntValue > 254 } {
+#			tk_messageBox -message "Mapping Entries value range is 1 to 254" -parent .addPDO -icon error
+#			focus .addPDO
+#			return
+#		}
+#		if {$noPDOValue < 1 ||$noPDOValue > 255 } {
+#			tk_messageBox -message "Number of PDOs value range is 1 to 255" -parent .addPDO -icon error
+#			focus .addPDO
+#			return
+#		}
+#		destroy .addPDO
+#	}
+#	button $frame3.b_cancel -text "Cancel" -command {
+#		destroy .addPDO
+#	}
 
-	button $frame3.b_ok -text "  Add  " -command { 
-		if {$pdoStartValue < 1 ||$pdoStartValue > 255 } {
-			tk_messageBox -message "PDO Starting number value range is 1 to 255" -parent .addPDO -icon error
-			focus .addPDO
-			return
-		}
-		if {$mapEntValue < 1 ||$mapEntValue > 254 } {
-			tk_messageBox -message "Mapping Entries value range is 1 to 254" -parent .addPDO -icon error
-			focus .addPDO
-			return
-		}
-		if {$noPDOValue < 1 ||$noPDOValue > 255 } {
-			tk_messageBox -message "Number of PDOs value range is 1 to 255" -parent .addPDO -icon error
-			focus .addPDO
-			return
-		}
-		destroy .addPDO
-	}
-	button $frame3.b_cancel -text "Cancel" -command {
-		destroy .addPDO
-	}
+#	grid config $winAddPDO.l_empty1 -row 0 -column 0 -sticky "news"
+#	grid config $titleFrame1 -row 1 -column 0 -ipadx 20 -padx 20 -sticky "news"
+#
+#	grid config $frame1 -row 0 -column 0 -sticky "news" -columnspan 1
+#	grid config $frame1.l_pdostart  -row 0 -column 0 
+#	grid config $frame1.en_pdostart -row 0 -column 1
+#	grid config $frame1.l_MapEnt  -row 1 -column 0 
+#	grid config $frame1.en_MapEnt -row 1 -column 1
+#	grid config $frame1.l_NoPDO  -row 2 -column 0 
+#	grid config $frame1.en_NoPDO -row 2 -column 1
+#
+#	grid config $titleInnerFrame2.l_empty5  -row 3 -column 0
+#
+#	grid config $titleInnerFrame2.l_type  -row 4 -column 0
+#
+#	grid config $frame2.ra_tran -row 0 -column 0 -sticky "w"
+#	grid config $frame2.ra_rece   -row 0 -column 1 -sticky "w"
+#	grid config $frame2 -row 5 -column 0
+#
+#	grid config $titleInnerFrame2.l_empty9 -row 6 -column 0 -sticky "news"
+#
+#	grid config $frame3.b_ok  -row 0 -column 0 
+#	grid config $frame3.b_cancel -row 0 -column 1
+#	grid config $frame3 -row 7 -column 0 
+#
+#	grid config $winAddPDO.l_empty8 -row 2 -column 0 -sticky "news"
+#
+#
+#	wm protocol .addPDO WM_DELETE_WINDOW "$frame3.b_cancel invoke"
+#	bind $winAddPDO <KeyPress-Return> "$frame3.b_ok invoke"
+#	bind $winAddPDO <KeyPress-Escape> "$frame3.b_cancel invoke"
+#
+#	centerW $winAddPDO
 
-	grid config $winAddPDO.l_empty1 -row 0 -column 0 -sticky "news"
-	grid config $titleFrame1 -row 1 -column 0 -ipadx 20 -padx 20 -sticky "news"
-
-	grid config $frame1 -row 0 -column 0 -sticky "news" -columnspan 1
-	grid config $frame1.l_pdostart  -row 0 -column 0 
-	grid config $frame1.en_pdostart -row 0 -column 1
-	grid config $frame1.l_MapEnt  -row 1 -column 0 
-	grid config $frame1.en_MapEnt -row 1 -column 1
-	grid config $frame1.l_NoPDO  -row 2 -column 0 
-	grid config $frame1.en_NoPDO -row 2 -column 1
-
-	grid config $titleInnerFrame2.l_empty5  -row 3 -column 0
-
-	grid config $titleInnerFrame2.l_type  -row 4 -column 0
-
-	grid config $frame2.ra_tran -row 0 -column 0 -sticky "w"
-	grid config $frame2.ra_rece   -row 0 -column 1 -sticky "w"
-	grid config $frame2 -row 5 -column 0
-
-	grid config $titleInnerFrame2.l_empty9 -row 6 -column 0 -sticky "news"
-
-	grid config $frame3.b_ok  -row 0 -column 0 
-	grid config $frame3.b_cancel -row 0 -column 1
-	grid config $frame3 -row 7 -column 0 
-
-	grid config $winAddPDO.l_empty8 -row 2 -column 0 -sticky "news"
-
-
-	wm protocol .addPDO WM_DELETE_WINDOW "$frame3.b_cancel invoke"
-	bind $winAddPDO <KeyPress-Return> "$frame3.b_ok invoke"
-	bind $winAddPDO <KeyPress-Escape> "$frame3.b_cancel invoke"
-
-	centerW $winAddPDO
 }
 
 ###############################################################################################
@@ -358,7 +445,7 @@ proc AddCNWindow {} {
 	set frame2 [frame $titleInnerFrame1.fram2]
 	set titleFrame2 [TitleFrame $titleInnerFrame1.titleFrame2 -text "Select Node" ]
 	set titleInnerFrame2 [$titleFrame2 getframe]
-	set titleFrame3 [TitleFrame $titleInnerFrame1.titleFrame3 -text "CN Config" ]
+	set titleFrame3 [TitleFrame $titleInnerFrame1.titleFrame3 -text "CN Configuration" ]
 	set titleInnerFrame3 [$titleFrame3 getframe]
 
 	label $titleInnerFrame1.l_empty1 -text "               "
@@ -592,7 +679,7 @@ proc NewProjectWindow {} {
 	set titleFrame1 [TitleFrame $winNewProj.titleFrame1 -text "Create New Project" ]
 	set titleInnerFrame1 [$titleFrame1 getframe]
 	set frame1 [frame $titleInnerFrame1.fram1]
-	set titleFrame2 [TitleFrame $titleInnerFrame1.titleFrame2 -text "MN Config" ]
+	set titleFrame2 [TitleFrame $titleInnerFrame1.titleFrame2 -text "MN Configuration" ]
 	set titleInnerFrame2 [$titleFrame2 getframe]
 
 	label $winNewProj.l_empty -text "               "	
@@ -660,16 +747,16 @@ proc NewProjectWindow {} {
 		}
 		$Editor::projMenu add command -label "Close Project" -command "CloseProject" 
 		$updatetree itemconfigure PjtName -text $tmpPjtName
+		set obj [NodeCreate 240 0]
+		set ErrCode [lindex $obj 0]
+		puts "ErrCode->$ErrCode"
+		if { $ErrCode != 0 } {
+			tk_messageBox -message "ERROR CODE:$ErrCode!\nCannot able to create MN" -title Info -icon info
+			destroy .newprj
+			return
+		}
 		catch {$updatetree delete MN-$mnCount}
 		$updatetree insert end PjtName MN-$mnCount -text "openPOWERLINK MN" -open 1 -image [Bitmap::get mn]
-		set obj [NodeCreate 240 0]
-		puts "obj->$obj"
-#puts "getRetValue->[ocfmRetValError_getRetValue [lindex $obj 0]]"
-#puts "getErrorCode->[ocfmRetValError_getErrorCode [lindex $obj 0]]"
-		if { [lindex $obj 0] != 0 } {
-			#tk_messageBox -message "ENUM:$catchErrCode!" -title Info -icon info
-			#return
-		}
 		lappend nodeIdList 240 [lindex $obj 1] [lindex $obj 2]
 		#puts "new project nodeIdList->$nodeIdList"
 		if {$conf=="off"} {
@@ -677,11 +764,12 @@ proc NewProjectWindow {} {
 			#check what is nodeId for mn
 			#API			
 			set catchErrCode [ImportXML "$tmpImpDir" 0 240]
-puts "catchErrCode->$catchErrCode"
-#puts "getRetValue->[ocfmRetValError_getRetValue $catchErrCode]"
-#puts "getErrorCode->[ocfmRetValError_getErrorCode $catchErrCode]"
-			if { $catchErrCode != 0 } {
-				#tk_messageBox -message "ENUM:$catchErrCode!" -title Info -icon info
+			puts "catchErrCode for import in new project->$catchErrCode"
+			set ErrCode [ocfmRetCode_code_get $catchErrCode]
+			puts "ErrCode:$ErrCode"
+			if { $ErrCode != 0 } {
+				#tk_messageBox -message "ErrCode:$ErrCode \n cannot able to import file" -title Info -icon info
+				#destroy .newprj
 				#return
 			}
 			puts "new project nodeIdList->$nodeIdList"
@@ -836,11 +924,11 @@ proc AddIndexWindow {} {
 		########finding obj
 		set nodeList [GetNodeList]			
 		set schCnt [lsearch -exact $nodeList $node]
-		puts  "AddIndexWindow schCnt->$schCnt=======nodeList->$nodeList"
-		puts "nodeIdList->$nodeIdList"
+		puts  "\n\n AddIndexWindow schCnt->$schCnt=======nodeList->$nodeList \n"
+		#puts "nodeIdList->$nodeIdList"
 		set nodeId [lindex $nodeIdList $schCnt]
-		set obj [lindex $nodeIdList [expr $schCnt+1]]
-		puts "obj--->$obj"
+		#set obj [lindex $nodeIdList [expr $schCnt+1]]
+		#puts "obj--->$obj"
 		#set objNode [lindex $nodeIdList [expr $schCnt+2]]
 		#set nodeType 1
 	
@@ -865,7 +953,8 @@ proc AddIndexWindow {} {
 		} else {
 			set nodeType 1
 		}
-		
+
+		#getting the node of last index inserted
 		if {$sortChild == ""} {
 			set count 0
 		} else {
@@ -874,18 +963,23 @@ proc AddIndexWindow {} {
 		puts count->$count
 		
 		set nodePos [split $node -]
-		set nodePos [lindex $nodePos end]
+		set nodePos [lrange $nodePos 1 end]
+		set nodePos [join $nodePos -]
 		puts "nodePos---->$nodePos=====nodeType---->$nodeType"
 
-		AddIndex $nodeId $nodeType $indexVar
 		puts "AddIndex nodeId->$nodeId nodeType->$nodeType indexVar->$indexVar"
+		AddIndex $nodeId $nodeType $indexVar
 
-		set nodeObj(1-$nodePos-$count) [CIndexCollection_getIndex $obj [llength $sortChild]]
+
+		#set nodeObj($nodePos-$count) [CIndexCollection_getIndex $obj [llength $sortChild]]
 		#set nodeObj(1-$nodePos-$count) [CIndexCollection_getIndexbyIndexValue $obj $indexVar]
 		puts "inc->[llength $sortChild]"
 
 		#$updatetree insert $count $node IndexValue-1-$nodePos-$count -text $indexVar -open 0 -image [Bitmap::get index]
-		$updatetree insert [llength $sortChild] $node IndexValue-1-$nodePos-$count -text \($indexVar\) -open 0 -image [Bitmap::get index]
+		set indexName []
+		set indexName [GetIndexAttributes $nodeId $nodeType $indexVar 0]
+		puts "indexName->$indexName"
+		$updatetree insert [llength $sortChild] $node IndexValue-$nodePos-$count -text [lindex $indexName 1]\($indexVar\) -open 0 -image [Bitmap::get index]
 		#previously it was
 		#$updatetree insert $count $node IndexValue-1-$nodePos-$count -text $indexVar -open 0 -image [Bitmap::get index]
 		#set nodeObj(1-$nodePos-$count) [CIndexCollection_getIndex $obj [expr [llength $sortChild]-1]]
@@ -929,6 +1023,8 @@ proc AddIndexWindow {} {
 proc AddSubIndexWindow {} {
 	global updatetree
 	global subIndexVar
+	global nodeIdList
+	global nodeObj	
 
 	set winAddSidx .addSidx
 	catch "destroy $winAddSidx"
@@ -987,7 +1083,12 @@ proc AddSubIndexWindow {} {
 		set obj [lindex $nodeIdList [expr $schCnt+1]]
 		puts "obj--->$obj"
 		#set objNode [lindex $nodeIdList [expr $schCnt+2]]
-		#set nodeType 1
+		if {[string match "OBD*" $parent]} {
+			set nodeType 0
+		} else {
+			set nodeType 1
+		}
+		
 	
 		set child [$updatetree nodes $node]
 		puts child->$child
@@ -1000,12 +1101,6 @@ proc AddSubIndexWindow {} {
 
 		#puts sortChild->$sortChild
 		set sortChild [lsort -integer $sortChild]
-		if {[string match "OBD*" $parent]} {
-			set nodeType 0
-		} else {
-			set nodeType 1
-		}
-		
 		if {$sortChild == ""} {
 			set count 0
 		} else {
@@ -1017,18 +1112,21 @@ proc AddSubIndexWindow {} {
 		set nodePos [split $node -]
 		set nodePos [lrange $nodePos 1 end]
 		set nodePos [join $nodePos -]
-		puts "nodePos---->$nodePos=====nodeType---->$nodeType======nodeId--->$nodeId"
-
-		#$updatetree insert $count $node IndexValue-1-$nodePos-$count -text $indexVar -open 0 -image [Bitmap::get index]
-		#$updatetree insert $count $node IndexValue-1-$nodePos-$count -text $indexVar -open 0 -image [Bitmap::get index]
-		$updatetree insert $count $node SubIndexValue-$nodePos-$count -text \($subIndexVar\) -open 0 -image [Bitmap::get subindex]
-		#no API called for adding SubIndex
-		#void AddSubIndex(int NodeID, ENodeType NodeType, char* IndexID, char* SubIndexID);
+		#puts "nodePos---->$nodePos=====nodeType---->$nodeType======nodeId--->$nodeId"
 		puts "AddSubIndex nodeId->$nodeId nodeType->$nodeType indexVar->$indexVar subIndexVar->$subIndexVar"
 		AddSubIndex $nodeId $nodeType $indexVar $subIndexVar
-		puts "nodeObj($nodePos)->$nodeObj($nodePos)"
-		set nodeObj($nodePos-$count) [CIndex_getSubIndex $nodeObj($nodePos) $count]
+		#puts "nodeObj($nodePos)->$nodeObj($nodePos)"
+		#set nodeObj($nodePos-$count) [CIndex_getSubIndex $nodeObj($nodePos) $count]
 		puts inc->$count
+		#$updatetree insert $count $node IndexValue-1-$nodePos-$count -text $indexVar -open 0 -image [Bitmap::get index]
+		#$updatetree insert $count $node IndexValue-1-$nodePos-$count -text $indexVar -open 0 -image [Bitmap::get index]
+		set subIndexName []
+		set subIndexName [GetSubIndexAttributes $nodeId $nodeType $indexVar $subIndexVar 0]
+		puts "subIndexName->$subIndexName"
+		$updatetree insert $count $node SubIndexValue-$nodePos-$count -text [lindex $subIndexName 1]\($subIndexVar\) -open 0 -image [Bitmap::get subindex]
+		#no API called for adding SubIndex
+		#void AddSubIndex(int NodeID, ENodeType NodeType, char* IndexID, char* SubIndexID);
+
 
 ################33for testing##########################
 #puts "\n###test start###"

@@ -62,9 +62,10 @@
 #  REVISION HISTORY:
 # $Log:      $
 ###############################################################################################
-
-source $RootDir/windows.tcl
-source $RootDir/validation.tcl
+source [file join $RootDir windows.tcl]
+source [file join $RootDir validation.tcl]
+#source $RootDir/windows.tcl
+#source $RootDir/validation.tcl
 
 ##
 # For Tablelist Package
@@ -90,42 +91,41 @@ set nodeIdList ""
 
 namespace eval Editor {
     	variable initDone 0
-    	variable _wfont
+    	#variable _wfont
     	variable notebook
     	variable list_notebook
     	variable con_notebook
     	variable pw1
     	variable pw2
-    	variable procWindow
-    	variable markWindow
+    	#variable procWindow
+    	#variable markWindow
     	variable mainframe
     	variable status
     	variable prgtext
     	variable prgindic
-    	variable font
-    	variable font_name
-    	variable Font_var
-    	variable FontSize_var
+    	#variable font
+    	#variable font_name
+    	#variable Font_var
+    	#variable FontSize_var
     	variable toolbar1  1
-    	variable toolbar2  0
     	variable showConsoleWindow 1
     	variable sortProcs 1
     	variable showProc 1
-    	variable checkNestedProc 1
+    	#variable checkNestedProc 1
     	variable showProcWindow 1
     	variable current
     	variable last
-    	variable text_win
-    	variable index_counter 0
-    	variable index
-    	variable slaves
-    	variable startTime [clock seconds]
-    	variable options
-    	variable lineNo
-    	variable lineEntryCombo
-    	variable toolbarButtons
-    	variable searchResults
-    	variable procMarks
+    	#variable text_win
+    	#variable index_counter 0
+    	#variable index
+    	#variable slaves
+    	#variable startTime [clock seconds]
+    	#variable options
+    	#variable lineNo
+    	#variable lineEntryCombo
+    	#variable toolbarButtons
+    	#variable searchResults
+    	#variable procMarks
     	variable mnMenu
     	variable cnMenu
     	variable projMenu    
@@ -133,7 +133,7 @@ namespace eval Editor {
     	variable idxMenu    
     	variable mnCount
     	variable cnCount
-    	variable serverUp 0
+
 }
 
 ################################################################################################
@@ -237,7 +237,7 @@ proc Editor::restoreWindowPositions {} {
     	$con_notebook configure -width $EditorData(options,con_notebookWidth)
     	$con_notebook configure -height $EditorData(options,con_notebookHeight)
     	showConsole $EditorData(options,showConsole)
-    	showProcWin $EditorData(options,showProcs)
+    	showTreeWin $EditorData(options,showTree)
 }
 
 ################################################################################################
@@ -564,9 +564,9 @@ proc Editor::create { } {
                 		}
            		}
             		{checkbutton "Show Test Tree Browser" {all option} "Show Code Browser" {}
-                		-variable Editor::options(showProcs)
-                		-command  {set EditorData(options,showProcs) $Editor::options(showProcs)
-                    			Editor::showTreeWin $EditorData(options,showProcs)
+                		-variable Editor::options(showTree)
+                		-command  {set EditorData(options,showTree) $Editor::options(showTree)
+                    			Editor::showTreeWin $EditorData(options,showTree)
                     			update idletasks
                 		}
             		}
@@ -586,7 +586,7 @@ proc Editor::create { } {
     	}
 
 	# to select the required check button in View menu
-    	set Editor::options(showProcs) 1
+    	set Editor::options(showTree) 1
     	set Editor::options(showConsole) 1
 	#shortcut keys for project
 	bind . <Key-F7> "BuildProject"
@@ -610,7 +610,7 @@ proc Editor::create { } {
 	$Editor::cnMenu add cascade -label "Add" -menu $Editor::IndexaddMenu
 	menu $Editor::IndexaddMenu -tearoff 0
 	$Editor::IndexaddMenu add command -label "Add Index" -command "AddIndexWindow"
-	$Editor::IndexaddMenu add command -label "Add PDO Objects" -command {AddPDOWindow}   
+	$Editor::IndexaddMenu add command -label "Inter CN Communication" -command {InterCNWindow}   
 	$Editor::cnMenu add command -label "Import XDC/XDD" -command {ReImport}
 	$Editor::cnMenu add separator
 	$Editor::cnMenu add command -label "Delete" -command {DeleteTreeNode}
@@ -916,6 +916,8 @@ proc BindTree {} {
 	.mainframe.frame.pw1.f0.frame.pw2.f0.frame.nb.fobjtree.sw.objTree configure -relief sunken 
 	bind . <Up> ArrowUp 
 	bind . <Down> ArrowDown
+	bind . <Left> ArrowLeft
+	bind . <Right> ArrowRight
 }
 
 proc UnbindTree {} {
@@ -923,6 +925,8 @@ proc UnbindTree {} {
 	.mainframe.frame.pw1.f0.frame.pw2.f0.frame.nb.fobjtree.sw.objTree configure -relief ridge 
 	bind . <Up> ""
 	bind . <Down> ""
+	bind . <Left> ""
+	bind . <Right> ""
 }
 ################################################################################################
 #proc Editor::SingleClickNode
@@ -932,11 +936,14 @@ proc UnbindTree {} {
 ################################################################################################
 proc Editor::SingleClickNode {node} {
 	global updatetree
+	global nodeIdList
 	global f0
 	global f1
 	global f2
 	global nodeObj
 	global nodeSelect
+	global nodeIdList
+
 
 	variable notebook
 
@@ -945,32 +952,61 @@ proc Editor::SingleClickNode {node} {
 	set nodeSelect $node
 puts "node====>$node"
 	if {[string match "TPDO-*" $node] || [string match "RPDO-*" $node]} {
+##################################################################################################
+		set parent [$updatetree parent $node]
+		set ancestor [$updatetree parent $parent]
+		set nodeList [GetNodeList]			
+		puts "nodeList->$nodeList===nodeIdList->$nodeIdList==ancestor->$ancestor"
+		set schCnt [lsearch -exact $nodeList $ancestor]
+puts "schCnt->$schCnt"
+		set nodeId [lindex $nodeIdList $schCnt]
+		set obj [lindex $nodeIdList [expr $schCnt+1]]
+		#set objNode [lindex $nodeIdList [expr $schCnt+2]]
+		if {[string match "OBD*" $ancestor]} {
+			set nodeType 0
+		} else {
+			set nodeType 1
+		}
+#######################################################################################################
 		set idx [$updatetree nodes $node]
 		set popCount 0 
 		$f2 delete 0 end
 		foreach tempIdx $idx {
+			set indexId [string range [$updatetree itemcget $tempIdx -text] end-4 end-1 ]
 			set sidx [$updatetree nodes $tempIdx]
 			foreach tempSidx $sidx { 
-				puts tempSidx->$tempSidx						
-				set tmpnode $tempSidx
-				set tmpSplit [split $tmpnode -]
-				set xdcId [lrange $tmpSplit 1 end]
-				set xdcId [join $xdcId -]
-				set xdcIcxId [lrange $tmpSplit 1 [expr [llength $tmpSplit] - 2]]
-				set xdcIcxId [join $xdcIcxId -]
-				set errorString []
-				set NodeID 1
-				set NodeType 1
-				set indx [lindex $tmpSplit [expr [llength $tmpSplit] - 2]]
-				set subId [lindex $tmpSplit end]
-				set indexValue [CBaseIndex_getIndexValue $nodeObj($xdcIcxId)]
-				set sIdxValue [CBaseIndex_getIndexValue $nodeObj($xdcId)]
-				set IndexName [CBaseIndex_getName $nodeObj($xdcId)]
-				set IndexObjType [CBaseIndex_getObjectType $nodeObj($xdcId)]
-				set IndexDataType [CBaseIndex_getDataType $nodeObj($xdcId)]
-				set IndexAccessType [CBaseIndex_getAccessType $nodeObj($xdcId)]
-				set IndexDefaultValue [CBaseIndex_getDefaultValue $nodeObj($xdcId)]
-				if {[string match "00" $sIdxValue]==0 } {
+				set subIndexId [string range [$updatetree itemcget $tempSidx -text] end-2 end-1 ]
+				#puts tempSidx->$tempSidx						
+				#set tmpnode $tempSidx
+				#set tmpSplit [split $tmpnode -]
+				#set xdcId [lrange $tmpSplit 1 end]
+				#set xdcId [join $xdcId -]
+				#set xdcIcxId [lrange $tmpSplit 1 [expr [llength $tmpSplit] - 2]]
+				#set xdcIcxId [join $xdcIcxId -]
+				#set indx [lindex $tmpSplit [expr [llength $tmpSplit] - 2]]
+				#set subId [lindex $tmpSplit end]
+				#set indexValue [CBaseIndex_getIndexValue $nodeObj($xdcIcxId)]
+				#set sIdxValue [CBaseIndex_getIndexValue $nodeObj($xdcId)]
+				#set IndexName [CBaseIndex_getName $nodeObj($xdcId)]
+				#set IndexObjType [CBaseIndex_getObjectType $nodeObj($xdcId)]
+				#set IndexDataType [CBaseIndex_getDataType $nodeObj($xdcId)]
+				#set IndexAccessType [CBaseIndex_getAccessType $nodeObj($xdcId)]
+				#set IndexDefaultValue [CBaseIndex_getDefaultValue $nodeObj($xdcId)]
+				#if {[string match "00" $sIdxValue] == 0 } {
+				#	set DataSize [string range $IndexDefaultValue 2 5]
+				#	set Offset [string range $IndexDefaultValue 6 9]
+				#	set Reserved [string range $IndexDefaultValue 10 11]
+				#	set listSubIndex [string range $IndexDefaultValue 12 13]
+				#	set listIndex [string range $IndexDefaultValue 14 17]
+				#	$f2 insert $popCount [list $popCount $IndexDefaultValue $listIndex $listSubIndex $Reserved $Offset $DataSize]
+				#	incr popCount 1 
+				#}
+#########################################################################################################
+				if {[string match "00" $subIndexId] == 0 } {
+					puts "\nGetSubIndexAttributes nodeId->$nodeId nodeType->$nodeType indexId->$indexId subIndexId->$subIndexId 4\n"
+					set tempIndexProp [GetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId 4]
+puts "tempIndexPropi PDO ->$tempIndexProp"
+					set IndexDefaultValue [lindex $tempIndexProp 1]
 					set DataSize [string range $IndexDefaultValue 2 5]
 					set Offset [string range $IndexDefaultValue 6 9]
 					set Reserved [string range $IndexDefaultValue 10 11]
@@ -979,6 +1015,7 @@ puts "node====>$node"
 					$f2 insert $popCount [list $popCount $IndexDefaultValue $listIndex $listSubIndex $Reserved $Offset $DataSize]
 					incr popCount 1 
 				}
+############################################################################################################
 			}
 		}
 		if {[string match "TPDO-*" $node]} {
@@ -995,88 +1032,133 @@ puts "node====>$node"
 	if {[string match "*SubIndex*" $node]} {
 		set tmpInnerf0 [lindex $f1 2]
 		set tmpInnerf1 [lindex $f1 3]
-		set tmpSplit [split $node -]
-		set xdcId [lrange $tmpSplit 1 end]
-		set xdcId [join $xdcId -]
-		set xdcIcxId [lrange $tmpSplit 1 [expr [llength $tmpSplit] - 2]]
-		set xdcIcxId [join $xdcIcxId -]
-puts "xdcId->$xdcId...xdcIcxId->$xdcIcxId"
-puts "nodeObj($xdcId)->$nodeObj($xdcId)"
-puts "nodeObj($xdcIcxId)->$nodeObj($xdcIcxId)"
-		set errorString []
-		set NodeID 1
-		set NodeType 1
-		set indx [lindex $tmpSplit [expr [llength $tmpSplit] - 2]]
-		set subId [lindex $tmpSplit end]
-		set indexValue [CBaseIndex_getIndexValue $nodeObj($xdcIcxId)]
-		set sIdxValue [CBaseIndex_getIndexValue $nodeObj($xdcId)]
-		set IndexName [CBaseIndex_getName $nodeObj($xdcId)]
-		set IndexObjType [CBaseIndex_getObjectType $nodeObj($xdcId)]
+		#set tmpSplit [split $node -]
+		#set xdcId [lrange $tmpSplit 1 end]
+		#set xdcId [join $xdcId -]
+		#set xdcIcxId [lrange $tmpSplit 1 [expr [llength $tmpSplit] - 2]]
+		#set xdcIcxId [join $xdcIcxId -]
+		#puts "xdcId->$xdcId...xdcIcxId->$xdcIcxId"
+		#puts "nodeObj($xdcId)->$nodeObj($xdcId)"
+		#puts "nodeObj($xdcIcxId)->$nodeObj($xdcIcxId)"
+		#set indx [lindex $tmpSplit [expr [llength $tmpSplit] - 2]]
+		#set subId [lindex $tmpSplit end]
+		#set indexValue [CBaseIndex_getIndexValue $nodeObj($xdcIcxId)]
+		#set sIdxValue [CBaseIndex_getIndexValue $nodeObj($xdcId)]
+		#set IndexName [CBaseIndex_getName $nodeObj($xdcId)]
+		#set IndexObjType [CBaseIndex_getObjectType $nodeObj($xdcId)]
 		#set objIndexDataType [CBaseIndex_getDataType $nodeObj($xdcId)]
 		#set IndexDataType [DataType_getName $objIndexDataType]
-		set IndexDataType "CHECK!!!!!!"
-		set IndexAccessType [CBaseIndex_getAccessType $nodeObj($xdcId)]
+		#set IndexDataType "CHECK!!!!!!"
+		#set IndexAccessType [CBaseIndex_getAccessType $nodeObj($xdcId)]
 		#Check for hex data. If not hex, make it null.
-		set IndexAccessType [string trimleft $IndexAccessType 0x]
-		set IndexAccessType [string trimleft $IndexAccessType 0X]
-		if {![string is ascii $IndexAccessType]} {
-			puts ErrorStr:$IndexAccessType
-			set IndexAccessType []
-		}
-		set IndexDefaultValue [CBaseIndex_getDefaultValue $nodeObj($xdcId)]
-		#Check for hex data. If not hex, make it null.
-		set IndexDefaultValue [string trimleft $IndexDefaultValue 0x]
-		set IndexDefaultValue [string trimleft $IndexDefaultValue 0X]
-		if {![string is xdigit $IndexDefaultValue]} {
-			puts ErrorStr:$IndexDefaultValue
-			set IndexDefaultValue []
-		}
-		set IndexActualValue [CBaseIndex_getActualValue $nodeObj($xdcId)]
-		set IndexHighLimit [CBaseIndex_getHighLimit $nodeObj($xdcId)]
-		set IndexLowLimit [CBaseIndex_getLowLimit $nodeObj($xdcId)]	
-		set IndexPdoMap [CBaseIndex_getPDOMapping $nodeObj($xdcId)]
-		#set pdoMapList [list NO DEFAULT OPTIONAL RPDO TPDO ]
-		#if {$IndexPdoMap >= 0 && IndexPdoMap <= 4} {
-		#	set IndexPdoMap [lindex $pdoMapList $IndexPdoMap ]
-		#} else {
-		#	#returned value out of range
+		#set IndexAccessType [string trimleft $IndexAccessType 0x]
+		#set IndexAccessType [string trimleft $IndexAccessType 0X]
+		#if {![string is ascii $IndexAccessType]} {
+		#	puts ErrorStr:$IndexAccessType
+		#	set IndexAccessType []
 		#}
+		#set IndexDefaultValue [CBaseIndex_getDefaultValue $nodeObj($xdcId)]
+		#Check for hex data. If not hex, make it null.
+		#set IndexDefaultValue [string trimleft $IndexDefaultValue 0x]
+		#set IndexDefaultValue [string trimleft $IndexDefaultValue 0X]
+		#if {![string is xdigit $IndexDefaultValue]} {
+		#	puts ErrorStr:$IndexDefaultValue
+		#	set IndexDefaultValue []
+		#}
+		#set IndexActualValue [CBaseIndex_getActualValue $nodeObj($xdcId)]
+		#set IndexHighLimit [CBaseIndex_getHighLimit $nodeObj($xdcId)]
+		#set IndexLowLimit [CBaseIndex_getLowLimit $nodeObj($xdcId)]	
+		#set IndexPdoMap [CBaseIndex_getPDOMapping $nodeObj($xdcId)]
+		##set pdoMapList [list NO DEFAULT OPTIONAL RPDO TPDO ]
+		##if {$IndexPdoMap >= 0 && IndexPdoMap <= 4} {
+		##	set IndexPdoMap [lindex $pdoMapList $IndexPdoMap ]
+		##} else {
+		##	#returned value out of range
+		##}
+
+###############################test########################################
+	##########################################
+	# GetIndexAttributes working. Sample code
+	##########################################
+
+	set parent [$updatetree parent $node]
+	set ancestor [$updatetree parent $parent]
+	set nodeList [GetNodeList]			
+	puts "nodeList->$nodeList===nodeIdList->$nodeIdList==ancestor->$ancestor"
+	set schCnt [lsearch -exact $nodeList $ancestor]
+puts "schCnt->$schCnt"
+	set nodeId [lindex $nodeIdList $schCnt]
+	set obj [lindex $nodeIdList [expr $schCnt+1]]
+	#set objNode [lindex $nodeIdList [expr $schCnt+2]]
+	if {[string match "OBD*" $ancestor]} {
+		set nodeType 0
+	} else {
+		set nodeType 1
+	}
+	# ocfmRetCode GetSubIndexAttributes(int NodeID, ENodeType NodeType, char* IndexID, char* SubIndexID, EAttributeType AttributeType, char* AttributeValue) ; # dont pass arguments for Attribute value
+
+	set indexId [string range [$updatetree itemcget $parent -text] end-4 end-1]
+	set subIndexId [string range [$updatetree itemcget $node -text] end-2 end-1]
+	set IndexProp []
+	#for {set cnt 0 } {$cnt <= 5} {incr cnt} {
+	#	puts "\nGetSubIndexAttributes nodeId->$nodeId nodeType->$nodeType indexId->$indexId subIndexId->$subIndexId $cnt\n"
+	#	set tempIndexProp [GetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId 2]
+	#	set ErrCode [ocfmRetCode_code_get [lindex $tempIndexProp 0]]
+	#	puts "ErrCode:$ErrCode"
+	#	if {$ErrCode == 0} {	
+	#		lappend IndexProp [lindex $tempIndexProp 1]
+	#	} else {
+	#		lappend IndexProp []
+	#	}
+
+	#}
+	puts "\nGetSubIndexAttributes nodeId->$nodeId nodeType->$nodeType indexId->$indexId subIndexId->$subIndexId 0\n"
+	set tempIndexProp [GetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId 0]
+	lappend IndexProp [lindex $tempIndexProp 1] [] [] [] []
+	##set tempIndexProp [GetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId 5]
+	##lappend IndexProp [lindex $tempIndexProp 1]
+	#lappend IndexProp []
+	puts "IndexProp->$IndexProp"
+############################################################################
+set IndexHighLimit []
+set IndexLowLimit []
+set IndexPdoMap []
 		$tmpInnerf0.en_idx1 configure -state normal
 		$tmpInnerf0.en_idx1 delete 0 end
-		$tmpInnerf0.en_idx1 insert 0 $indexValue
+		$tmpInnerf0.en_idx1 insert 0 $indexId
 		$tmpInnerf0.en_idx1 configure -state disabled
 
 		$tmpInnerf0.en_sidx1 configure -state normal
 		$tmpInnerf0.en_sidx1 delete 0 end
-		$tmpInnerf0.en_sidx1 insert 0 $sIdxValue
+		$tmpInnerf0.en_sidx1 insert 0 $subIndexId
 		$tmpInnerf0.en_sidx1 configure -state disabled
 
 		$tmpInnerf0.en_nam1 delete 0 end
-		$tmpInnerf0.en_nam1 insert 0 $IndexName
+		$tmpInnerf0.en_nam1 insert 0 [lindex $IndexProp 0]
 
 		$tmpInnerf1.en_obj1 configure -state normal
 		$tmpInnerf1.en_obj1 delete 0 end
-		$tmpInnerf1.en_obj1 insert 0 $IndexObjType
+		$tmpInnerf1.en_obj1 insert 0 [lindex $IndexProp 1]
 		$tmpInnerf1.en_obj1 configure -state disabled
 
 		$tmpInnerf1.en_data1 configure -state normal
 		$tmpInnerf1.en_data1 delete 0 end
-		$tmpInnerf1.en_data1 insert 0 $IndexDataType
+		$tmpInnerf1.en_data1 insert 0 [lindex $IndexProp 2]
 		$tmpInnerf1.en_data1 configure -state disabled
 
 		$tmpInnerf1.en_access1 configure -state normal
 		$tmpInnerf1.en_access1 delete 0 end
-		$tmpInnerf1.en_access1 insert 0 $IndexAccessType
+		$tmpInnerf1.en_access1 insert 0 [lindex $IndexProp 3]
 		$tmpInnerf1.en_access1 configure -state disabled
 
 		$tmpInnerf1.en_default1 configure -state normal
 		$tmpInnerf1.en_default1 delete 0 end
-		$tmpInnerf1.en_default1 insert 0 $IndexDefaultValue
+		$tmpInnerf1.en_default1 insert 0 [lindex $IndexProp 4]
 		$tmpInnerf1.en_default1 configure -state disabled
 
 		$tmpInnerf1.en_value1 configure -validate none 
 		$tmpInnerf1.en_value1 delete 0 end
-		$tmpInnerf1.en_value1 insert 0 $IndexActualValue
+		$tmpInnerf1.en_value1 insert 0 [lindex $IndexProp 5]
 		$tmpInnerf1.en_value1 configure -validate key -vcmd "IsDec %P $tmpInnerf1.en_value1"
 
 		$tmpInnerf1.en_lower1 configure -state normal
@@ -1104,77 +1186,119 @@ puts "nodeObj($xdcIcxId)->$nodeObj($xdcIcxId)"
 	} elseif {[string match "*Index*" $node]} {
 		set tmpInnerf0 [lindex $f0 2]
 		set tmpInnerf1 [lindex $f0 3]
-		set tmpSplit [split $node -]
-		set xdcId [lrange $tmpSplit 1 end]
-		set xdcId [join $xdcId -]
-puts "xdcId->$xdcId==nodeObj($xdcId)->$nodeObj($xdcId)"
-		set errorString []
-		set NodeID 1
-		set NodeType 1
-		set indx [lindex $tmpSplit end]
-		set indexValue [CBaseIndex_getIndexValue $nodeObj($xdcId)]
-		set IndexName [CBaseIndex_getName $nodeObj($xdcId)]
-		set IndexObjType [CBaseIndex_getObjectType $nodeObj($xdcId)]
+		#set tmpSplit [split $node -]
+		#set xdcId [lrange $tmpSplit 1 end]
+		#set xdcId [join $xdcId -]
+		#puts "xdcId->$xdcId==nodeObj($xdcId)->$nodeObj($xdcId)"
+		#set indx [lindex $tmpSplit end]
+		#set indexValue [CBaseIndex_getIndexValue $nodeObj($xdcId)]
+		#set IndexName [CBaseIndex_getName $nodeObj($xdcId)]
+		#set IndexObjType [CBaseIndex_getObjectType $nodeObj($xdcId)]
 		#set objIndexDataType [CBaseIndex_getDataType $nodeObj($xdcId)]
-		#set IndexDataType [DataType_getName $objIndexDataType]
-		set IndexDataType "CHECK!!!!!!"
-		set IndexAccessType [CBaseIndex_getAccessType $nodeObj($xdcId)]
-		#Check for hex data. If not hex, make it null.
-		set IndexAccessType [string trimleft $IndexAccessType 0x]
-		set IndexAccessType [string trimleft $IndexAccessType 0X]
-		if {![string is ascii $IndexAccessType]} {
-			puts ErrorStr:$IndexAccessType
-			set IndexAccessType []
-		}
-		set IndexDefaultValue [CBaseIndex_getDefaultValue $nodeObj($xdcId)]
-		#Check for hex data. If not hex, make it null.
-		set IndexDefaultValue [string trimleft $IndexDefaultValue 0x]
-		set IndexDefaultValue [string trimleft $IndexDefaultValue 0X]
-		if {![string is xdigit $IndexDefaultValue]} {
-			puts ErrorStr:$IndexDefaultValue
-			set IndexDefaultValue []
-		}
-		set IndexActualValue [CBaseIndex_getActualValue $nodeObj($xdcId)]
-		set IndexHighLimit [CBaseIndex_getHighLimit $nodeObj($xdcId)]
-		set IndexLowLimit [CBaseIndex_getLowLimit $nodeObj($xdcId)]	
-		set IndexPdoMap [CBaseIndex_getPDOMapping $nodeObj($xdcId)]
-		#set pdoMapList [list NO DEFAULT OPTIONAL RPDO TPDO ]
-		#if {$IndexPdoMap >= 0 && IndexPdoMap <= 4} {
-		#	set IndexPdoMap [lindex $pdoMapList $IndexPdoMap ]
-		#} else {
-		#	#returned value out of range
+		##set IndexDataType [DataType_getName $objIndexDataType]
+		#set IndexDataType "CHECK!!!!!!"
+		#set IndexAccessType [CBaseIndex_getAccessType $nodeObj($xdcId)]
+		##Check for hex data. If not hex, make it null.
+		#set IndexAccessType [string trimleft $IndexAccessType 0x]
+		#set IndexAccessType [string trimleft $IndexAccessType 0X]
+		#if {![string is ascii $IndexAccessType]} {
+		#	puts ErrorStr:$IndexAccessType
+		#	set IndexAccessType []
 		#}
+		#set IndexDefaultValue [CBaseIndex_getDefaultValue $nodeObj($xdcId)]
+		##Check for hex data. If not hex, make it null.
+		#set IndexDefaultValue [string trimleft $IndexDefaultValue 0x]
+		#set IndexDefaultValue [string trimleft $IndexDefaultValue 0X]
+		#if {![string is xdigit $IndexDefaultValue]} {
+		#	puts ErrorStr:$IndexDefaultValue
+		#	set IndexDefaultValue []
+		#}
+		#set IndexActualValue [CBaseIndex_getActualValue $nodeObj($xdcId)]
+		#set IndexHighLimit [CBaseIndex_getHighLimit $nodeObj($xdcId)]
+		#set IndexLowLimit [CBaseIndex_getLowLimit $nodeObj($xdcId)]	
+		#set IndexPdoMap [CBaseIndex_getPDOMapping $nodeObj($xdcId)]
+		##set pdoMapList [list NO DEFAULT OPTIONAL RPDO TPDO ]
+		##if {$IndexPdoMap >= 0 && IndexPdoMap <= 4} {
+		##	set IndexPdoMap [lindex $pdoMapList $IndexPdoMap ]
+		##} else {
+		##	#returned value out of range
+		##}
+###############################test########################################
+	##########################################
+	# GetIndexAttributes working. Sample code
+	##########################################
+	set parent [$updatetree parent $node]
+	set nodeList [GetNodeList]			
+	puts "nodeList->$nodeList===nodeIdList->$nodeIdList===parent->$parent"
+	set schCnt [lsearch -exact $nodeList $parent]
+puts "schCnt->$schCnt"
+	set nodeId [lindex $nodeIdList $schCnt]
+	set obj [lindex $nodeIdList [expr $schCnt+1]]
+	#set objNode [lindex $nodeIdList [expr $schCnt+2]]
+	if {[string match "OBD*" $parent]} {
+		set nodeType 0
+	} else {
+		set nodeType 1
+	}
+	#DllExport ocfmRetCode GetIndexAttributes(int NodeID, ENodeType NodeType, char* IndexID, EAttributeType AttributeType,char* AttributeValue) ; # dont pass arguments for Attribute value
+	set indexId [string range [$updatetree itemcget $node -text] end-4 end-1]
+	set IndexProp []
+	#for {set cnt 0 } {$cnt <= 5} {incr cnt} {
+	#	puts "\nGetIndexAttributes nodeId->$nodeId nodeType->$nodeType indexId->$indexId $cnt\n"
+	#	set tempIndexProp [GetIndexAttributes $nodeId $nodeType $indexId 2]
+	#	set ErrCode [ocfmRetCode_code_get [lindex $tempIndexProp 0]]
+	#	puts "ErrCode:$ErrCode"
+	#	if {$ErrCode == 0} {
+	#		lappend IndexProp [lindex $tempIndexProp 1]
+	#	} else {
+	#		lappend IndexProp []
+	#	}
+
+	#}
+	puts "\nGetIndexAttributes nodeId->$nodeId nodeType->$nodeType indexId->$indexId 0\n"
+	set tempIndexProp [GetIndexAttributes $nodeId $nodeType $indexId 0]
+	lappend IndexProp  [lindex $tempIndexProp 1] [] [] [] []
+	##set tempIndexProp [GetIndexAttributes $nodeId $nodeType $indexId 5]
+	##lappend IndexProp [lindex $tempIndexProp 1]
+	#lappend IndexProp []
+	puts "IndexProp->$IndexProp"
+	#set tempIndexProp [GetIndexAttributes $nodeId $nodeType $indexId 6]
+	#puts "tempIndexProp->$tempIndexProp"
+############################################################################
+set IndexHighLimit []
+set IndexLowLimit []
+set IndexPdoMap []
 		$tmpInnerf0.en_idx1 configure -state normal
 		$tmpInnerf0.en_idx1 delete 0 end
-		$tmpInnerf0.en_idx1 insert 0 $indexValue
+		$tmpInnerf0.en_idx1 insert 0 $indexId
 		$tmpInnerf0.en_idx1 configure -state disabled
 
 		$tmpInnerf0.en_nam1 delete 0 end
-		$tmpInnerf0.en_nam1 insert 0 $IndexName
+		$tmpInnerf0.en_nam1 insert 0 [lindex $IndexProp 0]
 
 		$tmpInnerf1.en_obj1 configure -state normal
 		$tmpInnerf1.en_obj1 delete 0 end
-		$tmpInnerf1.en_obj1 insert 0 $IndexObjType
+		$tmpInnerf1.en_obj1 insert 0 [lindex $IndexProp 1]
 		$tmpInnerf1.en_obj1 configure -state disabled
 
 		$tmpInnerf1.en_data1 configure -state normal
 		$tmpInnerf1.en_data1 delete 0 end
-		$tmpInnerf1.en_data1 insert 0 $IndexDataType
+		$tmpInnerf1.en_data1 insert 0 [lindex $IndexProp 2]
 		$tmpInnerf1.en_data1 configure -state disabled
 
 		$tmpInnerf1.en_access1 configure -state normal
 		$tmpInnerf1.en_access1 delete 0 end
-		$tmpInnerf1.en_access1 insert 0 $IndexAccessType
+		$tmpInnerf1.en_access1 insert 0 [lindex $IndexProp 3]
 		$tmpInnerf1.en_access1 configure -state disabled
 
 		$tmpInnerf1.en_default1 configure -state normal
 		$tmpInnerf1.en_default1 delete 0 end
-		$tmpInnerf1.en_default1 insert 0 $IndexDefaultValue
+		$tmpInnerf1.en_default1 insert 0 [lindex $IndexProp 4]
 		$tmpInnerf1.en_default1 configure -state disabled
 
 		$tmpInnerf1.en_value1 configure -validate none 
 		$tmpInnerf1.en_value1 delete 0 end
-		$tmpInnerf1.en_value1 insert 0 $IndexActualValue
+		$tmpInnerf1.en_value1 insert 0 [lindex $IndexProp 5]
 		$tmpInnerf1.en_value1 configure -validate key -vcmd "IsDec %P $tmpInnerf1.en_value1"
 
 		$tmpInnerf1.en_lower1 configure -state normal
@@ -1213,38 +1337,36 @@ puts "xdcId->$xdcId==nodeObj($xdcId)->$nodeObj($xdcId)"
 	##########################################
 	# GetIndexAttributes working. Sample code
 	##########################################
-	set AttrVal []
-	set AttrVal [GetIndexAttributes 1 1 1006 0]
+	#set AttrVal []
+	#set AttrVal [GetIndexAttributes 1 1 1006 0]
 	
-	puts "\n\n\n\t\t\tAttrVal->$AttrVal\n\n\n"
-	set AttrVal [lindex $AttrVal 1]
-	set AttrVal [string trimright $AttrVal]
-	puts "\n\n\n\t\t\tAttrVal->$AttrVal\n\n\n"
+	#puts "\n\n\n\t\t\tAttrVal->$AttrVal\n\n\n"
+	#set AttrVal [lindex $AttrVal 1]
+	#set AttrVal [string trimright $AttrVal]
+	#puts "\n\n\n\t\t\tAttrVal->$AttrVal\n\n\n"
 	
-	set IndexPos [new_intp]
-	set retErrStuct [IfIndexExists 1 1 1600 $IndexPos]
+	#set IndexPos [new_intp]
+	#set retErrStuct [IfIndexExists 1 1 1600 $IndexPos]
 	
-	set ret [intp_value $IndexPos]
+	#set ret [intp_value $IndexPos]
 	
-	puts "\n\n\n\t\t\tretErrStuct:$retErrStuct\n"
-	puts "\n\t\t\tIndexPos:$IndexPos RetValue:$ret\n\n\n"
+	#puts "\n\n\n\t\t\tretErrStuct:$retErrStuct\n"
+	#puts "\n\t\t\tIndexPos:$IndexPos RetValue:$ret\n\n\n"
 	##########################################
 	
-	set ErrCode [new_ocfmRetCode]
-	
-	set SubAttrValName [GetSubIndexAttributes 1 1 1601 01 0]
-	set ErrCodeStruct [lindex $SubAttrValName 0]
-	set SubAttrValName [lindex $SubAttrValName 1]
-	puts "\n\n\n\t\t\tSubAttrValName:$SubAttrValName\n\n"
-	
-	set SubAttrValAccess [GetSubIndexAttributes 1 1 1601 01 3]
-	set SubAttrValAccess [lindex $SubAttrValAccess 1]
-	puts "\n\n\n\t\t\tSubAttrValAccess:$SubAttrValAccess\n\n"
+	#set ErrCode [new_ocfmRetCode]
+	#	set SubAttrValName [GetSubIndexAttributes 1 1 1601 01 0]
+	#set ErrCodeStruct [lindex $SubAttrValName 0]
+	#set SubAttrValName [lindex $SubAttrValName 1]
+	#puts "\n\n\n\t\t\tSubAttrValName:$SubAttrValName\n\n"
+	#set SubAttrValAccess [GetSubIndexAttributes 1 1 1601 01 3]
+	#set SubAttrValAccess [lindex $SubAttrValAccess 1]
+	#puts "\n\n\n\t\t\tSubAttrValAccess:$SubAttrValAccess\n\n"
 			
-	set ErrCode [ocfmRetCode_code_get $ErrCodeStruct]
-	set ErrString [ocfmRetCode_errorString_get $ErrCodeStruct]
-	puts "ErrCode:$ErrCode"
-	puts "ErrString:$ErrString"
+	#set ErrCode [ocfmRetCode_code_get $ErrCodeStruct]
+	##set ErrString [ocfmRetCode_errorString_get $ErrCodeStruct] ; #raising error
+	#puts "ErrCode:$ErrCode"
+	#puts "ErrString:$ErrString"
 	
 	return
 }
@@ -1272,28 +1394,23 @@ proc AddCN {cnName tmpImpDir nodeId} {
 	incr cnCount
 	set child [$updatetree insert end MN-1 CN-1-$cnCount -text "$cnName" -open 0 -image [Bitmap::get cn]]
 	set obj [NodeCreate $nodeId 1]
-	puts "obj->$obj"
-#puts "getRetValue->[ocfmRetValError_getRetValue [lindex $obj 0]]"
-#puts "getErrorCode->[ocfmRetValError_getErrorCode [lindex $obj 0]]"
+	puts "Add CN obj->$obj"
 	if { [lindex $obj 0] != 0 } {
 		#tk_messageBox -message "ENUM:$catchErrCode!" -title Info -icon info
 		#return
 	}
 	#lappend nodeIdList CN-1-$cnCount
 	lappend nodeIdList $nodeId [lindex $obj 1] [lindex $obj 2]
-	if {$tmpImpDir!=0} {
+	if {$tmpImpDir!= ""} {
 		#API
-	set errorString []
-	set catchErrCode [ImportXML "$tmpImpDir" 1 $nodeId]
-puts "catchErrCode->$catchErrCode"
-#puts "getRetValue->[ocfmRetValError_getRetValue $catchErrCode]"
-#puts "getErrorCode->[ocfmRetValError_getErrorCode $catchErrCode]"
-	if { $catchErrCode != 0 } {
-		#tk_messageBox -message "ENUM:$catchErrCode!" -title Info -icon info
-		#return
-	}
-		
-		#puts $tmpImpDir
+		set catchErrCode [ImportXML "$tmpImpDir" 1 $nodeId]
+		puts "catchErrCode->$catchErrCode"
+		set ErrCode [ocfmRetCode_code_get $catchErrCode]
+		puts "ErrCode:$ErrCode"
+		if { $ErrCode != 0 } {
+			#tk_messageBox -message "ErrCode:$ErrCode \n cannot able to import file" -title Info -icon info
+			#return
+		}
 		Import CN-1-$cnCount $tmpImpDir 1 $nodeId [lindex $obj 1] [lindex $obj 2]
 	}
 	return
@@ -1905,11 +2022,12 @@ puts  "REimport obj->$obj=====objNode->$objNode"
 	set tmpImpDir [tk_getOpenFile -title "Import XDC" -filetypes $types -parent .]
 	if {$tmpImpDir != ""} {
 		#API 
+		#ReImportXML(char* fileName, char* errorString, int NodeID, ENodeType NodeType);
 		set catchErrCode [ReImportXML $tmpImpDir $nodeId $nodeType]
-puts "catchErrCode->$catchErrCode"
-#puts "getRetValue->[ocfmRetValError_getRetValue $catchErrCode]"
-#puts "getErrorCode->[ocfmRetValError_getErrorCode $catchErrCode]"
-		if { $catchErrCode != 0 } {
+		puts "catchErrCode in reimport ->$catchErrCode"
+		set ErrCode [ocfmRetCode_code_get $catchErrCode]
+		puts "ErrCode:$ErrCode"
+		if { $ErrCode != 0 } {
 			#tk_messageBox -message "ENUM:$catchErrCode!" -title Info -icon info
 			#return
 		}		
@@ -1918,13 +2036,9 @@ puts "catchErrCode->$catchErrCode"
 				$updatetree insert 0 MN$tmpNode OBD$tmpNode -text "OBD" -open 0 -image [Bitmap::get pdo]
 			}
 		}
-		catch {FreeNodeMemory $node}
+		#catch {FreeNodeMemory $node} ; # no need to free memory
 		catch {$updatetree delete [$updatetree nodes $node]}
-		# pass node Id  and node type instead of 1 and cn
 		$updatetree itemconfigure $node -open 0
-		#parseFile(char* filename, int NodeID, ENodeType  NodeType); 
-		#ReImportXML(char* fileName, char* errorString, int NodeID, ENodeType NodeType);
-		set errorString []
 		Import $node $tmpImpDir $nodeId $nodeType $obj $objNode 
 	}
 } 
@@ -1989,6 +2103,7 @@ proc DeleteTreeNode {} {
 		if {[string match "OBD*" $node]} {
 			#should not delete nodeId, obj, objNode from list since it is mn
 			set nodeType 0
+			#$updatetree delete $node
 		} else {
 			set nodeType 1
 		
@@ -2007,7 +2122,7 @@ proc DeleteTreeNode {} {
 			set nodeIdList [DeleteList $nodeIdList $nodeId]		
 			puts "after deletion nodeIdList->$nodeIdList "		
 		}
-		FreeNodeMemory $node
+		#FreeNodeMemory $node ; #no need to free bcoz memory not created
 		#this proc does following
 	 	#foreach childIdx [$updatetree nodes $node] {
 		#	if {[string match "*PDO*" $childIdx]} {
@@ -2088,9 +2203,6 @@ proc DeleteTreeNode {} {
 		if {[string match "*SubIndexValue*" $node]} {
 			puts "SharedLib delete sub index"
 			puts "DeleteSubIndex $nodeId $nodeType $idx $sidx"
-			#set errorString []
-			#set errStruct [IfNodeExists $nodeId $nodeType]
-			#puts TEST::[ocfmRetValError_getRetValue $errStruct] 
 			set catchErrCode [DeleteSubIndex $nodeId $nodeType $idx $sidx]
 puts "catchErrCode->$catchErrCode"
 #puts "getRetValue->[ocfmRetValError_getRetValue $catchErrCode]"
@@ -2110,20 +2222,22 @@ puts "catchErrCode->$catchErrCode"
 			if {$catchErrCode != 0} {
 				#tk_messageBox -message "ENUM:$catchErrCode!" -title Info -icon info
 				#return
-			}	
-	 		foreach childIdx [$updatetree nodes $node] {	
-				set tmpSplit [split $childIdx -]
-				set xdcId [lrange $tmpSplit 1 end]
-				set xdcId [join $xdcId -]
-				#puts -nonewline "$xdcId  "
-				unset nodeObj($xdcId)
-			}		
+			}
+			#no need to free menmory bcoz didnt create it	
+	 		#foreach childIdx [$updatetree nodes $node] {	
+			#	set tmpSplit [split $childIdx -]
+			#	set xdcId [lrange $tmpSplit 1 end]
+			#	set xdcId [join $xdcId -]
+			#	#puts -nonewline "$xdcId  "
+			#	unset nodeObj($xdcId)
+			#}		
 		}
 		
-		set tmpSplit [split $node -]
-		set xdcId [lrange $tmpSplit 1 end]
-		set xdcId [join $xdcId -]
-		unset nodeObj($xdcId)
+		# no need to free memory
+		#set tmpSplit [split $node -]
+		#set xdcId [lrange $tmpSplit 1 end]
+		#set xdcId [join $xdcId -]
+		#unset nodeObj($xdcId) ; #no need to free menmory bcoz didnt create it
 	}
 	set parent [$updatetree parent $node]
 	set nxtSelList [$updatetree nodes $parent]
@@ -2139,7 +2253,7 @@ puts "catchErrCode->$catchErrCode"
 		} elseif { $nxtSelCnt > 0 } {
 			#select next node since nxtSelCnt already incremented do nothing
 		} else {
-			puts "DeleteTreeNode->Inavlid cond 2"
+			puts "DeleteTreeNode->Invalid cond 2"
 		}
 			catch {set nxtSel [lindex $nxtSelList $nxtSelCnt] }
 			catch {$updatetree selection set $nxtSel}
@@ -2153,7 +2267,7 @@ puts "catchErrCode->$catchErrCode"
 #Input       : -
 #Output      : -
 #Description : searches a variable in list if present delete it and next 2 variables
-#	       used mainly for deleting nodeId, obj and objNode
+#	       used for deleting nodeId, obj and objNode
 ################################################################################################
 proc DeleteList {tempList deleteVar} {
 	set res [lsearch $tempList $deleteVar] 
@@ -2190,14 +2304,11 @@ proc NodeCreate {NodeID NodeType} {
 	set catchErrCode [CreateNode $NodeID $NodeType]
 	puts "catchErrCode->$catchErrCode"
 	set ErrCode [ocfmRetCode_code_get $catchErrCode]
-	set ErrString [ocfmRetCode_errorString_get $catchErrCode]
 	puts "ErrCode:$ErrCode"
-	puts "ErrString:$ErrString"
-#puts "getRetValue->[ocfmRetValError_getRetValue $catchErrCode]"
-#puts "getErrorCode->[ocfmRetValError_getErrorCode $catchErrCode]"
-	if { $catchErrCode != 0 } {
+
+	if { $ErrCode != 0 } {
 		#tk_messageBox -message "ENUM:$catchErrCode!" -title Info -icon info
-		#return [list $catchErrCode "" ""]
+		return [list $ErrCode " " " "]
 	}
 	set objNode [new_CNode]
 	set obj [new_CIndexCollection]
@@ -2207,7 +2318,7 @@ proc NodeCreate {NodeID NodeType} {
 	#currntly works only for windows
 	#set obj [CNode_getIndexCollectionWithoutPDO $objNode]
 	puts "NodeCreate :::  obj->$obj====objNode->$objNode=====objNodeCollection->$objNodeCollection"
-	return [list $catchErrCode $obj $objNode]
+	return [list $ErrCode $obj $objNode]
 }
 
 ################################################################################################
@@ -2427,4 +2538,28 @@ proc _ArrowDown {node origNode} {
 	#		return
 	#	}	
 	#}
+}
+
+################################################################################################
+#proc ArrowLeft
+#Input       : -
+#Output      : -
+#Description : Traversal for tree window
+################################################################################################
+proc ArrowLeft {} {
+	global updatetree
+	set node [$updatetree selection get]
+	$updatetree itemconfigure $node -open 0		
+}
+
+################################################################################################
+#proc ArrowRight
+#Input       : -
+#Output      : -
+#Description : Traversal for tree window
+################################################################################################
+proc ArrowRight {} {
+	global updatetree
+	set node [$updatetree selection get]
+	$updatetree itemconfigure $node -open 1	
 }

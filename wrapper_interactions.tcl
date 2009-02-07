@@ -157,7 +157,7 @@ proc SortNode {obj objNode choice {ObjIndex ""}} {
 proc Import {cn tmpDir NodeType NodeID obj objNode } {
 	global updatetree
 	global cnCount
-	global nodeObj
+	#global nodeObj
 	ImportProgress start
 
 	global LocvarProgbar
@@ -198,7 +198,7 @@ proc Import {cn tmpDir NodeType NodeID obj objNode } {
 #		puts "[lindex $corrList $inc]"
 		set ObjIndex [CIndexCollection_getIndex $obj [lindex $corrList $inc] ]
 		#set ObjIndex [CIndexCollection_getIndex $obj $inc]
-		set nodeObj(1-$cnId-$inc) $ObjIndex
+		#####set nodeObj(1-$cnId-$inc) $ObjIndex
 		set IndexValue [CBaseIndex_getIndexValue $ObjIndex]
 		set IndexName [CBaseIndex_getName $ObjIndex]
 		$updatetree insert $inc $cn IndexValue-1-$cnId-$inc -text $IndexName\($IndexValue\) -open 0 -image [Bitmap::get index]
@@ -209,7 +209,7 @@ puts "ObjIndex->$ObjIndex"
 #			puts "in sub index"
 			set ObjSIdx [CIndex_getSubIndex $ObjIndex [lindex $sidxCorrList $tmpCount]]
 			#set ObjSIdx [CIndex_getSubIndex $ObjIndex $tmpCount]
-			set nodeObj(1-$cnId-$inc-$tmpCount) $ObjSIdx
+			#####set nodeObj(1-$cnId-$inc-$tmpCount) $ObjSIdx
 			set SIdxValue [CBaseIndex_getIndexValue $ObjSIdx]
 			set SIdxName [CBaseIndex_getName $ObjSIdx]
 			$updatetree insert end IndexValue-1-$cnId-$inc SubIndexValue-1-$cnId-$inc-$tmpCount -text $SIdxName\($SIdxValue\) -open 0 -image [Bitmap::get subindex]
@@ -229,7 +229,7 @@ puts "ObjIndex->$ObjIndex"
 	for { set inc 0 } { $inc < $count } { incr inc } {
 		set ObjIndex [CIndexCollection_getIndex $TclIndexCollection [lindex $corrList $inc]]
 		#set ObjIndex [CIndexCollection_getIndex $TclIndexCollection $inc]
-		set nodeObj(1-TPdo$cnId-$inc) $ObjIndex
+		#####set nodeObj(1-TPdo$cnId-$inc) $ObjIndex
 puts "tpdo ObjIndex->$ObjIndex"
 		set IndexValue [CBaseIndex_getIndexValue $ObjIndex]
 		set IndexName [CBaseIndex_getName $ObjIndex]
@@ -239,7 +239,7 @@ puts "tpdo ObjIndex->$ObjIndex"
 		for { set tmpCount 0 } { $tmpCount < $SIdxCount } { incr tmpCount } {
 			set ObjSIdx [CIndex_getSubIndex $ObjIndex [lindex $sidxCorrList $tmpCount]]
 			#set ObjSIdx [CIndex_getSubIndex $ObjIndex $tmpCount]
-			set nodeObj(1-TPdo$cnId-$inc-$tmpCount) $ObjSIdx
+			#####set nodeObj(1-TPdo$cnId-$inc-$tmpCount) $ObjSIdx
 #			puts "nodeObj(1-TPdo$cnId-$inc-$tmpCount)--->$ObjSIdx"
 			set SIdxValue [CBaseIndex_getIndexValue $ObjSIdx]
 			set SIdxName [CBaseIndex_getName $ObjSIdx]
@@ -258,7 +258,7 @@ puts "tpdo ObjIndex->$ObjIndex"
 	for { set inc 0 } { $inc < $count } { incr inc } {
 		set ObjIndex [CIndexCollection_getIndex $TclIndexCollection [lindex $corrList $inc]]
 		#set ObjIndex [CIndexCollection_getIndex $TclIndexCollection $inc]
-		set nodeObj(1-RPdo$cnId-$inc) $ObjIndex
+		#####set nodeObj(1-RPdo$cnId-$inc) $ObjIndex
 puts "rpdoObjIndex->$ObjIndex"
 		set IndexValue [CBaseIndex_getIndexValue $ObjIndex]
 		set IndexName [CBaseIndex_getName $ObjIndex]
@@ -268,7 +268,7 @@ puts "rpdoObjIndex->$ObjIndex"
 		for { set tmpCount 0 } { $tmpCount < $SIdxCount } { incr tmpCount } {
 			set ObjSIdx [CIndex_getSubIndex $ObjIndex [lindex $sidxCorrList $tmpCount]]
 			#set ObjSIdx [CIndex_getSubIndex $ObjIndex $tmpCount]
-			set nodeObj(1-RPdo$cnId-$inc-$tmpCount) $ObjSIdx
+			#####set nodeObj(1-RPdo$cnId-$inc-$tmpCount) $ObjSIdx
 			set SIdxValue [CBaseIndex_getIndexValue $ObjSIdx]
 			set SIdxName [CBaseIndex_getName $ObjSIdx]
 			$updatetree insert end RPdoIndexValue-1-RPdo$cnId-$inc RPdoSubIndexValue-1-RPdo$cnId-$inc-$tmpCount -text $SIdxName\($SIdxValue\) -open 0 -image [Bitmap::get subindex]

@@ -246,6 +246,10 @@ proc EditManager::create_table {nb filename choice} {
 		grid config $fram.b_dis -row 1 -column 2 -sticky s
 		pack $fram -side bottom
     	} elseif {$choice == "pdo"} {
+
+
+tablelist::addBWidgetEntry
+
 		set st [tablelist::tablelist $st \
 	    		-columns {0 "No" left
 		      		0 "Mapping Entries" center
@@ -257,13 +261,39 @@ proc EditManager::create_table {nb filename choice} {
 	    			-setgrid 0 -width 0 \
 	    			-stripebackground gray98 \
 	    			-resizable 1 -movablecolumns 0 -movablerows 0 \
-	    			-showseparators 1 -spacing 10 -font custom1]
+	    			-showseparators 1 -spacing 10 -font custom1 \
+				-editstartcommand StartEdit -editendcommand EndEdit ]
+
+
+		$st columnconfigure 0 -editable no 
+		$st columnconfigure 1 -editable yes -editwindow entry	
+		$st columnconfigure 2 -editable yes -editwindow entry
+		$st columnconfigure 3 -editable yes -editwindow entry	
+		$st columnconfigure 4 -editable yes -editwindow entry
+		$st columnconfigure 5 -editable yes -editwindow entry
+		$st columnconfigure 6 -editable yes -editwindow entry
    	}
+
+	
 
     	$sw setwidget $st
     	pack $st -fill both -expand true
     	$nb itemconfigure $pageName -state disabled
     	$st configure -height 4 -width 40 -stretch all	
+
+   	#set fram [frame $frame.f1]  
+   	#label $fram.l_empty -text "  " -height 1 
+   	#button $fram.b_sav -text " Save " -command "SaveTable $st"
+   	#label $fram.l_empty1 -text "  "
+   	#button $fram.b_dis -text "Discard" -command "DiscardTable $st"
+   	#grid config $fram.l_empty -row 0 -column 0 -columnspan 2
+   	#grid config $fram.b_sav -row 1 -column 0 -sticky s
+   	#grid config $fram.l_empty1 -row 1 -column 1 -sticky s
+   	#grid config $fram.b_dis -row 1 -column 2 -sticky s
+   	#pack $fram -side bottom
+
+    	$nb itemconfigure $pageName -state disabled
+
     	return  $st
 }
 
@@ -440,67 +470,46 @@ proc ConvertHex {tmpValue} {
 ###############################################################################################
 proc SaveValue {frame0 frame1} {
 	global nodeSelect
-	global nodeObj
+	#global nodeObj
 	global nodeIdList
 	global updatetree
-	set nodeType CN
+
+	puts "\n\n   SaveValue \n"
 
 	#puts "nodeSelect->$nodeSelect"
 	#puts "nodeObj->$nodeObj"
 	
-
-	foreach mnNode [$updatetree nodes PjtName] {
-		set chk 1
-		foreach cnNode [$updatetree nodes $mnNode] {
-			if {$chk == 1} {
-				if {[string match "OBD*" $cnNode]} {
-					lappend nodeList $cnNode " " " "
-				} else {
-					lappend nodeList " " " " " " $cnNode " " " "
-				}
-				set chk 0
-			} else {
-				lappend nodeList $cnNode " " " "
-			}
-		}
-	}
-
-
-
-
-	set tmpSplit [split $nodeSelect -]
-	set tmpNodeSelect [lrange $tmpSplit 1 end]
-	set tmpNodeSelect [join $tmpNodeSelect -]
+	#set tmpSplit [split $nodeSelect -]
+	#set tmpNodeSelect [lrange $tmpSplit 1 end]
+	#set tmpNodeSelect [join $tmpNodeSelect -]
 
 	#puts "tmpNodeSelect->$tmpNodeSelect"
-	puts "nodeObj->$nodeObj($tmpNodeSelect)"
+	#puts "nodeObj->$nodeObj($tmpNodeSelect)"
 	set oldName [$updatetree itemcget $nodeSelect -text]
 	if {[string match "*SubIndexValue*" $nodeSelect]} {
-		set sIdxValue [CBaseIndex_getIndexValue $nodeObj($tmpNodeSelect)]
-		set sIdxValue [string toupper $sIdxValue]
-		puts "sIdxValue->$sIdxValue"
-		set indxId [lrange $tmpSplit 1 end-1 ]
-		set indxId [join $indxId -]
-		set indexValue [CBaseIndex_getIndexValue $nodeObj($indxId)]
-		set indexValue [string toupper $indexValue]
+		#set sIdxValue [CBaseIndex_getIndexValue $nodeObj($tmpNodeSelect)]
+		set subIndexId [string range $oldName end-2 end-1]
+		set subIndexId [string toupper $subIndexId]
 		set parent [$updatetree parent $nodeSelect]
+		set indexId [string range [$updatetree itemcget $parent -text ] end-4 end-1]
+		set indexId [string toupper $indexId]
 		#set indexId [string range[$updatetree itemcget $parent -text] end-5 end]
 		set parent [$updatetree parent $parent]	
 		set oldName [string range $oldName end-3 end ]
 		#set subIndexId $oldName
 	} else {
-		set indexValue [CBaseIndex_getIndexValue $nodeObj($tmpNodeSelect)]
-		set indexValue [string toupper $indexValue]
+		set indexId [string range $oldName end-4 end-1 ]
+		set indexId [string toupper $indexId]
 		set parent [$updatetree parent $nodeSelect]
 		set oldName [string range $oldName end-5 end ]
-		set indexId $oldName
+		set oldName $oldName
 	}
-
+	set nodeList [GetNodeList]
 	set schCnt [lsearch -exact $nodeList $parent ]
 	#puts  "schCnt->$schCnt=======nodeList->$nodeList"
 	set nodeId [lindex $nodeIdList $schCnt]
-	set obj [lindex $nodeIdList [expr $schCnt+1]]
-	set objNode [lindex $nodeIdList [expr $schCnt+2]]
+	#set obj [lindex $nodeIdList [expr $schCnt+1]]
+	#set objNode [lindex $nodeIdList [expr $schCnt+2]]
 	if {[string match "OBD*" $parent]} {
 		#it must be a mn
 		set nodeType 0
@@ -509,33 +518,49 @@ proc SaveValue {frame0 frame1} {
 		set nodeType 1
 	}
 
-	puts "nodeType->$nodeType"
-	puts "nodeId->$nodeId"
-	puts "indexValue->$indexValue"
 
 	set tmpVar0 [$frame0.en_nam1 cget -textvariable]
 	global $tmpVar0	
 	set newName [subst $[subst $tmpVar0]]
-	puts "name->[subst $[subst $tmpVar0]]"
+	puts "newName->[subst $[subst $tmpVar0]]"
 
 	set tmpVar1 [$frame1.en_value1 cget -textvariable]
 	global $tmpVar1	
-
 	set value [string toupper [subst $[subst $tmpVar1]] ]
-puts "value->$value"
+	puts "value->$value"
 	puts "value->[subst $[subst $tmpVar1]]"
-	set errStr []
+
+	set radioSel [$frame1.frame1.ra_dec cget -variable]
+	global $radioSel
+	puts "radioSel->$radioSel"
+	set radioSel [subst $[subst $radioSel]]
+	puts "radioSel after sub ->$radioSel"
+
+	if {$value != ""} {
+		if {$radioSel == "hex"} {
+			#it is hex value trim leading 0x
+			set value [string range $value 2 end]
+		} elseif {$radioSel == "dec"} {  
+			#is is dec value convert to hex
+			set value [format %X $value]
+		} else {
+			puts "\n\n\nSaveValue->Should Never Happen 1!!!\n\n\n"
+		}
+	} else {
+		#no value has been inputed by user
+	}
+
+	set value [string toupper $value]
 	if {[string match "*SubIndexValue*" $nodeSelect]} {
-		puts "----------------$nodeId $nodeType $indexValue $sIdxValue"
 		#DllExport EConfiuguratorErrors EditSubIndex(int NodeID, ENodeType NodeType, char* IndexID, char* SubIndexID, char* IndexValue, char* IndexName);
-		SetSubIndexAttributes $nodeId $nodeType $indexValue $sIdxValue [subst $[subst $tmpVar1]] [subst $[subst $tmpVar0]]
-		puts "SetSubIndexAttributes $nodeId $nodeType $indexValue $sIdxValue [subst $[subst $tmpVar1]] [subst $[subst $tmpVar0]]"
+		puts "SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName"
+		SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName
 	} elseif {[string match "*IndexValue*" $nodeSelect]} {
 		#DllExport EConfiuguratorErrors EditIndex(int NodeID, ENodeType NodeType, char* IndexID, char* IndexValue, char* IndexName);
-		SetIndexAttributes $nodeId $nodeType $indexValue [subst $[subst $tmpVar1]] [subst $[subst $tmpVar0]] 
-		puts "SetIndexAttributes $nodeId $nodeType $indexValue [subst $[subst $tmpVar1]] [subst $[subst $tmpVar0]] "
+		puts "SetIndexAttributes $nodeId $nodeType $indexId $value $newName"
+		SetIndexAttributes $nodeId $nodeType $indexId $value $newName
 	} else {
-		puts "\n\n\nShould Never Happen!!!\n\n\n"
+		puts "\n\n\nSaveValue->Should Never Happen 2!!!\n\n\n"
 	}
 	set newName [append newName $oldName]
 	puts "newName->$newName"
@@ -550,14 +575,59 @@ puts "value->$value"
 ###############################################################################################
 proc DiscardValue {frame0 frame1} {
 	global nodeSelect
-	global nodeObj
+	#global nodeObj
+	global nodeIdList
+	global updatetree
 
-	set tmpSplit [split $nodeSelect -]
-	set tmpNodeSelect [lrange $tmpSplit 1 end]
-	set tmpNodeSelect [join $tmpNodeSelect -]
+	puts "\n\n  DiscardValue \n"
 
-	set IndexName [CBaseIndex_getName $nodeObj($tmpNodeSelect)]
-	set IndexActualValue [CBaseIndex_getActualValue $nodeObj($tmpNodeSelect)]
+	#set tmpSplit [split $nodeSelect -]
+	#set tmpNodeSelect [lrange $tmpSplit 1 end]
+	#set tmpNodeSelect [join $tmpNodeSelect -]
+	set oldName [$updatetree itemcget $nodeSelect -text]
+	if {[string match "*SubIndexValue*" $nodeSelect]} {
+		#set sIdxValue [CBaseIndex_getIndexValue $nodeObj($tmpNodeSelect)]
+		set subIndexId [string range $oldName end-2 end-1]
+		set parent [$updatetree parent $nodeSelect]
+		set indexId [string range [$updatetree itemcget $parent -text] end-4 end-1]
+		set parent [$updatetree parent $parent]
+
+	} else {
+		set indexId [string range $oldName end-4 end-1 ]
+		set parent [$updatetree parent $nodeSelect]
+	}
+
+
+	set nodeList [GetNodeList]
+	set schCnt [lsearch -exact $nodeList $parent ]
+	#puts  "schCnt->$schCnt=======nodeList->$nodeList"
+	set nodeId [lindex $nodeIdList $schCnt]
+	set obj [lindex $nodeIdList [expr $schCnt+1]]
+	set objNode [lindex $nodeIdList [expr $schCnt+2]]
+	if {[string match "OBD*" $parent]} {
+		#it must be a mn
+		set nodeType 0
+	} else {
+		#it must be cn
+		set nodeType 1
+	}
+
+
+	if {[string match "*SubIndexValue*" $nodeSelect]} {
+		puts "GetSubIndexAttributes nodeId->$nodeId nodeType->$nodeType indexId->$indexId subIndexId->$subIndexId 0"
+		set tempIndexProp [GetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId 0]
+		set IndexName [lindex $tempIndexProp 1]
+		#set tempIndexProp [GetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId 5]
+		#set IndexActualValue [lindex $tempIndexProp 1]		
+		set IndexActualValue []
+	} else {
+		puts "GetIndexAttributes nodeId->$nodeId nodeType->$nodeType indexId->$indexId 0"
+		set tempIndexProp [GetIndexAttributes $nodeId $nodeType $indexId 0]
+		set IndexName [lindex $tempIndexProp 1]
+		#set tempIndexProp [GetIndexAttributes $nodeId $nodeType $indexId 5]
+		#set IndexActualValue [lindex $tempIndexProp 1]	
+		set IndexActualValue []
+	}
 
 	$frame0.en_nam1 delete 0 end
 	$frame0.en_nam1 insert 0 $IndexName
@@ -572,3 +642,98 @@ proc DiscardValue {frame0 frame1} {
 
 
 }
+
+proc StartEdit {tbl row col text} {
+	puts "tbl->$tbl==row->$row===col->$col"
+	set w [$tbl editwinpath]
+  	switch $col {
+		1 {
+            		$w configure -invalidcommand bell -validate key  -validatecommand "IsTableHex %P 16 $tbl $row $col"
+        	}
+
+        	2 {
+			$w configure -invalidcommand bell -validate key  -validatecommand "IsTableHex %P 4 $tbl $row $col"
+        	}
+
+	        3 {
+			$w configure -invalidcommand bell -validate key  -validatecommand "IsTableHex %P 2 $tbl $row $col"
+        	}
+        	4 {
+			$w configure -invalidcommand bell -validate key  -validatecommand "IsTableHex %P 2 $tbl $row $col"
+        	}
+        	5 {
+            		$w configure -invalidcommand bell -validate key  -validatecommand "IsTableHex %P 4 $tbl $row $col"
+        	}
+       	 	6 {
+            		$w configure -invalidcommand bell -validate key  -validatecommand "IsTableHex %P 4 $tbl $row $col"
+        	}
+    	}
+
+	return $text
+}
+
+proc EndEdit {tbl row col text} {
+  	switch $col {
+		1 {
+			if {[string length $text] != 16} {
+				bell
+				$tbl rejectinput
+				#return ""
+			} else {
+			}
+        	}
+
+        	2 {
+			if {[string length $text] != 4} {
+				bell
+				$tbl rejectinput
+				#return ""
+			} else {
+			}
+        	}
+
+	        3 {
+			if {[string length $text] != 2} {
+				bell
+				$tbl rejectinput
+				#return ""
+			} else {
+			}
+        	}
+        	4 {
+			if {[string length $text] != 2} {
+				bell
+				$tbl rejectinput
+				#return ""
+			} else {
+			}
+        	}
+        	5 {
+			if {[string length $text] != 4} {
+				bell
+				$tbl rejectinput
+				#return ""
+			} else {
+			}
+        	}
+       	 	6 {
+ 			if {[string length $text] != 4} {
+				bell
+				$tbl rejectinput
+				#return ""
+			} else {
+			}
+        	}
+    	}
+	 return $text
+}
+
+#proc SaveTable {tableWid} {
+#	set size [$tableWid size] ; # SIZE GIVES NO OF ROWS
+#	puts size->$size
+#	#puts "total_row->[expr $size/[$tableWid columncount] ]"
+#}
+
+#proc DiscardTable {tableWid} {
+
+#}

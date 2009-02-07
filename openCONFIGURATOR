@@ -110,6 +110,7 @@ proc initOPN_CFGRATOR {argc argv} {
 	lappend auto_path ..
 	 
 	option add *TitleFrame.font {helvetica 11 bold italic}
+puts "$tcl_platform(platform)"
 	if {"$tcl_platform(platform)" != "windows"} {
 		option add *background #d7d5d3 userDefault
 	}

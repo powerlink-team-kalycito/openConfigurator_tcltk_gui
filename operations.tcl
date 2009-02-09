@@ -1100,21 +1100,21 @@ puts "schCnt->$schCnt"
 	set indexId [string range [$updatetree itemcget $parent -text] end-4 end-1]
 	set subIndexId [string range [$updatetree itemcget $node -text] end-2 end-1]
 	set IndexProp []
-	#for {set cnt 0 } {$cnt <= 5} {incr cnt} {
-	#	puts "\nGetSubIndexAttributes nodeId->$nodeId nodeType->$nodeType indexId->$indexId subIndexId->$subIndexId $cnt\n"
-	#	set tempIndexProp [GetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId 2]
-	#	set ErrCode [ocfmRetCode_code_get [lindex $tempIndexProp 0]]
-	#	puts "ErrCode:$ErrCode"
-	#	if {$ErrCode == 0} {	
-	#		lappend IndexProp [lindex $tempIndexProp 1]
-	#	} else {
-	#		lappend IndexProp []
-	#	}
+	for {set cnt 0 } {$cnt <= 5} {incr cnt} {
+		puts "\nGetSubIndexAttributes nodeId->$nodeId nodeType->$nodeType indexId->$indexId subIndexId->$subIndexId $cnt\n"
+		set tempIndexProp [GetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $cnt]
+		set ErrCode [ocfmRetCode_code_get [lindex $tempIndexProp 0]]
+		puts "ErrCode:$ErrCode"
+		if {$ErrCode == 0} {	
+			lappend IndexProp [lindex $tempIndexProp 1]
+		} else {
+			lappend IndexProp []
+		}
 
-	#}
-	puts "\nGetSubIndexAttributes nodeId->$nodeId nodeType->$nodeType indexId->$indexId subIndexId->$subIndexId 0\n"
-	set tempIndexProp [GetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId 0]
-	lappend IndexProp [lindex $tempIndexProp 1] [] [] [] []
+	}
+	#puts "\nGetSubIndexAttributes nodeId->$nodeId nodeType->$nodeType indexId->$indexId subIndexId->$subIndexId 0\n"
+	#set tempIndexProp [GetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId 0]
+	#lappend IndexProp [lindex $tempIndexProp 1] [] [] [] []
 	##set tempIndexProp [GetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId 5]
 	##lappend IndexProp [lindex $tempIndexProp 1]
 	#lappend IndexProp []
@@ -1243,21 +1243,21 @@ puts "schCnt->$schCnt"
 	#DllExport ocfmRetCode GetIndexAttributes(int NodeID, ENodeType NodeType, char* IndexID, EAttributeType AttributeType,char* AttributeValue) ; # dont pass arguments for Attribute value
 	set indexId [string range [$updatetree itemcget $node -text] end-4 end-1]
 	set IndexProp []
-	#for {set cnt 0 } {$cnt <= 5} {incr cnt} {
-	#	puts "\nGetIndexAttributes nodeId->$nodeId nodeType->$nodeType indexId->$indexId $cnt\n"
-	#	set tempIndexProp [GetIndexAttributes $nodeId $nodeType $indexId 2]
-	#	set ErrCode [ocfmRetCode_code_get [lindex $tempIndexProp 0]]
-	#	puts "ErrCode:$ErrCode"
-	#	if {$ErrCode == 0} {
-	#		lappend IndexProp [lindex $tempIndexProp 1]
-	#	} else {
-	#		lappend IndexProp []
-	#	}
+	for {set cnt 0 } {$cnt <= 5} {incr cnt} {
+		puts "\nGetIndexAttributes nodeId->$nodeId nodeType->$nodeType indexId->$indexId $cnt\n"
+		set tempIndexProp [GetIndexAttributes $nodeId $nodeType $indexId $cnt]
+		set ErrCode [ocfmRetCode_code_get [lindex $tempIndexProp 0]]
+		puts "ErrCode:$ErrCode"
+		if {$ErrCode == 0} {
+			lappend IndexProp [lindex $tempIndexProp 1]
+		} else {
+			lappend IndexProp []
+		}
 
-	#}
-	puts "\nGetIndexAttributes nodeId->$nodeId nodeType->$nodeType indexId->$indexId 0\n"
-	set tempIndexProp [GetIndexAttributes $nodeId $nodeType $indexId 0]
-	lappend IndexProp  [lindex $tempIndexProp 1] [] [] [] []
+	}
+	#puts "\nGetIndexAttributes nodeId->$nodeId nodeType->$nodeType indexId->$indexId 0\n"
+	#set tempIndexProp [GetIndexAttributes $nodeId $nodeType $indexId 0]
+	#lappend IndexProp  [lindex $tempIndexProp 1] [] [] [] []
 	##set tempIndexProp [GetIndexAttributes $nodeId $nodeType $indexId 5]
 	##lappend IndexProp [lindex $tempIndexProp 1]
 	#lappend IndexProp []

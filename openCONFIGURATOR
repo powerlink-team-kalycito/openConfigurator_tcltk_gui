@@ -169,14 +169,14 @@ puts "$tcl_platform(platform)"
 
 
 
-	##################################################################
-  	### Calling Wrapper function
-    	##################################################################
-	load ./Tcl_WrapperMain.so
-	catch {load openCONFIGURATORwrapper.dll openCONFIGURATORwrapper}
+	# Loading shared library
+	if { [catch {load ./Tcl_WrapperMain.so}] } {
+		if {[catch {load openCONFIGURATORwrapper.dll openCONFIGURATORwrapper}]} {
+			tk_messageBox -message "Error loading Shared Library\nCannot proceed\nTry reinstalling the tool" -title Info -icon error
+			exit
+		}
+	}
 	puts "Successfully loaded dll"
-    	##################################################################
-
 
 	InsertTree
 

@@ -263,7 +263,7 @@ proc InterCNWindow {} {
 
 	set titleFrame1 [TitleFrame $winInterCN.titleFrame1 -text "PDO Configuration" ]
 	set titleInnerFrame1 [$titleFrame1 getframe]
-	set frame1 [frame $titleInnerFrame1.fram1 -bg green]
+	set frame1 [frame $titleInnerFrame1.fram1 -padx 5 -pady 5]
 	set frame2 [frame $titleInnerFrame1.fram2]
 	set frame3 [frame $titleInnerFrame1.fram3]
 
@@ -284,7 +284,7 @@ proc InterCNWindow {} {
 	}
 
 	grid config $winInterCN.l_empty1 -row 0 -column 0 -sticky "news"
-	grid config $titleFrame1 -row 1 -column 0 -ipadx 20 -padx 5 -sticky "news"
+	grid config $titleFrame1 -row 1 -column 0 -padx 5 -sticky "news"
 	grid config $winInterCN.l_empty2 -row 2 -column 0 -sticky "news"
 
 	#grid config $titleInnerFrame1 -row 0 -column 0 
@@ -518,7 +518,7 @@ proc AddCNWindow {} {
 		if {$confCn == "off"} {
 			set chk [AddCN $cnName $tmpImpCnDir $nodeId]
 		} else {
-			set chk [AddCN $cnName 0 $nodeId]
+			set chk [AddCN $cnName "" $nodeId]
 		}
 		destroy .addCN
 	}
@@ -748,10 +748,11 @@ proc NewProjectWindow {} {
 		$Editor::projMenu add command -label "Close Project" -command "CloseProject" 
 		$updatetree itemconfigure PjtName -text $tmpPjtName
 		set obj [NodeCreate 240 0]
-		set ErrCode [lindex $obj 0]
-		puts "ErrCode->$ErrCode"
+		set catchErrCode [lindex $obj 0]
+		set ErrCode [ocfmRetCode_code_get $catchErrCode]
+		puts "ErrCode:$ErrCode"
 		if { $ErrCode != 0 } {
-			tk_messageBox -message "ERROR CODE:$ErrCode!\nCannot able to create MN" -title Info -icon info
+			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Info -icon info
 			destroy .newprj
 			return
 		}
@@ -762,19 +763,22 @@ proc NewProjectWindow {} {
 		if {$conf=="off"} {
 
 			#check what is nodeId for mn
-			#API			
-			set catchErrCode [ImportXML "$tmpImpDir" 0 240]
+			#API		
+			#DllExport ocfmRetCode ImportXML(char* fileName, int NodeID, ENodeType NodeType);	
+			set catchErrCode [ImportXML "$tmpImpDir" 240 0]
 			puts "catchErrCode for import in new project->$catchErrCode"
 			set ErrCode [ocfmRetCode_code_get $catchErrCode]
 			puts "ErrCode:$ErrCode"
 			if { $ErrCode != 0 } {
-				#tk_messageBox -message "ErrCode:$ErrCode \n cannot able to import file" -title Info -icon info
-				#destroy .newprj
-				#return
+				tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+				destroy .newprj
+				return
 			}
 			puts "new project nodeIdList->$nodeIdList"
-			$updatetree insert end MN-$mnCount OBD-$mnCount -text "OBD" -open 0 -image [Bitmap::get pdo]
-			Import OBD-$mnCount $tmpImpDir 240 1 [lindex $obj 1] [lindex $obj 2] 
+			#MN will have only one OBD
+			$updatetree insert end MN-$mnCount OBD-$mnCount-1 -text "OBD" -open 0 -image [Bitmap::get pdo]
+			#Import parentNode tmpDir nodeType nodeID 
+			Import OBD-$mnCount-1 $tmpImpDir 0 240  
 		}
 		destroy .newprj
 	}
@@ -921,20 +925,37 @@ proc AddIndexWindow {} {
 		set indexVar [string toupper $indexVar]
 		set node [$updatetree selection get]
 		puts node----->$node
-		########finding obj
-		set nodeList [GetNodeList]			
-		set schCnt [lsearch -exact $nodeList $node]
-		puts  "\n\n AddIndexWindow schCnt->$schCnt=======nodeList->$nodeList \n"
-		#puts "nodeIdList->$nodeIdList"
-		set nodeId [lindex $nodeIdList $schCnt]
-		#set obj [lindex $nodeIdList [expr $schCnt+1]]
-		#puts "obj--->$obj"
-		#set objNode [lindex $nodeIdList [expr $schCnt+2]]
-		#set nodeType 1
-	
-		set child [$updatetree nodes $node]
+
+		#gets the nodeId and Type of selected node
+		set result [GetNodeIdType $node]
+		if {$result != "" } {
+			set nodeId [lindex $result 0]
+			set nodeType [lindex $result 1]
+		} else {
+			#must be some other node this condition should never reach
+			puts "\n\nAddIndexWindow->SHOULD NEVER HAPPEN 1!!\n\n"
+			return
+		}
+
+
+		set nodePos [split $node -]
+		set nodePos [lrange $nodePos 1 end]
+		set nodePos [join $nodePos -]
+
+		if {[string match "18*" $indexVar] || [string match "1A*" $indexVar]} {
+			#it must a TPDO object
+			set child [$updatetree nodes TPDO-$nodePos]
+		} elseif {[string match "14*" $indexVar] || [string match "16*" $indexVar]} {
+			#it must a RPDO object	
+			set child [$updatetree nodes RPDO-$nodePos]
+		} else {
+			set child [$updatetree nodes $node]
+		}	
+
+
 		#puts child->$child
 		set sortChild ""
+		set indexPos 0
 		foreach tempChild $child {
 			if {[string match "PDO*" $tempChild]} {
 				#dont need to add it to list
@@ -942,51 +963,54 @@ proc AddIndexWindow {} {
 				set tail [split $tempChild -]
 				set tail [lindex $tail end]
 				lappend sortChild $tail
+				#find the position where the added index is to be inserted in sorted order in TreeView 
+				#0x is appended so that the input will be considered as hexadecimal number and numerical operation proceeds
+					if {[ expr 0x$indexVar > 0x[string range [$updatetree itemcget $tempChild -text] end-4 end-1] ]} {
+						#since the tree is populated after sorting 
+						incr indexPos
+					} else {
+						#
+					}
 			}
 		}
 
-		#puts sortChild->$sortChild
-		set sortChild [lsort -integer $sortChild]
-		set parent [$updatetree parent $node]
-		if {[string match "OBD*" $node]} {
-			set nodeType 0
-		} else {
-			set nodeType 1
-		}
 
-		#getting the node of last index inserted
+		set sortChild [lsort -integer $sortChild]
 		if {$sortChild == ""} {
 			set count 0
 		} else {
 			set count [expr [lindex $sortChild end]+1 ]
 		}
-		puts count->$count
-		
-		set nodePos [split $node -]
-		set nodePos [lrange $nodePos 1 end]
-		set nodePos [join $nodePos -]
+		puts "indexPos->$indexPos=====count->$count"
 		puts "nodePos---->$nodePos=====nodeType---->$nodeType"
-
 		puts "AddIndex nodeId->$nodeId nodeType->$nodeType indexVar->$indexVar"
-		AddIndex $nodeId $nodeType $indexVar
+		set catchErrCode [AddIndex $nodeId $nodeType $indexVar]
+		puts "catchErrCode->$catchErrCode"
+		set ErrCode [ocfmRetCode_code_get $catchErrCode]
+		puts "ErrCode:$ErrCode"
+		if { $ErrCode != 0 } {
+			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+			destroy .addIdx
+			return
+		}
 
-
-		#set nodeObj($nodePos-$count) [CIndexCollection_getIndex $obj [llength $sortChild]]
-		#set nodeObj(1-$nodePos-$count) [CIndexCollection_getIndexbyIndexValue $obj $indexVar]
 		puts "inc->[llength $sortChild]"
 
-		#$updatetree insert $count $node IndexValue-1-$nodePos-$count -text $indexVar -open 0 -image [Bitmap::get index]
 		set indexName []
 		set indexName [GetIndexAttributes $nodeId $nodeType $indexVar 0]
 		puts "indexName->$indexName"
-		$updatetree insert [llength $sortChild] $node IndexValue-$nodePos-$count -text [lindex $indexName 1]\($indexVar\) -open 0 -image [Bitmap::get index]
-		#previously it was
-		#$updatetree insert $count $node IndexValue-1-$nodePos-$count -text $indexVar -open 0 -image [Bitmap::get index]
-		#set nodeObj(1-$nodePos-$count) [CIndexCollection_getIndex $obj [expr [llength $sortChild]-1]]
-		#no API called for adding Index
 
+		if {[string match "18*" $indexVar] || [string match "1A*" $indexVar]} {
+			#it must a TPDO object
+			$updatetree insert $indexPos TPDO-$nodePos TPdoIndexValue-$nodePos-$count -text [lindex $indexName 1]\($indexVar\) -open 0 -image [Bitmap::get index]
+		} elseif {[string match "14*" $indexVar] || [string match "16*" $indexVar]} {
+			#it must a RPDO object	
+			$updatetree insert $indexPos RPDO-$nodePos RPdoIndexValue-$nodePos-$count -text [lindex $indexName 1]\($indexVar\) -open 0 -image [Bitmap::get index]
+		} else {
+			$updatetree insert $indexPos $node IndexValue-$nodePos-$count -text [lindex $indexName 1]\($indexVar\) -open 0 -image [Bitmap::get index]
+		}
 
-
+		puts "child after adding index ->[$updatetree nodes $node]"
 
 		destroy .addIdx
 	}
@@ -1052,61 +1076,49 @@ proc AddSubIndexWindow {} {
 			set res [tk_messageBox -message "Invalid SubIndex" -type ok -parent .addSidx]
 			return
 		}		
-		#set node [$updatetree selection get]
-		#puts node----->$node
-		#set child [$updatetree nodes $node]
-		#set count [llength $child]
-		#puts count---->$count
-		#set nodePos [split $node -]
-		#set nodePos [lrange $nodePos 1 end]
-		#set nodePos [join $nodePos -]
-		#puts nodePos---->$nodePos
-		#if {$count != -1} {
-		#	$updatetree insert $count $node SubIndexValue-$nodePos-$count -text $subIndexVar -open 0 -image [Bitmap::get subindex]
-		#} else {
-		#	$updatetree insert 0 $node SubIndexValue-$nodePos-0 -text $subIndexVar -open 0 -image [Bitmap::get subindex]
-		#}
-		#destroy .addSidx
 		set subIndexVar [string toupper $subIndexVar]
 		set node [$updatetree selection get]
 		puts node----->$node
 		set indexVar [string range [$updatetree itemcget $node -text] end-4 end-1 ]
 		set indexVar [string toupper $indexVar]
-		########finding obj
-		set parent [$updatetree parent $node]
 
-		set nodeList [GetNodeList]			
-		set schCnt [lsearch -exact $nodeList $parent]
-		puts  "AddSubIndexWindow schCnt->$schCnt=======nodeList->$nodeList======indexVar->$indexVar "
-		puts "nodeIdList->$nodeIdList"
-		set nodeId [lindex $nodeIdList $schCnt]
-		set obj [lindex $nodeIdList [expr $schCnt+1]]
-		puts "obj--->$obj"
-		#set objNode [lindex $nodeIdList [expr $schCnt+2]]
-		if {[string match "OBD*" $parent]} {
-			set nodeType 0
+
+		#gets the nodeId and Type of selected node
+		set result [GetNodeIdType $node]
+		if {$result != "" } {
+			set nodeId [lindex $result 0]
+			set nodeType [lindex $result 1]
 		} else {
-			set nodeType 1
+			#must be some other node this condition should never reach
+			puts "\n\nAddSubIndexWindow->SHOULD NEVER HAPPEN 1!!\n\n"
+			return
 		}
-		
 	
 		set child [$updatetree nodes $node]
 		puts child->$child
+		set subIndexPos 0
 		set sortChild ""
 		foreach tempChild $child {
 			set tail [split $tempChild -]
 			set tail [lindex $tail end]
 			lappend sortChild $tail
+			#find the position where the added index is to be inserted in sorted order in TreeView 
+			#0x is appended so that the input will be considered as hexadecimal number and numerical operation proceeds
+			if {[ expr 0x$subIndexVar > 0x[string range [$updatetree itemcget $tempChild -text] end-2 end-1] ]} {
+				#since the tree is populated after sorting get the count where it is just greater such that it can be inserted properly
+				incr subIndexPos
+			} else {
+				#
+			}
 		}
 
-		#puts sortChild->$sortChild
 		set sortChild [lsort -integer $sortChild]
 		if {$sortChild == ""} {
 			set count 0
 		} else {
 			set count [expr [lindex $sortChild end]+1 ]
 		}
-		puts count->$count
+		puts "count->$count===subIndexPos->$subIndexPos"
 		
 		puts node->$node
 		set nodePos [split $node -]
@@ -1114,26 +1126,27 @@ proc AddSubIndexWindow {} {
 		set nodePos [join $nodePos -]
 		#puts "nodePos---->$nodePos=====nodeType---->$nodeType======nodeId--->$nodeId"
 		puts "AddSubIndex nodeId->$nodeId nodeType->$nodeType indexVar->$indexVar subIndexVar->$subIndexVar"
-		AddSubIndex $nodeId $nodeType $indexVar $subIndexVar
-		#puts "nodeObj($nodePos)->$nodeObj($nodePos)"
-		#set nodeObj($nodePos-$count) [CIndex_getSubIndex $nodeObj($nodePos) $count]
-		puts inc->$count
-		#$updatetree insert $count $node IndexValue-1-$nodePos-$count -text $indexVar -open 0 -image [Bitmap::get index]
-		#$updatetree insert $count $node IndexValue-1-$nodePos-$count -text $indexVar -open 0 -image [Bitmap::get index]
+		set catchErrCode [AddSubIndex $nodeId $nodeType $indexVar $subIndexVar]
+		puts "catchErrCode->$catchErrCode"
+		set ErrCode [ocfmRetCode_code_get $catchErrCode]
+		puts "ErrCode:$ErrCode"
+		if { $ErrCode != 0 } {
+			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+			destroy .addSidx
+			return
+		}
+
 		set subIndexName []
 		set subIndexName [GetSubIndexAttributes $nodeId $nodeType $indexVar $subIndexVar 0]
 		puts "subIndexName->$subIndexName"
-		$updatetree insert $count $node SubIndexValue-$nodePos-$count -text [lindex $subIndexName 1]\($subIndexVar\) -open 0 -image [Bitmap::get subindex]
-		#no API called for adding SubIndex
-		#void AddSubIndex(int NodeID, ENodeType NodeType, char* IndexID, char* SubIndexID);
 
-
-################33for testing##########################
-#puts "\n###test start###"
-#puts [CIndex_getSubIndex $nodeObj($nodePos) 0]
-#puts [CBaseIndex_getIndexValue [CIndex_getSubIndex $nodeObj($nodePos) 0] ]
-#puts "###test End###\n"
-#######################################################
+		if {[string match "TPdo*" $node]} {
+			$updatetree insert $subIndexPos $node TPdoSubIndexValue-$nodePos-$count -text [lindex $subIndexName 1]\($subIndexVar\) -open 0 -image [Bitmap::get subindex]
+		} elseif {[string match "RPdo*" $node]} {
+			$updatetree insert $subIndexPos $node RPdoSubIndexValue-$nodePos-$count -text [lindex $subIndexName 1]\($subIndexVar\) -open 0 -image [Bitmap::get subindex]
+		} else {
+			$updatetree insert $subIndexPos $node SubIndexValue-$nodePos-$count -text [lindex $subIndexName 1]\($subIndexVar\) -open 0 -image [Bitmap::get subindex]
+		}
 
 		destroy .addSidx
 

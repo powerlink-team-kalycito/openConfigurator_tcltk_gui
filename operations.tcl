@@ -86,7 +86,7 @@ set status_run 0
 set cnCount 0
 set mnCount 0
 set nodeIdList ""
-
+set savedValueList ""
 ###############################################################################################
 
 namespace eval Editor {
@@ -545,11 +545,11 @@ proc Editor::create { } {
         	"&Actions" all options 0 {
         		{command "SDO Read/Write" {noFile} "Do SDO Read or Write" {} -command YetToImplement -state disabled}
             		{command "Transfer CDC   Ctrl+F5" {noFile} "Transfer CDC" {} -command TransferCDC }
-            		{command "Transfer XML   Ctrl+F6" {noFile} "Transfer XML" {} -command YetToImplement }
+            		{command "Transfer XML   Ctrl+F6" {noFile} "Transfer XML" {} -command "TransferXML" }
 	    		{separator}
             		{command "Start MN" {noFile} "Start the Managing Node" {} -command YetToImplement }
-            		{command "Stop MN" {noFile} "Transfer CDC" {} -command YetToImplement }
-            		{command "Reconfigure MN" {noFile} "Transfer XML" {} -command YetToImplement }
+            		{command "Stop MN" {noFile} "Stop the Managing Node" {} -command YetToImplement }
+            		{command "Reconfigure MN" {noFile} "Reconfigure the Managing Node" {} -command YetToImplement }
 	    		{separator}
             		{command "Configure SDO connection" {}  "Reserved" {} -command YetToImplement -state disabled}
             		{command "Configure CDC Transfer" {}  "Reserved" {} -command YetToImplement -state disabled}
@@ -591,8 +591,8 @@ proc Editor::create { } {
 	#shortcut keys for project
 	bind . <Key-F7> "BuildProject"
 	bind . <Control-Key-F7> "YetToImplement"
-	bind . <Control-Key-F5> "YetToImplement"
-	bind . <Control-Key-F6> "YetToImplement"
+	bind . <Control-Key-F5> "TransferCDC"
+	bind . <Control-Key-F6> "TransferXML"
 	bind . <Control-Key-f> "FindDynWindow"
 	bind . <Control-Key-F> "FindDynWindow"
 	bind . <KeyPress-Escape> "EscapeTree"
@@ -621,8 +621,10 @@ proc Editor::create { } {
 	set Editor::mnMenu [menu  .mnMenu -tearoff 0]
 	$Editor::mnMenu add command -label "Add CN" -command "AddCNWindow" 
 	$Editor::mnMenu add command -label "Import XDC/XDD" -command "ReImport"
-	$Editor::mnMenu add separator
+	#$Editor::mnMenu add separator
 	$Editor::mnMenu add command -label "Auto Generate" -command {YetToImplement} 
+	$Editor::mnMenu add separator
+	$Editor::mnMenu add command -label "Delete OBD" -command {DeleteTreeNode}
 
 	#############################################################################
 	# Menu for the Project
@@ -735,7 +737,7 @@ proc Editor::create { } {
             	-helptype balloon\
             	-highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
             	-helptext "Transfer XML"\
-    	    	-command "YetToImplement"]
+    	    	-command "TransferXML"]
 	pack $bb_xml -side left -padx 4
 	
 	set sep2 [Separator::create $tb1.sep2 -orient vertical]
@@ -805,10 +807,16 @@ proc Editor::create { } {
 	set pw1 [PanedWindow::create $frame.pw1 -side left]
 	set pane [PanedWindow::add $pw1 ]
 	set pw2 [PanedWindow::create $pane.pw2 -side top]
-	
-	set pane1 [PanedWindow::add $pw2 -minsize 250 ]
+	#set pw3 [PanedWindow::create $pane.pw3 -side right]	 ; #newly added
+	#pack $pw3 -expand yes -fill both ; #newly added
+
+	set pane1 [PanedWindow::add $pw2 -minsize 250]
 	set pane2 [PanedWindow::add $pw2 -minsize 100]
+	#set pane2 [PanedWindow::add $pw3 -minsize 100] ; #newly added
 	set pane3 [PanedWindow::add $pw1 -minsize 100]
+
+#set testframe [frame $pane2.testframe -bg blue] ; #added for test
+#pack $testframe -expand yes -fill both ; #added for test
 
 	set list_notebook [NoteBook::create $pane1.nb]
 	set notebook [NoteBook::create $pane2.nb]	
@@ -831,9 +839,7 @@ proc Editor::create { } {
 	global PjtDir
 	set PjtDir $EditorData(options,History)
 
-	NoteBook::compute_size $list_notebook
-	$list_notebook configure -width 250
-	pack $list_notebook -side left -fill both -expand yes -padx 2 -pady 4
+
 
 	set cf0 [EditManager::create_conWindow $con_notebook "Console" 1]
 	set cf1 [EditManager::create_conWindow $con_notebook "Error" 2]
@@ -843,26 +849,36 @@ proc Editor::create { } {
 	pack $con_notebook -side bottom -fill both -expand yes -padx 4 -pady 4
 
 	pack $pw1 -fill both -expand yes
+	NoteBook::compute_size $list_notebook
+	$list_notebook configure -width 250
+	pack $list_notebook -side left -fill both -expand yes -padx 2 -pady 4
 	catch {font create TkFixedFont -family Courier -size -12 -weight bold}
-	set f0 [EditManager::create_tab $notebook "Index" ind ]
-	set f1 [EditManager::create_tab $notebook "Sub index" sub ]
-	set f2 [EditManager::create_table $notebook "PDO mapping" "pdo"]
-	$f2 columnconfigure 0 -background #e0e8f0 -width 6 -sortmode integer
-	$f2 columnconfigure 1 -background #e0e8f0 -width 23
-	$f2 columnconfigure 2 -background #e0e8f0 -width 11
-	$f2 columnconfigure 3 -background #e0e8f0 -width 11
-	$f2 columnconfigure 4 -background #e0e8f0 -width 11
-	$f2 columnconfigure 5 -background #e0e8f0 -width 11
-	$f2 columnconfigure 6 -background #e0e8f0 -width 11
 
-	NoteBook::compute_size $notebook
-	$notebook configure -width 750
-	pack $notebook -side left -fill both -expand yes -padx 4 -pady 4
+set alignFrame [frame $pane2.alignframe -width 750]
+pack $alignFrame -expand yes -fill both
+
+	set f0 [EditManager::create_tab $alignFrame "Index" ind ]
+	set f1 [EditManager::create_tab $alignFrame "Sub index" sub ]
+	#set f2 [EditManager::create_table $notebook "PDO mapping" "pdo"]
+	set f2 [EditManager::create_table $alignFrame "PDO mapping" "pdo"]
+	[lindex $f2 1] columnconfigure 0 -background #e0e8f0 -width 6 -sortmode integer
+	[lindex $f2 1] columnconfigure 1 -background #e0e8f0 -width 23
+	[lindex $f2 1] columnconfigure 2 -background #e0e8f0 -width 11
+	[lindex $f2 1] columnconfigure 3 -background #e0e8f0 -width 11
+	[lindex $f2 1] columnconfigure 4 -background #e0e8f0 -width 11
+	[lindex $f2 1] columnconfigure 5 -background #e0e8f0 -width 11
+	[lindex $f2 1] columnconfigure 6 -background #e0e8f0 -width 11
+
+	#NoteBook::compute_size $notebook
+	#$notebook configure -width 750
+	#pack $notebook -side left -fill both -expand yes -padx 4 -pady 4
+
+
 	pack $pw2 -fill both -expand yes
 
 	$list_notebook raise objtree
 	$con_notebook raise Console1
-	$notebook raise [lindex $f0 1]
+	#$notebook raise [lindex $f0 1]
 
 	pack $mainframe -fill both -expand yes
 	set prgindic 0
@@ -943,34 +959,60 @@ proc Editor::SingleClickNode {node} {
 	global nodeObj
 	global nodeSelect
 	global nodeIdList
-
+	global savedValueList
 
 	variable notebook
 
 
+#conPuts "$node"
+
 	$updatetree selection set $node
 	set nodeSelect $node
-puts "node====>$node"
+	puts "node====>$node"
+	
+
+	if {[string match "root" $node] || [string match "PjtName" $node] || [string match "MN-*" $node] || [string match "OBD-*" $node] || [string match "CN-*" $node] || [string match "PDO-*" $node]} {
+		#$notebook itemconfigure Page1 -state disabled
+		#$notebook itemconfigure Page2 -state disabled
+		#$notebook itemconfigure Page3 -state disabled
+		pack forget [lindex $f0 1]
+		pack forget [lindex $f1 1]
+		pack forget [lindex $f2 0]
+		return
+	}
+
+	#getting Id and Type of node
+	set result [GetNodeIdType $node]
+	if {$result == ""} {
+		#te node is not an index or a subindex	do nothing
+	} else {
+		# it is index or subindex
+		set nodeId [lindex $result 0]
+		set nodeType [lindex $result 1]
+	}
+
 	if {[string match "TPDO-*" $node] || [string match "RPDO-*" $node]} {
 ##################################################################################################
-		set parent [$updatetree parent $node]
-		set ancestor [$updatetree parent $parent]
-		set nodeList [GetNodeList]			
-		puts "nodeList->$nodeList===nodeIdList->$nodeIdList==ancestor->$ancestor"
-		set schCnt [lsearch -exact $nodeList $ancestor]
-puts "schCnt->$schCnt"
-		set nodeId [lindex $nodeIdList $schCnt]
-		set obj [lindex $nodeIdList [expr $schCnt+1]]
-		#set objNode [lindex $nodeIdList [expr $schCnt+2]]
-		if {[string match "OBD*" $ancestor]} {
-			set nodeType 0
-		} else {
-			set nodeType 1
-		}
+		#these are replaced by function GetNodeIdType
+		##set parent [$updatetree parent $node]
+		##set ancestor [$updatetree parent $parent]
+		##set nodeList [GetNodeList]			
+		##puts "nodeList->$nodeList===nodeIdList->$nodeIdList==ancestor->$ancestor"
+		##set schCnt [lsearch -exact $nodeList $ancestor]
+		##puts "schCnt->$schCnt"
+		##set nodeId [lindex $nodeIdList $schCnt]
+		##set obj [lindex $nodeIdList [expr $schCnt+1]]
+		###set objNode [lindex $nodeIdList [expr $schCnt+2]]
+		##if {[string match "OBD*" $ancestor]} {
+		##	set nodeType 0
+		##} else {
+		##	set nodeType 1
+		##}
 #######################################################################################################
 		set idx [$updatetree nodes $node]
 		set popCount 0 
-		$f2 delete 0 end
+		#$f2 delete 0 end
+		[lindex $f2 1] delete 0 end
 		foreach tempIdx $idx {
 			set indexId [string range [$updatetree itemcget $tempIdx -text] end-4 end-1 ]
 			set sidx [$updatetree nodes $tempIdx]
@@ -1007,28 +1049,49 @@ puts "schCnt->$schCnt"
 					set tempIndexProp [GetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId 4]
 puts "tempIndexPropi PDO ->$tempIndexProp"
 					set IndexDefaultValue [lindex $tempIndexProp 1]
+					#if {$IndexDefaultValue == ""} {
+					#	set IndexDefaultValue 0000000000000000
+					#} else {
+					#	set IndexDefaultValue [expr 0000000000000000 + $IndexDefaultValue]
+					#}
+					#puts "IndexDefaultValue->$IndexDefaultValue"
 					set DataSize [string range $IndexDefaultValue 2 5]
 					set Offset [string range $IndexDefaultValue 6 9]
 					set Reserved [string range $IndexDefaultValue 10 11]
 					set listSubIndex [string range $IndexDefaultValue 12 13]
 					set listIndex [string range $IndexDefaultValue 14 17]
-					$f2 insert $popCount [list $popCount $IndexDefaultValue $listIndex $listSubIndex $Reserved $Offset $DataSize]
+					#$f2 insert $popCount [list $popCount $IndexDefaultValue $listIndex $listSubIndex $Reserved $Offset $DataSize]
+					[lindex $f2 1] insert $popCount [list $popCount $IndexDefaultValue $listIndex $listSubIndex $Reserved $Offset $DataSize]
 					incr popCount 1 
 				}
 ############################################################################################################
 			}
 		}
-		if {[string match "TPDO-*" $node]} {
-			$notebook itemconfigure Page3 -state normal -text "TPDO mapping"
-		} else {
-			$notebook itemconfigure Page3 -state normal -text "RPDO mapping"
-		}
-		$notebook raise Page3
-		$notebook itemconfigure Page1 -state disabled
-		$notebook itemconfigure Page2 -state disabled
+		#if {[string match "TPDO-*" $node]} {
+		#	$notebook itemconfigure Page3 -state normal -text "TPDO mapping"
+		#} elseif {[string match "RPDO-*" $node]} {
+		#	$notebook itemconfigure Page3 -state normal -text "RPDO mapping"
+		#} else {
+		#	puts "\n\n Editor::SingleClickNode-> SHOULD NEVER HAPPEN 1 !!!\n\n"
+		#}
+		#$notebook raise Page3
+		#$notebook itemconfigure Page1 -state disabled
+		#$notebook itemconfigure Page2 -state disabled
+		pack forget [lindex $f0 1]
+		pack forget [lindex $f1 1]
+		pack [lindex $f2 0] -expand yes -fill both -padx 2 -pady 4
 		return 
 	} else {
 	}
+
+	#checking whether value has changed using save. If yes, keep the background
+	#of value and name as yellow. If no, white 
+	if {[lsearch $savedValueList $node] != -1} {
+		set savedBg #fdfdd4
+	} else {
+		set savedBg white
+	}
+
 	if {[string match "*SubIndex*" $node]} {
 		set tmpInnerf0 [lindex $f1 2]
 		set tmpInnerf1 [lindex $f1 3]
@@ -1077,28 +1140,32 @@ puts "tempIndexPropi PDO ->$tempIndexProp"
 		##}
 
 ###############################test########################################
-	##########################################
-	# GetIndexAttributes working. Sample code
-	##########################################
+		##########################################
+		# GetIndexAttributes working. Sample code
+		##########################################
 
-	set parent [$updatetree parent $node]
-	set ancestor [$updatetree parent $parent]
-	set nodeList [GetNodeList]			
-	puts "nodeList->$nodeList===nodeIdList->$nodeIdList==ancestor->$ancestor"
-	set schCnt [lsearch -exact $nodeList $ancestor]
-puts "schCnt->$schCnt"
-	set nodeId [lindex $nodeIdList $schCnt]
-	set obj [lindex $nodeIdList [expr $schCnt+1]]
-	#set objNode [lindex $nodeIdList [expr $schCnt+2]]
-	if {[string match "OBD*" $ancestor]} {
-		set nodeType 0
-	} else {
-		set nodeType 1
-	}
-	# ocfmRetCode GetSubIndexAttributes(int NodeID, ENodeType NodeType, char* IndexID, char* SubIndexID, EAttributeType AttributeType, char* AttributeValue) ; # dont pass arguments for Attribute value
+		###the lines were replaced by function GetNodeIdType
+		###set parent [$updatetree parent $node]
+		###set ancestor [$updatetree parent $parent]
+		###set nodeList [GetNodeList]			
+		###puts "nodeList->$nodeList===nodeIdList->$nodeIdList==ancestor->$ancestor"
+		###set schCnt [lsearch -exact $nodeList $ancestor]
+		###puts "schCnt->$schCnt"
+		###set nodeId [lindex $nodeIdList $schCnt]
+		###set obj [lindex $nodeIdList [expr $schCnt+1]]
+		###set objNode [lindex $nodeIdList [expr $schCnt+2]]
+		###if {[string match "OBD*" $ancestor]} {
+		###	set nodeType 0
+		###} else {
+			###	set nodeType 1
+		###}
+	
+		
+		# ocfmRetCode GetSubIndexAttributes(int NodeID, ENodeType NodeType, char* IndexID, char* SubIndexID, EAttributeType AttributeType, char* AttributeValue) ; # dont pass arguments for Attribute value
 
-	set indexId [string range [$updatetree itemcget $parent -text] end-4 end-1]
 	set subIndexId [string range [$updatetree itemcget $node -text] end-2 end-1]
+	set parent [$updatetree parent $node]
+	set indexId [string range [$updatetree itemcget $parent -text] end-4 end-1]
 	set IndexProp []
 	for {set cnt 0 } {$cnt <= 5} {incr cnt} {
 		puts "\nGetSubIndexAttributes nodeId->$nodeId nodeType->$nodeType indexId->$indexId subIndexId->$subIndexId $cnt\n"
@@ -1120,9 +1187,9 @@ puts "schCnt->$schCnt"
 	#lappend IndexProp []
 	puts "IndexProp->$IndexProp"
 ############################################################################
-set IndexHighLimit []
-set IndexLowLimit []
-set IndexPdoMap []
+		set IndexHighLimit []
+		set IndexLowLimit []
+		set IndexPdoMap []
 		$tmpInnerf0.en_idx1 configure -state normal
 		$tmpInnerf0.en_idx1 delete 0 end
 		$tmpInnerf0.en_idx1 insert 0 $indexId
@@ -1133,56 +1200,60 @@ set IndexPdoMap []
 		$tmpInnerf0.en_sidx1 insert 0 $subIndexId
 		$tmpInnerf0.en_sidx1 configure -state disabled
 
-		$tmpInnerf0.en_nam1 delete 0 end
-		$tmpInnerf0.en_nam1 insert 0 [lindex $IndexProp 0]
+		#$tmpInnerf0.en_nam1 delete 0 end
+		#$tmpInnerf0.en_nam1 insert 0 [lindex $IndexProp 0]
+		#$tmpInnerf0.en_nam1 configure -bg $savedBg
 
-		$tmpInnerf1.en_obj1 configure -state normal
-		$tmpInnerf1.en_obj1 delete 0 end
-		$tmpInnerf1.en_obj1 insert 0 [lindex $IndexProp 1]
-		$tmpInnerf1.en_obj1 configure -state disabled
+		#$tmpInnerf1.en_obj1 configure -state normal
+		#$tmpInnerf1.en_obj1 delete 0 end
+		#$tmpInnerf1.en_obj1 insert 0 [lindex $IndexProp 1]
+		#$tmpInnerf1.en_obj1 configure -state disabled
 
-		$tmpInnerf1.en_data1 configure -state normal
-		$tmpInnerf1.en_data1 delete 0 end
-		$tmpInnerf1.en_data1 insert 0 [lindex $IndexProp 2]
-		$tmpInnerf1.en_data1 configure -state disabled
+		#$tmpInnerf1.en_data1 configure -state normal
+		#$tmpInnerf1.en_data1 delete 0 end
+		#$tmpInnerf1.en_data1 insert 0 [lindex $IndexProp 2]
+		#$tmpInnerf1.en_data1 configure -state disabled
 
-		$tmpInnerf1.en_access1 configure -state normal
-		$tmpInnerf1.en_access1 delete 0 end
-		$tmpInnerf1.en_access1 insert 0 [lindex $IndexProp 3]
-		$tmpInnerf1.en_access1 configure -state disabled
+		#$tmpInnerf1.en_access1 configure -state normal
+		#$tmpInnerf1.en_access1 delete 0 end
+		#$tmpInnerf1.en_access1 insert 0 [lindex $IndexProp 3]
+		#$tmpInnerf1.en_access1 configure -state disabled
 
-		$tmpInnerf1.en_default1 configure -state normal
-		$tmpInnerf1.en_default1 delete 0 end
-		$tmpInnerf1.en_default1 insert 0 [lindex $IndexProp 4]
-		$tmpInnerf1.en_default1 configure -state disabled
+		#$tmpInnerf1.en_default1 configure -state normal
+		#$tmpInnerf1.en_default1 delete 0 end
+		#$tmpInnerf1.en_default1 insert 0 [lindex $IndexProp 4]
+		#$tmpInnerf1.en_default1 configure -state disabled
 
-		$tmpInnerf1.en_value1 configure -validate none 
-		$tmpInnerf1.en_value1 delete 0 end
-		$tmpInnerf1.en_value1 insert 0 [lindex $IndexProp 5]
-		$tmpInnerf1.en_value1 configure -validate key -vcmd "IsDec %P $tmpInnerf1.en_value1"
+		#$tmpInnerf1.en_value1 configure -validate none 
+		#$tmpInnerf1.en_value1 delete 0 end
+		#$tmpInnerf1.en_value1 insert 0 [lindex $IndexProp 5]
+		#$tmpInnerf1.en_value1 configure -validate key -vcmd "IsDec %P $tmpInnerf1.en_value1" -bg $savedBg
 
-		$tmpInnerf1.en_lower1 configure -state normal
-		$tmpInnerf1.en_lower1 delete 0 end
-		$tmpInnerf1.en_lower1 insert 0 $IndexLowLimit
-		$tmpInnerf1.en_lower1 configure -state disabled
+		#$tmpInnerf1.en_lower1 configure -state normal
+		#$tmpInnerf1.en_lower1 delete 0 end
+		#$tmpInnerf1.en_lower1 insert 0 $IndexLowLimit
+		#$tmpInnerf1.en_lower1 configure -state disabled
 
-		$tmpInnerf1.en_upper1 configure -state normal
-		$tmpInnerf1.en_upper1 delete 0 end
-		$tmpInnerf1.en_upper1 insert 0 $IndexHighLimit
-		$tmpInnerf1.en_upper1 configure -state disabled
+		#$tmpInnerf1.en_upper1 configure -state normal
+		#$tmpInnerf1.en_upper1 delete 0 end
+		#$tmpInnerf1.en_upper1 insert 0 $IndexHighLimit
+		#$tmpInnerf1.en_upper1 configure -state disabled
 
-		$tmpInnerf1.en_pdo1 configure -state normal
-		$tmpInnerf1.en_pdo1 delete 0 end
-		$tmpInnerf1.en_pdo1 insert 0 $IndexPdoMap
-		$tmpInnerf1.en_pdo1 configure -state disabled
+		#$tmpInnerf1.en_pdo1 configure -state normal
+		#$tmpInnerf1.en_pdo1 delete 0 end
+		#$tmpInnerf1.en_pdo1 insert 0 $IndexPdoMap
+		#$tmpInnerf1.en_pdo1 configure -state disabled
 
-		$tmpInnerf1.frame1.ra_dec select
-		#set hexDec1 dec
+		#$tmpInnerf1.frame1.ra_dec select
+		##set hexDec1 dec
 
-		$notebook itemconfigure Page2 -state normal
-		$notebook raise Page2
-		$notebook itemconfigure Page1 -state disabled
-		$notebook itemconfigure Page3 -state disabled
+		#$notebook itemconfigure Page2 -state normal
+		#$notebook raise Page2
+		#$notebook itemconfigure Page1 -state disabled
+		#$notebook itemconfigure Page3 -state disabled
+		pack forget [lindex $f0 1]
+		pack [lindex $f1 1] -expand yes -fill both -padx 2 -pady 4
+		pack forget [lindex $f2 0]
 	} elseif {[string match "*Index*" $node]} {
 		set tmpInnerf0 [lindex $f0 2]
 		set tmpInnerf1 [lindex $f0 3]
@@ -1227,107 +1298,174 @@ set IndexPdoMap []
 	##########################################
 	# GetIndexAttributes working. Sample code
 	##########################################
-	set parent [$updatetree parent $node]
-	set nodeList [GetNodeList]			
-	puts "nodeList->$nodeList===nodeIdList->$nodeIdList===parent->$parent"
-	set schCnt [lsearch -exact $nodeList $parent]
-puts "schCnt->$schCnt"
-	set nodeId [lindex $nodeIdList $schCnt]
-	set obj [lindex $nodeIdList [expr $schCnt+1]]
+	#set parent [$updatetree parent $node]
+	#set nodeList [GetNodeList]			
+	#puts "nodeList->$nodeList===nodeIdList->$nodeIdList===parent->$parent"
+	#set schCnt [lsearch -exact $nodeList $parent]
+#puts "schCnt->$schCnt"
+	#set nodeId [lindex $nodeIdList $schCnt]
+	#set obj [lindex $nodeIdList [expr $schCnt+1]]
 	#set objNode [lindex $nodeIdList [expr $schCnt+2]]
-	if {[string match "OBD*" $parent]} {
-		set nodeType 0
-	} else {
-		set nodeType 1
-	}
+	#if {[string match "OBD*" $parent]} {
+	#	set nodeType 0
+	#} else {
+	#	set nodeType 1
+	#}
 	#DllExport ocfmRetCode GetIndexAttributes(int NodeID, ENodeType NodeType, char* IndexID, EAttributeType AttributeType,char* AttributeValue) ; # dont pass arguments for Attribute value
-	set indexId [string range [$updatetree itemcget $node -text] end-4 end-1]
-	set IndexProp []
-	for {set cnt 0 } {$cnt <= 5} {incr cnt} {
-		puts "\nGetIndexAttributes nodeId->$nodeId nodeType->$nodeType indexId->$indexId $cnt\n"
-		set tempIndexProp [GetIndexAttributes $nodeId $nodeType $indexId $cnt]
-		set ErrCode [ocfmRetCode_code_get [lindex $tempIndexProp 0]]
-		puts "ErrCode:$ErrCode"
-		if {$ErrCode == 0} {
-			lappend IndexProp [lindex $tempIndexProp 1]
-		} else {
-			lappend IndexProp []
-		}
 
-	}
-	#puts "\nGetIndexAttributes nodeId->$nodeId nodeType->$nodeType indexId->$indexId 0\n"
-	#set tempIndexProp [GetIndexAttributes $nodeId $nodeType $indexId 0]
-	#lappend IndexProp  [lindex $tempIndexProp 1] [] [] [] []
-	##set tempIndexProp [GetIndexAttributes $nodeId $nodeType $indexId 5]
-	##lappend IndexProp [lindex $tempIndexProp 1]
-	#lappend IndexProp []
-	puts "IndexProp->$IndexProp"
-	#set tempIndexProp [GetIndexAttributes $nodeId $nodeType $indexId 6]
-	#puts "tempIndexProp->$tempIndexProp"
+		###the lines replaced by function GetNodeIdType
+		###set parent [$updatetree parent $node]
+		###set nodeList [GetNodeList]			
+		###puts "nodeList->$nodeList===nodeIdList->$nodeIdList===parent->$parent"
+		###set schCnt [lsearch -exact $nodeList $parent]
+		###puts "schCnt->$schCnt"
+		###set nodeId [lindex $nodeIdList $schCnt]
+		###set obj [lindex $nodeIdList [expr $schCnt+1]]
+		####set objNode [lindex $nodeIdList [expr $schCnt+2]]
+		###if {[string match "OBD*" $parent]} {
+		###	set nodeType 0
+		###} else {
+		###	set nodeType 1
+		###}
+
+		#DllExport ocfmRetCode GetIndexAttributes(int NodeID, ENodeType NodeType, char* IndexID, EAttributeType AttributeType,char* AttributeValue) ; # dont pass arguments for Attribute value
+		set indexId [string range [$updatetree itemcget $node -text] end-4 end-1]
+		set IndexProp []
+		for {set cnt 0 } {$cnt <= 5} {incr cnt} {
+			puts "\nGetIndexAttributes nodeId->$nodeId nodeType->$nodeType indexId->$indexId $cnt\n"
+			set tempIndexProp [GetIndexAttributes $nodeId $nodeType $indexId $cnt]
+			set ErrCode [ocfmRetCode_code_get [lindex $tempIndexProp 0]]
+			puts "ErrCode:$ErrCode"
+			if {$ErrCode == 0} {
+				lappend IndexProp [lindex $tempIndexProp 1]
+			} else {
+				lappend IndexProp []
+			}
+
+		}
+		#puts "\nGetIndexAttributes nodeId->$nodeId nodeType->$nodeType indexId->$indexId 0\n"
+		#set tempIndexProp [GetIndexAttributes $nodeId $nodeType $indexId 0]
+		#lappend IndexProp  [lindex $tempIndexProp 1] [] [] [] []
+		##set tempIndexProp [GetIndexAttributes $nodeId $nodeType $indexId 5]
+		##lappend IndexProp [lindex $tempIndexProp 1]
+		#lappend IndexProp []
+		puts "IndexProp->$IndexProp"
+		#set tempIndexProp [GetIndexAttributes $nodeId $nodeType $indexId 6]
+		#puts "tempIndexProp->$tempIndexProp"
+	
 ############################################################################
-set IndexHighLimit []
-set IndexLowLimit []
-set IndexPdoMap []
+		set IndexHighLimit []
+		set IndexLowLimit []
+		set IndexPdoMap []
 		$tmpInnerf0.en_idx1 configure -state normal
 		$tmpInnerf0.en_idx1 delete 0 end
 		$tmpInnerf0.en_idx1 insert 0 $indexId
 		$tmpInnerf0.en_idx1 configure -state disabled
 
-		$tmpInnerf0.en_nam1 delete 0 end
-		$tmpInnerf0.en_nam1 insert 0 [lindex $IndexProp 0]
+		#$tmpInnerf0.en_nam1 delete 0 end
+		#$tmpInnerf0.en_nam1 insert 0 [lindex $IndexProp 0]
+		#$tmpInnerf0.en_nam1 configure -bg $savedBg
 
-		$tmpInnerf1.en_obj1 configure -state normal
-		$tmpInnerf1.en_obj1 delete 0 end
-		$tmpInnerf1.en_obj1 insert 0 [lindex $IndexProp 1]
-		$tmpInnerf1.en_obj1 configure -state disabled
+		#$tmpInnerf1.en_obj1 configure -state normal
+		#$tmpInnerf1.en_obj1 delete 0 end
+		#$tmpInnerf1.en_obj1 insert 0 [lindex $IndexProp 1]
+		#$tmpInnerf1.en_obj1 configure -state disabled
 
-		$tmpInnerf1.en_data1 configure -state normal
-		$tmpInnerf1.en_data1 delete 0 end
-		$tmpInnerf1.en_data1 insert 0 [lindex $IndexProp 2]
-		$tmpInnerf1.en_data1 configure -state disabled
+		#$tmpInnerf1.en_data1 configure -state normal
+		#$tmpInnerf1.en_data1 delete 0 end
+		#$tmpInnerf1.en_data1 insert 0 [lindex $IndexProp 2]
+		#$tmpInnerf1.en_data1 configure -state disabled
 
-		$tmpInnerf1.en_access1 configure -state normal
-		$tmpInnerf1.en_access1 delete 0 end
-		$tmpInnerf1.en_access1 insert 0 [lindex $IndexProp 3]
-		$tmpInnerf1.en_access1 configure -state disabled
+		#$tmpInnerf1.en_access1 configure -state normal
+		#$tmpInnerf1.en_access1 delete 0 end
+		#$tmpInnerf1.en_access1 insert 0 [lindex $IndexProp 3]
+		#$tmpInnerf1.en_access1 configure -state disabled
 
-		$tmpInnerf1.en_default1 configure -state normal
-		$tmpInnerf1.en_default1 delete 0 end
-		$tmpInnerf1.en_default1 insert 0 [lindex $IndexProp 4]
-		$tmpInnerf1.en_default1 configure -state disabled
+		#$tmpInnerf1.en_default1 configure -state normal
+		#$tmpInnerf1.en_default1 delete 0 end
+		#$tmpInnerf1.en_default1 insert 0 [lindex $IndexProp 4]
+		#$tmpInnerf1.en_default1 configure -state disabled
 
-		$tmpInnerf1.en_value1 configure -validate none 
-		$tmpInnerf1.en_value1 delete 0 end
-		$tmpInnerf1.en_value1 insert 0 [lindex $IndexProp 5]
-		$tmpInnerf1.en_value1 configure -validate key -vcmd "IsDec %P $tmpInnerf1.en_value1"
+		#$tmpInnerf1.en_value1 configure -validate none 
+		#$tmpInnerf1.en_value1 delete 0 end
+		#$tmpInnerf1.en_value1 insert 0 [lindex $IndexProp 5]
+		#$tmpInnerf1.en_value1 configure -validate key -vcmd "IsDec %P $tmpInnerf1.en_value1" -bg $savedBg
 
-		$tmpInnerf1.en_lower1 configure -state normal
-		$tmpInnerf1.en_lower1 delete 0 end
-		$tmpInnerf1.en_lower1 insert 0 $IndexLowLimit
-		$tmpInnerf1.en_lower1 configure -state disabled
+		#$tmpInnerf1.en_lower1 configure -state normal
+		#$tmpInnerf1.en_lower1 delete 0 end
+		#$tmpInnerf1.en_lower1 insert 0 $IndexLowLimit
+		#$tmpInnerf1.en_lower1 configure -state disabled
 
-		$tmpInnerf1.en_upper1 configure -state normal
-		$tmpInnerf1.en_upper1 delete 0 end
-		$tmpInnerf1.en_upper1 insert 0 $IndexHighLimit
-		$tmpInnerf1.en_upper1 configure -state disabled
+		#$tmpInnerf1.en_upper1 configure -state normal
+		#$tmpInnerf1.en_upper1 delete 0 end
+		#$tmpInnerf1.en_upper1 insert 0 $IndexHighLimit
+		#$tmpInnerf1.en_upper1 configure -state disabled
 
-		$tmpInnerf1.en_pdo1 configure -state normal
-		$tmpInnerf1.en_pdo1 delete 0 end
-		$tmpInnerf1.en_pdo1 insert 0 $IndexPdoMap
-		$tmpInnerf1.en_pdo1 configure -state disabled
+		#$tmpInnerf1.en_pdo1 configure -state normal
+		#$tmpInnerf1.en_pdo1 delete 0 end
+		#$tmpInnerf1.en_pdo1 insert 0 $IndexPdoMap
+		#$tmpInnerf1.en_pdo1 configure -state disabled
 
-		$tmpInnerf1.frame1.ra_dec select
+		#$tmpInnerf1.frame1.ra_dec select
 
-		$notebook itemconfigure Page1 -state normal
-		$notebook raise Page1
-		$notebook itemconfigure Page2 -state disabled
-		$notebook itemconfigure Page3 -state disabled
-	} else {
-		$notebook itemconfigure Page1 -state disabled
-		$notebook itemconfigure Page2 -state disabled
-		$notebook itemconfigure Page3 -state disabled
+		#$notebook itemconfigure Page1 -state normal
+		#$notebook raise Page1
+		#$notebook itemconfigure Page2 -state disabled
+		#$notebook itemconfigure Page3 -state disabled
+		pack [lindex $f0 1] -expand yes -fill both -padx 2 -pady 4
+		pack forget [lindex $f1 1]
+		pack forget [lindex $f2 0]
+
 	}
-	set cpAttrVal [new_charp]
+
+	$tmpInnerf0.en_nam1 delete 0 end
+	$tmpInnerf0.en_nam1 insert 0 [lindex $IndexProp 0]
+	$tmpInnerf0.en_nam1 configure -bg $savedBg
+
+	$tmpInnerf1.en_obj1 configure -state normal
+	$tmpInnerf1.en_obj1 delete 0 end
+	$tmpInnerf1.en_obj1 insert 0 [lindex $IndexProp 1]
+	$tmpInnerf1.en_obj1 configure -state disabled
+
+	$tmpInnerf1.en_data1 configure -state normal
+	$tmpInnerf1.en_data1 delete 0 end
+	$tmpInnerf1.en_data1 insert 0 [lindex $IndexProp 2]
+	$tmpInnerf1.en_data1 configure -state disabled
+
+	$tmpInnerf1.en_access1 configure -state normal
+	$tmpInnerf1.en_access1 delete 0 end
+	$tmpInnerf1.en_access1 insert 0 [lindex $IndexProp 3]
+	$tmpInnerf1.en_access1 configure -state disabled
+
+	$tmpInnerf1.en_default1 configure -state normal
+	$tmpInnerf1.en_default1 delete 0 end
+	$tmpInnerf1.en_default1 insert 0 [lindex $IndexProp 4]
+	$tmpInnerf1.en_default1 configure -state disabled
+
+	$tmpInnerf1.en_value1 configure -validate none 
+	$tmpInnerf1.en_value1 delete 0 end
+	$tmpInnerf1.en_value1 insert 0 [lindex $IndexProp 5]
+	$tmpInnerf1.en_value1 configure -validate key -vcmd "IsDec %P $tmpInnerf1.en_value1" -bg $savedBg
+
+	$tmpInnerf1.en_lower1 configure -state normal
+	$tmpInnerf1.en_lower1 delete 0 end
+	$tmpInnerf1.en_lower1 insert 0 $IndexLowLimit
+	$tmpInnerf1.en_lower1 configure -state disabled
+
+	$tmpInnerf1.en_upper1 configure -state normal
+	$tmpInnerf1.en_upper1 delete 0 end
+	$tmpInnerf1.en_upper1 insert 0 $IndexHighLimit
+	$tmpInnerf1.en_upper1 configure -state disabled
+
+	$tmpInnerf1.en_pdo1 configure -state normal
+	$tmpInnerf1.en_pdo1 delete 0 end
+	$tmpInnerf1.en_pdo1 insert 0 $IndexPdoMap
+	$tmpInnerf1.en_pdo1 configure -state disabled
+
+	$tmpInnerf1.frame1.ra_dec select
+
+
+	#set cpAttrVal [new_charp]
 	#set ErrStruct [Tcl_CheckIndexAttribute 1 1 1006 0]
 	#set AttrVal []
 	
@@ -1391,29 +1529,47 @@ proc AddCN {cnName tmpImpDir nodeId} {
 	global cnCount
 	global mnCount
 	global nodeIdList
+
 	incr cnCount
-	set child [$updatetree insert end MN-1 CN-1-$cnCount -text "$cnName" -open 0 -image [Bitmap::get cn]]
 	set obj [NodeCreate $nodeId 1]
-	puts "Add CN obj->$obj"
-	if { [lindex $obj 0] != 0 } {
-		#tk_messageBox -message "ENUM:$catchErrCode!" -title Info -icon info
-		#return
+	puts "\n\nAdd CN obj->$obj"
+	set catchErrCode [lindex $obj 0]
+	set ErrCode [ocfmRetCode_code_get $catchErrCode]
+	if { $ErrCode != 0 } {
+		#tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning]
+		#the node is not created exit from procedure
+		return 
 	}
 	#lappend nodeIdList CN-1-$cnCount
 	lappend nodeIdList $nodeId [lindex $obj 1] [lindex $obj 2]
-	if {$tmpImpDir!= ""} {
+
+	set node [$updatetree selection get]
+	#puts "node->$node"
+	set parentId [split $node -]
+	set parentId [lrange $parentId 1 end]
+	set parentId [join $parentId -]
+
+	if {$tmpImpDir != ""} {
 		#API
-		set catchErrCode [ImportXML "$tmpImpDir" 1 $nodeId]
+		#DllExport ocfmRetCode ImportXML(char* fileName, int NodeID, ENodeType NodeType);
+		set catchErrCode [ImportXML "$tmpImpDir" $nodeId 1]
 		puts "catchErrCode->$catchErrCode"
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
 		puts "ErrCode:$ErrCode"
 		if { $ErrCode != 0 } {
-			#tk_messageBox -message "ErrCode:$ErrCode \n cannot able to import file" -title Info -icon info
-			#return
+			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+			return 
 		}
-		Import CN-1-$cnCount $tmpImpDir 1 $nodeId [lindex $obj 1] [lindex $obj 2]
+
+		set child [$updatetree insert end $node CN-$parentId-$cnCount -text "$cnName" -open 0 -image [Bitmap::get cn]]
+		#Import parentNode tmpDir nodeType nodeID 
+		Import CN-$parentId-$cnCount $tmpImpDir 1 $nodeId 
+
+	} else {
+		#should not import should create GUI
+		set child [$updatetree insert end $node CN-$parentId-$cnCount -text "$cnName" -open 0 -image [Bitmap::get cn]]
 	}
-	return
+	return 
 }
 
 ################################################################################################
@@ -1436,7 +1592,7 @@ proc Editor::TogConnect {} {
 	variable bb_connect
 	set tog [$bb_connect cget -image]
 	#puts $tog
-	#to toggle image the value varies according to images added 
+	#to toggle image, the value varies according to images added 
 	if {$tog == "image15"} {
 		Editor::Connect	       
 	} else {
@@ -1504,7 +1660,7 @@ namespace eval FindSpace {
 #proc FindDynWindow
 #Input       : -
 #Output      : -
-#Description : Displays GUI for Find
+#Description : Displays GUI for Find and add binding for Next
 ################################################################################################
 proc FindDynWindow {} {
 	catch {
@@ -1520,7 +1676,7 @@ proc FindDynWindow {} {
 #proc EscapeTree
 #Input       : -
 #Output      : -
-#Description : Hides GUI for Find
+#Description : Hides GUI for Find and remove binding for Next
 ################################################################################################
 proc EscapeTree {} {
 	catch {
@@ -1947,7 +2103,49 @@ proc TransferCDC {} {
                 return
         }
 	puts fileLocation_CDC:$fileLocation_CDC
-	GenerateCDC $fileLocation_CDC
+	set catchErrCode [GenerateCDC $fileLocation_CDC]
+	puts "catchErrCode->$catchErrCode"
+	set ErrCode [ocfmRetCode_code_get $catchErrCode]
+	puts "ErrCode:$ErrCode"
+	if { $ErrCode != 0 } {
+		tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+		return
+	}
+}
+
+################################################################################################
+#proc TransferXML
+#Input       : -
+#Output      : -
+#Description : Gets location where CDC is to be stored
+################################################################################################
+proc TransferXML {} {
+
+	puts "Geneartexap called"
+	set types {
+        {"All Project Files"     {*.xap } }
+	}
+	########### Before Closing Write the Data to the file ##########
+
+	#set file [tk_getSaveFile -filetypes $filePatternList -initialdir $EditorData(opti	ons,workingDir) \
+        #     -initialfile $filename -defaultextension $defaultExt -title "Save File"]
+
+
+	# Validate filename
+	set fileLocation_XAP [tk_getSaveFile -filetypes $types -title "Generate XAP"]
+        if {$fileLocation_XAP == ""} {
+                return
+        }
+	puts fileLocation_XAP:$fileLocation_XAP
+	set catchErrCode [GenerateXAP $fileLocation_XAP]
+	puts "catchErrCode->$catchErrCode"
+	set ErrCode [ocfmRetCode_code_get $catchErrCode]
+	puts "ErrCode:$ErrCode"
+	if { $ErrCode != 0 } {
+		tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+		return
+	}
+
 }
 
 ################################################################################################
@@ -1972,14 +2170,21 @@ proc ReImport {} {
 	global updatetree
 	global nodeIdList
 
-puts "Reimport nodeIdList->$nodeIdList"
+puts " \n\nReimport" 
+puts "nodeIdList->$nodeIdList"
 
 	set node [$updatetree selection get]
 	if {[string match "MN*" $node]} {
 		set child [$updatetree nodes $node]
 		set tmpNode [string range $node 2 end]
-		set node OBD$tmpNode
-		set res [lsearch $child "*OBD$tmpNode*"]
+		# since a MN has only one so -1 is appended
+		set node OBD$tmpNode-1
+
+		# check whether import is first time or not 
+		#so as to add OBD icon in GUI
+		set res [lsearch $child "OBD$tmpNode-1*"]
+		puts "in reimport res -> $res"
+		puts "child->$child"
 		set obj [lindex $nodeIdList 1]
 		set objNode [lindex $nodeIdList 2]
 		set nodeId 240
@@ -1988,37 +2193,48 @@ puts "Reimport nodeIdList->$nodeIdList"
 		#	$updatetree insert 0 MN$tmpNode OBD$tmpNode -text "OBD" -open 0 -image [Bitmap::get pdo]
 		#}
 	} else {
-		set nodeList ""
+		#set nodeList ""
 		
-		#foreach mnNode [$updatetree nodes PjtName] {
-		#	set chk 1
-		#	foreach cnNode [$updatetree nodes $mnNode] {
-		#		if {$chk == 1} {
-		#			if {[string match "OBD*" $cnNode]} {
-		#				lappend nodeList $cnNode " " " "
-		#			} else {
-		#				lappend nodeList " " " " " " $cnNode " " " "
-		#			}
-		#			set chk 0
-		#		} else {
-		#			lappend nodeList $cnNode " " " "
-		#		}
-		#	}
-		#}
-		set nodeList [GetNodeList]
-		set schCnt [lsearch -exact $nodeList $node]
-puts  "schCnt->$schCnt=======nodeList->$nodeList"
-		set nodeId [lindex $nodeIdList $schCnt]
-		set obj [lindex $nodeIdList [expr $schCnt+1]]
-		set objNode [lindex $nodeIdList [expr $schCnt+2]]
-		set nodeType 1
+		##foreach mnNode [$updatetree nodes PjtName] {
+		##	set chk 1
+		##	foreach cnNode [$updatetree nodes $mnNode] {
+		##		if {$chk == 1} {
+		##			if {[string match "OBD*" $cnNode]} {
+		##				lappend nodeList $cnNode " " " "
+		##			} else {
+		##				lappend nodeList " " " " " " $cnNode " " " "
+		##			}
+		##			set chk 0
+		##		} else {
+		##			lappend nodeList $cnNode " " " "
+		##		}
+		##	}
+		##}
+		#set nodeList [GetNodeList]
+		#set schCnt [lsearch -exact $nodeList $node]
+		#puts  "schCnt->$schCnt=======nodeList->$nodeList"
+		#set nodeId [lindex $nodeIdList $schCnt]
+		#set obj [lindex $nodeIdList [expr $schCnt+1]]
+		#set objNode [lindex $nodeIdList [expr $schCnt+2]]
+		#set nodeType 1
+		#gets the nodeId and Type of selected node
+		set result [GetNodeIdType $node]
+		if {$result != "" } {
+			set nodeId [lindex $result 0]
+			set nodeType [lindex $result 1]
+		} else {
+			#must be some other node this condition should never reach
+			puts "\n\nDeleteTreeNode->SHOULD NEVER HAPPEN\n\n"
+			return
+		}
+
 	}	
 	set cursor [. cget -cursor]
 	set types {
 	        {"XDC Files"     {.xdc } }
 	        {"XDD Files"     {.xdd } }
 	}
-puts  "REimport obj->$obj=====objNode->$objNode"
+	puts  "\n\nREimport"
 	set tmpImpDir [tk_getOpenFile -title "Import XDC" -filetypes $types -parent .]
 	if {$tmpImpDir != ""} {
 		#API 
@@ -2028,19 +2244,23 @@ puts  "REimport obj->$obj=====objNode->$objNode"
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
 		puts "ErrCode:$ErrCode"
 		if { $ErrCode != 0 } {
-			#tk_messageBox -message "ENUM:$catchErrCode!" -title Info -icon info
-			#return
-		}		
+			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+			return
+		}	
 		catch {
 			if { $res == -1} {
-				$updatetree insert 0 MN$tmpNode OBD$tmpNode -text "OBD" -open 0 -image [Bitmap::get pdo]
+				#there can be one OBD in MN so -1 is hardcoded
+				$updatetree insert 0 MN$tmpNode OBD$tmpNode-1 -text "OBD" -open 0 -image [Bitmap::get pdo]
 			}
 		}
 		#catch {FreeNodeMemory $node} ; # no need to free memory
 		catch {$updatetree delete [$updatetree nodes $node]}
 		$updatetree itemconfigure $node -open 0
-		Import $node $tmpImpDir $nodeId $nodeType $obj $objNode 
+		#Import parentNode tmpDir nodeType nodeID 
+		Import $node $tmpImpDir $nodeType $nodeId 
 	}
+	puts "**********\n"
+
 } 
 
 ################################################################################################
@@ -2055,12 +2275,42 @@ proc DeleteTreeNode {} {
 	global nodeIdList
 	global nodeObj	
 	puts nodeIdList->$nodeIdList
+
 	set nodeList ""
 	set node [$updatetree selection get]
-	if { [string match "PjtName" $node] || [string match "MN*" $node] || [string match "PDO*" $node]|| [string match "?PDO*" $node] } {
+	
+	if { [string match "PjtName" $node] || [string match "PDO*" $node]|| [string match "?PDO*" $node] } {
 		#should not delete when pjt, mn, pdo, tpdo or rpdo is selected 
 		return
 	}
+	if {[string match "MN*" $node]} {
+		set nodePos [split $node -]
+		set nodePos [lrange $nodePos 1 end]
+		set nodePos [join $nodePos -]
+
+		# always OBD node ends with -1
+		set node OBD-$nodePos-1
+		puts "DeleteTreeNode:::::node->$node"
+
+		set exist [$updatetree exists $node]	
+		if {$exist} { 
+			#has OBD node continue processing
+		} else {
+			#does not have any OBD exit from procedure		
+			return
+		}
+	}
+	#gets the nodeId and Type of selected node
+	set result [GetNodeIdType $node]
+	if {$result != "" } {
+		set nodeId [lindex $result 0]
+		set nodeType [lindex $result 1]
+	} else {
+		#must be some other node this condition should never reach
+		puts "\n\nDeleteTreeNode->SHOULD NEVER HAPPEN\n\n"
+		return
+	}
+	
 	#procedure GetNodeList does following fun
 	#foreach mnNode [$updatetree nodes PjtName] {
 	#	set chk 1
@@ -2090,31 +2340,39 @@ proc DeleteTreeNode {} {
 			}
    		}	
 		puts "is a node"
-		set schCnt [lsearch -exact $nodeList $node]
-		set nodeId [lindex $nodeIdList $schCnt]
-		#set incNodPos [expr $nodePos+1]
-		#puts "nodeId->$nodeId..."
-		#set nodeList [DeleteList $nodeList $node]
+		#set schCnt [lsearch -exact $nodeList $node]
+		#set nodeId [lindex $nodeIdList $schCnt]
+		##set incNodPos [expr $nodePos+1]
+		##puts "nodeId->$nodeId..."
+		##set nodeList [DeleteList $nodeList $node]
 		
-		#set nodeList [lrange $nodeList $incNodPos end]
-		#set nodeIdList [lrange $nodeIdList $incNodPos end]
+		##set nodeList [lrange $nodeList $incNodPos end]
+		##set nodeIdList [lrange $nodeIdList $incNodPos end]
 
 
-		if {[string match "OBD*" $node]} {
-			#should not delete nodeId, obj, objNode from list since it is mn
-			set nodeType 0
-			#$updatetree delete $node
-		} else {
-			set nodeType 1
-		
-		}
+		#if {[string match "OBD*" $node]} {
+		#	#should not delete nodeId, obj, objNode from list since it is mn
+		#	set nodeType 0
+		#	#$updatetree delete $node
+		#} else {
+		#	set nodeType 1
+		#}
 		#EConfiuguratorErrors DeleteNode(int NodeID, ENodeType NodeType);
-		puts "DeleteNode nodeId->$nodeId nodeType->$nodeType"
-		set catchErrCode [DeleteNode $nodeId $nodeType]
-		if { $catchErrCode != 0 } {
-			#tk_messageBox -message "ENUM:$catchErrCode!" -title Info -icon info
-			#return
+
+		if {$nodeType == 0} {
+			#it is a MN so clear up the memory
+			#ocfmRetCode DeleteMNObjDict(int NodeID);
+			puts "DeleteMNObjDict nodeId->$nodeId"
+			set catchErrCode [DeleteMNObjDict $nodeId ]
+		} elseif {$nodeType == 1} {
+			#it is a CN so delete the node entirely
+			puts "DeleteNode nodeId->$nodeId nodeType->$nodeType"
+			set catchErrCode [DeleteNode $nodeId $nodeType]
+		} else {
+			puts "\n\n\tDeleteTreeNode:invalid nodeType->$nodeType"
+			return
 		}
+
 		#freeing memory
 		if {[string match "OBD*" $node]} {
 			#should not delete nodeId, obj, objNode from list since it is mn
@@ -2168,70 +2426,90 @@ proc DeleteTreeNode {} {
 
 		#SharedLib delete cn node
 	} else {
+	
+		set res []
 		set idxNode [$updatetree selection get]
 		if {[string match "*SubIndexValue*" $node]} {
+			#gets SubIndexId of selected node
 			set sidx [string range [$updatetree itemcget $node -text] end-2 end-1 ]
 			puts sidx->$sidx
+
+			#gets the IndexId of selected SubIndex
 			set idxNode [$updatetree parent $node]
-		} elseif {[string match "*IndexValue*" $node]} {
-			#freeing the memory
-		} else {
-			puts "DeleteTreeNode->Invalid cond 1"
-		}
-		set idx [string range [$updatetree itemcget $idxNode -text] end-4 end-1 ]
-		puts idx->$idx
- 		set child $idxNode
-		if {[string match "*Pdo*" $node]} {	
-			set temppdo [$updatetree parent $idxNode]
-			set child [$updatetree parent $temppdo]	
-		}
-		puts child->$child
-		set paren [$updatetree parent $child]
-		puts paren->$paren
-		if {[string match "OBD*" $paren]} {	
-			#since it is a mn
-			set nodeId 240
-			set nodeType 0
-			puts "it is a MN"
-		} else {
-			#it is a cn
-			set nodeId [lsearch -exact $nodeList $paren]
-			set nodeId [lindex $nodeIdList $nodeId]
-			puts nodeId->$nodeId
-			set nodeType 1
-		}		
-		if {[string match "*SubIndexValue*" $node]} {
-			puts "SharedLib delete sub index"
-			puts "DeleteSubIndex $nodeId $nodeType $idx $sidx"
+			set idx [string range [$updatetree itemcget $idxNode -text] end-4 end-1 ]
+
+			puts "\n    DeleteSubIndex $nodeId $nodeType $idx $sidx\n"
 			set catchErrCode [DeleteSubIndex $nodeId $nodeType $idx $sidx]
-puts "catchErrCode->$catchErrCode"
-#puts "getRetValue->[ocfmRetValError_getRetValue $catchErrCode]"
-#puts "getErrorCode->[ocfmRetValError_getErrorCode $catchErrCode]"
-			if {$catchErrCode == 0} {
-				#tk_messageBox -message "ENUM:$catchErrCode!" -title Info -icon info
-				#return
-			}
 		} elseif {[string match "*IndexValue*" $node]} {
-			puts "SharedLib delete index"
-			puts "DeleteIndex $nodeId $nodeType $idx"
-			#set errorString []		
+			#gets the IndexId of selected Index			
+			set idx [string range [$updatetree itemcget $idxNode -text] end-4 end-1 ]
+			puts "\n      DeleteIndex $nodeId $nodeType $idx\n"
 			set catchErrCode [DeleteIndex $nodeId $nodeType $idx]
-puts "catchErrCode->$catchErrCode"
-#puts "getRetValue->[ocfmRetValError_getRetValue $catchErrCode]"
-#puts "getErrorCode->[ocfmRetValError_getErrorCode $catchErrCode]"
-			if {$catchErrCode != 0} {
-				#tk_messageBox -message "ENUM:$catchErrCode!" -title Info -icon info
-				#return
-			}
-			#no need to free menmory bcoz didnt create it	
-	 		#foreach childIdx [$updatetree nodes $node] {	
-			#	set tmpSplit [split $childIdx -]
-			#	set xdcId [lrange $tmpSplit 1 end]
-			#	set xdcId [join $xdcId -]
-			#	#puts -nonewline "$xdcId  "
-			#	unset nodeObj($xdcId)
-			#}		
+		} else {
+			puts "\n\n       DeleteTreeNode->Invalid cond 2!!!\n\n"
+			return
 		}
+	
+		#gets the IndexId
+		#set idx [string range [$updatetree itemcget $idxNode -text] end-4 end-1 ]
+		#puts idx->$idx
+ 		#set child $idxNode
+	
+		#If the Index or SubIndex is inside TPDO or RPDO set paren to PDO node
+		#which is a hild to mMN or CN node
+		###if {[string match "*Pdo*" $node]} {	
+		###	set temppdo [$updatetree parent $idxNode]
+		###	set child [$updatetree parent $temppdo]	
+		###}
+		###puts child->$child
+		###set paren [$updatetree parent $child]
+		###puts paren->$paren
+
+		#
+		###if {[string match "OBD*" $paren]} {	
+		###	#since it is a mn
+		###	set nodeId 240
+		###	set nodeType 0
+		###	puts "it is a MN"
+		###} else {
+		###	#it is a cn
+		###	set nodeId [lsearch -exact $nodeList $paren]
+		###	set nodeId [lindex $nodeIdList $nodeId]
+		###	puts nodeId->$nodeId
+		###	set nodeType 1
+		###}		
+		##if {[string match "*SubIndexValue*" $node]} {
+		##	puts "SharedLib delete sub index"
+		##	puts "DeleteSubIndex $nodeId $nodeType $idx $sidx"
+		##	set catchErrCode [DeleteSubIndex $nodeId $nodeType $idx $sidx]
+		##	puts "catchErrCode->$catchErrCode"
+		##	#puts "getRetValue->[ocfmRetValError_getRetValue $catchErrCode]"
+		##	#puts "getErrorCode->[ocfmRetValError_getErrorCode $catchErrCode]"
+		##	if {$catchErrCode == 0} {
+		##		#tk_messageBox -message "ENUM:$catchErrCode!" -title Info -icon info
+		##		#return
+		##	}
+		##} elseif {[string match "*IndexValue*" $node]} {
+		##	puts "SharedLib delete index"
+		##	puts "DeleteIndex $nodeId $nodeType $idx"
+		##	#set errorString []		
+		##	set catchErrCode [DeleteIndex $nodeId $nodeType $idx]
+		##	puts "catchErrCode->$catchErrCode"
+		##	#puts "getRetValue->[ocfmRetValError_getRetValue $catchErrCode]"
+		##	#puts "getErrorCode->[ocfmRetValError_getErrorCode $catchErrCode]"
+		##	if {$catchErrCode != 0} {
+		##		#tk_messageBox -message "ENUM:$catchErrCode!" -title Info -icon info
+		##		#return
+		##	}
+		##	#no need to free menmory bcoz didnt create it	
+	 	##	#foreach childIdx [$updatetree nodes $node] {	
+		##	#	set tmpSplit [split $childIdx -]
+		##	#	set xdcId [lrange $tmpSplit 1 end]
+		##	#	set xdcId [join $xdcId -]
+		##	#	#puts -nonewline "$xdcId  "
+		##	#	unset nodeObj($xdcId)
+		##	#}		
+		##}
 		
 		# no need to free memory
 		#set tmpSplit [split $node -]
@@ -2239,9 +2517,19 @@ puts "catchErrCode->$catchErrCode"
 		#set xdcId [join $xdcId -]
 		#unset nodeObj($xdcId) ; #no need to free menmory bcoz didnt create it
 	}
+
+	puts "catchErrCode->$catchErrCode"
+	set ErrCode [ocfmRetCode_code_get $catchErrCode]
+	puts "ErrCode:$ErrCode"
+	if { $ErrCode != 0 } {
+		tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+		return
+	}
+
 	set parent [$updatetree parent $node]
 	set nxtSelList [$updatetree nodes $parent]
 
+	# to highlight the next logical node after the deleted node
 	if {[llength $nxtSelList] == 1} {
 		#it is the only node so select parent
 		$updatetree selection set $parent
@@ -2257,6 +2545,8 @@ puts "catchErrCode->$catchErrCode"
 		}
 			catch {set nxtSel [lindex $nxtSelList $nxtSelCnt] }
 			catch {$updatetree selection set $nxtSel}
+			#should display content of currently highlighted node after deleting
+			Editor::SingleClickNode $nxtSel
 	}
 	$updatetree delete $node
 	#puts "*************$xdcId"
@@ -2295,21 +2585,32 @@ proc DeleteList {tempList deleteVar} {
 #Description : creates an object for node
 ################################################################################################
 proc NodeCreate {NodeID NodeType} {
+
+puts "\n\n      NodeCreate"
+
+
+
+
 	set objNode [new_CNode]
 	set objNodeCollection [new_CNodeCollection]
 	set objNodeCollection [CNodeCollection_getNodeColObjectPointer]
 	#puts "errorString->$errorString...NodeType->$NodeType...NodeID->$NodeID..."
 	puts $NodeType
 	set catchErrCode [new_ocfmRetCode]
+	puts "CreateNode NodeID->$NodeID NodeType->$NodeType"
 	set catchErrCode [CreateNode $NodeID $NodeType]
 	puts "catchErrCode->$catchErrCode"
 	set ErrCode [ocfmRetCode_code_get $catchErrCode]
 	puts "ErrCode:$ErrCode"
-
 	if { $ErrCode != 0 } {
-		#tk_messageBox -message "ENUM:$catchErrCode!" -title Info -icon info
-		return [list $ErrCode " " " "]
+		puts "ErrStr:[ocfmRetCode_errorString_get $catchErrCode]"
+		tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+		return [list $catchErrCode " " " "]
 	}
+
+	#set ErrStr [new_charp]
+	#set ErrStr [ocfmRetCode_errorString_get $catchErrCode]
+	#puts "ErrStr:$ErrStr"
 	set objNode [new_CNode]
 	set obj [new_CIndexCollection]
 	set objNode [CNodeCollection_getNode $objNodeCollection $NodeType $NodeID]
@@ -2318,7 +2619,42 @@ proc NodeCreate {NodeID NodeType} {
 	#currntly works only for windows
 	#set obj [CNode_getIndexCollectionWithoutPDO $objNode]
 	puts "NodeCreate :::  obj->$obj====objNode->$objNode=====objNodeCollection->$objNodeCollection"
-	return [list $ErrCode $obj $objNode]
+
+
+##########################test remove later#############################
+#puts "\n********"
+#set NodePos [new_intp]
+##puts "NodePos->$NodePos"
+#set catchErrCode [IfNodeExists 1 1 $NodePos] ;# set catchErrCode [IfNodeExists 240 0 $NodePos]
+##set catchErrCode [IfIndexExists 1 1 2000 $NodePos] ;# set catchErrCode [IfNodeExists 240 0 $NodePos]
+#puts "catchErrCode->$catchErrCode"
+
+#set testErrCode [ocfmRetCode_code_get $catchErrCode ]
+#puts "testErrCode->$testErrCode \n\n"
+##set ErrCode [charp_value $ErrCode]
+#set testErrStr [ocfmRetCode_errorString_get $catchErrCode ]
+
+#puts "testErrStr->$testErrStr"
+#puts "********\n"
+#########################################################################
+
+######for test remove later###########
+#set catchErrCode [CreateNode $NodeID $NodeType]
+#puts "\n \n catchErrCode->$catchErrCode"
+#set ErrStr [ocfmRetCode_errorString_get $catchErrCode ]
+##set ErrCode [charp_value $ErrCode]
+#puts "ErrStr->$ErrStr"
+#set ErrCode [ocfmRetCode_code_get $catchErrCode ]
+#puts "ErrCode->$ErrCode \n\n"
+		#set tempIndexProp [GetSubIndexAttributes 1 1 1000 01 0]
+		#puts "tempIndexProp:$tempIndexProp"
+		#set ErrCode [ocfmRetCode_code_get [lindex $tempIndexProp 0]]
+		#puts "ErrCode:$ErrCode"
+		#set ErrStr [new_charp]
+		#puts "[charp_value $ErrCode]"
+#########################################
+puts "*****************\n\n"
+	return [list $catchErrCode $obj $objNode]
 }
 
 ################################################################################################
@@ -2329,6 +2665,7 @@ proc NodeCreate {NodeID NodeType} {
 ################################################################################################
 proc GetNodeList {} {
 	global updatetree
+
 	foreach mnNode [$updatetree nodes PjtName] {
 		set chk 1
 		foreach cnNode [$updatetree nodes $mnNode] {
@@ -2346,6 +2683,65 @@ proc GetNodeList {} {
 	}
 
 	return $nodeList
+}
+################################################################################################
+#proc GetNodeIdType
+#Input       : node
+#Output      : node Id and nodeType
+#Description : 
+################################################################################################
+proc GetNodeIdType {node} {
+	global updatetree
+	global nodeIdList
+
+	puts node->$node
+	if {[string match "*SubIndex*" $node]} {
+		set parent [$updatetree parent [$updatetree parent $node]]
+		if {[string match "?Pdo*" $node]} {
+			#it must be subindex in TPDO orRPDO
+			set parent [$updatetree parent [$updatetree parent $parent]]
+		} else {
+			#must be subindex which is not a TPDO or RPDO
+		}
+	} elseif {[string match "*Index*" $node]} {
+		set parent [$updatetree parent $node]
+		if {[string match "?Pdo*" $node]} {
+			#it must be index in TPDO or RPDO
+			set parent [$updatetree parent [$updatetree parent $parent]]
+		} else {
+			#must be index which is not a TPDO or RPDO
+		}
+	} elseif {[string match "TPDO-*" $node] || [string match "RPDO-*" $node]} {
+		#it must be either TPDO or RPDO
+		set parent [$updatetree parent $node]
+		set parent [$updatetree parent $parent]
+
+	} elseif {[string match "OBD-*" $node] || [string match "CN-*" $node]} {
+		set parent $node
+	} else {
+		#must be root, PjtName or PDO
+		puts "\n\n  GetNodeIdType->must be root, PjtNmae or PDO passed node->$node\n\n"  
+		return
+	}
+
+	puts "parent->$parent"
+	set nodeList []
+	set nodeList [GetNodeList]
+	set searchCount [lsearch -exact $nodeList $parent ]
+	#puts  "searchCount->$searchCount=======nodeList->$nodeList"
+	set nodeId [lindex $nodeIdList $searchCount]
+	#set obj [lindex $nodeIdList [expr $searchCount+1]]
+	#set objNode [lindex $nodeIdList [expr $searchCount+2]]
+	if {[string match "OBD*" $parent]} {
+		#it must be a mn
+		set nodeType 0
+	} else {
+		#it must be cn
+		set nodeType 1
+	}
+	puts "GetNodeIdType->nodeId$nodeId===nodeType->$nodeType"
+	return [list $nodeId $nodeType]
+
 }
 
 ################################################################################################

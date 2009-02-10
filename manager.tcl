@@ -86,8 +86,12 @@ proc EditManager::create_tab {nb filename choice} {
     	global tmpValue$_newPageCounter
     	#global hexDec$_newPageCounter
 	global hexDec1
-    	set pageName "Page$_newPageCounter"
-    	set frame [$nb insert end $pageName -text $filename ]
+    	set pageName "page$_newPageCounter"
+    	#set frame [$nb insert end $pageName -text $filename ]
+
+	set outerFrame [frame $nb.$pageName -relief raised -borderwidth 1 ] ; #newly added
+	set frame [frame $outerFrame.frame -relief flat -borderwidth 10  ] ; #newly added
+	pack $frame -expand yes -fill both ; #newly added
 
     	set sw [ScrolledWindow $frame.sw]
     	pack $sw -fill both -expand true
@@ -199,8 +203,8 @@ proc EditManager::create_tab {nb filename choice} {
    	grid config $fram.b_dis -row 1 -column 2 -sticky s
    	pack $fram -side bottom
 
-    	$nb itemconfigure $pageName -state disabled
-    	return [list $uf $pageName $tabInnerf0 $tabInnerf1 ]
+    	#$nb itemconfigure $pageName -state disabled
+    	return [list $uf $outerFrame $tabInnerf0 $tabInnerf1 ]
 }
 
 ###############################################################################################
@@ -215,10 +219,14 @@ proc EditManager::create_table {nb filename choice} {
     	variable _newPageCounter
     
     	incr _newPageCounter
-    	set pageName "Page$_newPageCounter"
-    	set frame [$nb insert end $pageName -text $filename ]
+    	set pageName "page$_newPageCounter"
+    	#set frame [$nb insert end $pageName -text $filename ]
 
-    	set sw [ScrolledWindow $frame.sw]
+	set outerFrame [frame $nb.$pageName -relief raised -borderwidth 1 ] ; #newly added
+	set frame [frame $outerFrame.frame -relief flat -borderwidth 10  ] ; #newly added
+	pack $frame -expand yes -fill both ; #newly added
+
+    	set sw [ScrolledWindow $frame.sw ]
     	pack $sw -fill both -expand true
     	set st $frame.st
 
@@ -248,7 +256,7 @@ proc EditManager::create_table {nb filename choice} {
     	} elseif {$choice == "pdo"} {
 
 
-tablelist::addBWidgetEntry
+	#tablelist::addBWidgetEntry
 
 		set st [tablelist::tablelist $st \
 	    		-columns {0 "No" left
@@ -278,23 +286,23 @@ tablelist::addBWidgetEntry
 
     	$sw setwidget $st
     	pack $st -fill both -expand true
-    	$nb itemconfigure $pageName -state disabled
+    	#$nb itemconfigure $pageName -state disabled
     	$st configure -height 4 -width 40 -stretch all	
 
-   	#set fram [frame $frame.f1]  
-   	#label $fram.l_empty -text "  " -height 1 
-   	#button $fram.b_sav -text " Save " -command "SaveTable $st"
-   	#label $fram.l_empty1 -text "  "
-   	#button $fram.b_dis -text "Discard" -command "DiscardTable $st"
-   	#grid config $fram.l_empty -row 0 -column 0 -columnspan 2
-   	#grid config $fram.b_sav -row 1 -column 0 -sticky s
-   	#grid config $fram.l_empty1 -row 1 -column 1 -sticky s
-   	#grid config $fram.b_dis -row 1 -column 2 -sticky s
-   	#pack $fram -side bottom
+   	set fram [frame $frame.f1]  
+   	label $fram.l_empty -text "  " -height 1 
+   	button $fram.b_sav -text " Save " -command "SaveTable $st"
+   	label $fram.l_empty1 -text "  "
+   	button $fram.b_dis -text "Discard" -command "DiscardTable $st"
+   	grid config $fram.l_empty -row 0 -column 0 -columnspan 2
+   	grid config $fram.b_sav -row 1 -column 0 -sticky s
+   	grid config $fram.l_empty1 -row 1 -column 1 -sticky s
+   	grid config $fram.b_dis -row 1 -column 2 -sticky s
+   	pack $fram -side top
 
-    	$nb itemconfigure $pageName -state disabled
+    	#$nb itemconfigure $pageName -state disabled
 
-    	return  $st
+    	return  [list $outerFrame $st]
 }
 
 ###############################################################################################
@@ -473,49 +481,33 @@ proc SaveValue {frame0 frame1} {
 	#global nodeObj
 	global nodeIdList
 	global updatetree
+	global savedValueList ; #this list contains Nodes whose value are changed using save option
 
 	puts "\n\n   SaveValue \n"
 
-	#puts "nodeSelect->$nodeSelect"
-	#puts "nodeObj->$nodeObj"
-	
-	#set tmpSplit [split $nodeSelect -]
-	#set tmpNodeSelect [lrange $tmpSplit 1 end]
-	#set tmpNodeSelect [join $tmpNodeSelect -]
-
-	#puts "tmpNodeSelect->$tmpNodeSelect"
-	#puts "nodeObj->$nodeObj($tmpNodeSelect)"
 	set oldName [$updatetree itemcget $nodeSelect -text]
 	if {[string match "*SubIndexValue*" $nodeSelect]} {
-		#set sIdxValue [CBaseIndex_getIndexValue $nodeObj($tmpNodeSelect)]
 		set subIndexId [string range $oldName end-2 end-1]
 		set subIndexId [string toupper $subIndexId]
 		set parent [$updatetree parent $nodeSelect]
 		set indexId [string range [$updatetree itemcget $parent -text ] end-4 end-1]
 		set indexId [string toupper $indexId]
-		#set indexId [string range[$updatetree itemcget $parent -text] end-5 end]
-		set parent [$updatetree parent $parent]	
 		set oldName [string range $oldName end-3 end ]
-		#set subIndexId $oldName
 	} else {
 		set indexId [string range $oldName end-4 end-1 ]
 		set indexId [string toupper $indexId]
-		set parent [$updatetree parent $nodeSelect]
 		set oldName [string range $oldName end-5 end ]
-		set oldName $oldName
 	}
-	set nodeList [GetNodeList]
-	set schCnt [lsearch -exact $nodeList $parent ]
-	#puts  "schCnt->$schCnt=======nodeList->$nodeList"
-	set nodeId [lindex $nodeIdList $schCnt]
-	#set obj [lindex $nodeIdList [expr $schCnt+1]]
-	#set objNode [lindex $nodeIdList [expr $schCnt+2]]
-	if {[string match "OBD*" $parent]} {
-		#it must be a mn
-		set nodeType 0
+
+	#gets the nodeId and Type of selected node
+	set result [GetNodeIdType $nodeSelect]
+	if {$result != "" } {
+		set nodeId [lindex $result 0]
+		set nodeType [lindex $result 1]
 	} else {
-		#it must be cn
-		set nodeType 1
+		#must be some other node this condition should never reach
+		puts "\n\nSaveValue->SHOULD NEVER HAPPEN 1!!\n\n"
+		return
 	}
 
 
@@ -552,19 +544,37 @@ proc SaveValue {frame0 frame1} {
 
 	set value [string toupper $value]
 	if {[string match "*SubIndexValue*" $nodeSelect]} {
-		#DllExport EConfiuguratorErrors EditSubIndex(int NodeID, ENodeType NodeType, char* IndexID, char* SubIndexID, char* IndexValue, char* IndexName);
+		#DllExport ocfmRetCode SetSubIndexAttributes(int NodeID, ENodeType NodeType, char* IndexID, char* SubIndexID, char* IndexValue, char* IndexName);
 		puts "SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName"
-		SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName
+		set catchErrCode [SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName]
+		puts "catchErrCode->$catchErrCode"
+		set ErrCode [ocfmRetCode_code_get $catchErrCode]
+		puts "ErrCode:$ErrCode"
+		if { $ErrCode != 0 } {
+			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+			return
+		}
 	} elseif {[string match "*IndexValue*" $nodeSelect]} {
-		#DllExport EConfiuguratorErrors EditIndex(int NodeID, ENodeType NodeType, char* IndexID, char* IndexValue, char* IndexName);
+		#DllExport ocfmRetCode SetIndexAttributes(int NodeID, ENodeType NodeType, char* IndexID, char* IndexValue, char* IndexName);
 		puts "SetIndexAttributes $nodeId $nodeType $indexId $value $newName"
-		SetIndexAttributes $nodeId $nodeType $indexId $value $newName
+		set catchErrCode [SetIndexAttributes $nodeId $nodeType $indexId $value $newName]
+		puts "catchErrCode->$catchErrCode"
+		set ErrCode [ocfmRetCode_code_get $catchErrCode]
+		puts "ErrCode:$ErrCode"
+		if { $ErrCode != 0 } {
+			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+			return
+		}
 	} else {
 		puts "\n\n\nSaveValue->Should Never Happen 2!!!\n\n\n"
 	}
 	set newName [append newName $oldName]
 	puts "newName->$newName"
 	$updatetree itemconfigure $nodeSelect -text $newName
+	lappend savedValueList $nodeSelect
+	$frame0.en_nam1 configure -bg #fdfdd4
+	$frame1.en_value1 configure -bg #fdfdd4
+	puts "savedValueList->$savedValueList"
 }
 
 ###############################################################################################
@@ -728,12 +738,44 @@ proc EndEdit {tbl row col text} {
 	 return $text
 }
 
-#proc SaveTable {tableWid} {
+proc SaveTable {tableWid} {
+	global nodeSelect
+	global updatetree
+
+	puts "nodeSelect->$nodeSelect"
+	set result [$tableWid finishediting]
+	if {$result == 0} {
+		# value entered doesnt pass the -editendcommand of tablelist widget do not save value
+		return 
+	} else {
+		#continue doing
+	}
+	#puts "\n\n\tSaveTable->tablelist is having valid value entered\n\n"
+	# should save entered values to corresponding subindex
+	set result [GetNodeIdType $nodeSelect]
+	set nodeId [lindex $result 0]
+	set nodeType [lindex $result 1]
+	set rowCount 0
+	foreach childIndex [$updatetree nodes $nodeSelect] {
+	 	set indexId [string range [$updatetree itemcget $childIndex -text] end-4 end-1]
+		foreach childSubIndex [$updatetree nodes $childIndex] {
+			set subIndexId [string range [$updatetree itemcget $childSubIndex -text] end-2 end-1]
+			if {[string match "00" $subIndexId]} {
+			} else {
+				set name [string range [$updatetree itemcget $childSubIndex -text] 0 end-4]
+				set value [$tableWid cellcget $rowCount,1 -text]
+				puts "tableWid cellcget $rowCount,1 -text ====>$value"
+				puts "SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $name"
+				SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $name
+				incr rowCount
+			}
+		}
+	}
 #	set size [$tableWid size] ; # SIZE GIVES NO OF ROWS
 #	puts size->$size
 #	#puts "total_row->[expr $size/[$tableWid columncount] ]"
-#}
+}
 
-#proc DiscardTable {tableWid} {
+proc DiscardTable {tableWid} {
 
-#}
+}

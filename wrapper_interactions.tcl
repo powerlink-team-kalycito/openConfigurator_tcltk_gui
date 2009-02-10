@@ -64,29 +64,25 @@
 ###############################################################################################
 
 ##########################FOR TEST########################################################
-proc SortNode {obj objNode choice {ObjIndex ""}} {
+proc SortNode {nodeType nodeID nodePos choice {indexPos ""} {indexId ""}} {
 	global updatetree
 	global nodeObj
 
 
 	set errorString []
-#	puts "******Sort*****"
-#++++++++++++++++++++++++++++++
-#	puts "obj->$obj objNode->$objNode choice->$choice ObjIndex->$ObjIndex"
-#	puts "**"
 	if { $choice == "ind" } {
-		set count [CIndexCollection_getNumberofIndexes $obj]
-		set sortRange 4
-	} elseif { $choice == "tpdoInd"} {
-		set obj  [CNode_getPDOIndexCollection $objNode 1]
-		set count [CIndexCollection_getNumberofIndexes $obj]
-		set sortRange 4
-	} elseif { $choice == "rpdoInd" } {
-		set obj  [CNode_getPDOIndexCollection $objNode 2]
-		set count [CIndexCollection_getNumberofIndexes $obj]
+		set count [new_intp]
+		#DllExport ocfmRetCode GetIndexCount(int NodeID, ENodeType NodeType, int* Out_IndexCount);
+		set catchErrCode [GetIndexCount $nodeID $nodeType $count]
+		set count [intp_value $count]
 		set sortRange 4
 	} elseif { $choice == "sub" } {
-		set count [CIndex_getNumberofSubIndexes $ObjIndex]
+		set count [new_intp]
+		#DllExport ocfmRetCode GetSubIndexCount(int NodeID, ENodeType NodeType, char* IndexID, int* Out_SubIndexCount);
+		puts "GetSubIndexCount nodeID->$nodeID nodeType->$nodeType indexId->$indexId count->$count"
+		set catchErrCode [GetSubIndexCount $nodeID $nodeType $indexId $count]
+		set count [intp_value $count]
+		puts "\nSortNode:subindex count ->$count"
 		set sortRange 2
 	} else {
 		puts "Invalid choice for SortNode"
@@ -94,10 +90,17 @@ proc SortNode {obj objNode choice {ObjIndex ""}} {
 	}
 
 #	puts COUNT$count
+	#if count is zero no need to proceed		
 	set cntLen [string length $count]
 	if {$count == 0} {
-#		puts "****"
-		return
+		if { $choice == "ind" } {
+			return [list "" "" ""]
+		} elseif { $choice == "sub" } {
+		
+			return ""
+		} else {
+			#invalid choice
+		}
 	}
 	set sortList ""
 	for { set inc 0 } { $inc < $count } { incr inc } {
@@ -107,43 +110,84 @@ proc SortNode {obj objNode choice {ObjIndex ""}} {
 			#appending zeros
 			set tmpInc 0$tmpInc
 		}	
-		if { $choice == "ind" || $choice == "tpdoInd" || $choice == "rpdoInd" } {		
-			set tempObjIndex [CIndexCollection_getIndex $obj $inc]
+		if { $choice == "ind" } {
+			set catchErrCode [GetIndexIDbyPositions $nodePos $inc]
+			set indexId [lindex $catchErrCode 1]
+			puts "indexId->$indexId"
+			lappend sortList $indexId$tmpInc
 		} elseif { $choice == "sub" } {
-			set tempObjIndex [CIndex_getSubIndex $ObjIndex $inc]
+			puts "GetSubIndexIDbyPositions nodePos->$nodePos indexPos->$indexPos inc->$inc"
+			set catchErrCode [GetSubIndexIDbyPositions $nodePos $indexPos $inc]
+			set subIndexId [lindex $catchErrCode 1]
+			puts "subIndexId->$subIndexId"
+			lappend sortList $subIndexId$tmpInc
 		} else {
 			puts "Invalid choice for SortNode"
+			return
 		}
-		lappend sortList [CBaseIndex_getIndexValue $tempObjIndex]$tmpInc	
+	
 	}
-#	puts "b4sortList->$sortList"
+	puts "b4sortList->$sortList"
 	#lsort -increasing $sortList
 	set sortList [lsort -ascii $sortList]
 	#also chk out dictionary option
-#	puts sortList->$sortList
+	puts sortList->$sortList
 
-	set corrList ""
-	for { set inc 0 } { $inc < $count } { incr inc } {
-		
-		set sortInc [lindex $sortList $inc]
-		set sortInc [string range $sortInc $sortRange end]
-		set sortInc [string trimleft $sortInc 0]
-		if {$sortInc == ""} {
-			set sortInc 0
-		} else {
-			#got the exact value
+	if { $choice == "ind"} {
+		set sortListIdx ""
+		set sortListTpdo ""
+		set sortListRpdo ""
+		for { set inc 0 } { $inc < $count } { incr inc } {
+			
+			set sortInc [lindex $sortList $inc]
+	
+			if {[string match "18*" $sortInc] || [string match "1A*" $sortInc]} {
+				#it must a TPDO object
+				set corrList sortListTpdo
+			} elseif {[string match "14*" $sortInc] || [string match "16*" $sortInc]} {
+				#it must a RPDO object	
+				set corrList sortListRpdo
+			} else {
+				set corrList sortListIdx
+			}
+	
+			set sortInc [string range $sortInc $sortRange end]
+			set sortInc [string trimleft $sortInc 0]
+			if {$sortInc == ""} {
+				set sortInc 0
+			} else {
+				#got the exact value
+			}
+			lappend $corrList $sortInc
 		}
-		lappend corrList $sortInc
-		#set ObjIndex [CIndexCollection_getIndex $obj $sortInc]
-		#puts [CBaseIndex_getIndexValue $ObjIndex]
+		puts "sortListIdx->$sortListIdx"
+		puts "sortListTpdo->$sortListTpdo"
+		puts "sortListRpdo->$sortListRpdo"
+		return [list $sortListIdx $sortListTpdo $sortListRpdo]
+	} elseif {$choice == "sub"} {
+		set corrList ""
+		for { set inc 0 } { $inc < $count } { incr inc } {
+		
+			set sortInc [lindex $sortList $inc]
+			set sortInc [string range $sortInc $sortRange end]
+			set sortInc [string trimleft $sortInc 0]
+			if {$sortInc == ""} {
+				set sortInc 0
+			} else {
+				#got the exact value
+			}
+			lappend corrList $sortInc
+	
+		}
+		return $corrList
+	} else {
+		#check the choice
+		puts "choice Is ------> $choice"
+		return
 	}
-#	puts "corrList->$corrList"
-#	puts "******Sort end*****"
-	return $corrList
+
+
 }
-
-
-
 
 #########################################################################################
 
@@ -154,128 +198,136 @@ proc SortNode {obj objNode choice {ObjIndex ""}} {
 #Output      : -
 #Description : Reads an XDC/XDD file and populates tree
 ###############################################################################################
-proc Import {cn tmpDir NodeType NodeID obj objNode } {
+proc Import {parentNode tmpDir nodeType nodeID } {
 	global updatetree
 	global cnCount
-	#global nodeObj
 	ImportProgress start
 
 	global LocvarProgbar
 	set LocvarProgbar 0
 	set errorString []
-	#set NodeType 1
-#+++++++++++++++++++++++++++
-	#set objNodeCollection [new_CNodeCollection]
-	#set objNodeCollection [CNodeCollection_getNodeColObjectPointer]
-	#puts "errorString->$errorString...NodeType->$NodeType...NodeID->$NodeID..."
-	#CreateNode $NodeID $NodeType
-	#ImportXML "$tmpDir" $errorString $NodeType $NodeID
-        #set LocvarProgbar 20 
-	#set objNode [new_CNode]
-	#set obj [new_CIndexCollection]
-	#set objNode [CNodeCollection_getNode $objNodeCollection $NodeType $NodeID]
-	##old code 
-	#set obj [CNode_getIndexCollection $objNode]
-	##currntly works only for windows
-	##set obj [CNode_getIndexCollectionWithoutPDO $objNode]
-	puts "******Import*****"
-#++++++++++++++++++++++++++++++
-	puts "obj->$obj  objNode->$objNode"
-	puts "**"
-	set count [CIndexCollection_getNumberofIndexes $obj]
+	puts "\n\n\t******Import*****"
+
+	set nodePos [new_intp]
+	puts "IfNodeExists nodeID->$nodeID nodeType->$nodeType nodePos->$nodePos"
+	set catchErrCode [IfNodeExists $nodeID $nodeType $nodePos]
+	set nodePos [intp_value $nodePos]
+	puts "catchErrCode->$catchErrCode====nodePos->$nodePos"
+
+
+
+
+
+	#ocfmRetCode GetIndexCount(int NodeID, ENodeType NodeType, int* Out_IndexCount);
+	set count [new_intp]
+	set catchErrCode [GetIndexCount $nodeID $nodeType $count]
+	set count [intp_value $count]
 	puts COUNT$count
 	if {$count == 0} {
 		ImportProgress stop
       		return
 	}
-	set cnId [split $cn -]
-	set xdcId [lrange $cnId 1 end]
-	set xdcId [join $xdcId -]
-	set cnId [lindex $cnId end]
-	puts cnId-->$cnId
-	set corrList [SortNode $obj $objNode ind]
+
+	set parentId [split $parentNode -]
+	set parentId [lrange $parentId 1 end]
+	set parentId [join $parentId -]
+	puts "parentId---->$parentId"
+	set returnList [SortNode $nodeType $nodeID $nodePos ind]
+	set corrList [lindex $returnList 0]
+	puts "corrList->$corrList"
+	set count [llength $corrList]
 	for { set inc 0 } { $inc < $count } { incr inc } {
-#		puts "[lindex $corrList $inc]"
-		set ObjIndex [CIndexCollection_getIndex $obj [lindex $corrList $inc] ]
-		#set ObjIndex [CIndexCollection_getIndex $obj $inc]
-		#####set nodeObj(1-$cnId-$inc) $ObjIndex
-		set IndexValue [CBaseIndex_getIndexValue $ObjIndex]
-		set IndexName [CBaseIndex_getName $ObjIndex]
-		$updatetree insert $inc $cn IndexValue-1-$cnId-$inc -text $IndexName\($IndexValue\) -open 0 -image [Bitmap::get index]
-puts "ObjIndex->$ObjIndex"
-		set sidxCorrList [SortNode $obj $objNode sub $ObjIndex]
-		set SIdxCount [CIndex_getNumberofSubIndexes $ObjIndex]
+		set sortedIndexPos [lindex $corrList $inc]
+		set IndexValue [GetIndexIDbyPositions $nodePos $sortedIndexPos]
+		set IndexValue [lindex $IndexValue 1]
+		puts "IndexValue->$IndexValue"
+		set IndexName [GetIndexAttributes $nodeID $nodeType $IndexValue 0]
+		set IndexName [lindex $IndexName 1]
+		$updatetree insert $inc $parentNode IndexValue-$parentId-$inc -text $IndexName\($IndexValue\) -open 0 -image [Bitmap::get index]
+		set sidxCorrList [SortNode $nodeType $nodeID $nodePos sub $sortedIndexPos $IndexValue]
+		puts "IndexValue->$IndexValue\nsidxCorrList-->$sidxCorrList\n"
+
+		set SIdxCount [new_intp]
+		set catchErrCode [GetSubIndexCount $nodeID $nodeType $IndexValue $SIdxCount]
+		set SIdxCount [intp_value $SIdxCount]
+		puts "\t\tSIdxCount->$SIdxCount"
 		for { set tmpCount 0 } { $tmpCount < $SIdxCount } { incr tmpCount } {
-#			puts "in sub index"
-			set ObjSIdx [CIndex_getSubIndex $ObjIndex [lindex $sidxCorrList $tmpCount]]
-			#set ObjSIdx [CIndex_getSubIndex $ObjIndex $tmpCount]
-			#####set nodeObj(1-$cnId-$inc-$tmpCount) $ObjSIdx
-			set SIdxValue [CBaseIndex_getIndexValue $ObjSIdx]
-			set SIdxName [CBaseIndex_getName $ObjSIdx]
-			$updatetree insert end IndexValue-1-$cnId-$inc SubIndexValue-1-$cnId-$inc-$tmpCount -text $SIdxName\($SIdxValue\) -open 0 -image [Bitmap::get subindex]
+			#puts "in sub index"
+			set SIdxValue [GetSubIndexIDbyPositions $nodePos $sortedIndexPos [lindex $sidxCorrList $tmpCount] ]
+			set SIdxValue [lindex $SIdxValue 1]
+			puts "SIdxValue->$SIdxValue"
+			set SIdxName [GetSubIndexAttributes $nodeID $nodeType $IndexValue $SIdxValue 0]
+			set SIdxName [lindex $SIdxName 1]
+		#	#set SIdxName [CBaseIndex_getName $ObjSIdx]
+			$updatetree insert end IndexValue-$parentId-$inc SubIndexValue-$parentId-$inc-$tmpCount -text $SIdxName\($SIdxValue\) -open 0 -image [Bitmap::get subindex]
 		}
 		update idletasks
 	}
 #	puts "last inc->$inc"
 	set LocvarProgbar 50
 ###########################################for TPDO
-	set TclIndexCollection  [CNode_getPDOIndexCollection $objNode 1]
-	#set ObjIndex [new_CIndex]
-	set count [CIndexCollection_getNumberofIndexes $TclIndexCollection]
+	set corrList [lindex $returnList 1]
+	puts "corrList->$corrList"
+	set count [llength $corrList]
 	puts "count for tpdo->$count"
-	set corrList [SortNode $obj $objNode tpdoInd]
-	$updatetree insert end $cn PDO-1-$cnId -text "PDO" -open 0 -image [Bitmap::get pdo]
-	$updatetree insert end PDO-1-$cnId TPDO-1-$cnId -text "TPDO" -open 0 -image [Bitmap::get pdo]
+	$updatetree insert end $parentNode PDO-$parentId -text "PDO" -open 0 -image [Bitmap::get pdo]
+	$updatetree insert end PDO-$parentId TPDO-$parentId -text "TPDO" -open 0 -image [Bitmap::get pdo]
 	for { set inc 0 } { $inc < $count } { incr inc } {
-		set ObjIndex [CIndexCollection_getIndex $TclIndexCollection [lindex $corrList $inc]]
-		#set ObjIndex [CIndexCollection_getIndex $TclIndexCollection $inc]
-		#####set nodeObj(1-TPdo$cnId-$inc) $ObjIndex
-puts "tpdo ObjIndex->$ObjIndex"
-		set IndexValue [CBaseIndex_getIndexValue $ObjIndex]
-		set IndexName [CBaseIndex_getName $ObjIndex]
-		$updatetree insert $inc TPDO-1-$cnId TPdoIndexValue-1-TPdo$cnId-$inc -text $IndexName\($IndexValue\) -open 0 -image [Bitmap::get index]
-		set sidxCorrList [SortNode $obj $objNode sub $ObjIndex]
-		set SIdxCount [CIndex_getNumberofSubIndexes $ObjIndex]
+		set sortedIndexPos [lindex $corrList $inc]
+		set IndexValue [GetIndexIDbyPositions $nodePos $sortedIndexPos]
+		set IndexValue [lindex $IndexValue 1]
+		puts "IndexValue->$IndexValue"
+		set IndexName [GetIndexAttributes $nodeID $nodeType $IndexValue 0]
+		set IndexName [lindex $IndexName 1]
+		$updatetree insert $inc TPDO-$parentId TPdoIndexValue-$parentId-$inc -text $IndexName\($IndexValue\) -open 0 -image [Bitmap::get index]
+		#set sidxCorrList [SortNode $nodeType $nodeID $nodePos $obj $objNode sub "" $sortedIndexPos $IndexValue]
+		set sidxCorrList [SortNode $nodeType $nodeID $nodePos sub $sortedIndexPos $IndexValue]
+		set SIdxCount [new_intp]
+		set catchErrCode [GetSubIndexCount $nodeID $nodeType $IndexValue $SIdxCount]
+		set SIdxCount [intp_value $SIdxCount]
+		puts "\t\tSIdxCount->$SIdxCount"
 		for { set tmpCount 0 } { $tmpCount < $SIdxCount } { incr tmpCount } {
-			set ObjSIdx [CIndex_getSubIndex $ObjIndex [lindex $sidxCorrList $tmpCount]]
-			#set ObjSIdx [CIndex_getSubIndex $ObjIndex $tmpCount]
-			#####set nodeObj(1-TPdo$cnId-$inc-$tmpCount) $ObjSIdx
-#			puts "nodeObj(1-TPdo$cnId-$inc-$tmpCount)--->$ObjSIdx"
-			set SIdxValue [CBaseIndex_getIndexValue $ObjSIdx]
-			set SIdxName [CBaseIndex_getName $ObjSIdx]
-			$updatetree insert end TPdoIndexValue-1-TPdo$cnId-$inc TPdoSubIndexValue-1-TPdo$cnId-$inc-$tmpCount -text $SIdxName\($SIdxValue\) -open 0 -image [Bitmap::get subindex]
+			set SIdxValue [GetSubIndexIDbyPositions $nodePos $sortedIndexPos [lindex $sidxCorrList $tmpCount] ]
+			set SIdxValue [lindex $SIdxValue 1]
+			puts "SIdxValue->$SIdxValue"
+			set SIdxName [GetSubIndexAttributes $nodeID $nodeType $IndexValue $SIdxValue 0]
+			set SIdxName [lindex $SIdxName 1]
+			$updatetree insert end TPdoIndexValue-$parentId-$inc TPdoSubIndexValue-$parentId-$inc-$tmpCount -text $SIdxName\($SIdxValue\) -open 0 -image [Bitmap::get subindex]
 		}
 		update idletasks
 	}
 	set LocvarProgbar 75	
 ###########################################for RPDO
-	set TclIndexCollection  [CNode_getPDOIndexCollection $objNode 2]
-	#set ObjIndex [new_CIndex]
-	set count [CIndexCollection_getNumberofIndexes $TclIndexCollection]
+	set corrList [lindex $returnList 2]
+	puts "corrList->$corrList"
+	set count [llength $corrList]
 	puts "count for rpdo->$count"
-	$updatetree insert end PDO-1-$cnId RPDO-1-$cnId -text "RPDO" -open 0 -image [Bitmap::get pdo]
-	set corrList [SortNode $obj $objNode rpdoInd]
+	$updatetree insert end PDO-$parentId RPDO-$parentId -text "RPDO" -open 0 -image [Bitmap::get pdo]
 	for { set inc 0 } { $inc < $count } { incr inc } {
-		set ObjIndex [CIndexCollection_getIndex $TclIndexCollection [lindex $corrList $inc]]
-		#set ObjIndex [CIndexCollection_getIndex $TclIndexCollection $inc]
-		#####set nodeObj(1-RPdo$cnId-$inc) $ObjIndex
-puts "rpdoObjIndex->$ObjIndex"
-		set IndexValue [CBaseIndex_getIndexValue $ObjIndex]
-		set IndexName [CBaseIndex_getName $ObjIndex]
-		$updatetree insert $inc RPDO-1-$cnId RPdoIndexValue-1-RPdo$cnId-$inc -text $IndexName\($IndexValue\) -open 0 -image [Bitmap::get index]
-		set sidxCorrList [SortNode $obj $objNode sub $ObjIndex]
-		set SIdxCount [CIndex_getNumberofSubIndexes $ObjIndex]
+		set sortedIndexPos [lindex $corrList $inc]
+		set IndexValue [GetIndexIDbyPositions $nodePos $sortedIndexPos]
+		set IndexValue [lindex $IndexValue 1]
+		#puts "IndexValue->$IndexValue"
+		set IndexName [GetIndexAttributes $nodeID $nodeType $IndexValue 0]
+		set IndexName [lindex $IndexName 1]
+		$updatetree insert $inc RPDO-$parentId RPdoIndexValue-$parentId-$inc -text $IndexName\($IndexValue\) -open 0 -image [Bitmap::get index]
+		#set sidxCorrList [SortNode $nodeType $nodeID $nodePos $obj $objNode sub "" $sortedIndexPos $IndexValue]
+		set sidxCorrList [SortNode $nodeType $nodeID $nodePos sub $sortedIndexPos $IndexValue]
+		set SIdxCount [new_intp]
+		set catchErrCode [GetSubIndexCount $nodeID $nodeType $IndexValue $SIdxCount]
+		set SIdxCount [intp_value $SIdxCount]
+		#puts "\t\tSIdxCount->$SIdxCount"
 		for { set tmpCount 0 } { $tmpCount < $SIdxCount } { incr tmpCount } {
-			set ObjSIdx [CIndex_getSubIndex $ObjIndex [lindex $sidxCorrList $tmpCount]]
-			#set ObjSIdx [CIndex_getSubIndex $ObjIndex $tmpCount]
-			#####set nodeObj(1-RPdo$cnId-$inc-$tmpCount) $ObjSIdx
-			set SIdxValue [CBaseIndex_getIndexValue $ObjSIdx]
-			set SIdxName [CBaseIndex_getName $ObjSIdx]
-			$updatetree insert end RPdoIndexValue-1-RPdo$cnId-$inc RPdoSubIndexValue-1-RPdo$cnId-$inc-$tmpCount -text $SIdxName\($SIdxValue\) -open 0 -image [Bitmap::get subindex]
+			set SIdxValue [GetSubIndexIDbyPositions $nodePos $sortedIndexPos [lindex $sidxCorrList $tmpCount] ]
+			set SIdxValue [lindex $SIdxValue 1]
+			puts "SIdxValue->$SIdxValue"
+			set SIdxName [GetSubIndexAttributes $nodeID $nodeType $IndexValue $SIdxValue 0]
+			set SIdxName [lindex $SIdxName 1]
+			$updatetree insert end RPdoIndexValue-$parentId-$inc RPdoSubIndexValue-$parentId-$inc-$tmpCount -text $SIdxName\($SIdxValue\) -open 0 -image [Bitmap::get subindex]
 		}
 		update idletasks
 	}
-	puts "errorString->$errorString...NodeType->$NodeType...NodeID->$NodeID..."
+	puts "errorString->$errorString...nodeType->$nodeType...nodeID->$nodeID..."
 	set LocvarProgbar 100
 	ImportProgress stop
 

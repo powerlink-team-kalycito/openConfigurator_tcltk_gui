@@ -528,9 +528,6 @@ proc SaveValue {frame0 frame1} {
 	set radioSel [subst $[subst $radioSel]]
 	puts "radioSel after sub ->$radioSel"
 
-set value [expr $value+1]
-
-
 	if {$value != ""} {
 		if {$radioSel == "hex"} {
 			#it is hex value trim leading 0x

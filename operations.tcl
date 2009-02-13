@@ -1556,16 +1556,13 @@ proc AddCN {cnName tmpImpDir nodeId} {
 	global nodeIdList
 
 	incr cnCount
-	set obj [NodeCreate $nodeId 1]
-	puts "\n\nAdd CN obj->$obj"
-	set catchErrCode [lindex $obj 0]
+	set catchErrCode [NodeCreate $nodeId 1]
+	puts "\n\nAdd CN catchErrCode->$catchErrCode"
+	#set catchErrCode [lindex $obj 0]
 	set ErrCode [ocfmRetCode_code_get $catchErrCode]
 	if { $ErrCode != 0 } {
-		#tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning]
-		#the node is not created exit from procedure
-
-		#RETURN IS COMMITTED TO CONTINUE WORK		
-		#return 
+		tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning]
+		return 
 	}
 	#lappend nodeIdList CN-1-$cnCount
 	lappend nodeIdList $nodeId 
@@ -1585,8 +1582,7 @@ proc AddCN {cnName tmpImpDir nodeId} {
 		puts "ErrCode:$ErrCode"
 		if { $ErrCode != 0 } {
 			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
-			#RETURN IS COMMITTED TO CONTINUE WORK		
-			#return 
+			return 
 		}
 
 		set child [$updatetree insert end $node CN-$parentId-$cnCount -text "$cnName" -open 0 -image [Bitmap::get cn]]
@@ -2629,20 +2625,20 @@ puts "\n\n      NodeCreate"
 	if { $ErrCode != 0 } {
 		puts "ErrStr:[ocfmRetCode_errorString_get $catchErrCode]"
 		tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
-		return [list $catchErrCode " " " "]
+		return $catchErrCode 
 	}
 
-	#set ErrStr [new_charp]
-	#set ErrStr [ocfmRetCode_errorString_get $catchErrCode]
-	#puts "ErrStr:$ErrStr"
-	set objNode [new_CNode]
-	set obj [new_CIndexCollection]
-	set objNode [CNodeCollection_getNode $objNodeCollection $NodeType $NodeID]
-	#old code 
-	set obj [CNode_getIndexCollection $objNode]
-	#currntly works only for windows
-	#set obj [CNode_getIndexCollectionWithoutPDO $objNode]
-	puts "NodeCreate :::  obj->$obj====objNode->$objNode=====objNodeCollection->$objNodeCollection"
+	##set ErrStr [new_charp]
+	##set ErrStr [ocfmRetCode_errorString_get $catchErrCode]
+	##puts "ErrStr:$ErrStr"
+	#set objNode [new_CNode]
+	#set obj [new_CIndexCollection]
+	#set objNode [CNodeCollection_getNode $objNodeCollection $NodeType $NodeID]
+	##old code 
+	#set obj [CNode_getIndexCollection $objNode]
+	##currntly works only for windows
+	##set obj [CNode_getIndexCollectionWithoutPDO $objNode]
+	puts "***************\n"
 
 
 ##########################test remove later#############################
@@ -2678,7 +2674,7 @@ puts "\n\n      NodeCreate"
 		#puts "[charp_value $ErrCode]"
 #########################################
 puts "*****************\n\n"
-	return [list $catchErrCode $obj $objNode]
+	return $catchErrCode 
 }
 
 ################################################################################################

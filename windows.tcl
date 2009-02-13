@@ -516,9 +516,11 @@ proc AddCNWindow {} {
 
 
 		if {$confCn == "off"} {
+			#import the user selected xdc/xdd file for cn
 			set chk [AddCN $cnName $tmpImpCnDir $nodeId]
 		} else {
-			set chk [AddCN $cnName "" $nodeId]
+			#import the default cn xdd file
+			set chk [AddCN $cnName [file join [pwd] mn.xdd] $nodeId]
 		}
 		destroy .addCN
 	}
@@ -750,8 +752,8 @@ proc NewProjectWindow {} {
 		$Editor::projMenu add command -label "Properties" -command "PropertiesWindow"
 
 		$updatetree itemconfigure PjtName -text $tmpPjtName
-		set obj [NodeCreate 240 0]
-		set catchErrCode [lindex $obj 0]
+		set catchErrCode [NodeCreate 240 0]
+		#set catchErrCode [lindex $obj 0]
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
 		puts "ErrCode:$ErrCode"
 		if { $ErrCode != 0 } {
@@ -764,27 +766,32 @@ proc NewProjectWindow {} {
 		#lappend nodeIdList 240 [lindex $obj 1] [lindex $obj 2]
 		lappend nodeIdList 240 ; #removed obj and obj node
 		#puts "new project nodeIdList->$nodeIdList"
-		if {$conf=="off"} {
 
-			#check what is nodeId for mn
-			#API		
-			#DllExport ocfmRetCode ImportXML(char* fileName, int NodeID, ENodeType NodeType);	
-			set catchErrCode [ImportXML "$tmpImpDir" 240 0]
-			puts "catchErrCode for import in new project->$catchErrCode"
-			set ErrCode [ocfmRetCode_code_get $catchErrCode]
-			puts "ErrCode:$ErrCode"
-			if { $ErrCode != 0 } {
-				tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
-				#	the below two lines are commented so as to continue work DISPLAYING CANNOT PARSE FILE 
-				#destroy .newprj
-				#return
-			}
-			puts "new project nodeIdList->$nodeIdList"
-			#MN will have only one OBD
-			$updatetree insert end MN-$mnCount OBD-$mnCount-1 -text "OBD" -open 0 -image [Bitmap::get pdo]
-			#Import parentNode tmpDir nodeType nodeID 
-			Import OBD-$mnCount-1 $tmpImpDir 0 240  
+		if {$conf=="off"} {
+			#import the user specified xdc/xdd file	
+		} else {
+			#import the default xdd file
+			set tmpImpDir [file join [pwd] mn.xdd]
+			puts "\n\n default :::tmpImpDir->$tmpImpDir \n\n"
 		}
+
+		#DllExport ocfmRetCode ImportXML(char* fileName, int NodeID, ENodeType NodeType);
+		set catchErrCode [ImportXML "$tmpImpDir" 240 0]
+		puts "catchErrCode for import in new project->$catchErrCode"
+		set ErrCode [ocfmRetCode_code_get $catchErrCode]
+		puts "ErrCode:$ErrCode"
+		if { $ErrCode != 0 } {
+			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+			#	the below two lines are commented so as to continue work DISPLAYING CANNOT PARSE FILE 
+			destroy .newprj
+			return
+		}
+		puts "new project nodeIdList->$nodeIdList"
+		#MN will have only one OBD
+		$updatetree insert end MN-$mnCount OBD-$mnCount-1 -text "OBD" -open 0 -image [Bitmap::get pdo]
+		#Import parentNode tmpDir nodeType nodeID 
+		Import OBD-$mnCount-1 $tmpImpDir 0 240  
+		
 		destroy .newprj
 	}
 	button $frame1.bt_cancel -text Cancel -command { 

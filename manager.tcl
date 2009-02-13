@@ -528,6 +528,9 @@ proc SaveValue {frame0 frame1} {
 	set radioSel [subst $[subst $radioSel]]
 	puts "radioSel after sub ->$radioSel"
 
+set value [expr $value+1]
+
+
 	if {$value != ""} {
 		if {$radioSel == "hex"} {
 			#it is hex value trim leading 0x
@@ -608,19 +611,28 @@ proc DiscardValue {frame0 frame1} {
 	}
 
 
-	set nodeList [GetNodeList]
-	set schCnt [lsearch -exact $nodeList $parent ]
-	#puts  "schCnt->$schCnt=======nodeList->$nodeList"
-	set nodeId [lindex $nodeIdList $schCnt]
-	set obj [lindex $nodeIdList [expr $schCnt+1]]
-	set objNode [lindex $nodeIdList [expr $schCnt+2]]
-	if {[string match "OBD*" $parent]} {
-		#it must be a mn
-		set nodeType 0
+	
+	#gets the nodeId and Type of selected node
+	set result [GetNodeIdType $nodeSelect]
+	if {$result != "" } {
+		set nodeId [lindex $result 0]
+		set nodeType [lindex $result 1]
 	} else {
-		#it must be cn
-		set nodeType 1
+		#must be some other node this condition should never reach
+		puts "\n\DiscardValue->SHOULD NEVER HAPPEN 1!!\n\n"
+		return
 	}
+	#set nodeList [GetNodeList]
+	#set schCnt [lsearch -exact $nodeList $parent ]
+	##puts  "schCnt->$schCnt=======nodeList->$nodeList"
+	#set nodeId [lindex $nodeIdList $schCnt]
+	#if {[string match "OBD*" $parent]} {
+	#	#it must be a mn
+	#	set nodeType 0
+	#} else {
+	#	#it must be cn
+	#	set nodeType 1
+	#}
 
 
 	if {[string match "*SubIndexValue*" $nodeSelect]} {

@@ -318,7 +318,7 @@ proc dispRpdo {frame1 siblingList dispList} {
 #Output      : -
 #Description : Creates the GUI for adding PDO to CN
 ###############################################################################################
-proc AddPDOWindow {} {
+#proc AddPDOWindow {} {
 #	global pdoStartValue
 #	global mapEntValue
 #	global noPDOValue
@@ -415,7 +415,7 @@ proc AddPDOWindow {} {
 #
 #	centerW $winAddPDO
 
-}
+#}
 
 ###############################################################################################
 #proc AddCNWindow
@@ -745,7 +745,10 @@ proc NewProjectWindow {} {
 			focus .newprj
 			return
 		}
+
 		$Editor::projMenu add command -label "Close Project" -command "CloseProject" 
+		$Editor::projMenu add command -label "Properties" -command "PropertiesWindow"
+
 		$updatetree itemconfigure PjtName -text $tmpPjtName
 		set obj [NodeCreate 240 0]
 		set catchErrCode [lindex $obj 0]
@@ -758,7 +761,8 @@ proc NewProjectWindow {} {
 		}
 		catch {$updatetree delete MN-$mnCount}
 		$updatetree insert end PjtName MN-$mnCount -text "openPOWERLINK MN" -open 1 -image [Bitmap::get mn]
-		lappend nodeIdList 240 [lindex $obj 1] [lindex $obj 2]
+		#lappend nodeIdList 240 [lindex $obj 1] [lindex $obj 2]
+		lappend nodeIdList 240 ; #removed obj and obj node
 		#puts "new project nodeIdList->$nodeIdList"
 		if {$conf=="off"} {
 
@@ -771,8 +775,9 @@ proc NewProjectWindow {} {
 			puts "ErrCode:$ErrCode"
 			if { $ErrCode != 0 } {
 				tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
-				destroy .newprj
-				return
+				#	the below two lines are commented so as to continue work DISPLAYING CANNOT PARSE FILE 
+				#destroy .newprj
+				#return
 			}
 			puts "new project nodeIdList->$nodeIdList"
 			#MN will have only one OBD
@@ -893,8 +898,6 @@ proc ImportProgress {stat} {
 proc AddIndexWindow {} {
 	global updatetree
 	global indexVar
-	global nodeIdList
-	global nodeObj	
 
 	set winAddIdx .addIdx
 	catch "destroy $winAddIdx"
@@ -938,16 +941,16 @@ proc AddIndexWindow {} {
 		}
 
 
-		set nodePos [split $node -]
-		set nodePos [lrange $nodePos 1 end]
-		set nodePos [join $nodePos -]
+		set nodePosition [split $node -]
+		set nodePosition [lrange $nodePosition 1 end]
+		set nodePosition [join $nodePosition -]
 
 		if {[string match "18*" $indexVar] || [string match "1A*" $indexVar]} {
 			#it must a TPDO object
-			set child [$updatetree nodes TPDO-$nodePos]
+			set child [$updatetree nodes TPDO-$nodePosition]
 		} elseif {[string match "14*" $indexVar] || [string match "16*" $indexVar]} {
 			#it must a RPDO object	
-			set child [$updatetree nodes RPDO-$nodePos]
+			set child [$updatetree nodes RPDO-$nodePosition]
 		} else {
 			set child [$updatetree nodes $node]
 		}	
@@ -955,7 +958,7 @@ proc AddIndexWindow {} {
 
 		#puts child->$child
 		set sortChild ""
-		set indexPos 0
+		set indexPosition 0
 		foreach tempChild $child {
 			if {[string match "PDO*" $tempChild]} {
 				#dont need to add it to list
@@ -967,7 +970,7 @@ proc AddIndexWindow {} {
 				#0x is appended so that the input will be considered as hexadecimal number and numerical operation proceeds
 					if {[ expr 0x$indexVar > 0x[string range [$updatetree itemcget $tempChild -text] end-4 end-1] ]} {
 						#since the tree is populated after sorting 
-						incr indexPos
+						incr indexPosition
 					} else {
 						#
 					}
@@ -981,8 +984,6 @@ proc AddIndexWindow {} {
 		} else {
 			set count [expr [lindex $sortChild end]+1 ]
 		}
-		puts "indexPos->$indexPos=====count->$count"
-		puts "nodePos---->$nodePos=====nodeType---->$nodeType"
 		puts "AddIndex nodeId->$nodeId nodeType->$nodeType indexVar->$indexVar"
 		set catchErrCode [AddIndex $nodeId $nodeType $indexVar]
 		puts "catchErrCode->$catchErrCode"
@@ -996,18 +997,58 @@ proc AddIndexWindow {} {
 
 		puts "inc->[llength $sortChild]"
 
-		set indexName []
-		set indexName [GetIndexAttributes $nodeId $nodeType $indexVar 0]
-		puts "indexName->$indexName"
+		#set indexName []
+		#set indexName [GetIndexAttributes $nodeId $nodeType $indexVar 0]
+		#puts "indexName->$indexName"
+
+
+
+
+	set nodePos [new_intp]
+	puts "IfNodeExists nodeId->$nodeId nodeType->$nodeType nodePos->$nodePos"
+	#IfNodeExists API is used to get the nodePosition which is needed fro various operation	
+	set catchErrCode [IfNodeExists $nodeId $nodeType $nodePos]
+	set nodePos [intp_value $nodePos]
+
+	set indexPos [new_intp]
+	#DllExport ocfmRetCode IfIndexExists(int NodeID, ENodeType NodeType, char* IndexID, int* IndexPos)
+	set catchErrCode [IfIndexExists $nodeId $nodeType $indexVar $indexPos]
+	set indexPos [intp_value $indexPos]
+
+set indexName [GetIndexAttributesbyPositions $nodePos $indexPos 0 ]
+puts "indexName->$indexName"
+#set indexName [lindex $indexName 1]
+
 
 		if {[string match "18*" $indexVar] || [string match "1A*" $indexVar]} {
 			#it must a TPDO object
-			$updatetree insert $indexPos TPDO-$nodePos TPdoIndexValue-$nodePos-$count -text [lindex $indexName 1]\($indexVar\) -open 0 -image [Bitmap::get index]
+			set parentNode TPDO-$nodePosition
+			set indexNode TPdoIndexValue-$nodePosition-$count
+			set subIndexNode TPdoSubIndexValue-$nodePosition-$count
+			$updatetree insert $indexPosition TPDO-$nodePosition TPdoIndexValue-$nodePosition-$count -text [lindex $indexName 1]\($indexVar\) -open 0 -image [Bitmap::get index]
 		} elseif {[string match "14*" $indexVar] || [string match "16*" $indexVar]} {
 			#it must a RPDO object	
-			$updatetree insert $indexPos RPDO-$nodePos RPdoIndexValue-$nodePos-$count -text [lindex $indexName 1]\($indexVar\) -open 0 -image [Bitmap::get index]
+			set parentNode RPDO-$nodePosition
+			set indexNode RPdoIndexValue-$nodePosition-$count
+			set subIndexNode RPdoSubIndexValue-$nodePosition-$count
+			$updatetree insert $indexPosition RPDO-$nodePosition RPdoIndexValue-$nodePosition-$count -text [lindex $indexName 1]\($indexVar\) -open 0 -image [Bitmap::get index]
 		} else {
-			$updatetree insert $indexPos $node IndexValue-$nodePos-$count -text [lindex $indexName 1]\($indexVar\) -open 0 -image [Bitmap::get index]
+			set parentNode $node
+			set indexNode IndexValue-$nodePosition-$count
+			set subIndexNode SubIndexValue-$nodePosition-$count
+		}
+		$updatetree insert $indexPosition $parentNode $indexNode -text [lindex $indexName 1]\($indexVar\) -open 0 -image [Bitmap::get index]
+
+
+		#SortNode {nodeType nodeID nodePos choice {indexPos ""} {indexId ""}}
+		set sidxCorrList [SortNode $nodeType $nodeId $nodePos sub $indexPos $indexVar]
+		set sidxCount [llength $sidxCorrList]
+		for {set tempSidxCount 0} { $tempSidxCount < $sidxCount } {incr tempSidxCount} {
+			set sortedSubIndexPos [lindex $sidxCorrList $tempSidxCount]
+			set subIndexName [GetSubIndexAttributesbyPositions $nodePos $indexPos $sortedSubIndexPos  0 ]
+			set subIndexId [GetSubIndexIDbyPositions $nodePos $indexPos $sortedSubIndexPos ]
+			set subIndexId [lindex $subIndexId 1]
+			$updatetree insert $tempSidxCount $indexNode $subIndexNode-$tempSidxCount -text [lindex $subIndexName 1]\($subIndexId\) -open 0 -image [Bitmap::get subindex]
 		}
 
 		puts "child after adding index ->[$updatetree nodes $node]"
@@ -1047,8 +1088,6 @@ proc AddIndexWindow {} {
 proc AddSubIndexWindow {} {
 	global updatetree
 	global subIndexVar
-	global nodeIdList
-	global nodeObj	
 
 	set winAddSidx .addSidx
 	catch "destroy $winAddSidx"
@@ -1175,3 +1214,14 @@ proc AddSubIndexWindow {} {
 	centerW $winAddSidx
 }
 
+################################################################################################
+#proc PropertiesWindow
+#Input       : -
+#Output      : -
+#Description : -
+################################################################################################
+proc PropertiesWindow {} {
+	global updatetree
+
+	set node [$updatetree selection get]
+}

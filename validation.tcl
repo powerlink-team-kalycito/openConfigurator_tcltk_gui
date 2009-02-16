@@ -134,7 +134,7 @@ proc IsValidStr {input} {
 #Description : Validates whether an entry is a integer and does not exceed specified range
 ###############################################################################################
 proc IsDec {input tmpValue} {
-	puts "IsDec test"
+	#puts "IsDec test"
 	set tempInput [string trimleft $input 0]		
 	
 
@@ -153,8 +153,8 @@ proc IsDec {input tmpValue} {
 #Description : Validates whether an entry is a hexa decimal and does not exceed specified range
 ###############################################################################################
 proc IsHex {input tmpValue} {
-	puts "IsHex test"
-	puts "input->$input"
+	#puts "IsHex test"
+	#puts "input->$input"
 	#set tmpVar [$tmpValue cget -textvariable]
 	if {[string match -nocase "0x*" $input]} {
 		set tempInput [string range $input 2 end]

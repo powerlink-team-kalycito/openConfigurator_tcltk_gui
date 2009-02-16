@@ -213,6 +213,7 @@ proc errorInit {win {width 60} {height 5}} {
 	$window.t insert end "$prompt " prompt
 	$window.t mark set prompt insert
 	$window.t mark gravity prompt left
+	$window.t configure -state disabled
 	bind $window.t <Key-Left> {onKeyLeft %W ; break}
 	bind $window.t <Key-Right> {onKeyRight %W ; break}
 	bind $window.t <Key-BackSpace> {onKeyBackSpace %W;break}
@@ -233,6 +234,7 @@ proc errorPuts {var {tag output} {win {}} {flash 0} {see 1}} {
 	if {$win == {}} {
 		set win $errWindow
 	}
+	$win configure -state normal
 	$win mark gravity prompt right
 	$win insert end $var $tag
 	if {[string index $var [expr [string length $var]-1]] != "\n"} {
@@ -243,6 +245,7 @@ proc errorPuts {var {tag output} {win {}} {flash 0} {see 1}} {
 	$win mark gravity prompt left
 	if $see {$win see insert}
 	update
+	$win configure -state disabled
 	return
 }
 
@@ -277,6 +280,7 @@ proc warnInit {win {width 60} {height 5}} {
 	$window.t insert end "$prompt " prompt
 	$window.t mark set prompt insert
 	$window.t mark gravity prompt left
+	$window.t configure -state disabled
 	bind $window.t <Key-Left> {onKeyLeft %W ; break}
 	bind $window.t <Key-Right> {onKeyRight %W ; break}
 	bind $window.t <Key-BackSpace> {onKeyBackSpace %W;break}
@@ -297,6 +301,7 @@ proc warnPuts {var {tag output} {win {}} {flash 0} {see 1}} {
 	if {$win == {}} {
 		set win $warWindow
 	}
+	$win configure -state normal
 	$win mark gravity prompt right
 	$win insert end $var $tag
 	if {[string index $var [expr [string length $var]-1]] != "\n"} {
@@ -307,10 +312,11 @@ proc warnPuts {var {tag output} {win {}} {flash 0} {see 1}} {
 	$win mark gravity prompt left
 	if $see {$win see insert}
 	update
+	$win configure -state disabled
 	return
 }
 
-# this won,t be executed if console.tcl is sourced by another app
+# this won't be executed if console.tcl is sourced by another app
 if {[string compare [info script] $argv0] == 0} {
 	consoleInit .
 }

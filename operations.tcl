@@ -603,10 +603,10 @@ proc Editor::create { } {
 
 	set Editor::cnMenu [menu  .cnMenu -tearoff 0]
 	set Editor::IndexaddMenu .cnMenu.indexaddMenu
-	$Editor::cnMenu add command -label "Rename" \
-		 -command {set cursor [. cget -cursor]
-			YetToImplement
-		 }
+	#$Editor::cnMenu add command -label "Rename" \
+	#	 -command {set cursor [. cget -cursor]
+	#		YetToImplement
+	#	 }
 	$Editor::cnMenu add cascade -label "Add" -menu $Editor::IndexaddMenu
 	menu $Editor::IndexaddMenu -tearoff 0
 	$Editor::IndexaddMenu add command -label "Add Index" -command "AddIndexWindow"
@@ -614,7 +614,7 @@ proc Editor::create { } {
 	$Editor::cnMenu add command -label "Import XDC/XDD" -command {ReImport}
 	$Editor::cnMenu add separator
 	$Editor::cnMenu add command -label "Delete" -command {DeleteTreeNode}
-	$Editor::cnMenu add command -label "Properties" -command {PropertiesWindow}
+	#$Editor::cnMenu add command -label "Properties" -command {PropertiesWindow} ; #commented for this delivery 
 
 	#############################################################################
 	# Menu for the Managing Nodes
@@ -626,7 +626,7 @@ proc Editor::create { } {
 	$Editor::mnMenu add command -label "Auto Generate" -command {YetToImplement} 
 	$Editor::mnMenu add separator
 	$Editor::mnMenu add command -label "Delete OBD" -command {DeleteTreeNode}
-	$Editor::mnMenu add command -label "Properties" -command {PropertiesWindow}
+	#$Editor::mnMenu add command -label "Properties" -command {PropertiesWindow}; #commented for this delivery
 
 	#############################################################################
 	# Menu for the Project
@@ -804,7 +804,7 @@ proc Editor::create { } {
 	set Editor::connect_status "Disconnected from IP :0.0.0.0"
 	$temp configure -relief flat 
 	# NoteBook creation
-	set frame	[$mainframe getframe]
+	set frame [$mainframe getframe]
 	
 	set pw1 [PanedWindow::create $frame.pw1 -side left]
 	set pane [PanedWindow::add $pw1 ]
@@ -828,11 +828,11 @@ proc Editor::create { } {
 	set treeWindow $pf1.sw.objTree
 	# Binding on tree widget   
 	$treeWindow bindText <ButtonPress-1> Editor::SingleClickNode
-	#$treeWindow bindText <Delete> DeleteTreeNode
+	$treeWindow bindText <Double-1> Editor::DoubleClickNode
 	$treeWindow bindText <ButtonPress-3> {Editor::tselectright %X %Y}
 	#bind .mainframe.frame.pw1.f0.frame.pw2.f0.frame.nb.fobjtree.sw.objTree <Delete> "puts Delete_key_pressed"
-	bind $treeWindow <Button-4> {.mainframe.frame.pw1.f0.frame.pw2.f0.frame.nb.fobjtree.sw.objTree yview scroll -5 units}
-	bind $treeWindow <Button-5> {.mainframe.frame.pw1.f0.frame.pw2.f0.frame.nb.fobjtree.sw.objTree yview scroll 5 units}
+	bind $treeWindow <Button-4> {global updatetree ; $updatetree yview scroll -5 units}
+	bind $treeWindow <Button-5> {global updatetree ; $updatetree yview scroll 5 units}
 	bind $treeWindow <Enter> { BindTree }
 	bind $treeWindow <Leave> { UnbindTree }
 
@@ -886,6 +886,11 @@ pack $alignFrame -expand yes -fill both
 	set prgindic 0
 	destroy .intro
 	wm protocol . WM_DELETE_WINDOW Editor::exit_app
+
+
+
+
+
 	if {!$configError} {catch Editor::restoreWindowPositions}
 	update idletasks
 	return 1
@@ -931,7 +936,9 @@ proc BindTree {} {
 	#	FindSpace::OpenParent $updatetree $node
 	#}
 	bind . <Delete> DeleteTreeNode 
-	.mainframe.frame.pw1.f0.frame.pw2.f0.frame.nb.fobjtree.sw.objTree configure -relief sunken 
+
+$updatetree configure -selectbackground #678db2 -relief sunken 
+
 	bind . <Up> ArrowUp 
 	bind . <Down> ArrowDown
 	bind . <Left> ArrowLeft
@@ -939,8 +946,11 @@ proc BindTree {} {
 }
 
 proc UnbindTree {} {
+	global updatetree
 	bind . <Delete> "" 
-	.mainframe.frame.pw1.f0.frame.pw2.f0.frame.nb.fobjtree.sw.objTree configure -relief ridge 
+
+$updatetree configure -selectbackground gray -relief ridge 
+
 	bind . <Up> ""
 	bind . <Down> ""
 	bind . <Left> ""
@@ -986,7 +996,7 @@ proc Editor::SingleClickNode {node} {
 	#getting Id and Type of node
 	set result [GetNodeIdType $node]
 	if {$result == ""} {
-		#te node is not an index or a subindex	do nothing
+		#the node is not an index or a subindex	do nothing
 	} else {
 		# it is index or subindex
 		set nodeId [lindex $result 0]
@@ -1535,6 +1545,19 @@ puts "\n\n\tindexPos->$indexPos====subIndexPos->$subIndexPos\n"
 }
 
 ################################################################################################
+#proc Editor::DoubleClickNode
+#Input       : node
+#Output      : -
+#Description : Displays required tabs when corresponding nodes are clicked
+################################################################################################
+proc Editor::DoubleClickNode {node} {
+	global updatetree
+
+	$updatetree itemconfigure $node -open 1	
+	Editor::SingleClickNode $node
+} 
+
+################################################################################################
 #proc CloseProject
 #Input       : -
 #Output      : -
@@ -1561,7 +1584,7 @@ proc AddCN {cnName tmpImpDir nodeId} {
 	#set catchErrCode [lindex $obj 0]
 	set ErrCode [ocfmRetCode_code_get $catchErrCode]
 	if { $ErrCode != 0 } {
-		tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning]
+		tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
 		return 
 	}
 	#lappend nodeIdList CN-1-$cnCount
@@ -1584,13 +1607,15 @@ proc AddCN {cnName tmpImpDir nodeId} {
 			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
 			return 
 		}
-
+		
+		#creating the GUI for CN
 		set child [$updatetree insert end $node CN-$parentId-$cnCount -text "$cnName" -open 0 -image [Bitmap::get cn]]
+		#creating the GUI for imported objects
 		#Import parentNode tmpDir nodeType nodeID 
 		Import CN-$parentId-$cnCount $tmpImpDir 1 $nodeId 
 
 	} else {
-		#should not import should create GUI
+		#should not import should create GUI default are not it will come here
 		set child [$updatetree insert end $node CN-$parentId-$cnCount -text "$cnName" -open 0 -image [Bitmap::get cn]]
 	}
 	return 
@@ -2127,14 +2152,8 @@ proc TransferCDC {} {
                 return
         }
 	puts fileLocation_CDC:$fileLocation_CDC
-	set catchErrCode [GenerateCDC $fileLocation_CDC]
-	puts "catchErrCode->$catchErrCode"
-	set ErrCode [ocfmRetCode_code_get $catchErrCode]
-	puts "ErrCode:$ErrCode"
-	if { $ErrCode != 0 } {
-		tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
-		return
-	}
+	GenerateCDC $fileLocation_CDC
+	return
 }
 
 ################################################################################################
@@ -2297,7 +2316,7 @@ proc DeleteTreeNode {} {
 	global nodeObj	
 	puts nodeIdList->$nodeIdList
 
-	set nodeList ""
+
 	set node [$updatetree selection get]
 	
 	if { [string match "PjtName" $node] || [string match "PDO*" $node]|| [string match "?PDO*" $node] } {
@@ -2332,22 +2351,7 @@ proc DeleteTreeNode {} {
 		return
 	}
 	
-	#procedure GetNodeList does following fun
-	#foreach mnNode [$updatetree nodes PjtName] {
-	#	set chk 1
-	#	foreach cnNode [$updatetree nodes $mnNode] {
-	#		if {$chk == 1} {
-	#			if {[string match "OBD*" $cnNode]} {
-	#				lappend nodeList $cnNode " " " "
-	#			} else {
-	#				lappend nodeList " " " " " " $cnNode " " " "
-	#			}
-	#			set chk 0
-	#		} else {
-	#			lappend nodeList $cnNode " " " "
-	#		}
-	#	}
-	#}
+	set nodeList ""
 	set nodeList [GetNodeList]
 	puts nodeList->$nodeList...
 	if {[lsearch -exact $nodeList $node ]!=-1} {
@@ -2380,19 +2384,25 @@ proc DeleteTreeNode {} {
 		#}
 		#EConfiuguratorErrors DeleteNode(int NodeID, ENodeType NodeType);
 
-		if {$nodeType == 0} {
-			#it is a MN so clear up the memory
-			#ocfmRetCode DeleteMNObjDict(int NodeID);
-			puts "DeleteMNObjDict nodeId->$nodeId"
-			set catchErrCode [DeleteMNObjDict $nodeId ]
-		} elseif {$nodeType == 1} {
-			#it is a CN so delete the node entirely
-			puts "DeleteNode nodeId->$nodeId nodeType->$nodeType"
-			set catchErrCode [DeleteNode $nodeId $nodeType]
-		} else {
-			puts "\n\n\tDeleteTreeNode:invalid nodeType->$nodeType"
-			return
-		}
+		#if {$nodeType == 0} {
+		#	#it is a MN so clear up the memory
+		#	#ocfmRetCode DeleteMNObjDict(int NodeID);
+		#	puts "DeleteMNObjDict nodeId->$nodeId"
+		#	#set catchErrCode [DeleteMNObjDict $nodeId]
+		#	set catchErrCode [DeleteNodeObjDict $nodeId $nodeType] ; #THIS WORK FOR BOTH IMPLEMENT IT AFTER CODE COMMIT
+		#} elseif {$nodeType == 1} {
+		#	#it is a CN so delete the node entirely
+		#	puts "DeleteNode nodeId->$nodeId nodeType->$nodeType"
+		#	set catchErrCode [DeleteNode $nodeId $nodeType]
+		#} else {
+		#	puts "\n\n\tDeleteTreeNode:invalid nodeType->$nodeType"
+		#	return
+		#}
+
+
+		set catchErrCode [DeleteNodeObjDict $nodeId $nodeType]
+
+
 
 		#freeing memory
 		if {[string match "OBD*" $node]} {
@@ -2924,7 +2934,11 @@ proc _ArrowDown {node origNode} {
 proc ArrowLeft {} {
 	global updatetree
 	set node [$updatetree selection get]
-	$updatetree itemconfigure $node -open 0		
+	if {[$updatetree nodes $node] != "" } {
+		$updatetree itemconfigure $node -open 0		
+	} else {
+		# it has no child no need to collapse
+	}
 }
 
 ################################################################################################
@@ -2936,5 +2950,10 @@ proc ArrowLeft {} {
 proc ArrowRight {} {
 	global updatetree
 	set node [$updatetree selection get]
-	$updatetree itemconfigure $node -open 1	
+	if {[$updatetree nodes $node] != "" } {	
+		$updatetree itemconfigure $node -open 1		
+	} else {
+		# it has no child no need to expand
+	}
+
 }

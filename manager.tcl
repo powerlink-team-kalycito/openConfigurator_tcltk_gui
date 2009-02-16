@@ -534,7 +534,15 @@ proc SaveValue {frame0 frame1} {
 			set value [string range $value 2 end]
 		} elseif {$radioSel == "dec"} {  
 			#is is dec value convert to hex
-			set value [format %X $value]
+			set value [string trimleft $value 0]
+#puts "value after trim for dec :$value"
+			if {$value != ""} {
+				set value [format %X $value]
+#puts "value after conv for dec :$value"
+			} else {
+				#the value must be zero
+				set value 0
+			}
 		} else {
 			puts "\n\n\nSaveValue->Should Never Happen 1!!!\n\n\n"
 		}

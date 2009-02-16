@@ -508,12 +508,19 @@ proc AddCNWindow {} {
 			return
 		}
 		
-		if {$confCn=="off" && ![file isfile $tmpImpCnDir]} {
-			tk_messageBox -message "Entered path for Import XDC/XDD not exist " -icon error -parent .addCN
-			focus .addCN
-			return
+		if {$confCn=="off"} {
+			if {![file isfile $tmpImpCnDir]} {
+				tk_messageBox -message "Entered path for Import XDC/XDD not exist " -icon error -parent .addCN
+				focus .addCN
+				return
+			}
+			set ext [file extension $tmpImpDir]
+			if { $ext == "xdc" || $ext == "xdd" } {
+				tk_messageBox -message "Import files only of type XDC/XDD" -icon error -parent .newprj
+				focus .addCN
+				return
+			}
 		}
-
 
 		if {$confCn == "off"} {
 			#import the user selected xdc/xdd file for cn
@@ -576,83 +583,85 @@ proc AddCNWindow {} {
 #Description : Creates the GUI when Project is to be saved at different location and name
 ###############################################################################################
 proc SaveProjectAsWindow {} {
-	global tmpPjtName
-	global tmpPjtDir
+	set saveProject [tk_getSaveFile -parent . -title "Save Project As" -defaultextension .oct]
+	puts "saveProject->$saveProject"
+	#global tmpPjtName
+	#global tmpPjtDir
 
-	set winSavProjAs .savProjAs
-	catch "destroy $winSavProjAs"
-	toplevel $winSavProjAs
-	wm title     $winSavProjAs	"Project Wizard"
-	wm resizable $winSavProjAs 0 0
-	wm transient $winSavProjAs .
-	wm deiconify $winSavProjAs
-	wm minsize   $winSavProjAs 50 200
-	grab $winSavProjAs
+	#set winSavProjAs .savProjAs
+	#catch "destroy $winSavProjAs"
+	#toplevel $winSavProjAs
+	#wm title     $winSavProjAs	"Project Wizard"
+	#wm resizable $winSavProjAs 0 0
+	#wm transient $winSavProjAs .
+	#wm deiconify $winSavProjAs
+	#wm minsize   $winSavProjAs 50 200
+	#grab $winSavProjAs
 
-	set titleFrame1 [TitleFrame $winSavProjAs.titleFrame1 -text "Save Project as" ]
-	set titleInnerFrame1 [$titleFrame1 getframe]
-	set frame1 [frame $titleInnerFrame1.fram1]
+	#set titleFrame1 [TitleFrame $winSavProjAs.titleFrame1 -text "Save Project as" ]
+	#set titleInnerFrame1 [$titleFrame1 getframe]
+	#set frame1 [frame $titleInnerFrame1.fram1]
 
-	label $winSavProjAs.l_empty -text "               "	
-	label $winSavProjAs.l_empty1 -text "               "
-	label $titleInnerFrame1.l_empty2 -text "               "
-	label $titleInnerFrame1.l_pjname -text "Project Name :" -justify left
-	label $titleInnerFrame1.l_pjpath -text "Project Path :" -justify left
-	label $titleInnerFrame1.l_empty3 -text "               "
-	label $winSavProjAs.l_empty4 -text "               "
+	#label $winSavProjAs.l_empty -text "               "	
+	#label $winSavProjAs.l_empty1 -text "               "
+	#label $titleInnerFrame1.l_empty2 -text "               "
+	#label $titleInnerFrame1.l_pjname -text "Project Name :" -justify left
+	#label $titleInnerFrame1.l_pjpath -text "Project Path :" -justify left
+	#label $titleInnerFrame1.l_empty3 -text "               "
+	#label $winSavProjAs.l_empty4 -text "               "
 
-	set tmpPjtName ""
-	entry $titleInnerFrame1.en_pjname -textvariable tmpPjtName -background white -relief ridge
-	set tmpPjtDir ""
-	entry $titleInnerFrame1.en_pjpath -textvariable tmpPjtDir -background white -relief ridge -width 35
+	#set tmpPjtName ""
+	#entry $titleInnerFrame1.en_pjname -textvariable tmpPjtName -background white -relief ridge
+	#set tmpPjtDir ""
+	#entry $titleInnerFrame1.en_pjpath -textvariable tmpPjtDir -background white -relief ridge -width 35
 
-	button $titleInnerFrame1.bt_pjpath -text Browse -command {
-		set tmpPjtDir [tk_chooseDirectory -title "Save Project at" -parent .savProjAs]
-		if {$tmpPjtDir == ""} {
-			focus .savProjAs
-			return
-		}
-	}
-	button $frame1.bt_ok -text "  Ok  " -command {
-		set tmpPjtName [string trim $tmpPjtName]
-		if {$tmpPjtName == "" } {
-			tk_messageBox -message "Enter Project Name" -title "Set Project Name error" -parent .savProjAs -icon error
-			focus .savProjAs
-			return
-		}
-		if {![file isdirectory $tmpPjtDir]} {
-			tk_messageBox -message "Entered path for project is not a Directory" -parent .savProjAs -icon error
-			focus .savProjAs
-			return
-		}
-		destroy .savProjAs
-	}
-	button $frame1.bt_cancel -text Cancel -command { 
-		destroy .savProjAs
-	}
+	#button $titleInnerFrame1.bt_pjpath -text Browse -command {
+	#	set tmpPjtDir [tk_chooseDirectory -title "Save Project at" -parent .savProjAs]
+	#	if {$tmpPjtDir == ""} {
+	#		focus .savProjAs
+	#		return
+	#	}
+	#}
+	#button $frame1.bt_ok -text "  Ok  " -command {
+	#	set tmpPjtName [string trim $tmpPjtName]
+	#	if {$tmpPjtName == "" } {
+	#		tk_messageBox -message "Enter Project Name" -title "Set Project Name error" -parent .savProjAs -icon error
+	#		focus .savProjAs
+	#		return
+	#	}
+	#	if {![file isdirectory $tmpPjtDir]} {
+	#		tk_messageBox -message "Entered path for project is not a Directory" -parent .savProjAs -icon error
+	#		focus .savProjAs
+	#		return
+	#	}
+	#	destroy .savProjAs
+	#}
+	#button $frame1.bt_cancel -text Cancel -command { 
+	#	destroy .savProjAs
+	#}
 
 
-	grid config $winSavProjAs.l_empty -row 0 -column 0 
+	#grid config $winSavProjAs.l_empty -row 0 -column 0 
 	
-	grid config $titleFrame1 -row 1 -column 0 -sticky "news" -ipadx 10 -padx 10 -ipady 10
-	grid config $titleInnerFrame1.l_pjname -row 1 -column 0 
-	grid config $titleInnerFrame1.en_pjname -row 1 -column 1 -sticky "w"
-	grid config $titleInnerFrame1.l_pjpath -row 2 -column 0 
-	grid config $titleInnerFrame1.en_pjpath -row 2 -column 1 -sticky "w"
-	grid config $titleInnerFrame1.bt_pjpath -row 2 -column 2 
+	#grid config $titleFrame1 -row 1 -column 0 -sticky "news" -ipadx 10 -padx 10 -ipady 10
+	#grid config $titleInnerFrame1.l_pjname -row 1 -column 0 
+	#grid config $titleInnerFrame1.en_pjname -row 1 -column 1 -sticky "w"
+	#grid config $titleInnerFrame1.l_pjpath -row 2 -column 0 
+	#grid config $titleInnerFrame1.en_pjpath -row 2 -column 1 -sticky "w"
+	#grid config $titleInnerFrame1.bt_pjpath -row 2 -column 2 
 	
-	grid config $titleInnerFrame1.l_empty3 -row 3 -column 0 
-	grid config $frame1 -row 6 -column 1 
-	grid config $frame1.bt_ok -row 0 -column 0 
-	grid config $frame1.bt_cancel -row 0 -column 1 
+	#grid config $titleInnerFrame1.l_empty3 -row 3 -column 0 
+	#grid config $frame1 -row 6 -column 1 
+	#grid config $frame1.bt_ok -row 0 -column 0 
+	#grid config $frame1.bt_cancel -row 0 -column 1 
 
-	grid config $winSavProjAs.l_empty4 -row 2 -column 0 
+	#grid config $winSavProjAs.l_empty4 -row 2 -column 0 
 
-	wm protocol .savProjAs WM_DELETE_WINDOW "$frame1.bt_cancel invoke"
-	bind $winSavProjAs <KeyPress-Return> "$frame1.bt_ok invoke"
-	bind $winSavProjAs <KeyPress-Escape> "$frame1.bt_cancel invoke"
+	#wm protocol .savProjAs WM_DELETE_WINDOW "$frame1.bt_cancel invoke"
+	#bind $winSavProjAs <KeyPress-Return> "$frame1.bt_ok invoke"
+	#bind $winSavProjAs <KeyPress-Escape> "$frame1.bt_cancel invoke"
 
-	centerW $winSavProjAs
+	#centerW $winSavProjAs
 }
 
 ###############################################################################################
@@ -667,6 +676,8 @@ proc NewProjectWindow {} {
 	global tmpImpDir
 	global updatetree
 	global nodeIdList
+	global PjtName
+	global PjtDir
 
 	set winNewProj .newprj
 	catch "destroy $winNewProj"
@@ -747,9 +758,18 @@ proc NewProjectWindow {} {
 			focus .newprj
 			return
 		}
+		set ext [file extension $tmpImpDir]
+		if { $ext == "xdc" || $ext == "xdd" } {
+			tk_messageBox -message "Import files only of type XDC/XDD" -icon error -parent .newprj
+			focus .newprj
+			return
+		}
 
+		set PjtName $tmpPjtName
+		set PjtDir $tmpPjtDir
+		catch {$Editor::projMenu delete 3} ; # to delete the close project if already present 
 		$Editor::projMenu add command -label "Close Project" -command "CloseProject" 
-		$Editor::projMenu add command -label "Properties" -command "PropertiesWindow"
+		#$Editor::projMenu add command -label "Properties" -command "PropertiesWindow" ; #not implemnted in this delivery so commented out
 
 		$updatetree itemconfigure PjtName -text $tmpPjtName
 		set catchErrCode [NodeCreate 240 0]
@@ -762,10 +782,6 @@ proc NewProjectWindow {} {
 			return
 		}
 		catch {$updatetree delete MN-$mnCount}
-		$updatetree insert end PjtName MN-$mnCount -text "openPOWERLINK MN" -open 1 -image [Bitmap::get mn]
-		#lappend nodeIdList 240 [lindex $obj 1] [lindex $obj 2]
-		lappend nodeIdList 240 ; #removed obj and obj node
-		#puts "new project nodeIdList->$nodeIdList"
 
 		if {$conf=="off"} {
 			#import the user specified xdc/xdd file	
@@ -786,6 +802,10 @@ proc NewProjectWindow {} {
 			destroy .newprj
 			return
 		}
+		$updatetree insert end PjtName MN-$mnCount -text "openPOWERLINK MN" -open 1 -image [Bitmap::get mn]
+		#lappend nodeIdList 240 [lindex $obj 1] [lindex $obj 2]
+		lappend nodeIdList 240 ; #removed obj and obj node
+		#puts "new project nodeIdList->$nodeIdList"
 		puts "new project nodeIdList->$nodeIdList"
 		#MN will have only one OBD
 		$updatetree insert end MN-$mnCount OBD-$mnCount-1 -text "OBD" -open 0 -image [Bitmap::get pdo]
@@ -840,6 +860,8 @@ proc NewProjectWindow {} {
 proc CloseProject {} {
 	global PjtDir
 	global PjtName
+	global updatetree
+
 	if {$PjtDir == "" || $PjtDir == "None"} {
 		conPuts "No Project Selected" error
 		return
@@ -854,7 +876,6 @@ proc CloseProject {} {
 				conPuts "Exit Canceled" info
 				return}
    		}	
-	global updatetree
 
 	# Delete the Tree
 	$updatetree delete PjtName
@@ -975,12 +996,12 @@ proc AddIndexWindow {} {
 				lappend sortChild $tail
 				#find the position where the added index is to be inserted in sorted order in TreeView 
 				#0x is appended so that the input will be considered as hexadecimal number and numerical operation proceeds
-					if {[ expr 0x$indexVar > 0x[string range [$updatetree itemcget $tempChild -text] end-4 end-1] ]} {
-						#since the tree is populated after sorting 
-						incr indexPosition
-					} else {
-						#
-					}
+				if {[ expr 0x$indexVar > 0x[string range [$updatetree itemcget $tempChild -text] end-4 end-1] ]} {
+					#since the tree is populated after sorting 
+					incr indexPosition
+				} else {
+					#
+				}
 			}
 		}
 
@@ -1011,20 +1032,19 @@ proc AddIndexWindow {} {
 
 
 
-	set nodePos [new_intp]
-	puts "IfNodeExists nodeId->$nodeId nodeType->$nodeType nodePos->$nodePos"
-	#IfNodeExists API is used to get the nodePosition which is needed fro various operation	
-	set catchErrCode [IfNodeExists $nodeId $nodeType $nodePos]
-	set nodePos [intp_value $nodePos]
+		set nodePos [new_intp]
+		puts "IfNodeExists nodeId->$nodeId nodeType->$nodeType nodePos->$nodePos"
+		#IfNodeExists API is used to get the nodePosition which is needed fro various operation	
+		set catchErrCode [IfNodeExists $nodeId $nodeType $nodePos]
+		set nodePos [intp_value $nodePos]
 
-	set indexPos [new_intp]
-	#DllExport ocfmRetCode IfIndexExists(int NodeID, ENodeType NodeType, char* IndexID, int* IndexPos)
-	set catchErrCode [IfIndexExists $nodeId $nodeType $indexVar $indexPos]
-	set indexPos [intp_value $indexPos]
+		set indexPos [new_intp]
+		#DllExport ocfmRetCode IfIndexExists(int NodeID, ENodeType NodeType, char* IndexID, int* IndexPos)
+		set catchErrCode [IfIndexExists $nodeId $nodeType $indexVar $indexPos]
+		set indexPos [intp_value $indexPos]
 
-set indexName [GetIndexAttributesbyPositions $nodePos $indexPos 0 ]
-puts "indexName->$indexName"
-#set indexName [lindex $indexName 1]
+		set indexName [GetIndexAttributesbyPositions $nodePos $indexPos 0 ]
+		puts "indexName->$indexName"
 
 
 		if {[string match "18*" $indexVar] || [string match "1A*" $indexVar]} {
@@ -1032,18 +1052,19 @@ puts "indexName->$indexName"
 			set parentNode TPDO-$nodePosition
 			set indexNode TPdoIndexValue-$nodePosition-$count
 			set subIndexNode TPdoSubIndexValue-$nodePosition-$count
-			$updatetree insert $indexPosition TPDO-$nodePosition TPdoIndexValue-$nodePosition-$count -text [lindex $indexName 1]\($indexVar\) -open 0 -image [Bitmap::get index]
 		} elseif {[string match "14*" $indexVar] || [string match "16*" $indexVar]} {
 			#it must a RPDO object	
 			set parentNode RPDO-$nodePosition
 			set indexNode RPdoIndexValue-$nodePosition-$count
 			set subIndexNode RPdoSubIndexValue-$nodePosition-$count
-			$updatetree insert $indexPosition RPDO-$nodePosition RPdoIndexValue-$nodePosition-$count -text [lindex $indexName 1]\($indexVar\) -open 0 -image [Bitmap::get index]
 		} else {
 			set parentNode $node
 			set indexNode IndexValue-$nodePosition-$count
 			set subIndexNode SubIndexValue-$nodePosition-$count
 		}
+
+#puts "child for parentNode===>[$updatetree nodes $parentNode] "
+
 		$updatetree insert $indexPosition $parentNode $indexNode -text [lindex $indexName 1]\($indexVar\) -open 0 -image [Bitmap::get index]
 
 
@@ -1058,8 +1079,8 @@ puts "indexName->$indexName"
 			$updatetree insert $tempSidxCount $indexNode $subIndexNode-$tempSidxCount -text [lindex $subIndexName 1]\($subIndexId\) -open 0 -image [Bitmap::get subindex]
 		}
 
-		puts "child after adding index ->[$updatetree nodes $node]"
-
+		#puts "child for parentNode after adding index ->[$updatetree nodes $parentNode]"
+		unset indexVar
 		destroy .addIdx
 	}
 	button $frame2.bt_cancel -text Cancel -command { 
@@ -1193,7 +1214,7 @@ proc AddSubIndexWindow {} {
 		} else {
 			$updatetree insert $subIndexPos $node SubIndexValue-$nodePos-$count -text [lindex $subIndexName 1]\($subIndexVar\) -open 0 -image [Bitmap::get subindex]
 		}
-
+		unset subIndexVar
 		destroy .addSidx
 
 	}
@@ -1231,4 +1252,41 @@ proc PropertiesWindow {} {
 	global updatetree
 
 	set node [$updatetree selection get]
+	if {$node == "PjtName"} {
+		set title1 "Name :"
+		set display1 [$updatetree itemcget $node -text]
+		set title2 "Loaction"	
+		set 
+	} elseif { [string match "MN-*"] } {
+
+	} elseif { [string match "CN-*"] } {
+
+	} else {
+		#property is only for these nodes other node should have it
+		puts "\n\n\tNO PROPERTY WINDOW FOR NODE==>$node\n\n"
+		return
+	}
+
+	set winProp .prop
+	catch "destroy $winProp"
+	toplevel $winProp
+	wm title     $winProp "Properties"
+	wm resizable $winProp 0 0
+	wm transient $winProp .
+	wm deiconify $winProp
+	wm minsize   $winProp 50 50
+	grab $winProp
+
+	label $winprop.l_title1 -text ""
+	label $winprop.l_display1 -text ""
+	label $winprop.l_title2 -text ""
+	label $winprop.l_display2 -text ""
+	label $winprop.l_title3 -text ""
+	label $winprop.l_display3 -text ""
+	label $winprop.l_title4 -text ""
+	label $winprop.l_display4 -text ""
+	label $winprop.l_empty1 -text ""
+
+
+	
 }

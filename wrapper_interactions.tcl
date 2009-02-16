@@ -79,13 +79,13 @@ proc SortNode {nodeType nodeID nodePos choice {indexPos ""} {indexId ""}} {
 	} elseif { $choice == "sub" } {
 		set count [new_intp]
 		#DllExport ocfmRetCode GetSubIndexCount(int NodeID, ENodeType NodeType, char* IndexID, int* Out_SubIndexCount);
-		puts "GetSubIndexCount nodeID->$nodeID nodeType->$nodeType indexId->$indexId count->$count"
+		#puts "GetSubIndexCount nodeID->$nodeID nodeType->$nodeType indexId->$indexId count->$count"
 		set catchErrCode [GetSubIndexCount $nodeID $nodeType $indexId $count]
 		set count [intp_value $count]
-		puts "\nSortNode:subindex count ->$count"
+		#puts "\nSortNode:subindex count ->$count"
 		set sortRange 2
 	} else {
-		puts "Invalid choice for SortNode"
+		#puts "Invalid choice for SortNode"
 		return
 	}
 
@@ -113,25 +113,25 @@ proc SortNode {nodeType nodeID nodePos choice {indexPos ""} {indexId ""}} {
 		if { $choice == "ind" } {
 			set catchErrCode [GetIndexIDbyPositions $nodePos $inc]
 			set indexId [lindex $catchErrCode 1]
-			puts "indexId->$indexId"
+			#puts "indexId->$indexId"
 			lappend sortList $indexId$tmpInc
 		} elseif { $choice == "sub" } {
-			puts "GetSubIndexIDbyPositions nodePos->$nodePos indexPos->$indexPos inc->$inc"
+			#puts "GetSubIndexIDbyPositions nodePos->$nodePos indexPos->$indexPos inc->$inc"
 			set catchErrCode [GetSubIndexIDbyPositions $nodePos $indexPos $inc]
 			set subIndexId [lindex $catchErrCode 1]
-			puts "subIndexId->$subIndexId"
+			#puts "subIndexId->$subIndexId"
 			lappend sortList $subIndexId$tmpInc
 		} else {
-			puts "Invalid choice for SortNode"
+			#puts "Invalid choice for SortNode"
 			return
 		}
 	
 	}
-	puts "b4sortList->$sortList"
+	#puts "b4sortList->$sortList"
 	#lsort -increasing $sortList
 	set sortList [lsort -ascii $sortList]
 	#also chk out dictionary option
-	puts sortList->$sortList
+	#puts sortList->$sortList
 
 	if { $choice == "ind"} {
 		set sortListIdx ""
@@ -160,9 +160,9 @@ proc SortNode {nodeType nodeID nodePos choice {indexPos ""} {indexId ""}} {
 			}
 			lappend $corrList $sortInc
 		}
-		puts "sortListIdx->$sortListIdx"
-		puts "sortListTpdo->$sortListTpdo"
-		puts "sortListRpdo->$sortListRpdo"
+		#puts "sortListIdx->$sortListIdx"
+		#puts "sortListTpdo->$sortListTpdo"
+		#puts "sortListRpdo->$sortListRpdo"
 		return [list $sortListIdx $sortListTpdo $sortListRpdo]
 	} elseif {$choice == "sub"} {
 		set corrList ""
@@ -182,7 +182,7 @@ proc SortNode {nodeType nodeID nodePos choice {indexPos ""} {indexId ""}} {
 		return $corrList
 	} else {
 		#check the choice
-		puts "choice Is ------> $choice"
+		#puts "choice Is ------> $choice"
 		return
 	}
 
@@ -206,14 +206,14 @@ proc Import {parentNode tmpDir nodeType nodeID } {
 	global LocvarProgbar
 	set LocvarProgbar 0
 	set errorString []
-	puts "\n\n\t******Import*****"
+	#puts "\n\n\t******Import*****"
 
 	set nodePos [new_intp]
-	puts "IfNodeExists nodeID->$nodeID nodeType->$nodeType nodePos->$nodePos"
+	#puts "IfNodeExists nodeID->$nodeID nodeType->$nodeType nodePos->$nodePos"
 	#IfNodeExists API is used to get the nodePosition which is needed fro various operation	
 	set catchErrCode [IfNodeExists $nodeID $nodeType $nodePos]
 	set nodePos [intp_value $nodePos]
-	puts "catchErrCode->$catchErrCode====nodePos->$nodePos"
+	#puts "catchErrCode->$catchErrCode====nodePos->$nodePos"
 
 
 
@@ -223,7 +223,7 @@ proc Import {parentNode tmpDir nodeType nodeID } {
 	set count [new_intp]
 	set catchErrCode [GetIndexCount $nodeID $nodeType $count]
 	set count [intp_value $count]
-	puts COUNT$count
+	#puts COUNT$count
 	if {$count == 0} {
 		ImportProgress stop
       		return
@@ -232,16 +232,16 @@ proc Import {parentNode tmpDir nodeType nodeID } {
 	set parentId [split $parentNode -]
 	set parentId [lrange $parentId 1 end]
 	set parentId [join $parentId -]
-	puts "parentId---->$parentId"
+	#puts "parentId---->$parentId"
 	set returnList [SortNode $nodeType $nodeID $nodePos ind]
 	set corrList [lindex $returnList 0]
-	puts "corrList->$corrList"
+	#puts "corrList->$corrList"
 	set count [llength $corrList]
 	for { set inc 0 } { $inc < $count } { incr inc } {
 		set sortedIndexPos [lindex $corrList $inc]
 		set IndexValue [GetIndexIDbyPositions $nodePos $sortedIndexPos]
 		set IndexValue [lindex $IndexValue 1]
-		puts "IndexValue->$IndexValue"
+		#puts "IndexValue->$IndexValue"
 		#set IndexName [GetIndexAttributes $nodeID $nodeType $IndexValue 0]
 		#set IndexName [lindex $IndexName 1]
 		#ocfmRetCode GetIndexAttributesbyPositions(int NodePos, int IndexPos, EAttributeType AttributeType, char* Out_AttributeValue);
@@ -249,12 +249,12 @@ proc Import {parentNode tmpDir nodeType nodeID } {
 		set IndexName [lindex $catchErr 1]
 		$updatetree insert $inc $parentNode IndexValue-$parentId-$inc -text $IndexName\($IndexValue\) -open 0 -image [Bitmap::get index]
 		set sidxCorrList [SortNode $nodeType $nodeID $nodePos sub $sortedIndexPos $IndexValue]
-		puts "IndexValue->$IndexValue\nsidxCorrList-->$sidxCorrList\n"
+		#puts "IndexValue->$IndexValue\nsidxCorrList-->$sidxCorrList\n"
 
 		set SIdxCount [new_intp]
 		set catchErrCode [GetSubIndexCount $nodeID $nodeType $IndexValue $SIdxCount]
 		set SIdxCount [intp_value $SIdxCount]
-		puts "\t\tSIdxCount->$SIdxCount"
+		#puts "\t\tSIdxCount->$SIdxCount"
 		for { set tmpCount 0 } { $tmpCount < $SIdxCount } { incr tmpCount } {
 			#puts "in sub index"
 			set sortedSubIndexPos [lindex $sidxCorrList $tmpCount]
@@ -277,9 +277,9 @@ proc Import {parentNode tmpDir nodeType nodeID } {
 
 ###########################################for TPDO
 	set corrList [lindex $returnList 1]
-	puts "corrList->$corrList"
+	#puts "corrList->$corrList"
 	set count [llength $corrList]
-	puts "count for tpdo->$count"
+	#puts "count for tpdo->$count"
 	$updatetree insert end $parentNode PDO-$parentId -text "PDO" -open 0 -image [Bitmap::get pdo]
 	$updatetree insert end PDO-$parentId TPDO-$parentId -text "TPDO" -open 0 -image [Bitmap::get pdo]
 	for { set inc 0 } { $inc < $count } { incr inc } {
@@ -316,9 +316,9 @@ proc Import {parentNode tmpDir nodeType nodeID } {
 	set LocvarProgbar 75	
 ###########################################for RPDO
 	set corrList [lindex $returnList 2]
-	puts "corrList->$corrList"
+	#puts "corrList->$corrList"
 	set count [llength $corrList]
-	puts "count for rpdo->$count"
+	#puts "count for rpdo->$count"
 	$updatetree insert end PDO-$parentId RPDO-$parentId -text "RPDO" -open 0 -image [Bitmap::get pdo]
 	for { set inc 0 } { $inc < $count } { incr inc } {
 		set sortedIndexPos [lindex $corrList $inc]
@@ -351,7 +351,7 @@ proc Import {parentNode tmpDir nodeType nodeID } {
 		}
 		update idletasks
 	}
-	puts "errorString->$errorString...nodeType->$nodeType...nodeID->$nodeID..."
+	#puts "errorString->$errorString...nodeType->$nodeType...nodeID->$nodeID..."
 	set LocvarProgbar 100
 	ImportProgress stop
 

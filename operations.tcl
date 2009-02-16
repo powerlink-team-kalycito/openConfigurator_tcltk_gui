@@ -318,7 +318,7 @@ proc Editor::showTreeWin {show} {
     set win [winfo parent $win]
     set panedWin [winfo parent $win]
     update idletasks
-    puts show->$show
+    #puts show->$show
     if {$show} {
         grid configure $panedWin.f1 -column 2 -columnspan 1
         grid $panedWin.sash1
@@ -448,7 +448,7 @@ proc openproject { } {
         }
 	set tmpsplit [split $projectfilename /]
 	set PjtName [lindex $tmpsplit [expr [llength $tmpsplit] - 1]]
-	puts "Project name->$PjtName"
+	#puts "Project name->$PjtName"
 	set ext [file extension $projectfilename]
 	    if { $ext != "" } {
 	        if {[string compare $ext ".pjt"]} {
@@ -980,7 +980,7 @@ proc Editor::SingleClickNode {node} {
 
 	$updatetree selection set $node
 	set nodeSelect $node
-	puts "node====>$node"
+	#puts "node====>$node"
 	
 
 	if {[string match "root" $node] || [string match "PjtName" $node] || [string match "MN-*" $node] || [string match "OBD-*" $node] || [string match "CN-*" $node] || [string match "PDO-*" $node]} {
@@ -1004,7 +1004,7 @@ proc Editor::SingleClickNode {node} {
 	}
 
 	set nodePos [new_intp]
-	puts "IfNodeExists nodeId->$nodeId nodeType->$nodeType nodePos->$nodePos"
+	#puts "IfNodeExists nodeId->$nodeId nodeType->$nodeType nodePos->$nodePos"
 	#IfNodeExists API is used to get the nodePosition which is needed fro various operation	
 	set catchErrCode [IfNodeExists $nodeId $nodeType $nodePos]
 	set nodePos [intp_value $nodePos]
@@ -1061,7 +1061,7 @@ proc Editor::SingleClickNode {node} {
 				#}
 #########################################################################################################
 				if {[string match "00" $subIndexId] == 0 } {
-					puts "\nGetSubIndexAttributes nodeId->$nodeId nodeType->$nodeType indexId->$indexId subIndexId->$subIndexId 4\n"
+					#puts "\nGetSubIndexAttributes nodeId->$nodeId nodeType->$nodeType indexId->$indexId subIndexId->$subIndexId 4\n"
 					set indexPos [new_intp] ; #newly added
 					set subIndexPos [new_intp] ; #newly added
 					set catchErrCode [IfSubIndexExists $nodeId $nodeType $indexId $subIndexId $subIndexPos $indexPos] ; #newly added
@@ -1069,22 +1069,22 @@ proc Editor::SingleClickNode {node} {
 					set subIndexPos [intp_value $subIndexPos] ; #newly added
 
 					#set tempIndexProp [GetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId 4]
-					set tempIndexProp [GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos 4 ] ; # 4 is passed to get the defult value
-puts "tempIndexPropi PDO ->$tempIndexProp"
-					set IndexDefaultValue [lindex $tempIndexProp 1]
+					set tempIndexProp [GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos 5 ] ; # 5 is passed to get the actual value
+#puts "tempIndexPropi PDO ->$tempIndexProp"
+					set IndexActualValue [lindex $tempIndexProp 1]
 					#if {$IndexDefaultValue == ""} {
 					#	set IndexDefaultValue 0000000000000000
 					#} else {
 					#	set IndexDefaultValue [expr 0000000000000000 + $IndexDefaultValue]
 					#}
 					#puts "IndexDefaultValue->$IndexDefaultValue"
-					set DataSize [string range $IndexDefaultValue 2 5]
-					set Offset [string range $IndexDefaultValue 6 9]
-					set Reserved [string range $IndexDefaultValue 10 11]
-					set listSubIndex [string range $IndexDefaultValue 12 13]
-					set listIndex [string range $IndexDefaultValue 14 17]
+					set DataSize [string range $IndexActualValue 2 5]
+					set Offset [string range $IndexActualValue 6 9]
+					set Reserved [string range $IndexActualValue 10 11]
+					set listSubIndex [string range $IndexActualValue 12 13]
+					set listIndex [string range $IndexActualValue 14 17]
 					#$f2 insert $popCount [list $popCount $IndexDefaultValue $listIndex $listSubIndex $Reserved $Offset $DataSize]
-					[lindex $f2 1] insert $popCount [list $popCount $IndexDefaultValue $listIndex $listSubIndex $Reserved $Offset $DataSize]
+					[lindex $f2 1] insert $popCount [list $popCount $IndexActualValue $listIndex $listSubIndex $Reserved $Offset $DataSize]
 					incr popCount 1 
 				}
 ############################################################################################################
@@ -1200,7 +1200,7 @@ puts "tempIndexPropi PDO ->$tempIndexProp"
 	set catchErrCode [IfSubIndexExists $nodeId $nodeType $indexId $subIndexId $subIndexPos $indexPos] ; #newly added
 	set indexPos [intp_value $indexPos] ; #newly added
 	set subIndexPos [intp_value $subIndexPos] ; #newly added
-puts "\n\n\tindexPos->$indexPos====subIndexPos->$subIndexPos\n"
+#puts "\n\n\tindexPos->$indexPos====subIndexPos->$subIndexPos\n"
 
 
 	set IndexProp []
@@ -1208,9 +1208,9 @@ puts "\n\n\tindexPos->$indexPos====subIndexPos->$subIndexPos\n"
 
 		set tempIndexProp [GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos $cnt ]
 		set ErrCode [ocfmRetCode_code_get [lindex $tempIndexProp 0]]
-		puts "ErrCode:$ErrCode"
-		set ErrStr [ocfmRetCode_errorString_get [lindex $tempIndexProp 0]]
-		puts "Errstr:$ErrStr"
+		#puts "ErrCode:$ErrCode"
+		#set ErrStr [ocfmRetCode_errorString_get [lindex $tempIndexProp 0]]
+		#puts "Errstr:$ErrStr"
 		if {$ErrCode == 0} {	
 			lappend IndexProp [lindex $tempIndexProp 1]
 		} else {
@@ -1224,7 +1224,7 @@ puts "\n\n\tindexPos->$indexPos====subIndexPos->$subIndexPos\n"
 	##set tempIndexProp [GetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId 5]
 	##lappend IndexProp [lindex $tempIndexProp 1]
 	#lappend IndexProp []
-	puts "IndexProp->$IndexProp"
+	#puts "IndexProp->$IndexProp"
 ############################################################################
 
 		$tmpInnerf0.en_idx1 configure -state normal
@@ -1368,11 +1368,11 @@ puts "\n\n\tindexPos->$indexPos====subIndexPos->$subIndexPos\n"
 		set indexPos [intp_value $indexPos] ; #newly added
 		set IndexProp []
 		for {set cnt 0 } {$cnt <= 8} {incr cnt} {
-			puts "\nGetIndexAttributes nodeId->$nodeId nodeType->$nodeType indexId->$indexId $cnt\n"
+			#puts "\nGetIndexAttributes nodeId->$nodeId nodeType->$nodeType indexId->$indexId $cnt\n"
 			#set tempIndexProp [GetIndexAttributes $nodeId $nodeType $indexId $cnt]
 			set tempIndexProp [GetIndexAttributesbyPositions $nodePos $indexPos $cnt ]
 			set ErrCode [ocfmRetCode_code_get [lindex $tempIndexProp 0]]
-			puts "ErrCode:$ErrCode"
+			#puts "ErrCode:$ErrCode"
 			if {$ErrCode == 0} {
 				lappend IndexProp [lindex $tempIndexProp 1]
 			} else {
@@ -1386,7 +1386,7 @@ puts "\n\n\tindexPos->$indexPos====subIndexPos->$subIndexPos\n"
 		##set tempIndexProp [GetIndexAttributes $nodeId $nodeType $indexId 5]
 		##lappend IndexProp [lindex $tempIndexProp 1]
 		#lappend IndexProp []
-		puts "IndexProp->$IndexProp"
+		#puts "IndexProp->$IndexProp"
 		#set tempIndexProp [GetIndexAttributes $nodeId $nodeType $indexId 6]
 		#puts "tempIndexProp->$tempIndexProp"
 	
@@ -1497,8 +1497,11 @@ puts "\n\n\tindexPos->$indexPos====subIndexPos->$subIndexPos\n"
 	$tmpInnerf1.en_pdo1 insert 0 [lindex $IndexProp 6]
 	$tmpInnerf1.en_pdo1 configure -state disabled
 
-	$tmpInnerf1.frame1.ra_dec select
-
+	if {[string match -nocase "0x*" [lindex $IndexProp 5]]} {
+		$tmpInnerf1.frame1.ra_hex select
+	} else {
+		$tmpInnerf1.frame1.ra_dec select
+	}
 
 	#set cpAttrVal [new_charp]
 	#set ErrStruct [Tcl_CheckIndexAttribute 1 1 1006 0]
@@ -1553,7 +1556,11 @@ puts "\n\n\tindexPos->$indexPos====subIndexPos->$subIndexPos\n"
 proc Editor::DoubleClickNode {node} {
 	global updatetree
 
-	$updatetree itemconfigure $node -open 1	
+	if {[$updatetree nodes $node] != "" } {
+		$updatetree itemconfigure $node -open 1
+	} else {
+		# it has no child no need to expand
+	}
 	Editor::SingleClickNode $node
 } 
 
@@ -1580,11 +1587,11 @@ proc AddCN {cnName tmpImpDir nodeId} {
 
 	incr cnCount
 	set catchErrCode [NodeCreate $nodeId 1]
-	puts "\n\nAdd CN catchErrCode->$catchErrCode"
+	#puts "\n\nAdd CN catchErrCode->$catchErrCode"
 	#set catchErrCode [lindex $obj 0]
 	set ErrCode [ocfmRetCode_code_get $catchErrCode]
 	if { $ErrCode != 0 } {
-		tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+		#tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
 		return 
 	}
 	#lappend nodeIdList CN-1-$cnCount
@@ -1600,11 +1607,11 @@ proc AddCN {cnName tmpImpDir nodeId} {
 		#API
 		#DllExport ocfmRetCode ImportXML(char* fileName, int NodeID, ENodeType NodeType);
 		set catchErrCode [ImportXML "$tmpImpDir" $nodeId 1]
-		puts "catchErrCode->$catchErrCode"
+		#puts "catchErrCode->$catchErrCode"
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
-		puts "ErrCode:$ErrCode"
+		#puts "ErrCode:$ErrCode"
 		if { $ErrCode != 0 } {
-			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+			#tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
 			return 
 		}
 		
@@ -1745,7 +1752,7 @@ proc EscapeTree {} {
 proc FindSpace::Find { searchStr {node ""} {mode 0} } {
 	global updatetree
 
-puts "mode->$mode"
+#puts "mode->$mode"
 	set FindSpace::searchString $searchStr
 	set flag 0
 	set chk 0
@@ -1783,10 +1790,10 @@ puts "mode->$mode"
 						set chk 1
 					}
 				
-puts "flag 1 in idx ->$tempIdx"	
+#puts "flag 1 in idx ->$tempIdx"	
 				}
 				if {[string match -nocase "PDO*" $tempIdx]} {
-puts "calling pdo"
+#puts "calling pdo"
 				#set result [FindSpace::FindPdo $tempIdx $searchStr $mode $node $flag $prev $next $chk]
 				#if {$result == "no_match"} {
 				#	continue
@@ -1812,23 +1819,23 @@ puts "calling pdo"
 									set chk 1
 								}
 						
-puts "flag 1 in pdo idx ->$tempPdoIdx"	
+#puts "flag 1 in pdo idx ->$tempPdoIdx"	
 							}
 							if {[string match -nocase "*$searchStr*" [$updatetree itemcget $tempPdoIdx -text]] && $chk == 0} {
 								#lappend FindSpace::findList $tempIdx
-								puts -nonewline "......MATCH idx......"
+								#puts -nonewline "......MATCH idx......"
 								if { $mode == 0 } {
 									FindSpace::OpenParent $updatetree $tempPdoIdx
 									return 1
 								} elseif {$mode == "prev" } {
 									set prev $tempPdoIdx
-puts "prev in pdo idx ->$prev"
+#puts "prev in pdo idx ->$prev"
 								} elseif {$mode == "next" } {
 									if {$flag == 0} {
 										#do nothing
 									} elseif {$flag == 1} {
 										set next $tempPdoIdx
-puts "next in pdo sidx ->$next"
+#puts "next in pdo sidx ->$next"
 										return $next
 									}
 								}
@@ -1845,23 +1852,23 @@ puts "next in pdo sidx ->$next"
 										set chk 1
 									}
 						
-puts "flag 1 in idx ->$tempIdx"	
+#puts "flag 1 in idx ->$tempIdx"	
 								}
 								if {[string match -nocase "*$searchStr*" [$updatetree itemcget $tempPdoSidx -text]] && $chk == 0} {
 									#lappend FindSpace::findList $tempSidx
-									puts -nonewline "......MATCH sidx......"
+									#puts -nonewline "......MATCH sidx......"
 									if { $mode == 0 } {
 										FindSpace::OpenParent $updatetree $tempPdoSidx
 										return 1
 									} elseif {$mode == "prev" } {
 										set prev $tempPdoSidx
-puts "prev in pdo sidx ->$prev"
+#puts "prev in pdo sidx ->$prev"
 									} elseif {$mode == "next" } {
 										if {$flag == 0} {
 											#do nothing
 										} elseif {$flag == 1} {
 											set next $tempPdoSidx
-puts "next in pdo sidx ->$next"
+#puts "next in pdo sidx ->$next"
 											return $next
 										}
 		
@@ -1874,20 +1881,20 @@ puts "next in pdo sidx ->$next"
 					}
 				}
 				if {[string match -nocase "*$searchStr*" [$updatetree itemcget $tempIdx -text]] && $chk == 0} {
-puts "idx matched -> $tempIdx"
+#puts "idx matched -> $tempIdx"
 					#lappend FindSpace::findList $tempIdx
 					if { $mode == 0 } { 
 						FindSpace::OpenParent $updatetree $tempIdx
 						return 1
 					} elseif {$mode == "prev" } {
 						set prev $tempIdx
-puts "prev in idx ->$prev"
+#puts "prev in idx ->$prev"
 					} elseif {$mode == "next" } {
 						if {$flag == 0} {
 							#do nothing
 						} elseif {$flag == 1} {
 							set next $tempIdx
-puts "next in idx ->$next"
+#puts "next in idx ->$next"
 							return $next
 						}
 					}
@@ -1904,10 +1911,10 @@ puts "next in idx ->$next"
 							set flag 1
 							set chk 1
 						}
-puts "flag 1 in sidx ->$tempSidx"
+#puts "flag 1 in sidx ->$tempSidx"
 					}
 					if {[string match -nocase "*$searchStr*" [$updatetree itemcget $tempSidx -text]] && $chk == 0} {
-puts "sidx matched -> $tempSidx"
+#puts "sidx matched -> $tempSidx"
 						#lappend FindSpace::findList $tempSidx
 
 						if { $mode == 0 } { 
@@ -1915,13 +1922,13 @@ puts "sidx matched -> $tempSidx"
 							return 1
 						} elseif {$mode == "prev" } {
 							set prev $tempSidx
-puts "prev in sidx ->$prev"
+#puts "prev in sidx ->$prev"
 						} elseif {$mode == "next" } {
 							if {$flag == 0} {
 								#do nothing
 							} elseif {$flag == 1} {
 								set next $tempSidx
-puts "next in sidx ->$next"
+#puts "next in sidx ->$next"
 								return $next
 							}
 	
@@ -1935,7 +1942,7 @@ puts "next in sidx ->$next"
 			}
 	}
 	#$updatetree selection clear
-	#puts FindSpace::findList->$FindSpace::findList
+	##puts FindSpace::findList->$FindSpace::findList
 	#if {[llength $FindSpace::findList]!=0} {
 	#	catch { set parent [$updatetree parent [lindex $FindSpace::findList 0] ]
 	#		$updatetree itemconfigure [$updatetree parent [lindex $FindSpace::findList 0] ] -open 1
@@ -1960,12 +1967,12 @@ puts "next in sidx ->$next"
 proc FindSpace::FindPdo {pdoNode searchStr mode node flag prev next chk } {
 	global updatetree
 
-puts "mode->$mode"
-puts "node->$node"
-puts "flag->$flag"
-puts "prev->$prev"
-puts "next->$next"
-puts "chk->$chk"
+#puts "mode->$mode"
+#puts "node->$node"
+#puts "flag->$flag"
+#puts "prev->$prev"
+#puts "next->$next"
+#puts "chk->$chk"
 		
 	set childPdo [$updatetree nodes $pdoNode]
 	foreach tempPdo $childPdo {
@@ -1986,23 +1993,23 @@ puts "chk->$chk"
 					set chk 1
 				}
 						
-puts "flag 1 in idx ->$tempIdx"	
+#puts "flag 1 in idx ->$tempIdx"	
 			}
 			if {[string match -nocase "*$searchStr*" [$updatetree itemcget $tempIdx -text]] && $chk == 0} {
 				#lappend FindSpace::findList $tempIdx
-				puts -nonewline "......MATCH idx......"
+				#puts -nonewline "......MATCH idx......"
 				if { $mode == 0 } {
 					FindSpace::OpenParent $updatetree $tempIdx
 					return 1
 				} elseif {$mode == "prev" } {
 					set prev $tempIdx
-puts "prev in pdo idx ->$prev"
+#puts "prev in pdo idx ->$prev"
 				} elseif {$mode == "next" } {
 					if {$flag == 0} {
 						#do nothing
 					} elseif {$flag == 1} {
 						set next $tempIdx
-puts "next in pdo sidx ->$next"
+#puts "next in pdo sidx ->$next"
 						return $next
 					}
 	
@@ -2020,11 +2027,11 @@ puts "next in pdo sidx ->$next"
 						set chk 1
 					}
 						
-puts "flag 1 in idx ->$tempIdx"	
+#puts "flag 1 in idx ->$tempIdx"	
 				}
 				if {[string match -nocase "*$searchStr*" [$updatetree itemcget $tempSidx -text]] && $chk == 0} {
 					#lappend FindSpace::findList $tempSidx
-					puts -nonewline "......MATCH sidx......"
+					#puts -nonewline "......MATCH sidx......"
 					if {$tempSidx == $node && $mode == 1 && $flag ==0 } {
 						set flag 1
 					}
@@ -2033,13 +2040,13 @@ puts "flag 1 in idx ->$tempIdx"
 						return 1
 					} elseif {$mode == "prev" } {
 						set prev $tempSidx
-puts "prev in pdo sidx ->$prev"
+#puts "prev in pdo sidx ->$prev"
 					} elseif {$mode == "next" } {
 						if {$flag == 0} {
 							#do nothing
 						} elseif {$flag == 1} {
 							set next $tempSidx
-puts "next in pdo sidx ->$next"
+#puts "next in pdo sidx ->$next"
 							return $next
 						}
 		
@@ -2090,9 +2097,9 @@ proc FindSpace::Prev {} {
 		set prev [FindSpace::Find $FindSpace::searchString $node prev]
 		#puts out->$out
 		#set prev [lindex $out 0]
-		puts prev->$prev
+		#puts prev->$prev
 		if { $prev == "" } {
-			puts "prev no match"
+			#puts "prev no match"
 		} else {
 			FindSpace::OpenParent $updatetree $prev
 			#$updatetree selection set $prev 
@@ -2119,9 +2126,9 @@ proc FindSpace::Next {} {
 		FindSpace::Find $FindSpace::searchString
 	} else {	
 		set next [FindSpace::Find $FindSpace::searchString $node next]
-		puts next->$next
+		#puts next->$next
 		if { $next == "" } {
-			puts "next no match"
+			#puts "next no match"
 		} else {
 			FindSpace::OpenParent $updatetree $next
 		}
@@ -2151,7 +2158,7 @@ proc TransferCDC {} {
         if {$fileLocation_CDC == ""} {
                 return
         }
-	puts fileLocation_CDC:$fileLocation_CDC
+	#puts fileLocation_CDC:$fileLocation_CDC
 	GenerateCDC $fileLocation_CDC
 	return
 }
@@ -2164,7 +2171,7 @@ proc TransferCDC {} {
 ################################################################################################
 proc TransferXML {} {
 
-	puts "Geneartexap called"
+	#puts "Geneartexap called"
 	set types {
         {"All Project Files"     {*.xap } }
 	}
@@ -2179,13 +2186,13 @@ proc TransferXML {} {
         if {$fileLocation_XAP == ""} {
                 return
         }
-	puts fileLocation_XAP:$fileLocation_XAP
+	#puts fileLocation_XAP:$fileLocation_XAP
 	set catchErrCode [GenerateXAP $fileLocation_XAP]
-	puts "catchErrCode->$catchErrCode"
+	#puts "catchErrCode->$catchErrCode"
 	set ErrCode [ocfmRetCode_code_get $catchErrCode]
-	puts "ErrCode:$ErrCode"
+	#puts "ErrCode:$ErrCode"
 	if { $ErrCode != 0 } {
-		tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+		#tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
 		return
 	}
 
@@ -2213,8 +2220,8 @@ proc ReImport {} {
 	global updatetree
 	global nodeIdList
 
-puts " \n\nReimport" 
-puts "nodeIdList->$nodeIdList"
+#puts " \n\nReimport" 
+#puts "nodeIdList->$nodeIdList"
 
 	set node [$updatetree selection get]
 	if {[string match "MN*" $node]} {
@@ -2226,8 +2233,8 @@ puts "nodeIdList->$nodeIdList"
 		# check whether import is first time or not 
 		#so as to add OBD icon in GUI
 		set res [lsearch $child "OBD$tmpNode-1*"]
-		puts "in reimport res -> $res"
-		puts "child->$child"
+		#puts "in reimport res -> $res"
+		#puts "child->$child"
 
 		set nodeId 240
 		set nodeType 0
@@ -2264,7 +2271,7 @@ puts "nodeIdList->$nodeIdList"
 			set nodeType [lindex $result 1]
 		} else {
 			#must be some other node this condition should never reach
-			puts "\n\nDeleteTreeNode->SHOULD NEVER HAPPEN\n\n"
+			#puts "\n\nDeleteTreeNode->SHOULD NEVER HAPPEN\n\n"
 			return
 		}
 
@@ -2274,17 +2281,17 @@ puts "nodeIdList->$nodeIdList"
 	        {"XDC Files"     {.xdc } }
 	        {"XDD Files"     {.xdd } }
 	}
-	puts  "\n\nREimport"
+	#puts  "\n\nREimport"
 	set tmpImpDir [tk_getOpenFile -title "Import XDC" -filetypes $types -parent .]
 	if {$tmpImpDir != ""} {
 		#API 
 		#ReImportXML(char* fileName, char* errorString, int NodeID, ENodeType NodeType);
 		set catchErrCode [ReImportXML $tmpImpDir $nodeId $nodeType]
-		puts "catchErrCode in reimport ->$catchErrCode"
+		#puts "catchErrCode in reimport ->$catchErrCode"
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
-		puts "ErrCode:$ErrCode"
+		#puts "ErrCode:$ErrCode"
 		if { $ErrCode != 0 } {
-			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+			#tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
 			return
 		}	
 		catch {
@@ -2299,7 +2306,7 @@ puts "nodeIdList->$nodeIdList"
 		#Import parentNode tmpDir nodeType nodeID 
 		Import $node $tmpImpDir $nodeType $nodeId 
 	}
-	puts "**********\n"
+	#puts "**********\n"
 
 } 
 
@@ -2314,7 +2321,7 @@ proc DeleteTreeNode {} {
 	global updatetree
 	global nodeIdList
 	global nodeObj	
-	puts nodeIdList->$nodeIdList
+	#puts nodeIdList->$nodeIdList
 
 
 	set node [$updatetree selection get]
@@ -2330,7 +2337,7 @@ proc DeleteTreeNode {} {
 
 		# always OBD node ends with -1
 		set node OBD-$nodePos-1
-		puts "DeleteTreeNode:::::node->$node"
+		#puts "DeleteTreeNode:::::node->$node"
 
 		set exist [$updatetree exists $node]	
 		if {$exist} { 
@@ -2347,13 +2354,13 @@ proc DeleteTreeNode {} {
 		set nodeType [lindex $result 1]
 	} else {
 		#must be some other node this condition should never reach
-		puts "\n\nDeleteTreeNode->SHOULD NEVER HAPPEN\n\n"
+		#puts "\n\nDeleteTreeNode->SHOULD NEVER HAPPEN\n\n"
 		return
 	}
 	
 	set nodeList ""
 	set nodeList [GetNodeList]
-	puts nodeList->$nodeList...
+	#puts nodeList->$nodeList...
 	if {[lsearch -exact $nodeList $node ]!=-1} {
 		set result [tk_messageBox -message "Do you want to delete node?" -type yesno -icon question -title "Question"]
    		 switch -- $result {
@@ -2364,7 +2371,7 @@ proc DeleteTreeNode {} {
    			     return
 			}
    		}	
-		puts "is a node"
+		#puts "is a node"
 		#set schCnt [lsearch -exact $nodeList $node]
 		#set nodeId [lindex $nodeIdList $schCnt]
 		##set incNodPos [expr $nodePos+1]
@@ -2409,7 +2416,7 @@ proc DeleteTreeNode {} {
 			#should not delete nodeId, obj, objNode from list since it is mn
 		} else {
 			set nodeIdList [DeleteList $nodeIdList $nodeId]		
-			puts "after deletion nodeIdList->$nodeIdList "		
+			#puts "after deletion nodeIdList->$nodeIdList "		
 		}
 		#FreeNodeMemory $node ; #no need to free bcoz memory not created
 		#this proc does following
@@ -2463,21 +2470,21 @@ proc DeleteTreeNode {} {
 		if {[string match "*SubIndexValue*" $node]} {
 			#gets SubIndexId of selected node
 			set sidx [string range [$updatetree itemcget $node -text] end-2 end-1 ]
-			puts sidx->$sidx
+			#puts sidx->$sidx
 
 			#gets the IndexId of selected SubIndex
 			set idxNode [$updatetree parent $node]
 			set idx [string range [$updatetree itemcget $idxNode -text] end-4 end-1 ]
 
-			puts "\n    DeleteSubIndex $nodeId $nodeType $idx $sidx\n"
+			#puts "\n    DeleteSubIndex $nodeId $nodeType $idx $sidx\n"
 			set catchErrCode [DeleteSubIndex $nodeId $nodeType $idx $sidx]
 		} elseif {[string match "*IndexValue*" $node]} {
 			#gets the IndexId of selected Index			
 			set idx [string range [$updatetree itemcget $idxNode -text] end-4 end-1 ]
-			puts "\n      DeleteIndex $nodeId $nodeType $idx\n"
+			#puts "\n      DeleteIndex $nodeId $nodeType $idx\n"
 			set catchErrCode [DeleteIndex $nodeId $nodeType $idx]
 		} else {
-			puts "\n\n       DeleteTreeNode->Invalid cond 2!!!\n\n"
+			#puts "\n\n       DeleteTreeNode->Invalid cond 2!!!\n\n"
 			return
 		}
 	
@@ -2549,11 +2556,11 @@ proc DeleteTreeNode {} {
 		#unset nodeObj($xdcId) ; #no need to free menmory bcoz didnt create it
 	}
 
-	puts "catchErrCode->$catchErrCode"
+	#puts "catchErrCode->$catchErrCode"
 	set ErrCode [ocfmRetCode_code_get $catchErrCode]
-	puts "ErrCode:$ErrCode"
+	#puts "ErrCode:$ErrCode"
 	if { $ErrCode != 0 } {
-		tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+		#tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
 		return
 	}
 
@@ -2572,7 +2579,7 @@ proc DeleteTreeNode {} {
 		} elseif { $nxtSelCnt > 0 } {
 			#select next node since nxtSelCnt already incremented do nothing
 		} else {
-			puts "DeleteTreeNode->Invalid cond 2"
+			#puts "DeleteTreeNode->Invalid cond 2"
 		}
 			catch {set nxtSel [lindex $nxtSelList $nxtSelCnt] }
 			catch {$updatetree selection set $nxtSel}
@@ -2604,7 +2611,7 @@ proc DeleteList {tempList deleteVar} {
 			return $resList
 		}
 	}
-	puts "no match to delete from list"
+	#puts "no match to delete from list"
 	return $tempList
 }
 
@@ -2616,7 +2623,7 @@ proc DeleteList {tempList deleteVar} {
 ################################################################################################
 proc NodeCreate {NodeID NodeType} {
 
-puts "\n\n      NodeCreate"
+#puts "\n\n      NodeCreate"
 
 
 
@@ -2625,16 +2632,16 @@ puts "\n\n      NodeCreate"
 	set objNodeCollection [new_CNodeCollection]
 	set objNodeCollection [CNodeCollection_getNodeColObjectPointer]
 	#puts "errorString->$errorString...NodeType->$NodeType...NodeID->$NodeID..."
-	puts $NodeType
+	#puts $NodeType
 	set catchErrCode [new_ocfmRetCode]
-	puts "CreateNode NodeID->$NodeID NodeType->$NodeType"
+	#puts "CreateNode NodeID->$NodeID NodeType->$NodeType"
 	set catchErrCode [CreateNode $NodeID $NodeType]
-	puts "catchErrCode->$catchErrCode"
+	#puts "catchErrCode->$catchErrCode"
 	set ErrCode [ocfmRetCode_code_get $catchErrCode]
-	puts "ErrCode:$ErrCode"
+	#puts "ErrCode:$ErrCode"
 	if { $ErrCode != 0 } {
-		puts "ErrStr:[ocfmRetCode_errorString_get $catchErrCode]"
-		tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+		#puts "ErrStr:[ocfmRetCode_errorString_get $catchErrCode]"
+		#tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
 		return $catchErrCode 
 	}
 
@@ -2648,7 +2655,7 @@ puts "\n\n      NodeCreate"
 	#set obj [CNode_getIndexCollection $objNode]
 	##currntly works only for windows
 	##set obj [CNode_getIndexCollectionWithoutPDO $objNode]
-	puts "***************\n"
+	#puts "***************\n"
 
 
 ##########################test remove later#############################
@@ -2683,7 +2690,7 @@ puts "\n\n      NodeCreate"
 		#set ErrStr [new_charp]
 		#puts "[charp_value $ErrCode]"
 #########################################
-puts "*****************\n\n"
+#puts "*****************\n\n"
 	return $catchErrCode 
 }
 
@@ -2724,7 +2731,7 @@ proc GetNodeIdType {node} {
 	global updatetree
 	global nodeIdList
 
-	puts node->$node
+	#puts node->$node
 	if {[string match "*SubIndex*" $node]} {
 		set parent [$updatetree parent [$updatetree parent $node]]
 		if {[string match "?Pdo*" $node]} {
@@ -2750,15 +2757,15 @@ proc GetNodeIdType {node} {
 		set parent $node
 	} else {
 		#must be root, PjtName or PDO
-		puts "\n\n  GetNodeIdType->must be root, PjtNmae or PDO passed node->$node\n\n"  
+		#puts "\n\n  GetNodeIdType->must be root, PjtNmae or PDO passed node->$node\n\n"  
 		return
 	}
 
-	puts "parent->$parent"
+	#puts "parent->$parent"
 	set nodeList []
 	set nodeList [GetNodeList]
 	set searchCount [lsearch -exact $nodeList $parent ]
-	#puts  "searchCount->$searchCount=======nodeList->$nodeList"
+	##puts  "searchCount->$searchCount=======nodeList->$nodeList"
 	set nodeId [lindex $nodeIdList $searchCount]
 	if {[string match "OBD*" $parent]} {
 		#it must be a mn
@@ -2767,7 +2774,7 @@ proc GetNodeIdType {node} {
 		#it must be cn
 		set nodeType 1
 	}
-	puts "GetNodeIdType->nodeId$nodeId===nodeType->$nodeType"
+	#puts "GetNodeIdType->nodeId$nodeId===nodeType->$nodeType"
 	return [list $nodeId $nodeType]
 
 }
@@ -2783,7 +2790,7 @@ proc GetNodeIdType {node} {
 proc ArrowUp {} {
 	global updatetree
 	set node [$updatetree selection get]
-	#puts "node->$node"
+	#puts "AU node->$node"
 	if { $node == "" || $node == "root" || $node == "PjtName" } {
 		$updatetree selection set "PjtName"
 		$updatetree see "PjtName"
@@ -2797,17 +2804,20 @@ proc ArrowUp {} {
 	set parent [$updatetree parent $node]
 	set siblingList [$updatetree nodes $parent]
 	set cnt [lsearch -exact $siblingList $node]
+#puts "AU parent->$parent \t siblingList_>$siblingList \t cnt->$cnt"
 	if { $cnt == 0} {
 		#there is no node before it so select parent
 		$updatetree selection set $parent
 		$updatetree see $parent
 	} else {
 		set sibling  [lindex $siblingList [expr $cnt-1] ]
+#puts "AU sibling->$sibling \t open->[$updatetree itemcget $sibling -open]"
 		if {[$updatetree itemcget $sibling -open] == 0} {
 			$updatetree selection set $sibling
 			$updatetree see $sibling
 			return
 		} else {
+#puts "AU siblingList->$siblingList"
 			set siblingList [$updatetree nodes $sibling]
 			if {[$updatetree itemcget [lindex $siblingList end] -open] == 1} {
 				_ArrowUp [lindex $siblingList end]
@@ -2822,6 +2832,8 @@ proc ArrowUp {} {
 
 proc _ArrowUp {node} {
 	global updatetree
+
+#puts "-AU node->$node \t open->$[$updatetree itemcget $node -open]"
 	if {[$updatetree itemcget $node -open] == 0} {
 		$updatetree selection set $node
 		$updatetree see $node
@@ -2829,6 +2841,7 @@ proc _ArrowUp {node} {
 	} else {
 		
 		set siblingList [$updatetree nodes $node]
+#puts "-AU siblingList->$siblingList open->[$updatetree itemcget [lindex $siblingList end] -open]"
 		if {[$updatetree itemcget [lindex $siblingList end] -open] == 1} {
 			_ArrowUp [lindex $siblingList end]
 		} else {			
@@ -2848,51 +2861,54 @@ proc _ArrowUp {node} {
 proc ArrowDown {} {
 	global updatetree
 	set node [$updatetree selection get]
-	#puts "node->$node"
+	#puts "AD node->$node"
 	if { $node == "" || $node == "root" } {
 		return
 	}
 	#if {$node == "root" } {
 	#	return
 	#}
+#puts "AD open->[$updatetree itemcget $node -open]"
 	if {[$updatetree itemcget $node -open] == 0} {
 		set parent [$updatetree parent $node]
 		set siblingList [$updatetree nodes $parent]
 		set cnt [lsearch -exact $siblingList $node]
+#puts "AD parent->$parent \t siblingList->$siblingList \t cnt->$cnt"
 		if { $cnt == [expr [llength $siblingList]-1 ]} {
 			_ArrowDown $parent $node
 		} else {
 			$updatetree selection set [lindex $siblingList [expr $cnt+1] ]
 			$updatetree see [lindex $siblingList [expr $cnt+1] ]
+			return
 		}
-		return
 	} else {
 		set siblingList [$updatetree nodes $node]
+#puts "AD siblingList->$siblingList"
 		$updatetree selection set [lindex $siblingList 0]
 		$updatetree see [lindex $siblingList 0]
 		return
 	}
 
-	if { $cnt == [expr [llength $siblingList]-1 ]} {
-		set sibling  [lindex $siblingList [expr $cnt-1] ]
-		if {[$updatetree itemcget $sibling -open] == 0} {
-			$updatetree selection set $sibling
-			$updatetree see $sibling
-			return
-		} else {
-			set siblingList [$updatetree nodes $sibling]
-			$updatetree selection set [lindex $siblingList end]
-			$updatetree see [lindex $siblingList end]
-			return
-		}
-	}
+	#if { $cnt == [expr [llength $siblingList]-1 ]} {
+	#	set sibling  [lindex $siblingList [expr $cnt-1] ]
+	#	if {[$updatetree itemcget $sibling -open] == 0} {
+	#		$updatetree selection set $sibling
+	#		$updatetree see $sibling
+	#		return
+	#	} else {
+	#		set siblingList [$updatetree nodes $sibling]
+	#		$updatetree selection set [lindex $siblingList end]
+	#		$updatetree see [lindex $siblingList end]
+	#		return
+	#	}
+	#}
 }
 
 
 
 proc _ArrowDown {node origNode} {
 	global updatetree
-	#puts "_arrowDown node->$node origNode->$origNode"
+	#puts "-arrowDown node->$node origNode->$origNode"
 	if { $node == "root" } {
 		$updatetree selection set $origNode
 		$updatetree see $origNode
@@ -2902,6 +2918,7 @@ proc _ArrowDown {node origNode} {
 
 	set siblingList [$updatetree nodes $parent]
 	set cnt [lsearch -exact $siblingList $node]
+#puts "-AD parent->$parent \t siblingList->$siblingList \t cnt->$cnt \t length of siblingList->[llength $siblingList]"
 	if { $cnt == [expr [llength $siblingList]-1 ]} {
 		_ArrowDown $parent $origNode
 	} else {

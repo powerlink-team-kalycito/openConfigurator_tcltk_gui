@@ -308,8 +308,8 @@ proc InterCNWindow {} {
 }
 
 proc dispRpdo {frame1 siblingList dispList} {
-	puts "frame->$frame1==siblingList->$siblingList==dispList->$dispList"
-	puts [$frame1.co_cn getvalue]
+	#puts "frame->$frame1==siblingList->$siblingList==dispList->$dispList"
+	#puts [$frame1.co_cn getvalue]
 
 }
 ###############################################################################################
@@ -584,7 +584,7 @@ proc AddCNWindow {} {
 ###############################################################################################
 proc SaveProjectAsWindow {} {
 	set saveProject [tk_getSaveFile -parent . -title "Save Project As" -defaultextension .oct]
-	puts "saveProject->$saveProject"
+	#puts "saveProject->$saveProject"
 	#global tmpPjtName
 	#global tmpPjtDir
 
@@ -775,9 +775,9 @@ proc NewProjectWindow {} {
 		set catchErrCode [NodeCreate 240 0]
 		#set catchErrCode [lindex $obj 0]
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
-		puts "ErrCode:$ErrCode"
+		#puts "ErrCode:$ErrCode"
 		if { $ErrCode != 0 } {
-			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Info -icon info
+			#tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Info -icon info
 			destroy .newprj
 			return
 		}
@@ -788,16 +788,16 @@ proc NewProjectWindow {} {
 		} else {
 			#import the default xdd file
 			set tmpImpDir [file join [pwd] mn.xdd]
-			puts "\n\n default :::tmpImpDir->$tmpImpDir \n\n"
+			#puts "\n\n default :::tmpImpDir->$tmpImpDir \n\n"
 		}
 
 		#DllExport ocfmRetCode ImportXML(char* fileName, int NodeID, ENodeType NodeType);
 		set catchErrCode [ImportXML "$tmpImpDir" 240 0]
-		puts "catchErrCode for import in new project->$catchErrCode"
+		#puts "catchErrCode for import in new project->$catchErrCode"
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
-		puts "ErrCode:$ErrCode"
+		#puts "ErrCode:$ErrCode"
 		if { $ErrCode != 0 } {
-			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+			#tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
 			#	the below two lines are commented so as to continue work DISPLAYING CANNOT PARSE FILE 
 			destroy .newprj
 			return
@@ -806,7 +806,7 @@ proc NewProjectWindow {} {
 		#lappend nodeIdList 240 [lindex $obj 1] [lindex $obj 2]
 		lappend nodeIdList 240 ; #removed obj and obj node
 		#puts "new project nodeIdList->$nodeIdList"
-		puts "new project nodeIdList->$nodeIdList"
+		#puts "new project nodeIdList->$nodeIdList"
 		#MN will have only one OBD
 		$updatetree insert end MN-$mnCount OBD-$mnCount-1 -text "OBD" -open 0 -image [Bitmap::get pdo]
 		#Import parentNode tmpDir nodeType nodeID 
@@ -955,7 +955,7 @@ proc AddIndexWindow {} {
 		}
 		set indexVar [string toupper $indexVar]
 		set node [$updatetree selection get]
-		puts node----->$node
+		#puts node----->$node
 
 		#gets the nodeId and Type of selected node
 		set result [GetNodeIdType $node]
@@ -964,7 +964,7 @@ proc AddIndexWindow {} {
 			set nodeType [lindex $result 1]
 		} else {
 			#must be some other node this condition should never reach
-			puts "\n\nAddIndexWindow->SHOULD NEVER HAPPEN 1!!\n\n"
+			#puts "\n\nAddIndexWindow->SHOULD NEVER HAPPEN 1!!\n\n"
 			return
 		}
 
@@ -1012,18 +1012,18 @@ proc AddIndexWindow {} {
 		} else {
 			set count [expr [lindex $sortChild end]+1 ]
 		}
-		puts "AddIndex nodeId->$nodeId nodeType->$nodeType indexVar->$indexVar"
+		#puts "AddIndex nodeId->$nodeId nodeType->$nodeType indexVar->$indexVar"
 		set catchErrCode [AddIndex $nodeId $nodeType $indexVar]
-		puts "catchErrCode->$catchErrCode"
+		#puts "catchErrCode->$catchErrCode"
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
-		puts "ErrCode:$ErrCode"
+		#puts "ErrCode:$ErrCode"
 		if { $ErrCode != 0 } {
-			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+			#tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
 			destroy .addIdx
 			return
 		}
 
-		puts "inc->[llength $sortChild]"
+		#puts "inc->[llength $sortChild]"
 
 		#set indexName []
 		#set indexName [GetIndexAttributes $nodeId $nodeType $indexVar 0]
@@ -1033,7 +1033,7 @@ proc AddIndexWindow {} {
 
 
 		set nodePos [new_intp]
-		puts "IfNodeExists nodeId->$nodeId nodeType->$nodeType nodePos->$nodePos"
+		#puts "IfNodeExists nodeId->$nodeId nodeType->$nodeType nodePos->$nodePos"
 		#IfNodeExists API is used to get the nodePosition which is needed fro various operation	
 		set catchErrCode [IfNodeExists $nodeId $nodeType $nodePos]
 		set nodePos [intp_value $nodePos]
@@ -1044,7 +1044,7 @@ proc AddIndexWindow {} {
 		set indexPos [intp_value $indexPos]
 
 		set indexName [GetIndexAttributesbyPositions $nodePos $indexPos 0 ]
-		puts "indexName->$indexName"
+		#puts "indexName->$indexName"
 
 
 		if {[string match "18*" $indexVar] || [string match "1A*" $indexVar]} {
@@ -1077,6 +1077,10 @@ proc AddIndexWindow {} {
 			set subIndexId [GetSubIndexIDbyPositions $nodePos $indexPos $sortedSubIndexPos ]
 			set subIndexId [lindex $subIndexId 1]
 			$updatetree insert $tempSidxCount $indexNode $subIndexNode-$tempSidxCount -text [lindex $subIndexName 1]\($subIndexId\) -open 0 -image [Bitmap::get subindex]
+
+#puts "$updatetree insert $tempSidxCount $indexNode $subIndexNode-$tempSidxCount -text [lindex $subIndexName 1]\($subIndexId\) -open 0 -image [Bitmap::get subindex]"
+
+$updatetree itemconfigure $subIndexNode-$tempSidxCount -open 0
 		}
 
 		#puts "child for parentNode after adding index ->[$updatetree nodes $parentNode]"
@@ -1145,7 +1149,7 @@ proc AddSubIndexWindow {} {
 		}		
 		set subIndexVar [string toupper $subIndexVar]
 		set node [$updatetree selection get]
-		puts node----->$node
+		#puts node----->$node
 		set indexVar [string range [$updatetree itemcget $node -text] end-4 end-1 ]
 		set indexVar [string toupper $indexVar]
 
@@ -1157,12 +1161,12 @@ proc AddSubIndexWindow {} {
 			set nodeType [lindex $result 1]
 		} else {
 			#must be some other node this condition should never reach
-			puts "\n\nAddSubIndexWindow->SHOULD NEVER HAPPEN 1!!\n\n"
+			#puts "\n\nAddSubIndexWindow->SHOULD NEVER HAPPEN 1!!\n\n"
 			return
 		}
 	
 		set child [$updatetree nodes $node]
-		puts child->$child
+		#puts child->$child
 		set subIndexPos 0
 		set sortChild ""
 		foreach tempChild $child {
@@ -1185,27 +1189,27 @@ proc AddSubIndexWindow {} {
 		} else {
 			set count [expr [lindex $sortChild end]+1 ]
 		}
-		puts "count->$count===subIndexPos->$subIndexPos"
+		#puts "count->$count===subIndexPos->$subIndexPos"
 		
-		puts node->$node
+		#puts node->$node
 		set nodePos [split $node -]
 		set nodePos [lrange $nodePos 1 end]
 		set nodePos [join $nodePos -]
-		#puts "nodePos---->$nodePos=====nodeType---->$nodeType======nodeId--->$nodeId"
-		puts "AddSubIndex nodeId->$nodeId nodeType->$nodeType indexVar->$indexVar subIndexVar->$subIndexVar"
+		##puts "nodePos---->$nodePos=====nodeType---->$nodeType======nodeId--->$nodeId"
+		#puts "AddSubIndex nodeId->$nodeId nodeType->$nodeType indexVar->$indexVar subIndexVar->$subIndexVar"
 		set catchErrCode [AddSubIndex $nodeId $nodeType $indexVar $subIndexVar]
-		puts "catchErrCode->$catchErrCode"
+		#puts "catchErrCode->$catchErrCode"
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
-		puts "ErrCode:$ErrCode"
+		#puts "ErrCode:$ErrCode"
 		if { $ErrCode != 0 } {
-			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+			#tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
 			destroy .addSidx
 			return
 		}
 
 		set subIndexName []
 		set subIndexName [GetSubIndexAttributes $nodeId $nodeType $indexVar $subIndexVar 0]
-		puts "subIndexName->$subIndexName"
+		#puts "subIndexName->$subIndexName"
 
 		if {[string match "TPdo*" $node]} {
 			$updatetree insert $subIndexPos $node TPdoSubIndexValue-$nodePos-$count -text [lindex $subIndexName 1]\($subIndexVar\) -open 0 -image [Bitmap::get subindex]
@@ -1263,7 +1267,7 @@ proc PropertiesWindow {} {
 
 	} else {
 		#property is only for these nodes other node should have it
-		puts "\n\n\tNO PROPERTY WINDOW FOR NODE==>$node\n\n"
+		#puts "\n\n\tNO PROPERTY WINDOW FOR NODE==>$node\n\n"
 		return
 	}
 

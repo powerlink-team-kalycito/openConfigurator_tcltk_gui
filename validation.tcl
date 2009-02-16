@@ -185,7 +185,7 @@ proc SetValue {tmpValue {str no_input}  } {
 	#puts "SetValue invoked"
 	set tmpVar [$tmpValue cget -textvariable]
 	$tmpValue configure -validate none
-	puts SetValue->[$tmpValue cget -vcmd]
+	#puts SetValue->[$tmpValue cget -vcmd]
 	$tmpValue delete 0 end
 	if {$str != "no_input"} {
 		$tmpValue insert 0 $str

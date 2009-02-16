@@ -412,25 +412,25 @@ proc ConvertDec {tmpValue} {
 	#set selVar [subst $[subst $selVar]]
 	#puts "selVar->$selVar"
 	
-	puts "ConvertDec"
+	#puts "ConvertDec"
 	set tmpVar [$tmpValue.en_value1 cget -textvariable]
 	global $tmpVar
 	set tmpVal [subst $[subst $tmpVar]]
-	puts "b4 trim ConvertDec->[subst $[subst $tmpVar]]--------tmpVal->$tmpVal"
-	if {[string match "0x*" $tmpVal ] == 1 } {
+	#puts "b4 trim ConvertDec->[subst $[subst $tmpVar]]--------tmpVal->$tmpVal"
+	if {[string match -nocase "0x*" $tmpVal ] == 1 } {
 		set tmpVal [string range $tmpVal 2 end]
-		puts "b4 trim 0x remov ConvertDec->$tmpVal"
+		#puts "b4 trim 0x remov ConvertDec->$tmpVal"
 		set tmpVal [string trimleft $tmpVal 0]
-		puts "ConvertDec->$tmpVal"
+		#puts "ConvertDec->$tmpVal"
 		$tmpValue.en_value1 configure -validate none
 		$tmpValue.en_value1 delete 0 end
 		catch {set tmpVal [expr 0x$tmpVal]}
 		$tmpValue.en_value1 insert 0 $tmpVal
 		#set $tmpVar " "
-		puts  "fina1 ConvertDec->$tmpVal"
+		#puts  "fina1 ConvertDec->$tmpVal"
 		$tmpValue.en_value1 configure -validate key -vcmd "IsDec %P $tmpValue.en_value1"
 	} else {
-		puts "ConvertDec already selected"
+		#puts "ConvertDec already selected"
 		#already dec is selected
 	}
 	
@@ -446,26 +446,26 @@ proc ConvertHex {tmpValue} {
 	#set selVar [$tmpValue.frame1.ra_dec cget -variable]
 	#global $selVar
 	#set selVar [subst $[subst $selVar]]
-	#puts "selVar->$selVar...."
-	puts "ConvertHex"
+	##puts "selVar->$selVar...."
+	#puts "ConvertHex"
 
 	set tmpVar [$tmpValue.en_value1 cget -textvariable]
 	global $tmpVar	
 	set tmpVal [subst $[subst $tmpVar]]
-	puts "b4 trim ConvertHex->[subst $[subst $tmpVar]]--------tmpVal->$tmpVal"
-	if {[string match "0x*" $tmpVal ] == 0 } {
+	#puts "b4 trim ConvertHex->[subst $[subst $tmpVar]]--------tmpVal->$tmpVal"
+	if {[string match -nocase "0x*" $tmpVal ] == 0 } {
 		
 		set tmpVal [string trimleft $tmpVal 0]
-		puts "ConvertHex->$tmpVal"
+		#puts "ConvertHex->$tmpVal"
 		$tmpValue.en_value1 configure -validate none
 		$tmpValue.en_value1 delete 0 end
 		catch {set tmpVal [format %X $tmpVal]}
 		set tmpVal 0x$tmpVal
 		$tmpValue.en_value1 insert 0 $tmpVal
-		puts  "final ConvertHex->$tmpVal"
+		#puts  "final ConvertHex->$tmpVal"
 		$tmpValue.en_value1 configure -validate key -vcmd "IsHex %P $tmpValue.en_value1"
 	} else {
-		puts "ConvertHex already selected"
+		#puts "ConvertHex already selected"
 		#already hex is selected
 	}
 }
@@ -483,7 +483,7 @@ proc SaveValue {frame0 frame1} {
 	global updatetree
 	global savedValueList ; #this list contains Nodes whose value are changed using save option
 
-	puts "\n\n   SaveValue \n"
+	#puts "\n\n   SaveValue \n"
 
 	set oldName [$updatetree itemcget $nodeSelect -text]
 	if {[string match "*SubIndexValue*" $nodeSelect]} {
@@ -506,7 +506,7 @@ proc SaveValue {frame0 frame1} {
 		set nodeType [lindex $result 1]
 	} else {
 		#must be some other node this condition should never reach
-		puts "\n\nSaveValue->SHOULD NEVER HAPPEN 1!!\n\n"
+		#puts "\n\nSaveValue->SHOULD NEVER HAPPEN 1!!\n\n"
 		return
 	}
 
@@ -514,37 +514,40 @@ proc SaveValue {frame0 frame1} {
 	set tmpVar0 [$frame0.en_nam1 cget -textvariable]
 	global $tmpVar0	
 	set newName [subst $[subst $tmpVar0]]
-	puts "newName->[subst $[subst $tmpVar0]]"
+	#puts "newName->[subst $[subst $tmpVar0]]"
 
 	set tmpVar1 [$frame1.en_value1 cget -textvariable]
 	global $tmpVar1	
 	set value [string toupper [subst $[subst $tmpVar1]] ]
-	puts "value->$value"
-	puts "value->[subst $[subst $tmpVar1]]"
+	#puts "value->$value"
+	#puts "value->[subst $[subst $tmpVar1]]"
 
 	set radioSel [$frame1.frame1.ra_dec cget -variable]
 	global $radioSel
-	puts "radioSel->$radioSel"
+	#puts "radioSel->$radioSel"
 	set radioSel [subst $[subst $radioSel]]
-	puts "radioSel after sub ->$radioSel"
+	#puts "radioSel after sub ->$radioSel"
 
 	if {$value != ""} {
 		if {$radioSel == "hex"} {
-			#it is hex value trim leading 0x
-			set value [string range $value 2 end]
+			##it is hex value trim leading 0x
+			#set value [string range $value 2 end]
+			#do nothing values will be passed correctly
 		} elseif {$radioSel == "dec"} {  
 			#is is dec value convert to hex
 			set value [string trimleft $value 0]
 #puts "value after trim for dec :$value"
 			if {$value != ""} {
 				set value [format %X $value]
+				#0x is appended to represent it as hex
+				set value 0x$value
 #puts "value after conv for dec :$value"
 			} else {
 				#the value must be zero
-				set value 0
+				set value 0x0
 			}
 		} else {
-			puts "\n\n\nSaveValue->Should Never Happen 1!!!\n\n\n"
+			#puts "\n\n\nSaveValue->Should Never Happen 1!!!\n\n\n"
 		}
 	} else {
 		#no value has been inputed by user
@@ -553,36 +556,44 @@ proc SaveValue {frame0 frame1} {
 	set value [string toupper $value]
 	if {[string match "*SubIndexValue*" $nodeSelect]} {
 		#DllExport ocfmRetCode SetSubIndexAttributes(int NodeID, ENodeType NodeType, char* IndexID, char* SubIndexID, char* IndexValue, char* IndexName);
-		puts "SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName"
+		#puts "SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName"
 		set catchErrCode [SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName]
-		puts "catchErrCode->$catchErrCode"
+		#puts "catchErrCode->$catchErrCode"
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
-		puts "ErrCode:$ErrCode"
+		#puts "ErrCode:$ErrCode"
 		if { $ErrCode != 0 } {
-			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+			#tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
 			return
 		}
 	} elseif {[string match "*IndexValue*" $nodeSelect]} {
 		#DllExport ocfmRetCode SetIndexAttributes(int NodeID, ENodeType NodeType, char* IndexID, char* IndexValue, char* IndexName);
-		puts "SetIndexAttributes $nodeId $nodeType $indexId $value $newName"
+		#puts "SetIndexAttributes $nodeId $nodeType $indexId $value $newName"
 		set catchErrCode [SetIndexAttributes $nodeId $nodeType $indexId $value $newName]
-		puts "catchErrCode->$catchErrCode"
+		#puts "catchErrCode->$catchErrCode"
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
-		puts "ErrCode:$ErrCode"
+		#puts "ErrCode:$ErrCode"
 		if { $ErrCode != 0 } {
-			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+			#tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
 			return
 		}
 	} else {
-		puts "\n\n\nSaveValue->Should Never Happen 2!!!\n\n\n"
+		#puts "\n\n\nSaveValue->Should Never Happen 2!!!\n\n\n"
 	}
 	set newName [append newName $oldName]
-	puts "newName->$newName"
+	#puts "newName->$newName"
 	$updatetree itemconfigure $nodeSelect -text $newName
 	lappend savedValueList $nodeSelect
 	$frame0.en_nam1 configure -bg #fdfdd4
 	$frame1.en_value1 configure -bg #fdfdd4
-	puts "savedValueList->$savedValueList"
+	#$frame1.en_value1 configure -validate none 
+	#$frame1.en_value1 delete 0 end
+	#$frame1.en_value1 insert 0 $value
+	#$frame1.en_value1 configure -validate key	
+
+
+	#$frame1.frame1.ra_hex select
+	#always hex value is passed so it should be selected
+	#puts "savedValueList->$savedValueList"
 }
 
 ###############################################################################################
@@ -597,7 +608,7 @@ proc DiscardValue {frame0 frame1} {
 	global nodeIdList
 	global updatetree
 
-	puts "\n\n  DiscardValue \n"
+	#puts "\n\n  DiscardValue \n"
 
 	#set tmpSplit [split $nodeSelect -]
 	#set tmpNodeSelect [lrange $tmpSplit 1 end]
@@ -624,7 +635,7 @@ proc DiscardValue {frame0 frame1} {
 		set nodeType [lindex $result 1]
 	} else {
 		#must be some other node this condition should never reach
-		puts "\n\DiscardValue->SHOULD NEVER HAPPEN 1!!\n\n"
+		#puts "\n\DiscardValue->SHOULD NEVER HAPPEN 1!!\n\n"
 		return
 	}
 	#set nodeList [GetNodeList]
@@ -641,19 +652,19 @@ proc DiscardValue {frame0 frame1} {
 
 
 	if {[string match "*SubIndexValue*" $nodeSelect]} {
-		puts "GetSubIndexAttributes nodeId->$nodeId nodeType->$nodeType indexId->$indexId subIndexId->$subIndexId 0"
+		#puts "GetSubIndexAttributes nodeId->$nodeId nodeType->$nodeType indexId->$indexId subIndexId->$subIndexId 0"
 		set tempIndexProp [GetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId 0]
 		set IndexName [lindex $tempIndexProp 1]
-		#set tempIndexProp [GetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId 5]
-		#set IndexActualValue [lindex $tempIndexProp 1]		
-		set IndexActualValue []
+		set tempIndexProp [GetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId 5]
+		set IndexActualValue [lindex $tempIndexProp 1]		
+		#set IndexActualValue []
 	} else {
-		puts "GetIndexAttributes nodeId->$nodeId nodeType->$nodeType indexId->$indexId 0"
+		#puts "GetIndexAttributes nodeId->$nodeId nodeType->$nodeType indexId->$indexId 0"
 		set tempIndexProp [GetIndexAttributes $nodeId $nodeType $indexId 0]
 		set IndexName [lindex $tempIndexProp 1]
-		#set tempIndexProp [GetIndexAttributes $nodeId $nodeType $indexId 5]
-		#set IndexActualValue [lindex $tempIndexProp 1]	
-		set IndexActualValue []
+		set tempIndexProp [GetIndexAttributes $nodeId $nodeType $indexId 5]
+		set IndexActualValue [lindex $tempIndexProp 1]	
+		#set IndexActualValue []
 	}
 
 	$frame0.en_nam1 delete 0 end
@@ -663,15 +674,19 @@ proc DiscardValue {frame0 frame1} {
 	$frame1.en_value1 delete 0 end
 	$frame1.en_value1 insert 0 $IndexActualValue
 	$frame1.en_value1 configure -validate key
-	puts "IndexName->$IndexName"
-	puts "IndexActualValue->$IndexActualValue"
+	#puts "IndexName->$IndexName"
+	#puts "IndexActualValue->$IndexActualValue"
 	#after inserting value select appropriate radio button
-
+	if {[string match -nocase "0x*" $IndexActualValue]} {
+		$frame1.frame1.ra_hex select 
+	} else {
+		$frame1.frame1.ra_dec select	
+	}
 
 }
 
 proc StartEdit {tbl row col text} {
-	puts "tbl->$tbl==row->$row===col->$col"
+	#puts "tbl->$tbl==row->$row===col->$col"
 	set w [$tbl editwinpath]
   	switch $col {
 		1 {
@@ -759,7 +774,7 @@ proc SaveTable {tableWid} {
 	global nodeSelect
 	global updatetree
 
-	puts "nodeSelect->$nodeSelect"
+	#puts "nodeSelect->$nodeSelect"
 	set result [$tableWid finishediting]
 	if {$result == 0} {
 		# value entered doesnt pass the -editendcommand of tablelist widget do not save value
@@ -775,21 +790,22 @@ proc SaveTable {tableWid} {
 	set rowCount 0
 	foreach childIndex [$updatetree nodes $nodeSelect] {
 	 	set indexId [string range [$updatetree itemcget $childIndex -text] end-4 end-1]
-		foreach childSubIndex [$updatetree nodes $childIndex] {
+		foreach childSubIndputsex [$updatetree nodes $childIndex] {
 			set subIndexId [string range [$updatetree itemcget $childSubIndex -text] end-2 end-1]
 			if {[string match "00" $subIndexId]} {
 			} else {
 				set name [string range [$updatetree itemcget $childSubIndex -text] 0 end-4]
 				set value [$tableWid cellcget $rowCount,1 -text]
-				puts "tableWid cellcget $rowCount,1 -text ====>$value"
-				puts "SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $name"
-				SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $name
+				#puts "tableWid cellcget $rowCount,1 -text ====>$value"
+				#0x is appended when saving value to indicate it is a hexa decimal number
+				#puts "SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId 0x$value $name"
+				SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId 0x$value $name
 				incr rowCount
 			}
 		}
 	}
 #	set size [$tableWid size] ; # SIZE GIVES NO OF ROWS
-#	puts size->$size
+#	#puts size->$size
 #	#puts "total_row->[expr $size/[$tableWid columncount] ]"
 }
 

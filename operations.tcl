@@ -1496,7 +1496,7 @@ proc Editor::SingleClickNode {node} {
 	$tmpInnerf1.en_value1 configure -validate none 
 	$tmpInnerf1.en_value1 delete 0 end
 	$tmpInnerf1.en_value1 insert 0 [lindex $IndexProp 5]
-	$tmpInnerf1.en_value1 configure -validate key -vcmd "IsDec %P $tmpInnerf1.en_value1" -bg $savedBg
+	#$tmpInnerf1.en_value1 configure -validate key -vcmd "IsDec %P $tmpInnerf1.en_value1" -bg $savedBg
 
 	$tmpInnerf1.en_lower1 configure -state normal
 	$tmpInnerf1.en_lower1 delete 0 end
@@ -1515,8 +1515,10 @@ proc Editor::SingleClickNode {node} {
 
 	if {[string match -nocase "0x*" [lindex $IndexProp 5]]} {
 		$tmpInnerf1.frame1.ra_hex select
+		$tmpInnerf1.en_value1 configure -validate key -vcmd "IsHex %P $tmpInnerf1.en_value1" -bg $savedBg
 	} else {
 		$tmpInnerf1.frame1.ra_dec select
+		$tmpInnerf1.en_value1 configure -validate key -vcmd "IsDec %P $tmpInnerf1.en_value1" -bg $savedBg
 	}
 
 	#set cpAttrVal [new_charp]
@@ -1616,8 +1618,7 @@ proc AddCN {cnName tmpImpDir nodeId} {
 		tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
 		return 
 	}
-	#lappend nodeIdList CN-1-$cnCount
-	lappend nodeIdList $nodeId 
+
 
 	set node [$updatetree selection get]
 	#puts "node->$node"
@@ -1638,6 +1639,8 @@ proc AddCN {cnName tmpImpDir nodeId} {
 			return 
 		}
 		
+		#lappend nodeIdList CN-1-$cnCount
+		lappend nodeIdList $nodeId 
 		#creating the GUI for CN
 		set child [$updatetree insert end $node CN-$parentId-$cnCount -text "$cnName\($nodeId\)" -open 0 -image [Bitmap::get cn]]
 		#creating the GUI for imported objects
@@ -1645,6 +1648,9 @@ proc AddCN {cnName tmpImpDir nodeId} {
 		Import CN-$parentId-$cnCount $tmpImpDir 1 $nodeId 
 
 	} else {
+		#lappend nodeIdList CN-1-$cnCount
+		lappend nodeIdList $nodeId 
+
 		#should not import should create GUI default are not it will come here
 		set child [$updatetree insert end $node CN-$parentId-$cnCount -text "$cnName" -open 0 -image [Bitmap::get cn]]
 	}
@@ -2422,23 +2428,24 @@ proc DeleteTreeNode {} {
 		#}
 		#EConfiuguratorErrors DeleteNode(int NodeID, ENodeType NodeType);
 
-		#if {$nodeType == 0} {
-		#	#it is a MN so clear up the memory
+		if {$nodeType == 0} {
+			#it is a MN so clear up the memory
 		#	#ocfmRetCode DeleteMNObjDict(int NodeID);
 		#	puts "DeleteMNObjDict nodeId->$nodeId"
 		#	#set catchErrCode [DeleteMNObjDict $nodeId]
 		#	set catchErrCode [DeleteNodeObjDict $nodeId $nodeType] ; #THIS WORK FOR BOTH IMPLEMENT IT AFTER CODE COMMIT
-		#} elseif {$nodeType == 1} {
-		#	#it is a CN so delete the node entirely
+			set catchErrCode [DeleteNodeObjDict $nodeId $nodeType]
+		} elseif {$nodeType == 1} {
+			#it is a CN so delete the node entirely
 		#	puts "DeleteNode nodeId->$nodeId nodeType->$nodeType"
-		#	set catchErrCode [DeleteNode $nodeId $nodeType]
-		#} else {
+			set catchErrCode [DeleteNode $nodeId $nodeType]
+		} else {
 		#	puts "\n\n\tDeleteTreeNode:invalid nodeType->$nodeType"
-		#	return
-		#}
+			return
+		}
 
 
-		set catchErrCode [DeleteNodeObjDict $nodeId $nodeType]
+
 
 
 
@@ -2923,6 +2930,7 @@ proc ArrowDown {} {
 		return
 	}
 
+	#may be causing error
 	#if { $cnt == [expr [llength $siblingList]-1 ]} {
 	#	set sibling  [lindex $siblingList [expr $cnt-1] ]
 	#	if {[$updatetree itemcget $sibling -open] == 0} {

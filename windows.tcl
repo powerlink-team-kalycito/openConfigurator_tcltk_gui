@@ -515,8 +515,11 @@ proc AddCNWindow {} {
 				return
 			}
 			set ext [file extension $tmpImpDir]
-			if { $ext == "xdc" || $ext == "xdd" } {
-				tk_messageBox -message "Import files only of type XDC/XDD" -icon error -parent .newprj
+#puts "addcn ext->$ext"
+			if { $ext == ".xdc" || $ext == ".xdd" } {
+				#continue file is correct type
+			} else {
+				tk_messageBox -message "Import files only of type XDC/XDD" -icon error -parent .addCN
 				focus .addCN
 				return
 			}
@@ -527,7 +530,16 @@ proc AddCNWindow {} {
 			set chk [AddCN $cnName $tmpImpCnDir $nodeId]
 		} else {
 			#import the default cn xdd file
-			set chk [AddCN $cnName [file join [pwd] mn.xdd] $nodeId]
+			#set defaultCnDir [file join [pwd] cn.xdd]
+			#if {[file exists $defaultCnDir]} {
+			#	set chk [AddCN $cnName $defaultCnDir $nodeId]
+			#} else {
+			#	#there is no default cn.xdd file in required path
+			#	tk_messageBox -message "Default cn.xdd is not found" -icon error -parent .addCN
+			#	focus .addCN
+			#	return
+			#}
+				set chk [AddCN $cnName "" $nodeId]			
 		}
 		destroy .addCN
 	}
@@ -753,17 +765,23 @@ proc NewProjectWindow {} {
 			return
 		
 		}
-		if {$conf=="off" && ![file isfile $tmpImpDir]} {
-			tk_messageBox -message "Entered path for Import XDC/XDD not exist " -icon error -parent .newprj
-			focus .newprj
-			return
+		if {$conf=="off" } {
+			if {![file isfile $tmpImpDir]} {
+				tk_messageBox -message "Entered path for Import XDC/XDD not exist " -icon error -parent .newprj
+				focus .newprj
+				return
+			}
+			set ext [file extension $tmpImpDir]
+#puts "newproj ext->$ext"
+			if { $ext == ".xdc" || $ext == ".xdd" } {
+				#correct type continue
+			} else {
+				tk_messageBox -message "Import files only of type XDC/XDD" -icon error -parent .newprj
+				focus .newprj
+				return
+			}
 		}
-		set ext [file extension $tmpImpDir]
-		if { $ext == "xdc" || $ext == "xdd" } {
-			tk_messageBox -message "Import files only of type XDC/XDD" -icon error -parent .newprj
-			focus .newprj
-			return
-		}
+
 
 		set PjtName $tmpPjtName
 		set PjtDir $tmpPjtDir
@@ -784,35 +802,63 @@ proc NewProjectWindow {} {
 		}
 		catch {$updatetree delete MN-$mnCount}
 
-		if {$conf=="off"} {
+		#if {$conf == "off"} {
 			#import the user specified xdc/xdd file	
-		} else {
-			#import the default xdd file
-			set tmpImpDir [file join [pwd] mn.xdd]
-			#puts "\n\n default :::tmpImpDir->$tmpImpDir \n\n"
-		}
+		#} else {
+			##import the default xdd file
+			#set tmpImpDir [file join [pwd] mn.xdd]
+			##puts "\n\n default :::tmpImpDir->$tmpImpDir \n\n"
 
-		#DllExport ocfmRetCode ImportXML(char* fileName, int NodeID, ENodeType NodeType);
-		set catchErrCode [ImportXML "$tmpImpDir" 240 0]
-		#puts "catchErrCode for import in new project->$catchErrCode"
-		set ErrCode [ocfmRetCode_code_get $catchErrCode]
-		#puts "ErrCode:$ErrCode"
-		if { $ErrCode != 0 } {
-			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
-			#tk_messageBox -message "ErrCode : $ErrCode" -title Warning -icon warning
-			#	the below two lines are commented so as to continue work DISPLAYING CANNOT PARSE FILE 
-			destroy .newprj
-			return
-		}
+			#if {[file exists $tmpImpDir]} {
+			#	#continue the process
+			#} else {
+			#	#there is no default mn.xdd file in required path
+			#	tk_messageBox -message "Default mn.xdd is not found" -icon error -parent .newprj
+			#	focus .newprj
+			#	return
+			#}
+
+		#}
+
+
+
+
+
 		$updatetree insert end PjtName MN-$mnCount -text "openPOWERLINK MN(240)" -open 1 -image [Bitmap::get mn]
 		#lappend nodeIdList 240 [lindex $obj 1] [lindex $obj 2]
 		lappend nodeIdList 240 ; #removed obj and obj node
 		#puts "new project nodeIdList->$nodeIdList"
 		#puts "new project nodeIdList->$nodeIdList"
-		#MN will have only one OBD
+
+
+
+		if {$conf == "off"} {
+			#DllExport ocfmRetCode ImportXML(char* fileName, int NodeID, ENodeType NodeType);
+			set catchErrCode [ImportXML "$tmpImpDir" 240 0]
+			#puts "catchErrCode for import in new project->$catchErrCode"
+			set ErrCode [ocfmRetCode_code_get $catchErrCode]
+			#puts "ErrCode:$ErrCode"
+			if { $ErrCode != 0 } {
+				tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning	
+				#tk_messageBox -message "ErrCode : $ErrCode" -title Warning -icon warning
+				#	the below two lines are commented so as to continue work DISPLAYING CANNOT PARSE FILE 
+				destroy .newprj
+				return
+			}
 		$updatetree insert end MN-$mnCount OBD-$mnCount-1 -text "OBD" -open 0 -image [Bitmap::get pdo]
 		#Import parentNode tmpDir nodeType nodeID 
-		Import OBD-$mnCount-1 $tmpImpDir 0 240  
+		Import OBD-$mnCount-1 $tmpImpDir 0 240
+		}
+
+		#$updatetree insert end PjtName MN-$mnCount -text "openPOWERLINK MN(240)" -open 1 -image [Bitmap::get mn]
+		##lappend nodeIdList 240 [lindex $obj 1] [lindex $obj 2]
+		#lappend nodeIdList 240 ; #removed obj and obj node
+		##puts "new project nodeIdList->$nodeIdList"
+		##puts "new project nodeIdList->$nodeIdList"
+		#MN will have only one OBD
+		#$updatetree insert end MN-$mnCount OBD-$mnCount-1 -text "OBD" -open 0 -image [Bitmap::get pdo]
+		#Import parentNode tmpDir nodeType nodeID 
+		#Import OBD-$mnCount-1 $tmpImpDir 0 240  
 		
 		destroy .newprj
 	}

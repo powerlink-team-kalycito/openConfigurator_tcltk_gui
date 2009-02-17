@@ -161,7 +161,7 @@ User: Administrator
 		  </defType>
 		</DataTypeList>
 		<ObjectList>		
-          <Object index="1006" name="NMT_CycleLen_U32" objectType="7" dataType="0007" accessType="rw" defaultValue="0" actualValue="00004E20" >
+          <Object index="1000" name="NMT_DeviceType_U32" objectType="7" dataType="0007" accessType="rw" defaultValue="0"  >
           </Object>
           
 	<Object index="1001" name="ERR_ErrorRegister_U8" objectType="7" dataType="0005" accessType="ro" defaultValue="0" PDOmapping="opt">
@@ -313,7 +313,7 @@ User: Administrator
 		    <SubObject subIndex="06" name="SrcPort_U16" objectType="7" dataType="0006" accessType="Rw" defaultValue="0"  PDOmapping="no" />
 		<SubObject subIndex="07" name="DstPort_U16" objectType="7" dataType="0006" accessType="Rw" defaultValue="0"  PDOmapping="no" />
 		<SubObject subIndex="08" name="SrcMac_MAC" objectType="7" dataType="0401" accessType="Rw" defaultValue="00:00:00:00:00:00"  PDOmapping="no" />
-		<SubObject subIndex="09" name=" Target_U8" objectType="7" dataType="0005" accessType="Rw" defaultValue=" Invalid (0)"  PDOmapping="no" />
+		<SubObject subIndex="09" name=" Target_U8" objectType="7" dataType="0005" accessType="Rw" defaultValue="0"  PDOmapping="no" />
 	</Object>
 
 
@@ -666,7 +666,7 @@ User: Administrator
 		<SubObject subIndex="01" name="CNPReqPayload" objectType="7" dataType="0007" accessType="rw" defaultValue="36" PDOmapping="no" range="01-FE" nameIndex="0"/>
 	</Object>
 
-	<Object index="1F8C" name="NMT_CurrNMTState_U8" objectType="7" dataType="0005" accessType="ro" defaultValue="NMT_CS_NOT_ACTIVE resp,NMT_MS_NOT_ACTIVE" PDOmapping="yes">
+	<Object index="1F8C" name="NMT_CurrNMTState_U8" objectType="7" dataType="0005" accessType="ro" defaultValue="NMT_CS_NOT_ACTIVE resp" PDOmapping="yes">
 	</Object>
 
 	<Object index="1F8D" name="NMT_PResPayloadLimitList_AU16" objectType="8" dataType="0006">
@@ -676,12 +676,12 @@ User: Administrator
 
 	<Object index="1F8E" name="NMT_MNNodeCurrState_AU8" objectType="8" dataType="0006">
 		<SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="const" defaultValue="254" PDOmapping="no"/>
-		<SubObject subIndex="01" name="CurrState" objectType="7" dataType="0007" accessType="ro" defaultValue="NMT_CS_NOT_ACTIVE resp,NMT_MS_NOT_ACTIVE" PDOmapping="no" range="01-FE" nameIndex="0"/>
+		<SubObject subIndex="01" name="CurrState" objectType="7" dataType="0007" accessType="ro" defaultValue="NMT_CS_NOT_ACTIVE resp" PDOmapping="no" range="01-FE" nameIndex="0"/>
 	</Object>
 
 	<Object index="1F8F" name="NMT_MNNodeExpState_AU8" objectType="8" dataType="0006">
 		<SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="const" defaultValue="254" PDOmapping="no"/>
-		<SubObject subIndex="01" name="ExpState" objectType="7" dataType="0007" accessType="ro" defaultValue="NMT_CS_NOT_ACTIVE resp,NMT_MS_NOT_ACTIVE" PDOmapping="no" />
+		<SubObject subIndex="01" name="ExpState" objectType="7" dataType="0007" accessType="ro" defaultValue="NMT_CS_NOT_ACTIVE resp" PDOmapping="no" />
 	</Object>
 
 	<Object index="1F92" name="NMT_MNCNPResTimeout_AU32" objectType="8" dataType="0007">

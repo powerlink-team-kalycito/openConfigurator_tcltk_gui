@@ -465,7 +465,7 @@ proc ConvertHex {tmpValue} {
 		#puts  "final ConvertHex->$tmpVal"
 		$tmpValue.en_value1 configure -validate key -vcmd "IsHex %P $tmpValue.en_value1"
 	} else {
-		#puts "ConvertHex already selected"
+		puts "ConvertHex already selected"
 		#already hex is selected
 	}
 }
@@ -530,9 +530,8 @@ proc SaveValue {frame0 frame1} {
 
 	if {$value != ""} {
 		if {$radioSel == "hex"} {
-			##it is hex value trim leading 0x
-			#set value [string range $value 2 end]
-			#do nothing values will be passed correctly
+			#it is hex value trim leading 0x
+			set value [string range $value 2 end]
 		} elseif {$radioSel == "dec"} {  
 			#is is dec value convert to hex
 			set value [string trimleft $value 0]
@@ -540,11 +539,11 @@ proc SaveValue {frame0 frame1} {
 			if {$value != ""} {
 				set value [format %X $value]
 				#0x is appended to represent it as hex
-				set value 0x$value
+				set value $value
 #puts "value after conv for dec :$value"
 			} else {
 				#the value must be zero
-				set value 0x0
+				set value 0
 			}
 		} else {
 			#puts "\n\n\nSaveValue->Should Never Happen 1!!!\n\n\n"
@@ -554,9 +553,10 @@ proc SaveValue {frame0 frame1} {
 	}
 
 	set value [string toupper $value]
+	set value 0x$value
 	if {[string match "*SubIndexValue*" $nodeSelect]} {
 		#DllExport ocfmRetCode SetSubIndexAttributes(int NodeID, ENodeType NodeType, char* IndexID, char* SubIndexID, char* IndexValue, char* IndexName);
-		#puts "SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName"
+		puts "SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName"
 		set catchErrCode [SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName]
 		#puts "catchErrCode->$catchErrCode"
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
@@ -567,7 +567,7 @@ proc SaveValue {frame0 frame1} {
 		}
 	} elseif {[string match "*IndexValue*" $nodeSelect]} {
 		#DllExport ocfmRetCode SetIndexAttributes(int NodeID, ENodeType NodeType, char* IndexID, char* IndexValue, char* IndexName);
-		#puts "SetIndexAttributes $nodeId $nodeType $indexId $value $newName"
+		puts "SetIndexAttributes $nodeId $nodeType $indexId $value $newName"
 		set catchErrCode [SetIndexAttributes $nodeId $nodeType $indexId $value $newName]
 		#puts "catchErrCode->$catchErrCode"
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
@@ -674,14 +674,16 @@ proc DiscardValue {frame0 frame1} {
 	$frame1.en_value1 configure -validate none 
 	$frame1.en_value1 delete 0 end
 	$frame1.en_value1 insert 0 $IndexActualValue
-	$frame1.en_value1 configure -validate key
+
 	#puts "IndexName->$IndexName"
 	#puts "IndexActualValue->$IndexActualValue"
 	#after inserting value select appropriate radio button
 	if {[string match -nocase "0x*" $IndexActualValue]} {
 		$frame1.frame1.ra_hex select 
+		$frame1.en_value1 configure -validate key -vcmd "IsHex %P $frame1.en_value1"
 	} else {
 		$frame1.frame1.ra_dec select	
+		$frame1.en_value1 configure -validate key -vcmd "IsDec %P $frame1.en_value1"
 	}
 
 }

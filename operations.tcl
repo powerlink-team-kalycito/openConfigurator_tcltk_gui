@@ -1006,8 +1006,22 @@ proc Editor::SingleClickNode {node} {
 	set nodePos [new_intp]
 	#puts "IfNodeExists nodeId->$nodeId nodeType->$nodeType nodePos->$nodePos"
 	#IfNodeExists API is used to get the nodePosition which is needed fro various operation	
-	set catchErrCode [IfNodeExists $nodeId $nodeType $nodePos]
+	#set catchErrCode [IfNodeExists $nodeId $nodeType $nodePos]
+
+	#TODO waiting for new so then implement it
+	set ExistfFlag [new_boolp]
+	set catchErrCode [IfNodeExists $nodeId $nodeType $nodePos $ExistfFlag]
 	set nodePos [intp_value $nodePos]
+	set ExistfFlag [boolp_value $ExistfFlag]
+	set ErrCode [ocfmRetCode_code_get $catchErrCode]
+	#puts "ErrCode:$ErrCode"
+	if { $ErrCode == 0 && $ExistfFlag == 1 } {
+		#the node exist continue 
+	} else {
+		tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+		tk_messageBox -message "ErrCode : $ErrCode\nExistfFlag : $ExistfFlag" -title Warning -icon warning
+		return
+	}
 
 	if {[string match "TPDO-*" $node] || [string match "RPDO-*" $node]} {
 ##################################################################################################
@@ -1559,7 +1573,13 @@ proc Editor::DoubleClickNode {node} {
 	global updatetree
 
 	if {[$updatetree nodes $node] != "" } {
-		$updatetree itemconfigure $node -open 1
+		if {[$updatetree itemcget $node -open]} {
+			#it is already expanded so collapse it
+			$updatetree itemconfigure $node -open 0
+		} else {
+			#it is collapsed so expand it
+			$updatetree itemconfigure $node -open 1
+		}
 	} else {
 		# it has no child no need to expand
 	}
@@ -1593,7 +1613,7 @@ proc AddCN {cnName tmpImpDir nodeId} {
 	#set catchErrCode [lindex $obj 0]
 	set ErrCode [ocfmRetCode_code_get $catchErrCode]
 	if { $ErrCode != 0 } {
-		#tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+		tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
 		return 
 	}
 	#lappend nodeIdList CN-1-$cnCount
@@ -1613,12 +1633,13 @@ proc AddCN {cnName tmpImpDir nodeId} {
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
 		#puts "ErrCode:$ErrCode"
 		if { $ErrCode != 0 } {
-			#tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+			#tk_messageBox -message "ErrCode : $ErrCode" -title Warning -icon warning
 			return 
 		}
 		
 		#creating the GUI for CN
-		set child [$updatetree insert end $node CN-$parentId-$cnCount -text "$cnName" -open 0 -image [Bitmap::get cn]]
+		set child [$updatetree insert end $node CN-$parentId-$cnCount -text "$cnName\($nodeId\)" -open 0 -image [Bitmap::get cn]]
 		#creating the GUI for imported objects
 		#Import parentNode tmpDir nodeType nodeID 
 		Import CN-$parentId-$cnCount $tmpImpDir 1 $nodeId 
@@ -2165,9 +2186,8 @@ proc TransferCDC {} {
 	set ErrCode [ocfmRetCode_code_get $catchErrCode]
 	##puts "ErrCode:$ErrCode"
 	if { $ErrCode != 0 } {
-		##tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
-		tk_messageBox -message "ErrCode:$ErrCode" -title Warning -icon warning
-		#return
+		tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode] \n ErrorCode : $ErrCode" -title Warning -icon warning
+		#tk_messageBox -message "ErrCode:$ErrCode" -title Warning -icon warning
 	}
 	return
 }
@@ -2201,7 +2221,8 @@ proc TransferXML {} {
 	set ErrCode [ocfmRetCode_code_get $catchErrCode]
 	#puts "ErrCode:$ErrCode"
 	if { $ErrCode != 0 } {
-		#tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+		tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+		#tk_messageBox -message "ErrCode : $ErrCode" -title Warning -icon warning
 		return
 	}
 
@@ -2300,7 +2321,8 @@ proc ReImport {} {
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
 		#puts "ErrCode:$ErrCode"
 		if { $ErrCode != 0 } {
-			#tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+			#tk_messageBox -message "ErrCode : $ErrCode" -title Warning -icon warning
 			return
 		}	
 		catch {
@@ -2569,7 +2591,8 @@ proc DeleteTreeNode {} {
 	set ErrCode [ocfmRetCode_code_get $catchErrCode]
 	#puts "ErrCode:$ErrCode"
 	if { $ErrCode != 0 } {
-		#tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+		tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+		#tk_messageBox -message "ErrCode : $ErrCode" -title Warning -icon warning
 		return
 	}
 
@@ -2651,6 +2674,8 @@ proc NodeCreate {NodeID NodeType} {
 	if { $ErrCode != 0 } {
 		#puts "ErrStr:[ocfmRetCode_errorString_get $catchErrCode]"
 		#tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+		#NO NEED TO DISPLAY HERE CALLING FUNCTION WILL DISPLAY THEM
+		#tk_messageBox -message "ErrCode : $ErrCode" -title Warning -icon warning
 		return $catchErrCode 
 	}
 

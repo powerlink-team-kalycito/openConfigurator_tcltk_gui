@@ -573,7 +573,8 @@ proc SaveValue {frame0 frame1} {
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
 		#puts "ErrCode:$ErrCode"
 		if { $ErrCode != 0 } {
-			#tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+			#tk_messageBox -message "ErrCode : $ErrCode" -title Warning -icon warning
 			return
 		}
 	} else {
@@ -790,7 +791,7 @@ proc SaveTable {tableWid} {
 	set rowCount 0
 	foreach childIndex [$updatetree nodes $nodeSelect] {
 	 	set indexId [string range [$updatetree itemcget $childIndex -text] end-4 end-1]
-		foreach childSubIndputsex [$updatetree nodes $childIndex] {
+		foreach childSubIndex [$updatetree nodes $childIndex] {
 			set subIndexId [string range [$updatetree itemcget $childSubIndex -text] end-2 end-1]
 			if {[string match "00" $subIndexId]} {
 			} else {
@@ -810,5 +811,8 @@ proc SaveTable {tableWid} {
 }
 
 proc DiscardTable {tableWid} {
+	global nodeSelect
 
+	Editor::SingleClickNode $nodeSelect
+	#$tableWid finishediting
 }

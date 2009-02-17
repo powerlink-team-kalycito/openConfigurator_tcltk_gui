@@ -211,8 +211,30 @@ proc Import {parentNode tmpDir nodeType nodeID } {
 	set nodePos [new_intp]
 	#puts "IfNodeExists nodeID->$nodeID nodeType->$nodeType nodePos->$nodePos"
 	#IfNodeExists API is used to get the nodePosition which is needed fro various operation	
-	set catchErrCode [IfNodeExists $nodeID $nodeType $nodePos]
+	#set catchErrCode [IfNodeExists $nodeID $nodeType $nodePos]
+
+
+
+
+	#TODO waiting for new so then implement it
+	set ExistfFlag [new_boolp]
+	set catchErrCode [IfNodeExists $nodeID $nodeType $nodePos $ExistfFlag]
 	set nodePos [intp_value $nodePos]
+	set ExistfFlag [boolp_value $ExistfFlag]
+	set ErrCode [ocfmRetCode_code_get $catchErrCode]
+	#puts "ErrCode:$ErrCode"
+	if { $ErrCode == 0 && $ExistfFlag == 1 } {
+		#the node exist continue 
+	} else {
+		tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon 	warning
+		tk_messageBox -message "ErrCode : $ErrCode\nExistfFlag : $ExistfFlag" -title Warning -icon warning
+		ImportProgress stop
+		return
+	}
+
+
+
+
 	#puts "catchErrCode->$catchErrCode====nodePos->$nodePos"
 
 

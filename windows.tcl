@@ -247,7 +247,7 @@ proc InterCNWindow {} {
 
 	}
 	if {$siblingList == ""} {
-		tk_messageBox -message "It is the only CN present in that MN" -icon info
+		tk_messageBox -message "only one CN present" -icon info
 		return
 	}
 	
@@ -777,7 +777,8 @@ proc NewProjectWindow {} {
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
 		#puts "ErrCode:$ErrCode"
 		if { $ErrCode != 0 } {
-			#tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Info -icon info
+			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Info -icon info
+			#tk_messageBox -message "ErrCode : $ErrCode" -title Warning -icon warning
 			destroy .newprj
 			return
 		}
@@ -797,12 +798,13 @@ proc NewProjectWindow {} {
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
 		#puts "ErrCode:$ErrCode"
 		if { $ErrCode != 0 } {
-			#tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+			#tk_messageBox -message "ErrCode : $ErrCode" -title Warning -icon warning
 			#	the below two lines are commented so as to continue work DISPLAYING CANNOT PARSE FILE 
 			destroy .newprj
 			return
 		}
-		$updatetree insert end PjtName MN-$mnCount -text "openPOWERLINK MN" -open 1 -image [Bitmap::get mn]
+		$updatetree insert end PjtName MN-$mnCount -text "openPOWERLINK MN(240)" -open 1 -image [Bitmap::get mn]
 		#lappend nodeIdList 240 [lindex $obj 1] [lindex $obj 2]
 		lappend nodeIdList 240 ; #removed obj and obj node
 		#puts "new project nodeIdList->$nodeIdList"
@@ -1018,7 +1020,8 @@ proc AddIndexWindow {} {
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
 		#puts "ErrCode:$ErrCode"
 		if { $ErrCode != 0 } {
-			#tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+			#tk_messageBox -message "ErrCode : $ErrCode" -title Warning -icon warning
 			destroy .addIdx
 			return
 		}
@@ -1035,8 +1038,28 @@ proc AddIndexWindow {} {
 		set nodePos [new_intp]
 		#puts "IfNodeExists nodeId->$nodeId nodeType->$nodeType nodePos->$nodePos"
 		#IfNodeExists API is used to get the nodePosition which is needed fro various operation	
-		set catchErrCode [IfNodeExists $nodeId $nodeType $nodePos]
+		#set catchErrCode [IfNodeExists $nodeId $nodeType $nodePos]
+
+
+		#TODO waiting for new so then implement it
+		set ExistfFlag [new_boolp]
+		set catchErrCode [IfNodeExists $nodeId $nodeType $nodePos $ExistfFlag]
 		set nodePos [intp_value $nodePos]
+		set ExistfFlag [boolp_value $ExistfFlag]
+		set ErrCode [ocfmRetCode_code_get $catchErrCode]
+		#puts "ErrCode:$ErrCode"
+		if { $ErrCode == 0 && $ExistfFlag == 1 } {
+			#the node exist continue 
+		} else {
+			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon 	warning
+			tk_messageBox -message "ErrCode : $ErrCode\nExistfFlag : $ExistfFlag" -title Warning -icon warning
+			return
+		}
+
+
+
+
+
 
 		set indexPos [new_intp]
 		#DllExport ocfmRetCode IfIndexExists(int NodeID, ENodeType NodeType, char* IndexID, int* IndexPos)
@@ -1202,7 +1225,8 @@ proc AddSubIndexWindow {} {
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
 		#puts "ErrCode:$ErrCode"
 		if { $ErrCode != 0 } {
-			#tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+			#tk_messageBox -message "ErrCode : $ErrCode" -title Warning -icon warning
 			destroy .addSidx
 			return
 		}

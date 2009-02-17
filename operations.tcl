@@ -1072,11 +1072,13 @@ proc Editor::SingleClickNode {node} {
 					set tempIndexProp [GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos 5 ] ; # 5 is passed to get the actual value
 #puts "tempIndexPropi PDO ->$tempIndexProp"
 					set IndexActualValue [lindex $tempIndexProp 1]
-					#if {$IndexDefaultValue == ""} {
-					#	set IndexDefaultValue 0000000000000000
-					#} else {
-					#	set IndexDefaultValue [expr 0000000000000000 + $IndexDefaultValue]
-					#}
+					if {[string match -nocase "0x*" $IndexActualValue] } {
+						#remove appende 0x
+						set IndexActualValue [string range $IndexActualValue 2 end]
+					} else {
+						# no 0x no need to do anything
+						#TODO CHECK WHETHER NEED TO CONVERT TO HEX
+					}
 					#puts "IndexDefaultValue->$IndexDefaultValue"
 					set DataSize [string range $IndexActualValue 2 5]
 					set Offset [string range $IndexActualValue 6 9]
@@ -2159,7 +2161,14 @@ proc TransferCDC {} {
                 return
         }
 	#puts fileLocation_CDC:$fileLocation_CDC
-	GenerateCDC $fileLocation_CDC
+	set catchErrCode [GenerateCDC $fileLocation_CDC]
+	set ErrCode [ocfmRetCode_code_get $catchErrCode]
+	##puts "ErrCode:$ErrCode"
+	if { $ErrCode != 0 } {
+		##tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+		tk_messageBox -message "ErrCode:$ErrCode" -title Warning -icon warning
+		#return
+	}
 	return
 }
 

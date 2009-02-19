@@ -520,7 +520,7 @@ proc Editor::create { } {
 	# Menu description
 	set descmenu {
 		"&File" {} {} 0 {           
-       			{command "New &Project" {} "New Project" {Ctrl n}  -command NewProjectWindow}
+       			{command "New &Project" {} "New Project" {Ctrl n}  -command YetToImplement}
 			{command "Open Project" {}  "Open Project" {Ctrl o} -command openproject}
 	        	{command "Save Project" {noFile}  "Save Project" {Ctrl s} -command YetToImplement}
 	        	{command "Save Project as" {noFile}  "Save Project as" {} -command SaveProjectAsWindow}
@@ -634,7 +634,7 @@ proc Editor::create { } {
 
 	set Editor::projMenu [menu  .projMenu -tearoff 0]
 	$Editor::projMenu add command -label "Sample Project" -command "YetToImplement" 
-	$Editor::projMenu add command -label "New Project" -command "NewProjectWindow" 
+	$Editor::projMenu add command -label "New Project" -command "YetToImplement" 
 	$Editor::projMenu add command -label "Open Project" -command "YetToImplement" 
 
 	#############################################################################
@@ -674,7 +674,7 @@ proc Editor::create { } {
 	set bbox [ButtonBox::create $tb1.bbox1 -spacing 0 -padx 1 -pady 1]
 	set toolbarButtons(new) [ButtonBox::add $bbox -image [Bitmap::get page_white] \
 	        -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
-	        -helptext "Create new project" -command NewProjectWindow]
+	        -helptext "Create new project" -command YetToImplement]
 	set toolbarButtons(save) [ButtonBox::add $bbox -image [Bitmap::get disk] \
 	        -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
 	        -helptext "Save Project" -command YetToImplement]
@@ -730,7 +730,7 @@ proc Editor::create { } {
             	-width 21\
             	-helptype balloon\
             	-highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
-            	-helptext "Transfer CDC"\
+            	-helptext ""\
     	    	-command TransferCDC]
 	pack $bb_cdc -side left -padx 4
 	set bb_xml [ButtonBox::add $bbox -image [Bitmap::get transferxml]\
@@ -1637,6 +1637,8 @@ proc AddCN {cnName tmpImpDir nodeId} {
 			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
 			#tk_messageBox -message "ErrCode : $ErrCode" -title Warning -icon warning
 			return 
+		} else {
+			conPuts "Imported $tmpImpDir for Node ID: $nodeId"
 		}
 		
 		#lappend nodeIdList CN-1-$cnCount
@@ -2192,8 +2194,11 @@ proc TransferCDC {} {
 	set ErrCode [ocfmRetCode_code_get $catchErrCode]
 	##puts "ErrCode:$ErrCode"
 	if { $ErrCode != 0 } {
+		errorPuts "[ocfmRetCode_errorString_get $catchErrCode]"
 		tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode] \n ErrorCode : $ErrCode" -title Warning -icon warning
 		#tk_messageBox -message "ErrCode:$ErrCode" -title Warning -icon warning
+	} else {
+		conPuts "CDC generated" info
 	}
 	return
 }
@@ -2227,9 +2232,12 @@ proc TransferXML {} {
 	set ErrCode [ocfmRetCode_code_get $catchErrCode]
 	#puts "ErrCode:$ErrCode"
 	if { $ErrCode != 0 } {
+		errorPuts "[ocfmRetCode_errorString_get $catchErrCode]"
 		tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
 		#tk_messageBox -message "ErrCode : $ErrCode" -title Warning -icon warning
 		return
+	} else {
+		conPuts "XAP generated" info
 	}
 
 }
@@ -2241,8 +2249,8 @@ proc TransferXML {} {
 #Description : Build the project 
 ################################################################################################
 proc BuildProject {} {
-	conPuts "generating CDC"
-	conPuts "generating XML"
+	conPuts "Yet to be implemented"
+	warnPuts "Yet to be implemented"
 	#Tcl_GenerateCDC
 }
 
@@ -2330,7 +2338,9 @@ proc ReImport {} {
 			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
 			#tk_messageBox -message "ErrCode : $ErrCode" -title Warning -icon warning
 			return
-		}	
+		} else {
+			conPuts "ReImported $tmpImpDir for Node ID:$nodeId"
+		}
 		catch {
 			if { $res == -1} {
 				#there can be one OBD in MN so -1 is hardcoded

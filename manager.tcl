@@ -556,7 +556,7 @@ proc SaveValue {frame0 frame1} {
 	set value 0x$value
 	if {[string match "*SubIndexValue*" $nodeSelect]} {
 		#DllExport ocfmRetCode SetSubIndexAttributes(int NodeID, ENodeType NodeType, char* IndexID, char* SubIndexID, char* IndexValue, char* IndexName);
-		puts "SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName"
+		#puts "SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName"
 		set catchErrCode [SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName]
 		#puts "catchErrCode->$catchErrCode"
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
@@ -567,7 +567,7 @@ proc SaveValue {frame0 frame1} {
 		}
 	} elseif {[string match "*IndexValue*" $nodeSelect]} {
 		#DllExport ocfmRetCode SetIndexAttributes(int NodeID, ENodeType NodeType, char* IndexID, char* IndexValue, char* IndexName);
-		puts "SetIndexAttributes $nodeId $nodeType $indexId $value $newName"
+		#puts "SetIndexAttributes $nodeId $nodeType $indexId $value $newName"
 		set catchErrCode [SetIndexAttributes $nodeId $nodeType $indexId $value $newName]
 		#puts "catchErrCode->$catchErrCode"
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]

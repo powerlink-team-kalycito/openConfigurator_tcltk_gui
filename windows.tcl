@@ -514,7 +514,7 @@ proc AddCNWindow {} {
 				focus .addCN
 				return
 			}
-			set ext [file extension $tmpImpDir]
+			set ext [file extension $tmpImpCnDir]
 #puts "addcn ext->$ext"
 			if { $ext == ".xdc" || $ext == ".xdd" } {
 				#continue file is correct type
@@ -844,6 +844,8 @@ proc NewProjectWindow {} {
 				#	the below two lines are commented so as to continue work DISPLAYING CANNOT PARSE FILE 
 				destroy .newprj
 				return
+			} else {
+				conPuts "Imported $tmpImpDir for MN"
 			}
 		$updatetree insert end MN-$mnCount OBD-$mnCount-1 -text "OBD" -open 0 -image [Bitmap::get pdo]
 		#Import parentNode tmpDir nodeType nodeID 

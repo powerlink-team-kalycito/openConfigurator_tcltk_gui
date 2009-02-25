@@ -74,6 +74,55 @@ set path_to_Tablelist ./tablelist4.10
 lappend auto_path $path_to_Tablelist
 
 package require Tablelist
+#package require Thread
+#tsv::set application main [thread::id]
+#puts ""
+#tsv::set application importProgress [thread::create {
+
+	#package require Tk 8.5
+
+	#set dir [file dirname [info script]]
+	#puts dir$dir
+	#source [file join $dir wrapper_interactions.tcl]
+
+	#proc ImportProgress {stat} {
+	#	global LocvarProgbar
+	#	global prog
+	#	if {$stat == "start"} {
+	#		set winImpoProg .impoProg
+	#		catch "destroy $winImpoProg"
+	#		toplevel $winImpoProg
+	#		wm title     $winImpoProg	"Project Wizard"
+	#		wm resizable $winImpoProg 0 0
+	#		wm transient $winImpoProg .
+	#		wm deiconify $winImpoProg
+	#		grab $winImpoProg
+	#		set LocvarProgbar 0
+	#		set prog [ProgressBar $winImpoProg.prog -orient horizontal -width 200 -maximum 100 -height 10 -variable LocvarProgbar -type incremental -bg white -fg blue]
+	#		grid config $winImpoProg.prog -row 0 -column 0 -padx 10 -pady 10
+	#		centerW $winImpoProg
+	#		update idletasks
+	#		return  $winImpoProg.prog
+	#	} elseif {$stat == "stop" } { 
+	#		#set LocvarProgbar 100
+	#		destroy .impoProg
+	#	} elseif {$stat == "incr"} {
+	#		incr LocvarProgbar
+	#	}
+	#}
+#	proc StartProgress {} {
+#		thread::send [tsv::get application main] "ImportProgress start"
+#		after 1
+#		puts "StartProgress called"
+#		#thread::wait
+#		#set 
+#	}
+#	proc StopProgress {} {
+#		thread::send -async [tsv::set application main] "ImportProgress stop"
+#	}
+#	thread::wait
+#}]
+
 
 set dir [file dirname [info script]]
 source [file join $dir option.tcl]
@@ -390,7 +439,7 @@ proc Editor::exit_app {} {
 		set result [tk_messageBox -message "Save Project $PjtName ?" -type yesnocancel -icon question -title 			"Question"]
    		 switch -- $result {
    		     yes {			 
-   		         #saveproject
+   		         #Saveproject
    		     }
    		     no  {conPuts "Project $PjtName not saved" info}
    		     cancel {
@@ -425,7 +474,7 @@ proc openproject { } {
 	   		switch -- $result {
 	   		     yes {
 				#conPuts "Project $PjtName Saved" info
-				#saveproject
+				#Saveproject
 				}
 	   		     no  {
 				#conPuts "Project $PjtName Not Saved" info
@@ -522,7 +571,7 @@ proc Editor::create { } {
 		"&File" {} {} 0 {           
        			{command "New &Project" {} "New Project" {Ctrl n}  -command YetToImplement}
 			{command "Open Project" {}  "Open Project" {Ctrl o} -command openproject}
-	        	{command "Save Project" {noFile}  "Save Project" {Ctrl s} -command YetToImplement}
+	        	{command "Save Project" {noFile}  "Save Project" {Ctrl s} -command Saveproject}
 	        	{command "Save Project as" {noFile}  "Save Project as" {} -command SaveProjectAsWindow}
 			{command "Close Project" {}  "Close Project" {} -command CloseProject}                 
 	    		{separator}
@@ -623,7 +672,7 @@ proc Editor::create { } {
 	$Editor::mnMenu add command -label "Add CN" -command "AddCNWindow" 
 	$Editor::mnMenu add command -label "Import XDC/XDD" -command "ReImport"
 	#$Editor::mnMenu add separator
-	$Editor::mnMenu add command -label "Auto Generate" -command {YetToImplement} 
+	$Editor::mnMenu add command -label "Auto Generate" -command {AutoGenerateMNOBD} 
 	$Editor::mnMenu add separator
 	$Editor::mnMenu add command -label "Delete OBD" -command {DeleteTreeNode}
 	#$Editor::mnMenu add command -label "Properties" -command {PropertiesWindow}; #commented for this delivery
@@ -677,7 +726,7 @@ proc Editor::create { } {
 	        -helptext "Create new project" -command YetToImplement]
 	set toolbarButtons(save) [ButtonBox::add $bbox -image [Bitmap::get disk] \
 	        -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
-	        -helptext "Save Project" -command YetToImplement]
+	        -helptext "Save Project" -command Saveproject]
 	set toolbarButtons(saveAll) [ButtonBox::add $bbox -image [Bitmap::get disk_multiple] \
             	-highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
             	-helptext "Save Project as" -command SaveProjectAsWindow]    
@@ -830,9 +879,12 @@ proc Editor::create { } {
 	$treeWindow bindText <ButtonPress-1> Editor::SingleClickNode
 	$treeWindow bindText <Double-1> Editor::DoubleClickNode
 	$treeWindow bindText <ButtonPress-3> {Editor::tselectright %X %Y}
-	#bind .mainframe.frame.pw1.f0.frame.pw2.f0.frame.nb.fobjtree.sw.objTree <Delete> "puts Delete_key_pressed"
-	bind $treeWindow <Button-4> {global updatetree ; $updatetree yview scroll -5 units}
-	bind $treeWindow <Button-5> {global updatetree ; $updatetree yview scroll 5 units}
+	if {"$tcl_platform(platform)" == "unix"} {
+		bind $treeWindow <Button-4> {global updatetree ; $updatetree yview scroll -5 units}
+		bind $treeWindow <Button-5> {global updatetree ; $updatetree yview scroll 5 units}
+	}
+
+
 	bind $treeWindow <Enter> { BindTree }
 	bind $treeWindow <Leave> { UnbindTree }
 
@@ -856,8 +908,8 @@ proc Editor::create { } {
 	pack $list_notebook -side left -fill both -expand yes -padx 2 -pady 4
 	catch {font create TkFixedFont -family Courier -size -12 -weight bold}
 
-set alignFrame [frame $pane2.alignframe -width 750]
-pack $alignFrame -expand yes -fill both
+	set alignFrame [frame $pane2.alignframe -width 750]
+	pack $alignFrame -expand yes -fill both
 
 	set f0 [EditManager::create_tab $alignFrame "Index" ind ]
 	set f1 [EditManager::create_tab $alignFrame "Sub index" sub ]
@@ -927,6 +979,13 @@ proc Editor::_create_intro { } {
 
 proc BindTree {} {
 	global updatetree
+	global tcl_platform
+	global f2
+
+	#[lindex $f2 1] configure -takefocus 0
+
+#focus $updatetree ; temporary fix but not correct
+
 	#set node [$updatetree selection get]
 	#puts "BindTree node->$node"
 	#if { $node == "" || $node == "root" } {
@@ -936,25 +995,33 @@ proc BindTree {} {
 	#	FindSpace::OpenParent $updatetree $node
 	#}
 	bind . <Delete> DeleteTreeNode 
-
-$updatetree configure -selectbackground #678db2 -relief sunken 
-
 	bind . <Up> ArrowUp 
 	bind . <Down> ArrowDown
 	bind . <Left> ArrowLeft
 	bind . <Right> ArrowRight
+	if {"$tcl_platform(platform)" == "windows"} {
+		bind . <MouseWheel> {global updatetree; $updatetree yview scroll [expr -%D/24] units }
+	}
+
+	#$updatetree configure -selectbackground #678db2 -relief sunken 
+	$updatetree configure -selectbackground #678db2
 }
 
 proc UnbindTree {} {
+	global tcl_platform
 	global updatetree
+
 	bind . <Delete> "" 
-
-$updatetree configure -selectbackground gray -relief ridge 
-
 	bind . <Up> ""
 	bind . <Down> ""
 	bind . <Left> ""
 	bind . <Right> ""
+	if {"$tcl_platform(platform)" == "windows"} {
+		bind . <MouseWheel> ""
+	}
+
+	#$updatetree configure -selectbackground gray -relief ridge 
+	$updatetree configure -selectbackground gray
 }
 ################################################################################################
 #proc Editor::SingleClickNode
@@ -990,6 +1057,8 @@ proc Editor::SingleClickNode {node} {
 		pack forget [lindex $f0 1]
 		pack forget [lindex $f1 1]
 		pack forget [lindex $f2 0]
+		[lindex $f2 1] cancelediting
+		[lindex $f2 1] configure -state disabled
 		return
 	}
 
@@ -1019,7 +1088,7 @@ proc Editor::SingleClickNode {node} {
 		#the node exist continue 
 	} else {
 		tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
-		tk_messageBox -message "ErrCode : $ErrCode\nExistfFlag : $ExistfFlag" -title Warning -icon warning
+		#tk_messageBox -message "ErrCode : $ErrCode\nExistfFlag : $ExistfFlag" -title Warning -icon warning
 		return
 	}
 
@@ -1039,6 +1108,7 @@ proc Editor::SingleClickNode {node} {
 		##	set nodeType 1
 		##}
 #######################################################################################################
+		[lindex $f2 1] configure -state normal
 		set idx [$updatetree nodes $node]
 		set popCount 0 
 		#$f2 delete 0 end
@@ -1094,11 +1164,11 @@ proc Editor::SingleClickNode {node} {
 						#TODO CHECK WHETHER NEED TO CONVERT TO HEX
 					}
 					#puts "IndexDefaultValue->$IndexDefaultValue"
-					set DataSize [string range $IndexActualValue 2 5]
-					set Offset [string range $IndexActualValue 6 9]
-					set Reserved [string range $IndexActualValue 10 11]
-					set listSubIndex [string range $IndexActualValue 12 13]
-					set listIndex [string range $IndexActualValue 14 17]
+					set DataSize [string range $IndexActualValue 0 3]
+					set Offset [string range $IndexActualValue 4 7]
+					set Reserved [string range $IndexActualValue 8 9]
+					set listSubIndex [string range $IndexActualValue 10 11]
+					set listIndex [string range $IndexActualValue 12 15]
 					#$f2 insert $popCount [list $popCount $IndexDefaultValue $listIndex $listSubIndex $Reserved $Offset $DataSize]
 					[lindex $f2 1] insert $popCount [list $popCount $IndexActualValue $listIndex $listSubIndex $Reserved $Offset $DataSize]
 					incr popCount 1 
@@ -1307,6 +1377,8 @@ proc Editor::SingleClickNode {node} {
 		pack forget [lindex $f0 1]
 		pack [lindex $f1 1] -expand yes -fill both -padx 2 -pady 4
 		pack forget [lindex $f2 0]
+		[lindex $f2 1] cancelediting
+		[lindex $f2 1] configure -state disabled
 	} elseif {[string match "*Index*" $node]} {
 		set tmpInnerf0 [lindex $f0 2]
 		set tmpInnerf1 [lindex $f0 3]
@@ -1466,6 +1538,8 @@ proc Editor::SingleClickNode {node} {
 		pack [lindex $f0 1] -expand yes -fill both -padx 2 -pady 4
 		pack forget [lindex $f1 1]
 		pack forget [lindex $f2 0]
+		[lindex $f2 1] cancelediting
+		[lindex $f2 1] configure -state disabled
 
 	}
 
@@ -1589,13 +1663,85 @@ proc Editor::DoubleClickNode {node} {
 } 
 
 ################################################################################################
+#proc SaveProject
+#Input       : -
+#Output      : -
+#Description : -
+################################################################################################
+proc Saveproject {} {
+	global tcl_platform
+	global PjtName
+	global PjtDir
+
+
+	#if {$tcl_platform(platform) == "unix"} {
+	#	set fileSeperator /
+	#} elseif {$tcl_platform(platform) == "windows"} {
+	#	set fileSeperator \		
+  	#} elseif {$tcl_platform(platform) == "macintosh"} {
+	#	set fileSeperator :	
+	#} else {
+	#	#platform other than unix, windows and macintosh
+	#}
+	
+	#if { [string index $PjtDir end] == $fileSeperator } {
+	#	#it is appende with file seperator continue
+	#	set savePjtDir $PjtDir
+        #} else {
+	#	set savePjtDir $PjtDir$fileSeperator
+        #}
+
+	#ocfmRetCode SaveProject(char* ProjectPath);
+	#calling the API to ave the project
+	set catchErrCode [SaveProject $PjtDir $PjtName]
+	set ErrCode [ocfmRetCode_code_get $catchErrCode]
+	if { $ErrCode != 0 } {
+		tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+		return 
+	}
+	
+}
+################################################################################################
 #proc CloseProject
 #Input       : -
 #Output      : -
 #Description : -
 ################################################################################################
 proc CloseProject {} {
+	global nodeIdList
+	global savedValueList
+	global nodeSelect	
+	global updatetree
+	global mnCount
+	global cnCount
 
+	puts "nodeIdList->$nodeIdList...length->[llength $nodeIdList]"
+	if {[llength $nodeIdList] != 0} {
+		foreach nodeId $nodeIdList {
+			if {$nodeId == 240} {
+				# nodeId is 240 for mn
+				set nodeType 0
+			} else {
+				set nodeType 1
+			}	
+			puts "DeleteNode nodeId->$nodeId nodeType->$nodeType"
+			DeleteNode $nodeId $nodeType
+		}
+	} else {
+		#there was no node created so continue with process
+	}
+	
+
+	#reset all the globaly maintained list 
+	set nodeIdList ""
+	set savedValueList ""
+	set nodeSelect ""
+	set mnCount 0
+	set cnCount 0
+
+	$updatetree delete PjtName
+	InsertTree
+		
 }
 ################################################################################################
 #proc AddCN
@@ -1654,7 +1800,7 @@ proc AddCN {cnName tmpImpDir nodeId} {
 		lappend nodeIdList $nodeId 
 
 		#should not import should create GUI default are not it will come here
-		set child [$updatetree insert end $node CN-$parentId-$cnCount -text "$cnName" -open 0 -image [Bitmap::get cn]]
+		set child [$updatetree insert end $node CN-$parentId-$cnCount -text "$cnName\($nodeId\)" -open 0 -image [Bitmap::get cn]]
 	}
 	return 
 }
@@ -2348,6 +2494,7 @@ proc ReImport {} {
 			}
 		}
 		#catch {FreeNodeMemory $node} ; # no need to free memory
+		cleanSavedValueList $node
 		catch {$updatetree delete [$updatetree nodes $node]}
 		$updatetree itemconfigure $node -open 0
 		#Import parentNode tmpDir nodeType nodeID 
@@ -2368,6 +2515,7 @@ proc DeleteTreeNode {} {
 	global updatetree
 	global nodeIdList
 	global nodeObj	
+	global savedValueList
 	#puts nodeIdList->$nodeIdList
 
 
@@ -2466,6 +2614,9 @@ proc DeleteTreeNode {} {
 			set nodeIdList [DeleteList $nodeIdList $nodeId]		
 			#puts "after deletion nodeIdList->$nodeIdList "		
 		}
+
+		cleanSavedValueList $node
+
 		#FreeNodeMemory $node ; #no need to free bcoz memory not created
 		#this proc does following
 	 	#foreach childIdx [$updatetree nodes $node] {
@@ -2535,7 +2686,9 @@ proc DeleteTreeNode {} {
 			#puts "\n\n       DeleteTreeNode->Invalid cond 2!!!\n\n"
 			return
 		}
-	
+		#puts "b4 del savedValueList->$savedValueList"
+		#puts "after del savedValueList->$savedValueList"
+
 		#gets the IndexId
 		#set idx [string range [$updatetree itemcget $idxNode -text] end-4 end-1 ]
 		#puts idx->$idx
@@ -2662,6 +2815,45 @@ proc DeleteList {tempList deleteVar} {
 	}
 	#puts "no match to delete from list"
 	return $tempList
+}
+
+################################################################################################
+#proc cleanSavedValueList
+#Input       : node
+#Output      : -
+#Description : searches the savedValueList and deletes the node under it if they are present
+#	       
+################################################################################################
+proc cleanSavedValueList {node} {
+	global savedValueList
+
+puts "bef clean savedValueList->$savedValueList"
+
+	set tempSavedValueList ""
+	set matchNode [split $node -]
+	set matchNode [lrange $matchNode 1 end]
+	set matchNode [join $matchNode -]
+	puts "matchNode->$matchNode"
+	foreach tempValue $savedValueList {
+		if {[string match "*SubIndexValue*" $tempValue]} {
+			set tempMatchNode *-$matchNode-*-*
+		} elseif {[string match "*IndexValue*" $tempValue]} {
+			set tempMatchNode *-$matchNode-*
+		} else {
+			#other than IndexValue and SubIndexValue no node should occur
+		}
+puts "tempMatchNode->$tempMatchNode tempValue->$tempValue match->[string match $tempMatchNode $tempValue]"
+		if {[string match $tempMatchNode $tempValue]} {
+			#matched so dont copy it
+		} else {
+			lappend tempSavedValueList $tempValue
+		}
+	}
+	set savedValueList $tempSavedValueList
+
+puts "aft clean savedValueList->$savedValueList"
+
+#tk_messageBox
 }
 
 ################################################################################################
@@ -3025,4 +3217,86 @@ proc ArrowRight {} {
 		# it has no child no need to expand
 	}
 
+}
+
+################################################################################################
+#proc AutoGenerateMNOBD
+#Input       : -
+#Output      : -
+#Description : AutoGenerates the MN OBD and populates the tree.
+################################################################################################
+
+proc AutoGenerateMNOBD {} {
+	global updatetree
+	global nodeIdList
+
+	set node [$updatetree selection get]
+	if {[string match "MN*" $node]} {
+		set child [$updatetree nodes $node]
+		set tmpNode [string range $node 2 end]
+		# since a MN has only one so -1 is appended
+		set node OBD$tmpNode-1
+
+		# check whether import is first time or not 
+		#so as to add OBD icon in GUI
+		set res [lsearch $child "OBD$tmpNode-1*"]
+		#puts "in reimport res -> $res"
+		#puts "child->$child"
+
+		set nodeId 240
+		set nodeType 0
+		#if { $res == -1} {
+		#	$updatetree insert 0 MN$tmpNode OBD$tmpNode -text "OBD" -open 0 -image [Bitmap::get pdo]
+		#}
+	} else {
+		set result [GetNodeIdType $node]
+		if {$result != "" } {
+			set nodeId [lindex $result 0]
+			set nodeType [lindex $result 1]
+		} else {
+			#must be some other node this condition should never reach
+			#puts "\n\nDeleteTreeNode->SHOULD NEVER HAPPEN\n\n"
+			return
+		}
+
+	}	
+	set cursor [. cget -cursor]
+	set types {
+	        {"XDC Files"     {.xdc } }
+	        {"XDD Files"     {.xdd } }
+	}
+	#puts  "\n\nREimport"
+	#set tmpImpDir [tk_getOpenFile -title "Import XDC" -filetypes $types -parent .]
+	set tmpImpDir .
+	if {$tmpImpDir != ""} {
+		#API 
+		#ReImportXML(char* fileName, char* errorString, int NodeID, ENodeType NodeType);
+		
+		
+		#set catchErrCode [ReImportXML $tmpImpDir $nodeId $nodeType]
+		set catchErrCode [GenerateMNOBD]		
+		
+		#puts "catchErrCode in reimport ->$catchErrCode"
+		set ErrCode [ocfmRetCode_code_get $catchErrCode]
+		#puts "ErrCode:$ErrCode"
+		if { $ErrCode != 0 } {
+			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+			#tk_messageBox -message "ErrCode : $ErrCode" -title Warning -icon warning
+			return
+		} else {
+			conPuts "ReImported $tmpImpDir for Node ID:$nodeId"
+		}
+		catch {
+			if { $res == -1} {
+				#there can be one OBD in MN so -1 is hardcoded
+				$updatetree insert 0 MN$tmpNode OBD$tmpNode-1 -text "OBD" -open 0 -image [Bitmap::get pdo]
+			}
+		}
+		#catch {FreeNodeMemory $node} ; # no need to free memory
+		catch {$updatetree delete [$updatetree nodes $node]}
+		$updatetree itemconfigure $node -open 0
+		#Import parentNode tmpDir nodeType nodeID 
+		Import $node $tmpImpDir $nodeType $nodeId 
+	}
+	#puts "**********\n"
 }

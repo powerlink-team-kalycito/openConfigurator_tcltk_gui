@@ -71,6 +71,7 @@
 ###############################################################################################
 proc StartUp {} {
 	global startVar
+	global frame2
 	set winStartUp .startUp
 	catch "destroy $winStartUp"
 	catch "font delete custom2"
@@ -106,9 +107,13 @@ proc StartUp {} {
 		} elseif {$startVar == 3} {
 			YetToImplement;
 		}
+		unset startVar
+		unset frame2
 		destroy .startUp
 	}
 	button $frame2.b_cancel -text "Cancel" -command {
+		unset startVar
+		unset frame2
 		destroy .startUp
 		Editor::exit_app
 	}
@@ -179,6 +184,8 @@ proc OpenProjectText {t_desc} {
 ###############################################################################################
 proc ConnectionSettingWindow {} {
 	global connectionIpAddr
+	global frame2
+
 	set winConnSett .connSett
 	catch "destroy $winConnSett"
 	toplevel     $winConnSett
@@ -201,9 +208,11 @@ proc ConnectionSettingWindow {} {
 
 	button $frame2.b_ok -text "  Ok  " -command { 
 		YetToImplement
-		destroy .connSett
+		$frame2.b_cancel invoke
 	}
 	button $frame2.b_cancel -text "Cancel" -command {
+		unset connectionIpAddr
+		unset frame2
 		destroy .connSett
 	}
 
@@ -234,6 +243,8 @@ proc ConnectionSettingWindow {} {
 ###############################################################################################
 proc InterCNWindow {} {
 	global updatetree
+	global frame2	
+
 	set node [$updatetree selection get]
 	set siblingList ""
 	set dispList ""
@@ -277,9 +288,11 @@ proc InterCNWindow {} {
  	
 	button $frame2.bt_ok -text "  Ok  " -command {
 		destroy .interCN
+		YetToImplement
 	}
 
 	button $frame2.bt_cancel -text "Cancel" -command {
+		unset frame2
 		destroy .interCN
 	}
 
@@ -427,6 +440,7 @@ proc AddCNWindow {} {
 	global cnName
 	global nodeId
 	global tmpImpCnDir
+	global frame1
 
 	set winAddCN .addCN
 	catch "destroy $winAddCN"
@@ -541,10 +555,14 @@ proc AddCNWindow {} {
 			#}
 				set chk [AddCN $cnName "" $nodeId]			
 		}
-		destroy .addCN
+		$frame1.bt_cancel invoke
 	}
 
 	button $frame1.bt_cancel -text Cancel -command { 
+		unset cnName
+		unset nodeId
+		unset tmpImpCnDir
+		unset frame1
 		destroy .addCN
 	}
 
@@ -686,6 +704,7 @@ proc NewProjectWindow {} {
 	global tmpPjtName
 	global tmpPjtDir
 	global tmpImpDir
+	global frame1
 	global updatetree
 	global nodeIdList
 	global PjtName
@@ -763,7 +782,11 @@ proc NewProjectWindow {} {
 			tk_messageBox -message "Entered path for Project is not a directory" -icon error -parent .newprj
 			focus .newprj
 			return
-		
+		}
+		if {![file writable $tmpPjtDir]} {
+			tk_messageBox -message "Entered path for Project is write protected" -icon error -parent .newprj
+			focus .newprj
+			return
 		}
 		if {$conf=="off" } {
 			if {![file isfile $tmpImpDir]} {
@@ -786,53 +809,36 @@ proc NewProjectWindow {} {
 		set PjtName $tmpPjtName
 		set PjtDir $tmpPjtDir
 		catch {$Editor::projMenu delete 3} ; # to delete the close project if already present 
-		$Editor::projMenu add command -label "Close Project" -command "CloseProject" 
-		#$Editor::projMenu add command -label "Properties" -command "PropertiesWindow" ; #not implemnted in this delivery so commented out
+		$Editor::projMenu add command -label "Close Project" -command "CloseProjectWindow" 
+		catch {$Editor::projMenu delete 4} ; # to delete the Properties if already present
+		$Editor::projMenu add command -label "Properties" -command "PropertiesWindow" ; #not implemnted in this delivery so commented out
+
+		#CloseProject is called to delete node and insert tree
+		#CloseProject
 
 		$updatetree itemconfigure PjtName -text $tmpPjtName
-		set catchErrCode [NodeCreate 240 0]
-		#set catchErrCode [lindex $obj 0]
+
+		set catchErrCode [NodeCreate 240 0 openPOWERLINK_MN]
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
 		#puts "ErrCode:$ErrCode"
 		if { $ErrCode != 0 } {
-			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Info -icon info
-			#tk_messageBox -message "ErrCode : $ErrCode" -title Warning -icon warning
-			destroy .newprj
-			return
+			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Info -parent .newprj -icon info
+			$frame1.bt_cancel invoke
 		}
-		catch {$updatetree delete MN-$mnCount}
 
-		#if {$conf == "off"} {
-			#import the user specified xdc/xdd file	
-		#} else {
-			##import the default xdd file
-			#set tmpImpDir [file join [pwd] mn.xdd]
-			##puts "\n\n default :::tmpImpDir->$tmpImpDir \n\n"
-
-			#if {[file exists $tmpImpDir]} {
-			#	#continue the process
-			#} else {
-			#	#there is no default mn.xdd file in required path
-			#	tk_messageBox -message "Default mn.xdd is not found" -icon error -parent .newprj
-			#	focus .newprj
-			#	return
-			#}
-
-		#}
-
-
-
-
-
-		$updatetree insert end PjtName MN-$mnCount -text "openPOWERLINK MN(240)" -open 1 -image [Bitmap::get mn]
-		#lappend nodeIdList 240 [lindex $obj 1] [lindex $obj 2]
+		$updatetree insert end PjtName MN-$mnCount -text "openPOWERLINK_MN(240)" -open 1 -image [Bitmap::get mn]
 		lappend nodeIdList 240 ; #removed obj and obj node
-		#puts "new project nodeIdList->$nodeIdList"
-		#puts "new project nodeIdList->$nodeIdList"
-
-
 
 		if {$conf == "off"} {
+#thread::send [tsv::get application importProgress] "StartProgress" ; #
+#puts "before calling thread"
+#after 1
+#puts "after calling thread"
+#thread::join [tsv::get application importProgress]
+#vwait tsv::get application flag
+#tsv::set application flag 0
+#puts "waiting for variable to be set"
+
 			#DllExport ocfmRetCode ImportXML(char* fileName, int NodeID, ENodeType NodeType);
 			set catchErrCode [ImportXML "$tmpImpDir" 240 0]
 			#puts "catchErrCode for import in new project->$catchErrCode"
@@ -840,32 +846,23 @@ proc NewProjectWindow {} {
 			#puts "ErrCode:$ErrCode"
 			if { $ErrCode != 0 } {
 				tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning	
-				#tk_messageBox -message "ErrCode : $ErrCode" -title Warning -icon warning
-				#	the below two lines are commented so as to continue work DISPLAYING CANNOT PARSE FILE 
-				destroy .newprj
-				return
-			} else {
-				conPuts "Imported $tmpImpDir for MN"
+				$frame1.bt_cancel invoke
 			}
 		$updatetree insert end MN-$mnCount OBD-$mnCount-1 -text "OBD" -open 0 -image [Bitmap::get pdo]
 		#Import parentNode tmpDir nodeType nodeID 
 		Import OBD-$mnCount-1 $tmpImpDir 0 240
+#puts "end of button ok"
 		}
 
-		#$updatetree insert end PjtName MN-$mnCount -text "openPOWERLINK MN(240)" -open 1 -image [Bitmap::get mn]
-		##lappend nodeIdList 240 [lindex $obj 1] [lindex $obj 2]
-		#lappend nodeIdList 240 ; #removed obj and obj node
-		##puts "new project nodeIdList->$nodeIdList"
-		##puts "new project nodeIdList->$nodeIdList"
-		#MN will have only one OBD
-		#$updatetree insert end MN-$mnCount OBD-$mnCount-1 -text "OBD" -open 0 -image [Bitmap::get pdo]
-		#Import parentNode tmpDir nodeType nodeID 
-		#Import OBD-$mnCount-1 $tmpImpDir 0 240  
-		
-		destroy .newprj
+		$frame1.bt_cancel invoke
 	}
 	button $frame1.bt_cancel -text Cancel -command { 
+		unset tmpPjtName
+		unset tmpPjtDir
+		unset tmpImpDir
+		unset frame1
 		destroy .newprj
+		return
 	}
 
 	grid config $winNewProj.l_empty -row 0 -column 0 
@@ -902,12 +899,12 @@ proc NewProjectWindow {} {
 }
 
 ###############################################################################################
-#proc CloseProject
+#proc CloseProjectWindow
 #Input       : -
 #Output      : -
 #Description : Creates the GUI when existing Project is to be closed
 ###############################################################################################
-proc CloseProject {} {
+proc CloseProjectWindow {} {
 	global PjtDir
 	global PjtName
 	global updatetree
@@ -916,20 +913,24 @@ proc CloseProject {} {
 		conPuts "No Project Selected" error
 		return
 	} else {	
-	set result [tk_messageBox -message "Save Project $PjtName ?" -type yesnocancel -icon question -title 			"Question"]
+		set result [tk_messageBox -message "Save Project $PjtName ?" -type yesnocancel -icon question -title 			"Question"]
    		 switch -- $result {
    		     yes {			 
-   		         #saveproject
+   		     	    #Saveproject
+			    conPuts "Save project not implemented" info
+			    CloseProject
+			    return yes
    		     }
-   		     no  {conPuts "Project $PjtName not saved" info}
+   		     no  {
+			    conPuts "Project $PjtName not saved" info
+			    CloseProject
+ 		 	    return no
+		     }
    		     cancel {
 				conPuts "Exit Canceled" info
-				return}
+				return cancel
+		     }
    		}	
-
-	# Delete the Tree
-	$updatetree delete PjtName
-	$updatetree insert end root PjtName -text "POWERLINK Network" -open 1 -image [Bitmap::get network]
 	}
 }
 
@@ -938,29 +939,59 @@ proc CloseProject {} {
 #Input       : choice
 #Output      : progressbar path
 #Description : Creates the GUI displaying progress when XDC/XDD is imported
+#	       This function is called by thread 
 ################################################################################################
 proc ImportProgress {stat} {
-	global LocvarProgbar
-	global prog
+	#global LocvarProgbar
+	#global prog
 
 	if {$stat == "start"} {
-		set winImpoProg .impoProg
-		catch "destroy $winImpoProg"
-		toplevel $winImpoProg
+
+
+	#package require Tk 8.5
+	#puts "In thread tkpath->$tkpath"
+	#set RootDir [pwd]
+	#set path_to_BWidget [file join $RootDir BWidget-1.2.1]
+	#lappend auto_path $path_to_BWidget
+	#package require -exact BWidget 1.2.1
+
+	#wm withdraw .
+	#wm title . "progress"
+	#BWidget::place . 0 0 
+			wm deiconify .
+			raise .
+			focus .
+
+
+
+
+		#set winImpoProg .impoProg
+		#catch "destroy $winImpoProg"
+		set winImpoProg .
+		#toplevel $winImpoProg
 		wm title     $winImpoProg	"Project Wizard"
 		wm resizable $winImpoProg 0 0
-		wm transient $winImpoProg .
+		#wm transient $winImpoProg .
 		wm deiconify $winImpoProg
 		grab $winImpoProg
 		set LocvarProgbar 0
-		set prog [ProgressBar $winImpoProg.prog -orient horizontal -width 200 -maximum 100 -height 10 -variable LocvarProgbar -type incremental -bg white -fg blue]
-		grid config $winImpoProg.prog -row 0 -column 0 -padx 10 -pady 10
-		centerW $winImpoProg
+		#set prog [ProgressBar $winImpoProg.prog -orient horizontal -width 200 -maximum 100 -height 10 -variable LocvarProgbar -type incremental -bg white -fg blue]
+		#set prog [ttk::progressbar $winImpoProg.prog -mode indeterminate]
+		set prog [ttk::progressbar .prog -mode indeterminate -orient horizontal -length 200 ]
+		grid config $prog -row 0 -column 0 -padx 10 -pady 10
+		#ttk::progressbar::start $winImpoProg.prog 10 ; #added for indeterminate mode
+		$prog start 10
+		BWidget::place $winImpoProg 0 0 center
 		update idletasks
+		puts "progress bar created"
 		return  $winImpoProg.prog
 	} elseif {$stat == "stop" } { 
 		#set LocvarProgbar 100
-		destroy .impoProg
+		#ttk::progressbar::stop .impoProg.prog ; #added for indeterminate mode
+		#.impoProg.prog stop
+		.prog stop
+		#destroy .impoProg
+		wm withdraw .
 	} elseif {$stat == "incr"} {
 		incr LocvarProgbar
 	}
@@ -976,6 +1007,7 @@ proc ImportProgress {stat} {
 proc AddIndexWindow {} {
 	global updatetree
 	global indexVar
+	global frame2
 
 	set winAddIdx .addIdx
 	catch "destroy $winAddIdx"
@@ -1001,6 +1033,7 @@ proc AddIndexWindow {} {
 	button $frame2.bt_ok -text "  Ok  " -command {
 		if {[string length $indexVar] != 4} {
 			set res [tk_messageBox -message "Invalid Index" -type ok -parent .addIdx]
+			focus .addIdx
 			return
 		}
 		set indexVar [string toupper $indexVar]
@@ -1068,10 +1101,9 @@ proc AddIndexWindow {} {
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
 		#puts "ErrCode:$ErrCode"
 		if { $ErrCode != 0 } {
-			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning -parent .addIdx
 			#tk_messageBox -message "ErrCode : $ErrCode" -title Warning -icon warning
-			destroy .addIdx
-			return
+			$frame2.bt_cancel invoke
 		}
 
 		#puts "inc->[llength $sortChild]"
@@ -1099,9 +1131,9 @@ proc AddIndexWindow {} {
 		if { $ErrCode == 0 && $ExistfFlag == 1 } {
 			#the node exist continue 
 		} else {
-			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon 	warning
-			tk_messageBox -message "ErrCode : $ErrCode\nExistfFlag : $ExistfFlag" -title Warning -icon warning
-			return
+			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon 	warning -parent .addIdx
+			tk_messageBox -message "ErrCode : $ErrCode\nExistfFlag : $ExistfFlag" -title Warning -icon warning -parent .addIdx
+			$frame2.bt_cancel invoke
 		}
 
 
@@ -1155,12 +1187,14 @@ $updatetree itemconfigure $subIndexNode-$tempSidxCount -open 0
 		}
 
 		#puts "child for parentNode after adding index ->[$updatetree nodes $parentNode]"
-		unset indexVar
-		destroy .addIdx
+
+		$frame2.bt_cancel invoke
 	}
 	button $frame2.bt_cancel -text Cancel -command { 
 		unset indexVar
+		unset frame2
 		destroy .addIdx	
+		return
 	}
 	grid config $winAddIdx.l_empty1 -row 0 -column 0 
 	grid config $frame1 -row 1 -column 0 
@@ -1191,6 +1225,7 @@ $updatetree itemconfigure $subIndexNode-$tempSidxCount -open 0
 proc AddSubIndexWindow {} {
 	global updatetree
 	global subIndexVar
+	global frame2
 
 	set winAddSidx .addSidx
 	catch "destroy $winAddSidx"
@@ -1216,6 +1251,7 @@ proc AddSubIndexWindow {} {
 	button $frame2.bt_ok -text "  Ok  " -command {
 		if {[string length $subIndexVar] != 2} {
 			set res [tk_messageBox -message "Invalid SubIndex" -type ok -parent .addSidx]
+			focus .addSidx
 			return
 		}		
 		set subIndexVar [string toupper $subIndexVar]
@@ -1275,8 +1311,7 @@ proc AddSubIndexWindow {} {
 		if { $ErrCode != 0 } {
 			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
 			#tk_messageBox -message "ErrCode : $ErrCode" -title Warning -icon warning
-			destroy .addSidx
-			return
+			$frame2.bt_cancel invoke
 		}
 
 		set subIndexName []
@@ -1290,13 +1325,15 @@ proc AddSubIndexWindow {} {
 		} else {
 			$updatetree insert $subIndexPos $node SubIndexValue-$nodePos-$count -text [lindex $subIndexName 1]\($subIndexVar\) -open 0 -image [Bitmap::get subindex]
 		}
-		unset subIndexVar
-		destroy .addSidx
+
+		$frame2.bt_cancel invoke
 
 	}
 	button $frame2.bt_cancel -text Cancel -command { 
 		unset subIndexVar
+		unset frame2
 		destroy .addSidx
+		return
 	}
 	grid config $winAddSidx.l_empty1 -row 0 -column 0 
 	grid config $frame1 -row 1 -column 0 
@@ -1319,6 +1356,242 @@ proc AddSubIndexWindow {} {
 }
 
 ################################################################################################
+#proc AddPDOWindow
+#Input       : -
+#Output      : -
+#Description : -
+################################################################################################
+proc AddPDOWindow {} {
+	global updatetree
+	global pdoVar
+	global frame2
+
+	set winAddPdo .addPdo
+	catch "destroy $winAddPdo"
+	toplevel $winAddPdo
+	wm title     $winAddPdo	"Add PDO"
+	wm resizable $winAddPdo 0 0
+	wm transient $winAddPdo .
+	wm deiconify $winAddPdo
+	wm minsize   $winAddPdo 50 50
+	grab $winAddPdo
+
+	set frame1 [frame $winAddPdo.fram1]
+	set frame2 [frame $winAddPdo.fram2]
+
+	label $winAddPdo.l_empty1 -text "               "	
+	label $frame1.l_index -text "Enter the PDO Index"
+	label $winAddPdo.l_empty2 -text "               "	
+	label $winAddPdo.l_empty3 -text "               "
+
+	entry $frame1.en_index -textvariable pdoVar -background white -relief ridge -validate key -vcmd "IsValidIdx %P 4"
+	set pdoVar ""
+
+	button $frame2.bt_ok -text "  Ok  " -command {
+		if {[string length $pdoVar] != 4} {
+			set res [tk_messageBox -message "Invalid PDO Index" -type ok -parent .addPdo]
+			focus .addPdo
+			return
+		}
+		set pdoVar [string toupper $pdoVar]
+
+		set flag 0
+		foreach check [list 14?? 16?? 18?? 1A??] {
+			if {[string match "$check" $pdoVar]} {
+				#it is a match exit the loop
+				set flag 0
+				break
+			} else {
+				set flag 1
+			}
+		}
+		if {$flag == 1} {
+			#it did not match any thing
+			set res [tk_messageBox -message "Invalid PDO Index" -type ok -parent .addPdo]
+			focus .addPdo
+			return
+ 		}
+
+
+		set node [$updatetree selection get]
+		#puts node----->$node
+
+		#gets the nodeId and Type of selected node
+		set result [GetNodeIdType $node]
+		if {$result != "" } {
+			set nodeId [lindex $result 0]
+			set nodeType [lindex $result 1]
+		} else {
+			#must be some other node this condition should never reach
+			#puts "\n\nAddIndexWindow->SHOULD NEVER HAPPEN 1!!\n\n"
+			return
+		}
+
+
+		set nodePosition [split $node -]
+		set nodePosition [lrange $nodePosition 1 end]
+		set nodePosition [join $nodePosition -]
+
+		if {[string match "18*" $pdoVar] || [string match "1A*" $pdoVar]} {
+			#it must a TPDO object
+			set child [$updatetree nodes TPDO-$nodePosition]
+		} elseif {[string match "14*" $pdoVar] || [string match "16*" $pdoVar]} {
+			#it must a RPDO object	
+			set child [$updatetree nodes RPDO-$nodePosition]
+		} else {
+			#should not occur
+		}	
+
+
+		puts child->$child
+		set sortChild ""
+		set indexPosition 0
+		foreach tempChild $child {
+			if {[string match "PDO*" $tempChild]} {
+				#dont need to add it to list
+			} else {
+				set tail [split $tempChild -]
+				set tail [lindex $tail end]
+				lappend sortChild $tail
+				#find the position where the added index is to be inserted in sorted order in TreeView 
+				#0x is appended so that the input will be considered as hexadecimal number and numerical operation proceeds
+				if {[ expr 0x$pdoVar > 0x[string range [$updatetree itemcget $tempChild -text] end-4 end-1] ]} {
+					#since the tree is populated after sorting 
+					incr indexPosition
+				} else {
+					#
+				}
+			}
+		}
+
+
+		set sortChild [lsort -integer $sortChild]
+		if {$sortChild == ""} {
+			set count 0
+		} else {
+			set count [expr [lindex $sortChild end]+1 ]
+		}
+		puts "AddIndex nodeId->$nodeId nodeType->$nodeType indexVar->$pdoVar"
+		set catchErrCode [AddIndex $nodeId $nodeType $pdoVar]
+		#puts "catchErrCode->$catchErrCode"
+		set ErrCode [ocfmRetCode_code_get $catchErrCode]
+		#puts "ErrCode:$ErrCode"
+		if { $ErrCode != 0 } {
+			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning -parent .addPdo
+			#tk_messageBox -message "ErrCode : $ErrCode" -title Warning -icon warning
+			$frame2.bt_cancel invoke
+		}
+
+		#puts "inc->[llength $sortChild]"
+
+		#set indexName []
+		#set indexName [GetIndexAttributes $nodeId $nodeType $indexVar 0]
+		#puts "indexName->$indexName"
+
+
+
+
+		set nodePos [new_intp]
+		#puts "IfNodeExists nodeId->$nodeId nodeType->$nodeType nodePos->$nodePos"
+		#IfNodeExists API is used to get the nodePosition which is needed fro various operation	
+		#set catchErrCode [IfNodeExists $nodeId $nodeType $nodePos]
+
+
+		#TODO waiting for new so then implement it
+		set ExistfFlag [new_boolp]
+		set catchErrCode [IfNodeExists $nodeId $nodeType $nodePos $ExistfFlag]
+		set nodePos [intp_value $nodePos]
+		set ExistfFlag [boolp_value $ExistfFlag]
+		set ErrCode [ocfmRetCode_code_get $catchErrCode]
+		#puts "ErrCode:$ErrCode"
+		if { $ErrCode == 0 && $ExistfFlag == 1 } {
+			#the node exist continue 
+		} else {
+			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon 	warning -parent .addPdo
+			tk_messageBox -message "ErrCode : $ErrCode\nExistfFlag : $ExistfFlag" -title Warning -icon warning -parent .addPdo
+			$frame2.bt_cancel invoke
+		}
+
+
+
+
+
+
+		set indexPos [new_intp]
+		#DllExport ocfmRetCode IfIndexExists(int NodeID, ENodeType NodeType, char* IndexID, int* IndexPos)
+		set catchErrCode [IfIndexExists $nodeId $nodeType $pdoVar $indexPos]
+		set indexPos [intp_value $indexPos]
+
+		set indexName [GetIndexAttributesbyPositions $nodePos $indexPos 0 ]
+		#puts "indexName->$indexName"
+
+
+		if {[string match "18*" $pdoVar] || [string match "1A*" $pdoVar]} {
+			#it must a TPDO object
+			set parentNode TPDO-$nodePosition
+			set indexNode TPdoIndexValue-$nodePosition-$count
+			set subIndexNode TPdoSubIndexValue-$nodePosition-$count
+		} elseif {[string match "14*" $pdoVar] || [string match "16*" $pdoVar]} {
+			#it must a RPDO object	
+			set parentNode RPDO-$nodePosition
+			set indexNode RPdoIndexValue-$nodePosition-$count
+			set subIndexNode RPdoSubIndexValue-$nodePosition-$count
+		} else {
+			#should not occur
+		}
+
+#puts "child for parentNode===>[$updatetree nodes $parentNode] "
+
+		$updatetree insert $indexPosition $parentNode $indexNode -text [lindex $indexName 1]\($pdoVar\) -open 0 -image [Bitmap::get index]
+
+
+		#SortNode {nodeType nodeID nodePos choice {indexPos ""} {indexId ""}}
+		set sidxCorrList [SortNode $nodeType $nodeId $nodePos sub $indexPos $pdoVar]
+		set sidxCount [llength $sidxCorrList]
+		for {set tempSidxCount 0} { $tempSidxCount < $sidxCount } {incr tempSidxCount} {
+			set sortedSubIndexPos [lindex $sidxCorrList $tempSidxCount]
+			set subIndexName [GetSubIndexAttributesbyPositions $nodePos $indexPos $sortedSubIndexPos  0 ]
+			set subIndexId [GetSubIndexIDbyPositions $nodePos $indexPos $sortedSubIndexPos ]
+			set subIndexId [lindex $subIndexId 1]
+			$updatetree insert $tempSidxCount $indexNode $subIndexNode-$tempSidxCount -text [lindex $subIndexName 1]\($subIndexId\) -open 0 -image [Bitmap::get subindex]
+
+#puts "$updatetree insert $tempSidxCount $indexNode $subIndexNode-$tempSidxCount -text [lindex $subIndexName 1]\($subIndexId\) -open 0 -image [Bitmap::get subindex]"
+
+$updatetree itemconfigure $subIndexNode-$tempSidxCount -open 0
+		}
+
+		#puts "child for parentNode after adding index ->[$updatetree nodes $parentNode]"
+		$frame2.bt_cancel invoke
+		
+	}
+	button $frame2.bt_cancel -text Cancel -command { 
+		unset pdoVar
+		unset frame2
+		destroy .addPdo	
+		return
+	}
+	grid config $winAddPdo.l_empty1 -row 0 -column 0 
+	grid config $frame1 -row 1 -column 0 
+	grid config $winAddPdo.l_empty2 -row 2 -column 0 
+	grid config $frame2 -row 3 -column 0  
+	grid config $winAddPdo.l_empty3 -row 4 -column 0 
+
+	grid config $frame1.l_index -row 0 -column 0 -padx 5
+	grid config $frame1.en_index -row 0 -column 1 -padx 5
+
+	grid config $frame2.bt_ok -row 0 -column 0 -padx 5
+	grid config $frame2.bt_cancel -row 0 -column 1 -padx 5
+
+	wm protocol .addPdo WM_DELETE_WINDOW "$frame2.bt_cancel invoke"
+	bind $winAddPdo <KeyPress-Return> "$frame2.bt_ok invoke"
+	bind $winAddPdo <KeyPress-Escape> "$frame2.bt_cancel invoke"
+
+	focus $frame1.en_index
+	centerW $winAddPdo
+}
+
+
+################################################################################################
 #proc PropertiesWindow
 #Input       : -
 #Output      : -
@@ -1326,43 +1599,137 @@ proc AddSubIndexWindow {} {
 ################################################################################################
 proc PropertiesWindow {} {
 	global updatetree
+	global PjtDir
 
 	set node [$updatetree selection get]
-	if {$node == "PjtName"} {
-		set title1 "Name :"
-		set display1 [$updatetree itemcget $node -text]
-		set title2 "Loaction"	
-		set 
-	} elseif { [string match "MN-*"] } {
-
-	} elseif { [string match "CN-*"] } {
-
-	} else {
-		#property is only for these nodes other node should have it
-		#puts "\n\n\tNO PROPERTY WINDOW FOR NODE==>$node\n\n"
-		return
-	}
 
 	set winProp .prop
 	catch "destroy $winProp"
 	toplevel $winProp
-	wm title     $winProp "Properties"
 	wm resizable $winProp 0 0
 	wm transient $winProp .
 	wm deiconify $winProp
-	wm minsize   $winProp 50 50
+	wm minsize   $winProp 200 100
 	grab $winProp
 
-	label $winprop.l_title1 -text ""
-	label $winprop.l_display1 -text ""
-	label $winprop.l_title2 -text ""
-	label $winprop.l_display2 -text ""
-	label $winprop.l_title3 -text ""
-	label $winprop.l_display3 -text ""
-	label $winprop.l_title4 -text ""
-	label $winprop.l_display4 -text ""
-	label $winprop.l_empty1 -text ""
+	set frame1 [frame $winProp.frame -padx 5 -pady 5 ]
+
+	if {$node == "PjtName"} {
+		wm title $winProp "Project Properties"
+		set title1 "Name"
+		set display1 [$updatetree itemcget $node -text]
+		set title2 "Location"	
+		set display2 $PjtDir
+	} elseif { [string match "MN-*" $node] || [string match "CN-*" $node] } {
+		if { [string match "MN-*" $node] } {
+			wm title $winProp "MN Properties"
+			set nodeId 240
+			set nodeType 0
+			set title1 "Managing Node"
+			set display1 "openPOWERLINK_MN"
+			#ocfmRetCode GetNodeCount(int MNID, int* Out_NodeCount)
+			set title3 "Number of CN"	
+			set count [new_intp]
+			set catchErrCode [GetNodeCount 240 $count]
+			set ErrCode [ocfmRetCode_code_get $catchErrCode]
+puts "CN count:[intp_value $count]....ErrCode->$ErrCode"
+			if { $ErrCode == 0 } {
+				set display3 [expr [intp_value $count]-1]
+			} else {
+				set display3 ""
+			}
+			label $frame1.l_title3 -text $title3
+			label $frame1.l_sep3 -text ":"
+			label $frame1.l_display3 -text $display3	
+		} else {
+			wm title $winProp "CN Properties"
+			set result [GetNodeIdType $node]
+			if {$result != "" } {
+				set nodeId [lindex $result 0]
+				set nodeType [lindex $result 1]
+			} else {
+				#must be some other node this condition should never reach
+				return
+			}
+			set title1 "Name"
+			set display1 [string range [$updatetree itemcget $node -text] 0 end-3]
+		
+		}
+
+		set title2 "NodeId "	
+		set display2 $nodeId
+
+		set title4 "Number of Indexes"
+		set count [new_intp]
+puts "GetIndexCount $nodeId $nodeType $count"	
+		set catchErrCode [GetIndexCount $nodeId $nodeType $count]
+puts "catchErrCode->$catchErrCode"
+		set ErrCode [ocfmRetCode_code_get $catchErrCode]
+puts "Errcode->$ErrCode"
+		if { $ErrCode == 0 } {
+			set display4 [intp_value $count]
+		} else {
+			set display4 ""
+		}
+		label $frame1.l_title4 -text $title4
+		label $frame1.l_sep4 -text ":"
+		label $frame1.l_display4 -text $display4
+	} else {
+		#should not occur
+		return
+	}
 
 
+	label $frame1.l_title1 -text $title1 
+	label $frame1.l_sep1 -text ":"
+	label $frame1.l_display1 -text $display1
+	label $frame1.l_title2 -text $title2
+	label $frame1.l_sep2 -text ":"
+	label $frame1.l_display2 -text $display2
+	label $frame1.l_empty1 -text ""
+	label $frame1.l_empty2 -text ""
+
+	button $winProp.bt_ok -text "  Ok  " -command {
+		destroy .prop
+	}
+
+	#grid config $frame1 -row 0 -column 0 
+	pack configure $frame1 
+
+	grid config $frame1.l_empty1 -row 0 -column 0 -columnspan 2
+
+	grid config $frame1.l_title1 -row 1 -column 0 -sticky w
+	grid config $frame1.l_sep1 -row 1 -column 1
+	grid config $frame1.l_display1 -row 1 -column 2 -sticky w
+	grid config $frame1.l_title2 -row 2 -column 0  -sticky w
+	grid config $frame1.l_sep2 -row 2 -column 1
+	grid config $frame1.l_display2 -row 2 -column 2 -sticky w
+	if { $node == "PjtName" } {
+		grid config $frame1.l_empty2 -row 3 -column 0 -columnspan 1
+
+		#grid config $winProp.bt_ok -row 1 -column 0
+		pack configure $winProp.bt_ok
+	} elseif { [string match "MN-*" $node] } {
+		grid config $frame1.l_title3 -row 3 -column 0 -sticky w	
+		grid config $frame1.l_sep3 -row 3 -column 1	
+		grid config $frame1.l_display3 -row 3 -column 2 -sticky w
+		grid config $frame1.l_title4 -row 4 -column 0 -sticky w
+		grid config $frame1.l_sep4 -row 4 -column 1	
+		grid config $frame1.l_display4 -row 4 -column 2 -sticky w
+		grid config $frame1.l_empty2 -row 5 -column 0 -columnspan 1
+
+		#grid config $winProp.bt_ok -row 1 -column 0
+		pack configure $winProp.bt_ok
+	} elseif { [string match "CN-*" $node] } {
+		grid config $frame1.l_title4 -row 3 -column 0 -sticky w
+		grid config $frame1.l_sep4 -row 3 -column 1
+		grid config $frame1.l_display4 -row 3 -column 2 -sticky w
+		grid config $frame1.l_empty2 -row 4 -column 0 -columnspan 1
+
+		#grid config $winProp.bt_ok -row 1 -column 0
+		pack configure $winProp.bt_ok
+	} else {
+		#should not occur
+	}
 	
 }

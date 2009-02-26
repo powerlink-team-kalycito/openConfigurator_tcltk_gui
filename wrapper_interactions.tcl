@@ -199,9 +199,13 @@ proc SortNode {nodeType nodeID nodePos choice {indexPos ""} {indexId ""}} {
 #Description : Reads an XDC/XDD file and populates tree
 ###############################################################################################
 proc Import {parentNode tmpDir nodeType nodeID } {
+#puts "start of import"
 	global updatetree
 	global cnCount
-	ImportProgress start
+	#ImportProgress start
+
+#thread::send [tsv::set application importProgress] "StartProgress" ; #
+#after 10000
 
 	global LocvarProgbar
 	set LocvarProgbar 0
@@ -228,7 +232,7 @@ proc Import {parentNode tmpDir nodeType nodeID } {
 	} else {
 		tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon 	warning
 		tk_messageBox -message "ErrCode : $ErrCode\nExistfFlag : $ExistfFlag" -title Warning -icon warning
-		ImportProgress stop
+		#ImportProgress stop
 		return
 	}
 
@@ -247,7 +251,8 @@ proc Import {parentNode tmpDir nodeType nodeID } {
 	set count [intp_value $count]
 	#puts COUNT$count
 	if {$count == 0} {
-		ImportProgress stop
+		#thread::send -async [tsv::set application importProgress] "StopProgress"
+		#ImportProgress stop
       		return
 	}
 
@@ -375,7 +380,9 @@ proc Import {parentNode tmpDir nodeType nodeID } {
 	}
 	#puts "errorString->$errorString...nodeType->$nodeType...nodeID->$nodeID..."
 	set LocvarProgbar 100
-	ImportProgress stop
+	#ImportProgress stop
+#tk_messageBox -message "clicing ok destroys progress window"
+#thread::send -async [tsv::set application importProgress] "StopProgress"
 
 }
 

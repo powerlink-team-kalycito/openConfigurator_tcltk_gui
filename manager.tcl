@@ -416,7 +416,7 @@ proc ConvertDec {tmpValue} {
 	set tmpVar [$tmpValue.en_value1 cget -textvariable]
 	global $tmpVar
 	set tmpVal [subst $[subst $tmpVar]]
-	#puts "b4 trim ConvertDec->[subst $[subst $tmpVar]]--------tmpVal->$tmpVal"
+	#puts "\nb4 trim ConvertDec->[subst $[subst $tmpVar]]--------tmpVal->$tmpVal"
 	if {[string match -nocase "0x*" $tmpVal ] == 1 } {
 		set tmpVal [string range $tmpVal 2 end]
 		#puts "b4 trim 0x remov ConvertDec->$tmpVal"
@@ -427,7 +427,7 @@ proc ConvertDec {tmpValue} {
 		catch {set tmpVal [expr 0x$tmpVal]}
 		$tmpValue.en_value1 insert 0 $tmpVal
 		#set $tmpVar " "
-		#puts  "fina1 ConvertDec->$tmpVal"
+		#puts  "fina1 ConvertDec->$tmpVal\n"
 		$tmpValue.en_value1 configure -validate key -vcmd "IsDec %P $tmpValue.en_value1"
 	} else {
 		#puts "ConvertDec already selected"
@@ -452,22 +452,61 @@ proc ConvertHex {tmpValue} {
 	set tmpVar [$tmpValue.en_value1 cget -textvariable]
 	global $tmpVar	
 	set tmpVal [subst $[subst $tmpVar]]
-	#puts "b4 trim ConvertHex->[subst $[subst $tmpVar]]--------tmpVal->$tmpVal"
+	#puts "\nb4 trim ConvertHex->[subst $[subst $tmpVar]]--------tmpVal->$tmpVal"
 	if {[string match -nocase "0x*" $tmpVal ] == 0 } {
 		
 		set tmpVal [string trimleft $tmpVal 0]
 		#puts "ConvertHex->$tmpVal"
 		$tmpValue.en_value1 configure -validate none
 		$tmpValue.en_value1 delete 0 end
-		catch {set tmpVal [format %X $tmpVal]}
+
+		if { $tmpVal > 4294967295 } {
+			set calcVal $tmpVal
+			set finalVal ""
+			while { $calcVal > 4294967295 } {
+				set quo [expr $calcVal / 4294967296 ]
+				#puts "quo->$quo"
+				set rem [expr $calcVal - ( $quo * 4294967296) ]
+				#puts "rem->$rem"
+				if { $quo  > 4294967295 } {
+					#set rem [AppendZero [format %X $rem] 8]	
+					set finalVal [AppendZero [format %X $rem] 8]$finalVal		
+					#puts "rem->$rem...finalVal->$finalVal"
+				} else {
+					#set quo [AppendZero [format %X $quo] 8]
+					set finalVal [AppendZero [format %X $rem] 8]$finalVal	
+					#puts "final val after appending	$finalVal"
+					set finalVal [format %X $quo]$finalVal
+					#puts "quo->$quo...finalVal->$finalVal"
+				}
+				set calcVal $quo
+				puts "calcVal->$calcVal"
+			}
+			set tmpVal $finalVal
+		} else {
+			catch {set tmpVal [format %X $tmpVal]}
+		}
+
 		set tmpVal 0x$tmpVal
 		$tmpValue.en_value1 insert 0 $tmpVal
-		#puts  "final ConvertHex->$tmpVal"
+		#puts  "final ConvertHex->$tmpVal\n"
 		$tmpValue.en_value1 configure -validate key -vcmd "IsHex %P $tmpValue.en_value1"
 	} else {
 		puts "ConvertHex already selected"
 		#already hex is selected
 	}
+}
+###############################################################################################
+#proc AppendZero
+#Input       : -
+#Output      : -
+#Description : Append zero to the input until require length is reached
+###############################################################################################
+proc AppendZero { input length} {
+	while {[string length $input] < $length} {
+		set input 0$input
+	}
+	return $input
 }
 
 ###############################################################################################
@@ -478,7 +517,6 @@ proc ConvertHex {tmpValue} {
 ###############################################################################################
 proc SaveValue {frame0 frame1} {
 	global nodeSelect
-	#global nodeObj
 	global nodeIdList
 	global updatetree
 	global savedValueList ; #this list contains Nodes whose value are changed using save option

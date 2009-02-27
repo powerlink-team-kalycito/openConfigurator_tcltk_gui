@@ -664,7 +664,7 @@ User: Administrator
 
 	<Object index="1F8B" name="NMT_MNPReqPayloadLimitList_AU16" objectType="8" dataType="0006">
 		<SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="rw" defaultValue="254" PDOmapping="no"/>
-		<SubObject subIndex="01" name="CNPReqPayload" objectType="7" dataType="0007" accessType="rw" defaultValue="36" PDOmapping="no" range="01-FE" nameIndex="0"/>
+		<SubObject subIndex="01" name="CNPReqPayload" objectType="7" dataType="0006" accessType="rw" defaultValue="36" PDOmapping="no" range="01-FE" nameIndex="0"/>
 	</Object>
 
 	<Object index="1F8C" name="NMT_CurrNMTState_U8" objectType="7" dataType="0005" accessType="ro" defaultValue="1C" PDOmapping="yes">
@@ -672,7 +672,7 @@ User: Administrator
 
 	<Object index="1F8D" name="NMT_PResPayloadLimitList_AU16" objectType="8" dataType="0006">
 		<SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="rw" defaultValue="254" PDOmapping="no"/>
-		<SubObject subIndex="01" name=" PResPayloadLimit" objectType="7" dataType="0007" accessType="rw" defaultValue="36" PDOmapping="no" range="01-FE" nameIndex="0"/>
+		<SubObject subIndex="01" name=" PResPayloadLimit" objectType="7" dataType="0006" accessType="rw" defaultValue="36" PDOmapping="no" range="01-FE" nameIndex="0"/>
 	</Object>
 
 	<Object index="1F8E" name="NMT_MNNodeCurrState_AU8" objectType="8" dataType="0006">

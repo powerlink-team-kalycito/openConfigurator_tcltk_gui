@@ -132,7 +132,7 @@ proc EditManager::create_tab {nb filename choice} {
 	entry $tabInnerf1.en_lower1 -state disabled
 	entry $tabInnerf1.en_pdo1 -state disabled
 	entry $tabInnerf1.en_default1 -state disabled
-	entry $tabInnerf1.en_value1 -textvariable tmpValue$_newPageCounter  -relief ridge -justify center -bg white -validate key -vcmd "IsDec %P $tabInnerf1.en_value1"
+	entry $tabInnerf1.en_value1 -textvariable tmpValue$_newPageCounter  -relief ridge -justify center -bg white -validate key -vcmd "IsDec %P $tabInnerf1.en_value1 %d %i"
 
         set frame1 [frame $tabInnerf1.frame1]
         #set ra_dec [radiobutton $frame1.ra_dec -text "Dec" -variable hexDec$_newPageCounter -value on -command "ConvertDec $tabInnerf1.en_value1"]
@@ -428,7 +428,7 @@ proc ConvertDec {tmpValue} {
 		$tmpValue.en_value1 insert 0 $tmpVal
 		#set $tmpVar " "
 		#puts  "fina1 ConvertDec->$tmpVal\n"
-		$tmpValue.en_value1 configure -validate key -vcmd "IsDec %P $tmpValue.en_value1"
+		$tmpValue.en_value1 configure -validate key -vcmd "IsDec %P $tmpValue.en_value1 %d %i"
 	} else {
 		#puts "ConvertDec already selected"
 		#already dec is selected
@@ -490,7 +490,7 @@ proc ConvertHex {tmpValue} {
 		set tmpVal 0x$tmpVal
 		$tmpValue.en_value1 insert 0 $tmpVal
 		#puts  "final ConvertHex->$tmpVal\n"
-		$tmpValue.en_value1 configure -validate key -vcmd "IsHex %P $tmpValue.en_value1"
+		$tmpValue.en_value1 configure -validate key -vcmd "IsHex %P $tmpValue.en_value1 %d %i"
 	} else {
 		puts "ConvertHex already selected"
 		#already hex is selected
@@ -718,10 +718,10 @@ proc DiscardValue {frame0 frame1} {
 	#after inserting value select appropriate radio button
 	if {[string match -nocase "0x*" $IndexActualValue]} {
 		$frame1.frame1.ra_hex select 
-		$frame1.en_value1 configure -validate key -vcmd "IsHex %P $frame1.en_value1"
+		$frame1.en_value1 configure -validate key -vcmd "IsHex %P $frame1.en_value1 %d %i"
 	} else {
 		$frame1.frame1.ra_dec select	
-		$frame1.en_value1 configure -validate key -vcmd "IsDec %P $frame1.en_value1"
+		$frame1.en_value1 configure -validate key -vcmd "IsDec %P $frame1.en_value1 %d %i"
 	}
 
 }

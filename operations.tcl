@@ -62,8 +62,6 @@
 #  REVISION HISTORY:
 # $Log:      $
 ###############################################################################################
-source [file join $RootDir windows.tcl]
-source [file join $RootDir validation.tcl]
 #source $RootDir/windows.tcl
 #source $RootDir/validation.tcl
 
@@ -88,7 +86,11 @@ tsv::set application importProgress [thread::create -joinable {
 	source [file join $RootDir windows.tcl]
 
 	wm withdraw .
-	#wm title . "progress"
+	if {"$tcl_platform(platform)" != "windows"} {
+		. config -bg #d7d5d3
+	}
+	wm protocol . WM_DELETE_WINDOW dont_exit
+	wm title . "progress"
 	BWidget::place . 0 0 center
 	update idletasks
 
@@ -155,6 +157,12 @@ tsv::set application importProgress [thread::create -joinable {
 		#thread::send [tsv::set application main] "ImportProgress stop"
 		ImportProgress stop
 		#tsv::set application flag 0
+	}
+	proc exit_thread {} {
+		wm protocol . WM_DELETE_WINDOW ""
+	}
+	proc dont_exit {} {
+		return
 	}
 	thread::wait
 }]
@@ -490,7 +498,7 @@ proc Editor::exit_app {} {
 		     }
    		}
     }
-
+    thread::send [tsv::get application importProgress] "exit_thread"
     exit
 }
 
@@ -502,13 +510,12 @@ proc Editor::exit_app {} {
 ################################################################################################
 proc openproject { } {
 
-	YetToImplement
-	return
+	#YetToImplement
+	#return
 
 	global PjtDir
 	global PjtName
 	global updatetree
-	global pageopened_list
 	global status_run
 	if { $status_run == 1 } {
 		Editor::RunStatusInfo
@@ -542,18 +549,72 @@ proc openproject { } {
         if {$projectfilename == ""} {
                 return
         }
-	set tmpsplit [split $projectfilename /]
-	set PjtName [lindex $tmpsplit [expr [llength $tmpsplit] - 1]]
+	set tmpsplit [file split $projectfilename ]
+	set tempPjtName [lindex $tmpsplit end]
 	#puts "Project name->$PjtName"
 	set ext [file extension $projectfilename]
 	    if { $ext != "" } {
-	        if {[string compare $ext ".pjt"]} {
+	        if {[string compare $ext ".oct"]} {
 		    set PjtDir None
 		    tk_messageBox -message "Extension $ext not supported" -title "Open Project Error" -icon error
 		    return
 	        }
 	    }
-	set PjtDir [file dirname $projectfilename]
+
+
+		#CloseProject is called to delete node and insert tree
+		CloseProject
+
+
+	set tempPjtDir [file dirname $projectfilename]
+	puts "PjtDir->$tempPjtDir PjtName->$tempPjtName "
+
+	#API for open project
+	#ocfmRetCode OpenProject(char* PjtPath, char* projectXmlFileName);
+	set catchErrCode [OpenProject $tempPjtDir $tempPjtName]
+	set ErrCode [ocfmRetCode_code_get $catchErrCode]
+	puts "ErrCode:$ErrCode"
+	if { $ErrCode != 0 } {
+		tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+		#tk_messageBox -message "ErrCode : $ErrCode" -title Warning -icon warning
+		return
+	} else {
+		#conPuts "ReImported $tmpImpDir for Node ID:$nodeId"
+	}
+	set PjtDir $tempPjtDir
+	set PjtName $tempPjtName
+
+	$updatetree insert end MN-$mnCount OBD-$mnCount-1 -text "OBD" -open 0 -image [Bitmap::get pdo]
+	Import OBD-$mnCount-1 0 240
+
+	set count [new_intp]
+	set catchErrCode [GetNodeCount 240 $count]
+	set ErrCode [ocfmRetCode_code_get $catchErrCode]
+	puts "CN count:[intp_value $count]....ErrCode->$ErrCode"
+	if { $ErrCode == 0 } {
+		set nodeCount [intp_value $count]
+		for {set inc 0} {$inc <= $nodeCount} {incr inc} {
+			#API
+			#ocfmRetCode GetNodeAttributesbyNodePos(int NodePos, ENodeType* NodeType, int* Out_NodeID, char* Out_NodeName);
+			set nodeId [new_intp]			
+			set nodeType [new_intp]
+			set nodeName [new_charp]
+			set catchErrCode [GetNodeAttributesbyNodePos $inc $nodeType $nodeId $nodeName]
+			set ErrCode [ocfmRetCode_code_get $catchErrCode]
+
+			puts "ErrCode:$ErrCode "
+			if { $ErrCode == 0 } {
+				set nodeId [intp_value $nodeId]
+				set nodeType [intp_value $nodeType]
+				set nodeName [charp_value $nodeName]
+				puts "nodeId->$nodeId..nodeType->$nodeType..nodeName->$nodeName"
+			} else {
+				#some error has occured
+				continue
+			}
+		}
+	}
+
 }
 
 ################################################################################################
@@ -618,7 +679,7 @@ proc Editor::create { } {
 	set descmenu {
 		"&File" {} {} 0 {           
        			{command "New &Project" {} "New Project" {Ctrl n}  -command { _NewProject } }
-			{command "Open Project" {}  "Open Project" {Ctrl o} -command { YetToImplement ; #openproject}}
+			{command "Open Project" {}  "Open Project" {Ctrl o} -command { #YetToImplement ; openproject}}
 	        	{command "Save Project" {noFile}  "Save Project" {Ctrl s} -command Saveproject}
 	        	{command "Save Project as" {noFile}  "Save Project as" {} -command SaveProjectAsWindow}
 			{command "Close Project" {}  "Close Project" {} -command CloseProjectWindow}                 
@@ -733,7 +794,7 @@ proc Editor::create { } {
 	set Editor::projMenu [menu  .projMenu -tearoff 0]
 	$Editor::projMenu add command -label "Sample Project" -command "YetToImplement" 
 	$Editor::projMenu add command -label "New Project" -command { _NewProject}
-	$Editor::projMenu add command -label "Open Project" -command "YetToImplement" 
+	$Editor::projMenu add command -label "Open Project" -command {openproject} 
 
 	#############################################################################
 	# Menu for the object dictionary
@@ -817,14 +878,14 @@ proc Editor::create { } {
 	   	-command "YetToImplement"]
 	pack $bb_stop -side left -padx 4
 
-	set bb_reconfig [ButtonBox::add $bbox -image [Bitmap::get reconfig]\
-            	-height 21\
-           	-width 21\
-            	-helptype balloon\
-            	-highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
-            	-helptext "Reconfigure stack"\
-    	    	-command "YetToImplement"]
-	pack $bb_reconfig -side left -padx 4
+	#set bb_reconfig [ButtonBox::add $bbox -image [Bitmap::get reconfig]\
+        #    	-height 21\
+        #   	-width 21\
+        #    	-helptype balloon\
+        #    	-highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
+        #    	-helptext "Reconfigure stack"\
+    	#    	-command "YetToImplement"]
+	#pack $bb_reconfig -side left -padx 4
 	pack $bbox -side left -anchor w
 	
 	set sep1 [Separator::create $tb1.sep1 -orient vertical]
@@ -1327,7 +1388,6 @@ proc Editor::SingleClickNode {node} {
 	$tmpInnerf1.en_value1 configure -validate none 
 	$tmpInnerf1.en_value1 delete 0 end
 	$tmpInnerf1.en_value1 insert 0 [lindex $IndexProp 5]
-	#$tmpInnerf1.en_value1 configure -validate key -vcmd "IsDec %P $tmpInnerf1.en_value1" -bg $savedBg
 
 	$tmpInnerf1.en_lower1 configure -state normal
 	$tmpInnerf1.en_lower1 delete 0 end
@@ -1346,10 +1406,10 @@ proc Editor::SingleClickNode {node} {
 
 	if {[string match -nocase "0x*" [lindex $IndexProp 5]]} {
 		$tmpInnerf1.frame1.ra_hex select
-		$tmpInnerf1.en_value1 configure -validate key -vcmd "IsHex %P $tmpInnerf1.en_value1" -bg $savedBg
+		$tmpInnerf1.en_value1 configure -validate key -vcmd "IsHex %P $tmpInnerf1.en_value1 %d %i" -bg $savedBg
 	} else {
 		$tmpInnerf1.frame1.ra_dec select
-		$tmpInnerf1.en_value1 configure -validate key -vcmd "IsDec %P $tmpInnerf1.en_value1" -bg $savedBg
+		$tmpInnerf1.en_value1 configure -validate key -vcmd "IsDec %P $tmpInnerf1.en_value1 %d %i" -bg $savedBg
 	}
 
 	return
@@ -1523,8 +1583,8 @@ proc AddCN {cnName tmpImpDir nodeId} {
 		#creating the GUI for CN
 		set child [$updatetree insert end $node CN-$parentId-$cnCount -text "$cnName\($nodeId\)" -open 0 -image [Bitmap::get cn]]
 		#creating the GUI for imported objects
-		#Import parentNode tmpDir nodeType nodeID 
-		Import CN-$parentId-$cnCount $tmpImpDir 1 $nodeId 
+		#Import parentNode nodeType nodeID 
+		Import CN-$parentId-$cnCount 1 $nodeId 
 
 	} else {
 		#lappend nodeIdList CN-1-$cnCount
@@ -2175,8 +2235,9 @@ proc ReImport {} {
 	}	
 	set cursor [. cget -cursor]
 	set types {
-	        {"XDC Files"     {.xdc } }
-	        {"XDD Files"     {.xdd } }
+	        {{XDC/XDD Files} {.xd*} }
+	        {{XDD Files}     {.xdd} }
+		{{XDC Files}     {.xdc} }
 	}
 	#puts  "\n\nREimport"
 	set tmpImpDir [tk_getOpenFile -title "Import XDC" -filetypes $types -parent .]
@@ -2214,8 +2275,8 @@ proc ReImport {} {
 		cleanSavedValueList $node
 		catch {$updatetree delete [$updatetree nodes $node]}
 		$updatetree itemconfigure $node -open 0
-		#Import parentNode tmpDir nodeType nodeID 
-		Import $node $tmpImpDir $nodeType $nodeId 
+		#Import parentNode nodeType nodeID 
+		Import $node $nodeType $nodeId 
 	}
 	#puts "**********\n"
 
@@ -2813,8 +2874,8 @@ proc AutoGenerateMNOBD {} {
 		#catch {FreeNodeMemory $node} ; # no need to free memory
 		catch {$updatetree delete [$updatetree nodes $node]}
 		$updatetree itemconfigure $node -open 0
-		#Import parentNode tmpDir nodeType nodeID 
-		Import $node $tmpImpDir $nodeType $nodeId 
+		#Import parentNode nodeType nodeID 
+		Import $node $nodeType $nodeId 
 	}
 	#puts "**********\n"
 }

@@ -486,7 +486,7 @@ proc AddCNWindow {} {
 	$titleInnerFrame3.ra_def select
 
 
-	entry $frame2.en_name -textvariable cnName -background white -relief ridge
+	entry $frame2.en_name -textvariable cnName -background white -relief ridge -validate key -vcmd "IsValidStr %P"
 	set cnName ""	
 	entry $frame2.en_node -textvariable nodeId -background white -relief ridge -validate key -vcmd "IsInt %P %V"
 	set nodeId ""
@@ -496,8 +496,9 @@ proc AddCNWindow {} {
 
 	button $titleInnerFrame3.bt_imppath -text Browse -command {
 		set types {
-		        {"XDC Files"     {.xdc } }
-		        {"XDD Files"     {.xdd } }
+		        {{XDC/XDD Files} {.xd*} }
+		        {{XDD Files}     {.xdd} }
+			{{XDC Files}     {.xdc} }
 		}
 		set tmpImpCnDir [tk_getOpenFile -title "Import XDC/XDD" -filetypes $types -parent .addCN]
 
@@ -544,16 +545,16 @@ proc AddCNWindow {} {
 			set chk [AddCN $cnName $tmpImpCnDir $nodeId]
 		} else {
 			#import the default cn xdd file
-			#set defaultCnDir [file join [pwd] cn.xdd]
-			#if {[file exists $defaultCnDir]} {
-			#	set chk [AddCN $cnName $defaultCnDir $nodeId]
-			#} else {
+			set tmpImpCnDir [file join [pwd] cn.xdd]
+			if {[file exists $tmpImpCnDir]} {
+				set chk [AddCN $cnName $tmpImpCnDir $nodeId]
+			} else {
 			#	#there is no default cn.xdd file in required path
 			#	tk_messageBox -message "Default cn.xdd is not found" -icon error -parent .addCN
 			#	focus .addCN
 			#	return
-			#}
-				set chk [AddCN $cnName "" $nodeId]			
+			}
+			#set chk [AddCN $cnName "" $nodeId]			
 		}
 		$frame1.bt_cancel invoke
 	}
@@ -705,10 +706,17 @@ proc NewProjectWindow {} {
 	global tmpPjtDir
 	global tmpImpDir
 	global frame1
+	global titleInnerFrame2
+	global winNewProj
+
 	global updatetree
 	global nodeIdList
 	global PjtName
 	global PjtDir
+	global DefaultPjtDir
+	global HOME
+
+puts "DefaultPjtDir->$DefaultPjtDir"
 
 	set winNewProj .newprj
 	catch "destroy $winNewProj"
@@ -730,39 +738,56 @@ proc NewProjectWindow {} {
 	label $winNewProj.l_empty1 -text "               "
 	label $titleInnerFrame1.l_empty2 -text "               "
 	label $titleInnerFrame1.l_pjname -text "Project Name :" -justify left
-	label $titleInnerFrame1.l_pjpath -text "Project Path :" -justify left
+	label $titleInnerFrame1.l_pjpath -text "Project Path   :" -justify left
 	label $titleInnerFrame1.l_empty3 -text "               "
 	label $titleInnerFrame1.l_empty4 -text "               "
 
-	set tmpPjtName ""
-	entry $titleInnerFrame1.en_pjname -textvariable tmpPjtName -background white -relief ridge
-	set tmpPjtDir ""
+	entry $titleInnerFrame1.en_pjname -textvariable tmpPjtName -background white -relief ridge -validate key -vcmd "IsValidStr %P"
+	for {set inc 1} {1} {incr inc} {
+		if {![file exists [file join $DefaultPjtDir Project$inc]]} {
+			break;
+		}
+	}
+	set tmpPjtName Project$inc
+	$titleInnerFrame1.en_pjname selection range 0 end
+
 	entry $titleInnerFrame1.en_pjpath -textvariable tmpPjtDir -background white -relief ridge -width 35
-	set tmpImpDir ""
+	set tmpPjtDir $DefaultPjtDir
+
 	entry $titleInnerFrame2.en_imppath -textvariable tmpImpDir -background white -relief ridge -width 35
+	set tmpImpDir 
 	$titleInnerFrame2.en_imppath config -state disabled 
 
 	radiobutton $titleInnerFrame2.ra_def -text "Default" -variable conf -value on -command {
 		.newprj.titleFrame1.f.titleFrame2.f.en_imppath config -state disabled 
 		.newprj.titleFrame1.f.titleFrame2.f.bt_imppath config -state disabled 
+		#wm minsize   $winNewProj 50 200
+		#grid remove $titleInnerFrame2.en_imppath
+		#grid remove $titleInnerFrame2.bt_imppath
 	}
 	radiobutton $titleInnerFrame2.ra_imp -text "Import XDC/XDD" -variable conf -value off -command {
 		.newprj.titleFrame1.f.titleFrame2.f.en_imppath config -state normal 
 		.newprj.titleFrame1.f.titleFrame2.f.bt_imppath config -state normal 
+		#wm minsize   $winNewProj 550 200
+		#grid config $titleInnerFrame2.en_imppath -row 1 -column 1
+		#grid config $titleInnerFrame2.bt_imppath -row 1 -column 2
+
 	} 
 	$titleInnerFrame2.ra_def select
 
 	button $titleInnerFrame1.bt_pjpath -text Browse -command {
-		set tmpPjtDir [tk_chooseDirectory -title "Project Location" -parent .newprj]
+		set tmpPjtDir [tk_chooseDirectory -title "Project Location" -initialdir $DefaultPjtDir -parent .newprj]
 		if {$tmpPjtDir == ""} {
 			focus .newprj
 			return
 		}
 	}
 	button $titleInnerFrame2.bt_imppath -text Browse -command {
+#set typeList [list *.xdc *.xdd]
 		set types {
-		        {"XDC Files"     {.xdc } }
-		        {"XDD Files"     {.xdd } }
+		        {{XDC/XDD Files} {.xd*} }
+		        {{XDD Files}     {.xdd} }
+			{{XDC Files}     {.xdc} }
 		}
 		set tmpImpDir [tk_getOpenFile -title "Import XDC/XDD" -filetypes $types -parent .newprj]
 		if {$tmpImpDir == ""} {
@@ -774,23 +799,23 @@ proc NewProjectWindow {} {
 	button $frame1.bt_ok -text "  Ok  " -command {
 		set tmpPjtName [string trim $tmpPjtName]
 		if {$tmpPjtName == "" } {
-			tk_messageBox -message "Enter Project Name" -title "Set Project Name error" -icon error
+			tk_messageBox -message "Enter Project Name" -title "Set Project Name error" -icon warning
 			focus .newprj
 			return
 		}
 		if {![file isdirectory $tmpPjtDir]} {
-			tk_messageBox -message "Entered path for Project is not a directory" -icon error -parent .newprj
+			tk_messageBox -message "Entered path for Project is not a directory" -icon warning -parent .newprj
 			focus .newprj
 			return
 		}
 		if {![file writable $tmpPjtDir]} {
-			tk_messageBox -message "Entered path for Project is write protected" -icon error -parent .newprj
+			tk_messageBox -message "Entered path for Project is write protected" -icon info -parent .newprj
 			focus .newprj
 			return
 		}
 		if {$conf=="off" } {
 			if {![file isfile $tmpImpDir]} {
-				tk_messageBox -message "Entered path for Import XDC/XDD not exist " -icon error -parent .newprj
+				tk_messageBox -message "Entered path for Import XDC/XDD not exist " -icon warning -parent .newprj
 				focus .newprj
 				return
 			}
@@ -799,9 +824,17 @@ proc NewProjectWindow {} {
 			if { $ext == ".xdc" || $ext == ".xdd" } {
 				#correct type continue
 			} else {
-				tk_messageBox -message "Import files only of type XDC/XDD" -icon error -parent .newprj
+				tk_messageBox -message "Import files only of type XDC/XDD" -icon warning -parent .newprj
 				focus .newprj
 				return
+			}
+		} else {
+			set tmpImpDir [file join [pwd] mn.xdd]
+			if {![file isfile $tmpImpDir]} {
+				##TODO: discuss what to do
+				#tk_messageBox -message "Entered path for Import XDC/XDD not exist " -icon warning -parent .newprj
+				#focus .newprj
+				#return
 			}
 		}
 
@@ -829,8 +862,10 @@ proc NewProjectWindow {} {
 		$updatetree insert end PjtName MN-$mnCount -text "openPOWERLINK_MN(240)" -open 1 -image [Bitmap::get mn]
 		lappend nodeIdList 240 ; #removed obj and obj node
 
-		if {$conf == "off"} {
-#thread::send [tsv::get application importProgress] "StartProgress" ; #
+
+		#if later if dont want to import anything for default option change the if condition
+		if {$conf == "off" || $conf == "on" } {
+thread::send [tsv::get application importProgress] "StartProgress" ; #
 #puts "before calling thread"
 #after 1
 #puts "after calling thread"
@@ -849,9 +884,9 @@ proc NewProjectWindow {} {
 				$frame1.bt_cancel invoke
 			}
 		$updatetree insert end MN-$mnCount OBD-$mnCount-1 -text "OBD" -open 0 -image [Bitmap::get pdo]
-		#Import parentNode tmpDir nodeType nodeID 
-		Import OBD-$mnCount-1 $tmpImpDir 0 240
-#puts "end of button ok"
+		#Import parentNode nodeType nodeID 
+		Import OBD-$mnCount-1 0 240
+thread::send -async [tsv::set application importProgress] "StopProgress"
 		}
 
 		$frame1.bt_cancel invoke
@@ -861,6 +896,8 @@ proc NewProjectWindow {} {
 		unset tmpPjtDir
 		unset tmpImpDir
 		unset frame1
+		unset titleInnerFrame2
+		unset winNewProj
 		destroy .newprj
 		return
 	}
@@ -869,9 +906,9 @@ proc NewProjectWindow {} {
 	
 	grid config $titleFrame1 -row 1 -column 0 -sticky "news" -ipadx 10 -padx 10 -ipady 10
 
-	grid config $titleInnerFrame1.l_pjname -row 1 -column 0 
+	grid config $titleInnerFrame1.l_pjname -row 1 -column 0 -sticky "w"
 	grid config $titleInnerFrame1.en_pjname -row 1 -column 1 -sticky "w"
-	grid config $titleInnerFrame1.l_pjpath -row 2 -column 0 
+	grid config $titleInnerFrame1.l_pjpath -row 2 -column 0 -sticky "w"
 	grid config $titleInnerFrame1.en_pjpath -row 2 -column 1 -sticky "w"
 	grid config $titleInnerFrame1.bt_pjpath -row 2 -column 2 
 	
@@ -881,8 +918,8 @@ proc NewProjectWindow {} {
 	grid config $titleInnerFrame2.ra_def -row 0 -column 0 -sticky "w"
 	grid config $titleInnerFrame2.ra_imp -row 1 -column 0
 	grid config $titleInnerFrame2.en_imppath -row 1 -column 1
-	grid config $titleInnerFrame2.bt_imppath -row 1 -column 2
- 
+	grid config $titleInnerFrame2.bt_imppath -row 1 -column 2 
+
 	grid config $titleInnerFrame1.l_empty4 -row 5 -column 0 
 	
 	grid config $frame1 -row 6 -column 1 

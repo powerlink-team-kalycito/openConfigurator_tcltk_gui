@@ -120,7 +120,7 @@ proc IsInt {input type} {
 #Description : Validates whether an entry is a valid string
 ###############################################################################################
 proc IsValidStr {input} {
-	if { [string is wordchar $input] == 0 || [string length $input] > 32 } {
+	if { [string is wordchar $input] == 0 || [string length $input] >= 32 } {
 		return 0
 	} else {
 		return 1
@@ -133,15 +133,15 @@ proc IsValidStr {input} {
 #Output      : 0 or 1
 #Description : Validates whether an entry is a integer and does not exceed specified range
 ###############################################################################################
-proc IsDec {input tmpValue} {
-	#puts "IsDec test"
+proc IsDec {input tmpValue mode idx} {
+
 	set tempInput [string trimleft $input 0]		
 	
-
+	puts "IsDec test input->$input tempInput->$tempInput isint->[string is int $tempInput]"
 	if { [string is int $tempInput] == 0 } {
 		return 0
 	} else {
-			after 1 SetValue $tmpValue $input
+		after 1 SetValue $tmpValue $mode $idx $input
 		return 1
 	}
 }
@@ -152,16 +152,20 @@ proc IsDec {input tmpValue} {
 #Output      : 0 or 1
 #Description : Validates whether an entry is a hexa decimal and does not exceed specified range
 ###############################################################################################
-proc IsHex {input tmpValue} {
+proc IsHex {input tmpValue mode idx} {
 	#puts "IsHex test"
-	#puts "input->$input"
+	puts "IsHex input->$input"
 	#set tmpVar [$tmpValue cget -textvariable]
 	if {[string match -nocase "0x*" $input]} {
 		set tempInput [string range $input 2 end]
 	} elseif {[string match -nocase "x*" $input]} {
 		set tempInput [string range $input 1 end]
 	} else {
-		set tempInput $input
+		if {[string match -nocase "*0x*" $input]} {
+			return 0
+		} else {
+			set tempInput $input
+		}
 	}
 
 
@@ -169,7 +173,7 @@ proc IsHex {input tmpValue} {
 		return 0
 	} else {
 		set tempInput 0x$tempInput
-		after 1 SetValue $tmpValue $tempInput
+		after 1 SetValue $tmpValue $mode $idx $tempInput
 		#puts "SetValue called"
 		return 1
 	}
@@ -181,14 +185,21 @@ proc IsHex {input tmpValue} {
 #Output      : 0 or 1
 #Description : 
 ###############################################################################################
-proc SetValue {tmpValue {str no_input}  } {
-	#puts "SetValue invoked"
+proc SetValue {tmpValue mode idx {str no_input}  } {
+	puts "SetValue invoked mode->$mode idx->$idx str->$str"
 	set tmpVar [$tmpValue cget -textvariable]
 	$tmpValue configure -validate none
 	#puts SetValue->[$tmpValue cget -vcmd]
 	$tmpValue delete 0 end
 	if {$str != "no_input"} {
 		$tmpValue insert 0 $str
+		if {$mode == 0} {
+			#value has been deleted
+			$tmpValue icursor $idx
+		} else {
+			#value has been inserted
+			$tmpValue icursor [expr $idx+1] 
+		}
 	} else {
 		#entry box made empty no need to insert value	
 	}

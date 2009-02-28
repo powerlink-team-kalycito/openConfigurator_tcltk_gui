@@ -198,7 +198,7 @@ proc SortNode {nodeType nodeID nodePos choice {indexPos ""} {indexId ""}} {
 #Output      : -
 #Description : Reads an XDC/XDD file and populates tree
 ###############################################################################################
-proc Import {parentNode tmpDir nodeType nodeID } {
+proc Import {parentNode nodeType nodeID } {
 #puts "start of import"
 	global updatetree
 	global cnCount
@@ -382,7 +382,5 @@ proc Import {parentNode tmpDir nodeType nodeID } {
 	set LocvarProgbar 100
 	#ImportProgress stop
 #tk_messageBox -message "clicing ok destroys progress window"
-#thread::send -async [tsv::set application importProgress] "StopProgress"
-
 }
 

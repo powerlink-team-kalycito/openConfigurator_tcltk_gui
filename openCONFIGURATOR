@@ -72,6 +72,8 @@ set pwd [pwd]
 package require Tk 8.5
 
 global RootDir
+global HOME
+global DefaultPjtDir
 global EditorData
 global conWindow
 global warWindow
@@ -92,6 +94,8 @@ source [file join $RootDir operations.tcl]
 source [file join $RootDir console.tcl]
 source [file join $RootDir manager.tcl]
 source [file join $RootDir wrapper_interactions.tcl]
+source [file join $RootDir windows.tcl]
+source [file join $RootDir validation.tcl]
 
 ###############################################################################################
 #proc initOPN_CFGRATOR
@@ -107,14 +111,33 @@ proc initOPN_CFGRATOR {argc argv} {
 	global PjtDir
 	global PjtName
 	global RootDir
+	global DefaultPjtDir
+
 	lappend auto_path ..
 	 
 	option add *TitleFrame.font {helvetica 11 bold italic}
-puts "$tcl_platform(platform)"
+#puts "$tcl_platform(platform)==$::env(HOME)"
 	if {"$tcl_platform(platform)" != "windows"} {
 		option add *background #d7d5d3 userDefault
 	}
 	
+	if {$tcl_platform(platform) == "unix"} {
+		set HOME $::env(HOME)
+		set DefaultPjtDir [file join $HOME openCONFIG_Projects]
+		if {![file exists $DefaultPjtDir]} {
+			file mkdir $DefaultPjtDir
+		} else {
+			#directory already exists
+			puts "openCONFIG_Projects directory already exists"
+		}
+	} elseif {$tcl_platform(platform) == "windows"} {
+		#if {} {
+
+		#}
+	} else {
+
+	}
+
 	wm withdraw .
 	wm title . "openCONFIGURATOR"
 	set chk [Editor::create]

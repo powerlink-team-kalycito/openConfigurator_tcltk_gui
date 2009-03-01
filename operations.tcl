@@ -672,10 +672,10 @@ proc Editor::create { } {
 	set descmenu {
 		"&File" {} {} 0 {           
        			{command "New &Project" {} "New Project" {Ctrl n}  -command { _NewProject } }
-			{command "Open Project" {}  "Open Project" {Ctrl o} -command { #YetToImplement ; openproject}}
+			{command "Open Project" {}  "Open Project" {Ctrl o} -command { openproject } }
 	        	{command "Save Project" {noFile}  "Save Project" {Ctrl s} -command Saveproject}
-	        	{command "Save Project as" {noFile}  "Save Project as" {} -command SaveProjectAsWindow}
-			{command "Close Project" {}  "Close Project" {} -command CloseProjectWindow}                 
+	        	{command "Save Project as" {noFile}  "Save Project as" {} -command SaveProjectAsWindow }
+			{command "Close Project" {}  "Close Project" {} -command CloseProjectWindow }
 	    		{separator}
             		{command "E&xit" {}  "Exit openCONFIGURATOR" {Alt x} -command Editor::exit_app}
         	}

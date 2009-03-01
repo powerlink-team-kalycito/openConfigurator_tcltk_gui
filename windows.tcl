@@ -649,7 +649,19 @@ puts "in GenCNname nodeIdList->$nodeIdList"
 #Description : Creates the GUI when Project is to be saved at different location and name
 ###############################################################################################
 proc SaveProjectAsWindow {} {
-	set saveProject [tk_getSaveFile -parent . -title "Save Project As" -defaultextension .oct]
+	set saveProjectAs [tk_getSaveFile -parent . -title "Save Project As" -defaultextension .oct]
+	#set fileLocation_CDC [tk_getSaveFile -filetypes $types -initialdir $PjtDir -initialfile [generateAutoName $PjtDir CDC .cdc ] -title "Transfer CDC"]
+	set projectDir [file dirname $saveProjectAs]
+	set projectName [file tail $saveProjectAs]
+puts "In save project as SaveProject projectDir->$projectDir projectName->$projectName"
+	set catchErrCode [SaveProject $projectDir $projectName]
+	set ErrCode [ocfmRetCode_code_get $catchErrCode]
+	if { $ErrCode != 0 } {
+		tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+		return 
+	}
+
+
 	#puts "saveProject->$saveProject"
 	#global tmpPjtName
 	#global tmpPjtDir

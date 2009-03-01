@@ -326,14 +326,17 @@ proc EditManager::create_conWindow {nb text choice} {
     	if {$choice == 1} {
 		set conWindow [consoleInit $sw]
 		set window $conWindow
+		lappend conWindow $nb $pagename
 		$nb itemconfigure $pagename -image [Bitmap::get file]
     	} elseif {$choice == 2} {    
 		set errWindow [errorInit $sw]
 		set window $errWindow
+		lappend errWindow $nb $pagename
 		$nb itemconfigure $pagename -image [Bitmap::get error_small]
     	} elseif {$choice == 3} {    
 		set warWindow [warnInit $sw]
 		set window $warWindow
+		lappend warWindow $nb $pagename
 		$nb itemconfigure $pagename -image [Bitmap::get warning_small]
     	} else {
 		#invalid selection
@@ -520,6 +523,7 @@ proc SaveValue {frame0 frame1} {
 	global nodeIdList
 	global updatetree
 	global savedValueList ; #this list contains Nodes whose value are changed using save option
+	global status_save
 
 	#puts "\n\n   SaveValue \n"
 
@@ -597,27 +601,26 @@ proc SaveValue {frame0 frame1} {
 		#puts "SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName"
 		set catchErrCode [SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName]
 		#puts "catchErrCode->$catchErrCode"
-		set ErrCode [ocfmRetCode_code_get $catchErrCode]
-		#puts "ErrCode:$ErrCode"
-		if { $ErrCode != 0 } {
-			#tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
-			return
-		}
 	} elseif {[string match "*IndexValue*" $nodeSelect]} {
 		#DllExport ocfmRetCode SetIndexAttributes(int NodeID, ENodeType NodeType, char* IndexID, char* IndexValue, char* IndexName);
 		#puts "SetIndexAttributes $nodeId $nodeType $indexId $value $newName"
 		set catchErrCode [SetIndexAttributes $nodeId $nodeType $indexId $value $newName]
 		#puts "catchErrCode->$catchErrCode"
-		set ErrCode [ocfmRetCode_code_get $catchErrCode]
-		#puts "ErrCode:$ErrCode"
-		if { $ErrCode != 0 } {
-			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
-			#tk_messageBox -message "ErrCode : $ErrCode" -title Warning -icon warning
-			return
-		}
 	} else {
-		#puts "\n\n\nSaveValue->Should Never Happen 2!!!\n\n\n"
+		puts "\n\n\nSaveValue->Should Never Happen 2!!!$nodeSelect->$$nodeSelect\n\n\n"
+		return
 	}
+	set ErrCode [ocfmRetCode_code_get $catchErrCode]
+	#puts "ErrCode:$ErrCode"
+	if { $ErrCode != 0 } {
+		tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+		return
+	}
+
+	#value for Index or SubIndex is edited need to change
+	set status_save 1
+
+	
 	set newName [append newName $oldName]
 	#puts "newName->$newName"
 	$updatetree itemconfigure $nodeSelect -text $newName
@@ -814,6 +817,7 @@ proc EndEdit {tbl row col text} {
 proc SaveTable {tableWid} {
 	global nodeSelect
 	global updatetree
+	global status_save
 
 	#puts "nodeSelect->$nodeSelect"
 	set result [$tableWid finishediting]
@@ -845,6 +849,10 @@ proc SaveTable {tableWid} {
 			}
 		}
 	}
+
+	#PDO entries value is changed need to save 
+	set status_save 1	
+
 #	set size [$tableWid size] ; # SIZE GIVES NO OF ROWS
 #	#puts size->$size
 #	#puts "total_row->[expr $size/[$tableWid columncount] ]"

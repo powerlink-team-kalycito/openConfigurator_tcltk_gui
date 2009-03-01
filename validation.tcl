@@ -120,7 +120,7 @@ proc IsInt {input type} {
 #Description : Validates whether an entry is a valid string
 ###############################################################################################
 proc IsValidStr {input} {
-	if { [string is wordchar $input] == 0 || [string length $input] >= 32 } {
+	if { [string is wordchar $input] == 0 || [string length $input] > 32 } {
 		return 0
 	} else {
 		return 1

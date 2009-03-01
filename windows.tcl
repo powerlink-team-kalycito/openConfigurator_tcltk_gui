@@ -441,6 +441,7 @@ proc AddCNWindow {} {
 	global nodeId
 	global tmpImpCnDir
 	global frame1
+	global lastXD
 
 	set winAddCN .addCN
 	catch "destroy $winAddCN"
@@ -485,13 +486,21 @@ proc AddCNWindow {} {
 	}
 	$titleInnerFrame3.ra_def select
 
+	set autoGen [GenCNname]
 
 	entry $frame2.en_name -textvariable cnName -background white -relief ridge -validate key -vcmd "IsValidStr %P"
-	set cnName ""	
+	set cnName [lindex $autoGen 0]	
+	$frame2.en_name selection range 0 end
+	$frame2.en_name icursor end
+
 	entry $frame2.en_node -textvariable nodeId -background white -relief ridge -validate key -vcmd "IsInt %P %V"
-	set nodeId ""
+	set nodeId [lindex $autoGen 1]
 	entry $titleInnerFrame3.en_imppath -textvariable tmpImpCnDir -background white -relief ridge -width 35
-	set tmpImpCnDir ""
+	if {![file isdirectory $lastXD] && [file exists $lastXD] } {	
+		set tmpImpCnDir $lastXD	
+	} else {
+		set tmpImpCnDir ""
+	}
 	$titleInnerFrame3.en_imppath config -state disabled
 
 	button $titleInnerFrame3.bt_imppath -text Browse -command {
@@ -500,7 +509,12 @@ proc AddCNWindow {} {
 		        {{XDD Files}     {.xdd} }
 			{{XDC Files}     {.xdc} }
 		}
-		set tmpImpCnDir [tk_getOpenFile -title "Import XDC/XDD" -filetypes $types -parent .addCN]
+		if {![file isdirectory $lastXD] && [file exists $lastXD] } {
+			set tmpImpCnDir [tk_getOpenFile -title "Import XDC/XDD" -initialfile $lastXD -filetypes $types -parent .addCN]
+		} else {
+			set tmpImpCnDir [tk_getOpenFile -title "Import XDC/XDD" -filetypes $types -parent .addCN]
+		}
+		#set tmpImpCnDir [tk_getOpenFile -title "Import XDC/XDD" -filetypes $types -parent .addCN] ; #workingold
 
 	}
  	$titleInnerFrame3.bt_imppath config -state disabled 
@@ -538,6 +552,9 @@ proc AddCNWindow {} {
 				focus .addCN
 				return
 			}
+		
+			set lastXD $tmpImpCnDir
+		
 		}
 
 		if {$confCn == "off"} {
@@ -607,6 +624,24 @@ proc AddCNWindow {} {
 	centerW $winAddCN
 }
 
+proc GenCNname {} {
+	global nodeIdList
+	global updatetree
+puts "in GenCNname nodeIdList->$nodeIdList"
+	for {set inc 1} {$inc < 240} {incr inc} {
+		puts "lsearch -exact $nodeIdList $inc->[lsearch -exact $nodeIdList $inc]"
+		if {[lsearch -exact $nodeIdList $inc] == -1 } {
+			break;
+		}
+	}
+
+	if {$inc == 240} { 
+		#239 cn are created no more cn can be created
+		#return $Name$inc
+	} else {
+		return [list CN_$inc $inc]
+	}
+}
 ###############################################################################################
 #proc SaveProjectAsWindow
 #Input       : -
@@ -706,6 +741,7 @@ proc NewProjectWindow {} {
 	global tmpPjtDir
 	global tmpImpDir
 	global frame1
+	global titleInnerFrame1
 	global titleInnerFrame2
 	global winNewProj
 
@@ -715,6 +751,8 @@ proc NewProjectWindow {} {
 	global PjtDir
 	global DefaultPjtDir
 	global HOME
+	global status_save
+	global lastXD
 
 puts "DefaultPjtDir->$DefaultPjtDir"
 
@@ -743,19 +781,27 @@ puts "DefaultPjtDir->$DefaultPjtDir"
 	label $titleInnerFrame1.l_empty4 -text "               "
 
 	entry $titleInnerFrame1.en_pjname -textvariable tmpPjtName -background white -relief ridge -validate key -vcmd "IsValidStr %P"
-	for {set inc 1} {1} {incr inc} {
-		if {![file exists [file join $DefaultPjtDir Project$inc]]} {
-			break;
-		}
-	}
-	set tmpPjtName Project$inc
+	#for {set inc 1} {1} {incr inc} {
+	#	if {![file exists [file join $DefaultPjtDir Project$inc]]} {
+	#		break;
+	#	}
+	#}
+	#set tmpPjtName Project$inc
+	set tmpPjtName  [generateAutoName $DefaultPjtDir Project ""]
+#puts "tmpPjtName->$tmpPjtName....."
 	$titleInnerFrame1.en_pjname selection range 0 end
+	$titleInnerFrame1.en_pjname icursor end
 
 	entry $titleInnerFrame1.en_pjpath -textvariable tmpPjtDir -background white -relief ridge -width 35
 	set tmpPjtDir $DefaultPjtDir
 
 	entry $titleInnerFrame2.en_imppath -textvariable tmpImpDir -background white -relief ridge -width 35
-	set tmpImpDir 
+	if {![file isdirectory $lastXD] && [file exists $lastXD] } {	
+		set tmpImpDir $lastXD	
+	} else {
+		set tmpImpDir ""
+	}
+
 	$titleInnerFrame2.en_imppath config -state disabled 
 
 	radiobutton $titleInnerFrame2.ra_def -text "Default" -variable conf -value on -command {
@@ -789,7 +835,12 @@ puts "DefaultPjtDir->$DefaultPjtDir"
 		        {{XDD Files}     {.xdd} }
 			{{XDC Files}     {.xdc} }
 		}
-		set tmpImpDir [tk_getOpenFile -title "Import XDC/XDD" -filetypes $types -parent .newprj]
+		if {![file isdirectory $lastXD] && [file exists $lastXD] } {
+			set tmpImpDir [tk_getOpenFile -title "Import XDC/XDD" -initialfile $lastXD -filetypes $types -parent .newprj]
+		} else {
+			set tmpImpDir [tk_getOpenFile -title "Import XDC/XDD" -filetypes $types -parent .newprj]
+		}
+		#set tmpImpDir [tk_getOpenFile -title "Import XDC/XDD" -filetypes $types -parent .newprj];#workingold
 		if {$tmpImpDir == ""} {
 			focus .newprj
 			return
@@ -813,6 +864,19 @@ puts "DefaultPjtDir->$DefaultPjtDir"
 			focus .newprj
 			return
 		}
+		if {[file exists [file join $tmpPjtDir $tmpPjtName]]} {
+			set result [tk_messageBox -message "Folder $tmpPjtName already exists.\nDo you want to overwrite it?" -type yesno -icon question -parent .newprj]
+   			 switch -- $result {
+   			 	yes {
+			 		#continue with process
+					#TODO does the existing project need to be deleted
+			 	}			 
+   		     		no  {
+					focus $titleInnerFrame1.en_pjname
+			   		return
+			 	}
+   			 }
+		}
 		if {$conf=="off" } {
 			if {![file isfile $tmpImpDir]} {
 				tk_messageBox -message "Entered path for Import XDC/XDD not exist " -icon warning -parent .newprj
@@ -828,6 +892,7 @@ puts "DefaultPjtDir->$DefaultPjtDir"
 				focus .newprj
 				return
 			}
+			set lastXD $tmpImpDir
 		} else {
 			set tmpImpDir [file join [pwd] mn.xdd]
 			if {![file isfile $tmpImpDir]} {
@@ -837,7 +902,6 @@ puts "DefaultPjtDir->$DefaultPjtDir"
 				#return
 			}
 		}
-
 
 		set PjtName $tmpPjtName
 		set PjtDir $tmpPjtDir
@@ -859,9 +923,13 @@ puts "DefaultPjtDir->$DefaultPjtDir"
 			$frame1.bt_cancel invoke
 		}
 
+
+		#New project is created need to save
+		set status_save 1
+
 		$updatetree insert end PjtName MN-$mnCount -text "openPOWERLINK_MN(240)" -open 1 -image [Bitmap::get mn]
 		lappend nodeIdList 240 ; #removed obj and obj node
-
+puts "nodeIdList->$nodeIdList"
 
 		#if later if dont want to import anything for default option change the if condition
 		if {$conf == "off" || $conf == "on" } {
@@ -896,6 +964,7 @@ thread::send -async [tsv::set application importProgress] "StopProgress"
 		unset tmpPjtDir
 		unset tmpImpDir
 		unset frame1
+		unset titleInnerFrame1
 		unset titleInnerFrame2
 		unset winNewProj
 		destroy .newprj
@@ -945,29 +1014,47 @@ proc CloseProjectWindow {} {
 	global PjtDir
 	global PjtName
 	global updatetree
+	global status_save	
 
-	if {$PjtDir == "" || $PjtDir == "None"} {
+	if {$PjtDir == "" || $PjtDir == "None" || $PjtName == "" } {
 		conPuts "No Project Selected" error
+		CloseProject
 		return
 	} else {	
-		set result [tk_messageBox -message "Save Project $PjtName ?" -type yesnocancel -icon question -title 			"Question"]
-   		 switch -- $result {
-   		     yes {			 
-   		     	    #Saveproject
-			    conPuts "Save project not implemented" info
-			    CloseProject
-			    return yes
-   		     }
-   		     no  {
-			    conPuts "Project $PjtName not saved" info
-			    CloseProject
- 		 	    return no
-		     }
-   		     cancel {
-				conPuts "Exit Canceled" info
-				return cancel
-		     }
-   		}	
+		#check whether project has changed from last saved
+		if {$status_save} {
+			set result [tk_messageBox -message "Save Project $PjtName ?" -type yesnocancel -icon question -title "Question"]
+	   		 switch -- $result {
+	   		     yes {			 
+	   		     	    Saveproject
+				    conPuts "Save project not implemented" info
+			    	    CloseProject
+				    return yes
+	   		     }
+	   		     no  {
+				    conPuts "Project $PjtName not saved" info
+			    	    CloseProject
+	 		 	    return no
+			     }
+	   		     cancel {
+				    conPuts "Exit Canceled" info
+				    return cancel
+		   	     }
+			 }
+   		} else {
+			#TODO only for testing remove for delivery
+			set result [tk_messageBox -message "Do you want to close Project $PjtName ?" -type okcancel -icon question -title "Question"]
+	   		 switch -- $result {
+				ok {
+			    		CloseProject
+					return ok
+				}
+				cancel {
+					#here cancel is 
+					return cancel 
+				}
+			}
+		}		
 	}
 }
 
@@ -1014,19 +1101,29 @@ proc ImportProgress {stat} {
 		set LocvarProgbar 0
 		#set prog [ProgressBar $winImpoProg.prog -orient horizontal -width 200 -maximum 100 -height 10 -variable LocvarProgbar -type incremental -bg white -fg blue]
 		#set prog [ttk::progressbar $winImpoProg.prog -mode indeterminate]
-		set prog [ttk::progressbar .prog -mode indeterminate -orient horizontal -length 200 ]
-		grid config $prog -row 0 -column 0 -padx 10 -pady 10
-		#ttk::progressbar::start $winImpoProg.prog 10 ; #added for indeterminate mode
-		$prog start 10
+		if {![winfo exists .prog]} {
+			set prog [ttk::progressbar .prog -mode indeterminate -orient horizontal -length 200 ]
+			grid config $prog -row 0 -column 0 -padx 10 -pady 10
+			#ttk::progressbar::start $winImpoProg.prog 10 ; #added for indeterminate mode
+		} else {
+			
+		}
+		catch { .prog start 10 }
 		BWidget::place $winImpoProg 0 0 center
+
 		update idletasks
-		puts "progress bar created"
+		#puts "progress bar created"
 		return  $winImpoProg.prog
 	} elseif {$stat == "stop" } { 
 		#set LocvarProgbar 100
 		#ttk::progressbar::stop .impoProg.prog ; #added for indeterminate mode
 		#.impoProg.prog stop
-		.prog stop
+
+		#if {[winfo exists .prog]} {
+		#	catch {	.prog stop }
+		#}
+
+		catch {	.prog stop }
 		#destroy .impoProg
 		wm withdraw .
 	} elseif {$stat == "incr"} {
@@ -1045,6 +1142,7 @@ proc AddIndexWindow {} {
 	global updatetree
 	global indexVar
 	global frame2
+	global status_save
 
 	set winAddIdx .addIdx
 	catch "destroy $winAddIdx"
@@ -1143,6 +1241,9 @@ proc AddIndexWindow {} {
 			$frame2.bt_cancel invoke
 		}
 
+		#Index is added need to save
+		set status_save 1
+
 		#puts "inc->[llength $sortChild]"
 
 		#set indexName []
@@ -1169,7 +1270,7 @@ proc AddIndexWindow {} {
 			#the node exist continue 
 		} else {
 			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon 	warning -parent .addIdx
-			tk_messageBox -message "ErrCode : $ErrCode\nExistfFlag : $ExistfFlag" -title Warning -icon warning -parent .addIdx
+			#tk_messageBox -message "ErrCode : $ErrCode\nExistfFlag : $ExistfFlag" -title Warning -icon warning -parent .addIdx
 			$frame2.bt_cancel invoke
 		}
 
@@ -1263,6 +1364,7 @@ proc AddSubIndexWindow {} {
 	global updatetree
 	global subIndexVar
 	global frame2
+	global status_save
 
 	set winAddSidx .addSidx
 	catch "destroy $winAddSidx"
@@ -1351,6 +1453,9 @@ proc AddSubIndexWindow {} {
 			$frame2.bt_cancel invoke
 		}
 
+		#SubIndex is added need to save
+		set status_save 1
+
 		set subIndexName []
 		set subIndexName [GetSubIndexAttributes $nodeId $nodeType $indexVar $subIndexVar 0]
 		#puts "subIndexName->$subIndexName"
@@ -1402,6 +1507,7 @@ proc AddPDOWindow {} {
 	global updatetree
 	global pdoVar
 	global frame2
+	global status_save
 
 	set winAddPdo .addPdo
 	catch "destroy $winAddPdo"
@@ -1508,7 +1614,7 @@ proc AddPDOWindow {} {
 		} else {
 			set count [expr [lindex $sortChild end]+1 ]
 		}
-		puts "AddIndex nodeId->$nodeId nodeType->$nodeType indexVar->$pdoVar"
+		#puts "AddIndex nodeId->$nodeId nodeType->$nodeType indexVar->$pdoVar"
 		set catchErrCode [AddIndex $nodeId $nodeType $pdoVar]
 		#puts "catchErrCode->$catchErrCode"
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
@@ -1525,7 +1631,8 @@ proc AddPDOWindow {} {
 		#set indexName [GetIndexAttributes $nodeId $nodeType $indexVar 0]
 		#puts "indexName->$indexName"
 
-
+		#Index is added to PDO need to save
+		set status_save 1
 
 
 		set nodePos [new_intp]
@@ -1545,7 +1652,7 @@ proc AddPDOWindow {} {
 			#the node exist continue 
 		} else {
 			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon 	warning -parent .addPdo
-			tk_messageBox -message "ErrCode : $ErrCode\nExistfFlag : $ExistfFlag" -title Warning -icon warning -parent .addPdo
+			#tk_messageBox -message "ErrCode : $ErrCode\nExistfFlag : $ExistfFlag" -title Warning -icon warning -parent .addPdo
 			$frame2.bt_cancel invoke
 		}
 
@@ -1669,7 +1776,7 @@ proc PropertiesWindow {} {
 			set count [new_intp]
 			set catchErrCode [GetNodeCount 240 $count]
 			set ErrCode [ocfmRetCode_code_get $catchErrCode]
-puts "CN count:[intp_value $count]....ErrCode->$ErrCode"
+#puts "CN count:[intp_value $count]....ErrCode->$ErrCode"
 			if { $ErrCode == 0 } {
 				set display3 [expr [intp_value $count]-1]
 			} else {
@@ -1698,11 +1805,11 @@ puts "CN count:[intp_value $count]....ErrCode->$ErrCode"
 
 		set title4 "Number of Indexes"
 		set count [new_intp]
-puts "GetIndexCount $nodeId $nodeType $count"	
+#puts "GetIndexCount $nodeId $nodeType $count"	
 		set catchErrCode [GetIndexCount $nodeId $nodeType $count]
-puts "catchErrCode->$catchErrCode"
+#puts "catchErrCode->$catchErrCode"
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
-puts "Errcode->$ErrCode"
+#puts "Errcode->$ErrCode"
 		if { $ErrCode == 0 } {
 			set display4 [intp_value $count]
 		} else {

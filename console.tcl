@@ -165,7 +165,7 @@ proc conPuts {var {tag output} {win {}} {flash 0} {see 1}} {
 	global conWindow
 	
 	if {$win == {}} {
-		set win $conWindow
+		set win [lindex $conWindow 0]
 	}
 	$win configure -state normal
 	$win mark gravity prompt right
@@ -179,6 +179,7 @@ proc conPuts {var {tag output} {win {}} {flash 0} {see 1}} {
 	if $see {$win see insert}
 	update
 	$win configure -state disabled
+	[lindex $conWindow 1] raise [lindex $conWindow 2]
 	return
 }
 
@@ -232,7 +233,7 @@ proc errorPuts {var {tag output} {win {}} {flash 0} {see 1}} {
 	global errWindow
 	
 	if {$win == {}} {
-		set win $errWindow
+		set win [lindex $errWindow 0]
 	}
 	$win configure -state normal
 	$win mark gravity prompt right
@@ -246,6 +247,7 @@ proc errorPuts {var {tag output} {win {}} {flash 0} {see 1}} {
 	if $see {$win see insert}
 	update
 	$win configure -state disabled
+	[lindex $errWindow 1] raise [lindex $errWindow 2]
 	return
 }
 
@@ -299,7 +301,7 @@ proc warnPuts {var {tag output} {win {}} {flash 0} {see 1}} {
 	global warWindow
 	
 	if {$win == {}} {
-		set win $warWindow
+		set win [lindex $warWindow 0]
 	}
 	$win configure -state normal
 	$win mark gravity prompt right
@@ -313,6 +315,7 @@ proc warnPuts {var {tag output} {win {}} {flash 0} {see 1}} {
 	if $see {$win see insert}
 	update
 	$win configure -state disabled
+	[lindex $warWindow 1] raise [lindex $warWindow 2]
 	return
 }
 

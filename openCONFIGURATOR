@@ -116,27 +116,38 @@ proc initOPN_CFGRATOR {argc argv} {
 	lappend auto_path ..
 	 
 	option add *TitleFrame.font {helvetica 11 bold italic}
-#puts "$tcl_platform(platform)==$::env(HOME)"
+puts "$tcl_platform(platform)==$::env(HOME)"
 	if {"$tcl_platform(platform)" != "windows"} {
 		option add *background #d7d5d3 userDefault
 	}
 	
-	if {$tcl_platform(platform) == "unix"} {
+	#if {$tcl_platform(platform) == "unix"} {
+	#	set HOME $::env(HOME)
+	#	set DefaultPjtDir [file join $HOME openCONFIG_Projects]
+	#	if {![file exists $DefaultPjtDir]} {
+	#		file mkdir $DefaultPjtDir
+	#	} else {
+	#		#directory already exists
+	#		#puts "openCONFIG_Projects directory already exists"
+	#	}
+	#} elseif {$tcl_platform(platform) == "windows"} {
+	#	#if {} {
+	#
+	#	#}
+	#} else {
+
+	#}
+
+
 		set HOME $::env(HOME)
-		set DefaultPjtDir [file join $HOME openCONFIG_Projects]
+		set DefaultPjtDir [file join $HOME openCONFIGURATOR_Projects]
 		if {![file exists $DefaultPjtDir]} {
 			file mkdir $DefaultPjtDir
 		} else {
 			#directory already exists
 			puts "openCONFIG_Projects directory already exists"
 		}
-	} elseif {$tcl_platform(platform) == "windows"} {
-		#if {} {
 
-		#}
-	} else {
-
-	}
 
 	wm withdraw .
 	wm title . "openCONFIGURATOR"
@@ -155,40 +166,42 @@ proc initOPN_CFGRATOR {argc argv} {
 	}
 	StartUp 
 
-	if {$argc >= 1} {
-		set cursor [. cget -cursor]
-		. configure -cursor watch
-		update
-		foreach filename $argv {
-			if {[file exists $filename]} {
-				Editor::openFile $filename
-			} elseif {[file exists [file join $EditorData(options,workingDir) $filename]]} {
-				Editor::openFile [file join $EditorData(options,workingDir) $filename]
-			}
-		}
-		. configure -cursor $cursor
-		update
-	}
+	#if {$argc >= 1} {
+	#	set cursor [. cget -cursor]
+	#	. configure -cursor watch
+	#	update
+	#	foreach filename $argv {
+	#		if {[file exists $filename]} {
+	#			Editor::openFile $filename
+	#		} elseif {[file exists [file join $EditorData(options,workingDir) $filename]]} {
+	#			Editor::openFile [file join $EditorData(options,workingDir) $filename]
+	#		}
+	#	}
+	#	. configure -cursor $cursor
+	#	update
+	#}
 	
 	$updatetree delete end root PjtName
 	
-	set pjtFolder $EditorData(options,History)
-
-	set tmpsplit [split $pjtFolder /]
-	set filename [lindex $tmpsplit [expr [llength $tmpsplit] - 1]]
-	set PjtName $filename.pjt
-	set tempFile $pjtFolder/$PjtName
-	if {![file exists $tempFile]} {
-		set pjtFolder $RootDir/Default
-		set PjtDir $pjtFolder
-	} elseif {$pjtFolder == "None" || $pjtFolder == ""} {
-		
-		set pjtFolder $RootDir/Default
-		set PjtDir $pjtFolder
-	} 
-		set tmpsplit [split $pjtFolder /]
-			set filename [lindex $tmpsplit [expr [llength $tmpsplit] - 1]]
-			set PjtName $filename.pjt
+	#set pjtFolder $EditorData(options,History)
+	#puts "pjtFolder->$pjtFolder"
+	#set tmpsplit [file split $pjtFolder ]
+	#set filename [lindex $tmpsplit end]
+	#set PjtName $filename.pjt
+	#set tempFile [file join $pjtFolder $PjtName]
+	#if {![file exists $tempFile]} {
+	#	set pjtFolder [file join $RootDir Default]
+	#	set PjtDir $pjtFolder
+	#} elseif {$pjtFolder == "None" || $pjtFolder == ""} {
+	#	
+	#	set pjtFolder [file join $RootDir Default]
+	#	set PjtDir $pjtFolder
+	#} 
+	#	set tmpsplit [file split $pjtFolder ]
+	#	set filename [lindex $tmpsplit end]
+	#	set PjtName $filename.oct
+	set PjtDir ""
+	set PjtName ""
 
 
 

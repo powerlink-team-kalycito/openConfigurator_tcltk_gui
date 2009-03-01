@@ -137,7 +137,7 @@ proc IsDec {input tmpValue mode idx} {
 
 	set tempInput [string trimleft $input 0]		
 	
-	puts "IsDec test input->$input tempInput->$tempInput isint->[string is int $tempInput]"
+	#puts "IsDec test input->$input tempInput->$tempInput isint->[string is int $tempInput]"
 	if { [string is int $tempInput] == 0 } {
 		return 0
 	} else {
@@ -154,7 +154,7 @@ proc IsDec {input tmpValue mode idx} {
 ###############################################################################################
 proc IsHex {input tmpValue mode idx} {
 	#puts "IsHex test"
-	puts "IsHex input->$input"
+	#puts "IsHex input->$input"
 	#set tmpVar [$tmpValue cget -textvariable]
 	if {[string match -nocase "0x*" $input]} {
 		set tempInput [string range $input 2 end]

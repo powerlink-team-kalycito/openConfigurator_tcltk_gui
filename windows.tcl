@@ -93,23 +93,35 @@ proc StartUp {} {
 	
 	text $frame1.t_desc -height 5 -width 40 -state disabled -background white
 
-	radiobutton $frame1.ra_default  -text "Open Sample Project"   -variable startVar -value 1 -font custom2 -command "SampleProjectText $frame1.t_desc" -state disabled
+	radiobutton $frame1.ra_default  -text "Open Sample Project"   -variable startVar -value 1 -font custom2 -command "SampleProjectText $frame1.t_desc" 
 	radiobutton $frame1.ra_newProj  -text "Create New Project"    -variable startVar -value 2 -font custom2 -command "NewProjectText $frame1.t_desc" 
-	radiobutton $frame1.ra_openProj -text "Open Existing Project" -variable startVar -value 3 -font custom2 -command "OpenProjectText $frame1.t_desc" -state disabled
+	radiobutton $frame1.ra_openProj -text "Open Existing Project" -variable startVar -value 3 -font custom2 -command "OpenProjectText $frame1.t_desc" 
 	$frame1.ra_newProj select
 	NewProjectText $frame1.t_desc
 	 
 	button $frame2.b_ok -text "  Ok  " -command { 
 		if {$startVar == 1} {
-			YetToImplement;
+
+			set samplePjt [file join [pwd] Default sample sample.oct]
+			puts "open sample->$samplePjt"
+
+			if {[file exists $samplePjt]} {
+				destroy .startUp
+				_openproject $samplePjt
+			} else {
+				errorPuts "Sample project is not present" error	
+				focus .startUp
+				return
+			}
 		} elseif {$startVar == 2} {
+			destroy .startUp
 			NewProjectWindow
 		} elseif {$startVar == 3} {
-			YetToImplement;
+			destroy .startUp
+			openproject
 		}
 		unset startVar
 		unset frame2
-		destroy .startUp
 	}
 	button $frame2.b_cancel -text "Cancel" -command {
 		unset startVar
@@ -567,9 +579,9 @@ proc AddCNWindow {} {
 				set chk [AddCN $cnName $tmpImpCnDir $nodeId]
 			} else {
 			#	#there is no default cn.xdd file in required path
-			#	tk_messageBox -message "Default cn.xdd is not found" -icon error -parent .addCN
-			#	focus .addCN
-			#	return
+				tk_messageBox -message "Default cn.xdd is not found" -icon error -parent .addCN
+				focus .addCN
+				return
 			}
 			#set chk [AddCN $cnName "" $nodeId]			
 		}
@@ -649,43 +661,50 @@ puts "in GenCNname nodeIdList->$nodeIdList"
 #Description : Creates the GUI when Project is to be saved at different location and name
 ###############################################################################################
 proc SaveProjectAsWindow {} {
-	set saveProjectAs [tk_getSaveFile -parent . -title "Save Project As" -defaultextension .oct]
-	#set fileLocation_CDC [tk_getSaveFile -filetypes $types -initialdir $PjtDir -initialfile [generateAutoName $PjtDir CDC .cdc ] -title "Transfer CDC"]
-	set projectDir [file dirname $saveProjectAs]
-	set projectName [file tail $saveProjectAs]
-puts "In save project as SaveProject projectDir->$projectDir projectName->$projectName"
-	set catchErrCode [SaveProject $projectDir $projectName]
-	set ErrCode [ocfmRetCode_code_get $catchErrCode]
-	if { $ErrCode != 0 } {
-		tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
-		return 
+	global PjtName
+	global PjtDir
+
+	if {$PjtDir == "" || $PjtDir == "None" || $PjtName == "" } {
+		conPuts "No Project Selected" info
+		return
+	} else {
+		set saveProjectAs [tk_getSaveFile -parent . -title "Save Project As"]
+		#set fileLocation_CDC [tk_getSaveFile -filetypes $types -initialdir $PjtDir -initialfile [generateAutoName $PjtDir CDC .cdc ] -title "Transfer CDC"]
+		set projectDir [file dirname $saveProjectAs]
+		set projectName [file tail $saveProjectAs]
+		puts "In save project as SaveProject projectDir->$projectDir projectName->$projectName"
+		set catchErrCode [SaveProject $projectDir $projectName]
+		set ErrCode [ocfmRetCode_code_get $catchErrCode]
+		if { $ErrCode != 0 } {
+			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+			return 
+		}
 	}
 
+		#puts "saveProject->$saveProject"
+		#global tmpPjtName
+		#global tmpPjtDir
 
-	#puts "saveProject->$saveProject"
-	#global tmpPjtName
-	#global tmpPjtDir
+		#set winSavProjAs .savProjAs
+		#catch "destroy $winSavProjAs"
+		#toplevel $winSavProjAs
+		#wm title     $winSavProjAs	"Project Wizard"
+		#wm resizable $winSavProjAs 0 0
+		#wm transient $winSavProjAs .
+		#wm deiconify $winSavProjAs
+		#wm minsize   $winSavProjAs 50 200
+		#grab $winSavProjAs
 
-	#set winSavProjAs .savProjAs
-	#catch "destroy $winSavProjAs"
-	#toplevel $winSavProjAs
-	#wm title     $winSavProjAs	"Project Wizard"
-	#wm resizable $winSavProjAs 0 0
-	#wm transient $winSavProjAs .
-	#wm deiconify $winSavProjAs
-	#wm minsize   $winSavProjAs 50 200
-	#grab $winSavProjAs
+		#set titleFrame1 [TitleFrame $winSavProjAs.titleFrame1 -text "Save Project as" ]
+		#set titleInnerFrame1 [$titleFrame1 getframe]
+		#set frame1 [frame $titleInnerFrame1.fram1]
 
-	#set titleFrame1 [TitleFrame $winSavProjAs.titleFrame1 -text "Save Project as" ]
-	#set titleInnerFrame1 [$titleFrame1 getframe]
-	#set frame1 [frame $titleInnerFrame1.fram1]
-
-	#label $winSavProjAs.l_empty -text "               "	
-	#label $winSavProjAs.l_empty1 -text "               "
-	#label $titleInnerFrame1.l_empty2 -text "               "
-	#label $titleInnerFrame1.l_pjname -text "Project Name :" -justify left
-	#label $titleInnerFrame1.l_pjpath -text "Project Path :" -justify left
-	#label $titleInnerFrame1.l_empty3 -text "               "
+		#label $winSavProjAs.l_empty -text "               "	
+		#label $winSavProjAs.l_empty1 -text "               "
+		#label $titleInnerFrame1.l_empty2 -text "               "
+		#label $titleInnerFrame1.l_pjname -text "Project Name :" -justify left
+		#label $titleInnerFrame1.l_pjpath -text "Project Path :" -justify left
+		#label $titleInnerFrame1.l_empty3 -text "               "
 	#label $winSavProjAs.l_empty4 -text "               "
 
 	#set tmpPjtName ""
@@ -909,21 +928,24 @@ puts "DefaultPjtDir->$DefaultPjtDir"
 			set tmpImpDir [file join [pwd] mn.xdd]
 			if {![file isfile $tmpImpDir]} {
 				##TODO: discuss what to do
-				#tk_messageBox -message "Entered path for Import XDC/XDD not exist " -icon warning -parent .newprj
-				#focus .newprj
-				#return
+				tk_messageBox -message "Default cn.xdd is not found" -icon warning -parent .newprj
+				focus .newprj
+				return
 			}
 		}
 
+
+		#CloseProject is called to delete node and insert tree
+		CloseProject
+
 		set PjtName $tmpPjtName
 		set PjtDir $tmpPjtDir
+
 		catch {$Editor::projMenu delete 3} ; # to delete the close project if already present 
-		$Editor::projMenu add command -label "Close Project" -command "CloseProjectWindow" 
+		$Editor::projMenu add command -label "Close Project" -command "_CloseProject" 
 		catch {$Editor::projMenu delete 4} ; # to delete the Properties if already present
 		$Editor::projMenu add command -label "Properties" -command "PropertiesWindow" ; #not implemnted in this delivery so commented out
 
-		#CloseProject is called to delete node and insert tree
-		#CloseProject
 
 		$updatetree itemconfigure PjtName -text $tmpPjtName
 
@@ -967,6 +989,14 @@ thread::send [tsv::get application importProgress] "StartProgress" ; #
 		#Import parentNode nodeType nodeID 
 		Import OBD-$mnCount-1 0 240
 thread::send -async [tsv::set application importProgress] "StopProgress"
+
+
+#folder for project is created only when there is no error
+#puts "file mkdir $PjtDir"
+			file mkdir [file join $PjtDir $PjtName]						
+		} else {
+#puts "file mkdir $PjtDir"	
+			file mkdir [file join $PjtDir $PjtName]						
 		}
 
 		$frame1.bt_cancel invoke
@@ -1017,6 +1047,40 @@ thread::send -async [tsv::set application importProgress] "StopProgress"
 }
 
 ###############################################################################################
+#proc SaveProjectWindow
+#Input       : -
+#Output      : -
+#Description : Creates the GUI when existing Project is to be closed
+###############################################################################################
+proc SaveProjectWindow {} {
+	global PjtDir
+	global PjtName
+	global updatetree
+	global status_save	
+
+	if {$PjtDir == "" || $PjtDir == "None" || $PjtName == "" } {
+		conPuts "No Project Selected" info
+		return
+	} else {	
+		#check whether project has changed from last saved
+		if {$status_save} {
+			set result [tk_messageBox -message "Save Project $PjtName ?" -type yesno -icon question -title "Question"]
+			switch -- $result {
+				yes {			 
+					Saveproject
+					conPuts "Project $PjtName is saved" info
+					return yes
+				}
+				no {
+					conPuts "Project $PjtName not saved" info
+					return no
+				}
+			}
+		}		
+	}
+}
+
+###############################################################################################
 #proc CloseProjectWindow
 #Input       : -
 #Output      : -
@@ -1029,46 +1093,24 @@ proc CloseProjectWindow {} {
 	global status_save	
 
 	if {$PjtDir == "" || $PjtDir == "None" || $PjtName == "" } {
-		conPuts "No Project Selected" error
+		conPuts "No Project Selected" info
 		CloseProject
 		return
 	} else {	
-		#check whether project has changed from last saved
-		if {$status_save} {
-			set result [tk_messageBox -message "Save Project $PjtName ?" -type yesnocancel -icon question -title "Question"]
-	   		 switch -- $result {
-	   		     yes {			 
-	   		     	    Saveproject
-				    conPuts "Save project not implemented" info
-			    	    CloseProject
-				    return yes
-	   		     }
-	   		     no  {
-				    conPuts "Project $PjtName not saved" info
-			    	    CloseProject
-	 		 	    return no
-			     }
-	   		     cancel {
-				    conPuts "Exit Canceled" info
-				    return cancel
-		   	     }
-			 }
-   		} else {
-			#TODO only for testing remove for delivery
-			set result [tk_messageBox -message "Do you want to close Project $PjtName ?" -type okcancel -icon question -title "Question"]
-	   		 switch -- $result {
-				ok {
-			    		CloseProject
-					return ok
-				}
-				cancel {
-					#here cancel is 
-					return cancel 
-				}
+		#TODO only for testing remove for delivery
+		set result [tk_messageBox -message "Close Project $PjtName ?" -type okcancel -icon question -title "Question"]
+   		 switch -- $result {
+			ok {
+				CloseProject
+				return ok
 			}
-		}		
-	}
+			cancel {
+				return cancel 
+			}
+		}
+	}		
 }
+
 
 ################################################################################################
 #proc ImportProgress

@@ -423,8 +423,7 @@ proc Editor::exit_app {} {
     variable current
     variable index
     variable text_win
-    variable serverUp
-    global TotalTestCase
+
     global PjtDir
     global PjtName
     global status_run
@@ -443,8 +442,8 @@ proc Editor::exit_app {} {
 		set result [tk_messageBox -message "Save Project $PjtName ?" -type yesnocancel -icon question -title 			"Question"]
    		 switch -- $result {
    		     yes {			 
-   		             #Saveproject
-			     conPuts "Save project not yet implemented" info
+   		             Saveproject
+			     conPuts "Project $PjtName is saved" info
    		     }
    		     no  {conPuts "Project $PjtName not saved" info
 		     }
@@ -467,10 +466,6 @@ proc Editor::exit_app {} {
 #Description : Opens an already existing project prompts to save the current project
 ################################################################################################
 proc openproject { } {
-
-	#YetToImplement
-	#return
-
 	global PjtDir
 	global PjtName
 	global updatetree
@@ -505,8 +500,6 @@ proc openproject { } {
 		}
 	}
 
-	#CloseProject is called to delete node and insert tree
-	CloseProject
 	
 	set types {
         {"All Project Files"     {*.oct } }
@@ -517,22 +510,35 @@ proc openproject { } {
         if {$projectfilename == ""} {
                 return
         }
-	set tmpsplit [file split $projectfilename ]
-	set tempPjtName [lindex $tmpsplit end]
+	#set tmpsplit [file split $projectfilename ]
+	set tempPjtName [file tail $projectfilename]
 	#puts "Project name->$PjtName"
 	set ext [file extension $projectfilename]
-	    if { $ext != "" } {
-	        if {[string compare $ext ".oct"]} {
-		    set PjtDir None
-		    tk_messageBox -message "Extension $ext not supported" -title "Open Project Error" -icon error
-		    return
-	        }
-	    }
+        if {[string compare $ext ".oct"]} {
+	    set PjtDir None
+	    tk_messageBox -message "Extension $ext not supported" -title "Open Project Error" -icon error
+	    return
+	}
+	_openproject $projectfilename
 
 
+}
+proc _openproject {projectfilename} {
+	global PjtDir
+	global PjtName
+	global updatetree
+	global nodeIdList
+	global mnCount
+	global cnCount	
+	global status_run
+	global status_save
+
+	#CloseProject is called to delete node and insert tree
+	CloseProject
 
 	set tempPjtDir [file dirname $projectfilename]
-	puts "PjtDir->$tempPjtDir PjtName->$tempPjtName "
+	set tempPjtName [file tail $projectfilename]
+	puts "\n\nPjtDir->$tempPjtDir PjtName->$tempPjtName \n\n"
 
 	thread::send [tsv::get application importProgress] "StartProgress"
 	#API for open project
@@ -551,7 +557,8 @@ proc openproject { } {
 	set PjtDir $tempPjtDir
 	set PjtName $tempPjtName
 
-	
+	$updatetree itemconfigure PjtName -text $PjtName
+
 	set count [new_intp]
 	set catchErrCode [GetNodeCount 240 $count]
 	set ErrCode [ocfmRetCode_code_get $catchErrCode]
@@ -598,16 +605,17 @@ puts "node->$node"
 			}
 		}
 
-	catch {$Editor::projMenu delete 3} ; # to delete the close project if already present 
-	$Editor::projMenu add command -label "Close Project" -command "CloseProjectWindow" 
-	catch {$Editor::projMenu delete 4} ; # to delete the Properties if already present
-	$Editor::projMenu add command -label "Properties" -command "PropertiesWindow" ; #not implemnted in this 
-	conPuts "Project [file join $PjtDir $PjtName] is successfully opened"
-	puts nodeIdList->$nodeIdList
+		catch {$Editor::projMenu delete 3} ; # to delete the close project if already present 
+		$Editor::projMenu add command -label "Close Project" -command "_CloseProject" 
+		catch {$Editor::projMenu delete 4} ; # to delete the Properties if already present
+		$Editor::projMenu add command -label "Properties" -command "PropertiesWindow"
+		conPuts "Project [file join $PjtDir $PjtName] is successfully opened"
+		puts nodeIdList->$nodeIdList
+
 	} else {
-	errPuts "Error in opening Project [file join $PjtDir $PjtName]" error
+		errorPuts "Error in opening Project [file join $PjtDir $PjtName]" error
 	}
-thread::send -async [tsv::set application importProgress] "StopProgress"
+	thread::send -async [tsv::set application importProgress] "StopProgress"
 }
 
 ################################################################################################
@@ -675,14 +683,13 @@ proc Editor::create { } {
 			{command "Open Project" {}  "Open Project" {Ctrl o} -command { openproject } }
 	        	{command "Save Project" {noFile}  "Save Project" {Ctrl s} -command Saveproject}
 	        	{command "Save Project as" {noFile}  "Save Project as" {} -command SaveProjectAsWindow }
-			{command "Close Project" {}  "Close Project" {} -command CloseProjectWindow }
+			{command "Close Project" {}  "Close Project" {} -command _CloseProject }
 	    		{separator}
             		{command "E&xit" {}  "Exit openCONFIGURATOR" {Alt x} -command Editor::exit_app}
         	}
         	"&Project" {} {} 0 {
             		{command "Build Project    F7" {noFile} "Generate CDC and XML" {} -command BuildProject }
-            		{command "Rebuild Project  Ctrl+F7" {noFile} "Clean and Build" {} -command YetToImplement }
-	    		{command "Clean Project" {noFile} "Clean" {} -command YetToImplement }
+            		{command "Clean Project" {noFile} "Clean" {} -command CleanProject }
 	    		{command "Stop Build" {}  "Reserved" {} -command YetToImplement -state disabled}
             		{separator}
             		{command "Project Settings" {}  "Project Settings" {} -command YetToImplement }
@@ -740,7 +747,7 @@ proc Editor::create { } {
     	set Editor::options(showConsole) 1
 	#shortcut keys for project
 	bind . <Key-F7> "BuildProject"
-	bind . <Control-Key-F7> "YetToImplement"
+	bind . <Control-Key-F7> "" ; #to prevent BuildProject called
 	bind . <Control-Key-F5> "TransferCDC 1"
 	bind . <Control-Key-F6> "TransferXML 1"
 	bind . <Control-Key-f> "FindDynWindow"
@@ -787,7 +794,6 @@ proc Editor::create { } {
 	$Editor::projMenu add command -label "Sample Project" -command "YetToImplement" 
 	$Editor::projMenu add command -label "New Project" -command { _NewProject}
 	$Editor::projMenu add command -label "Open Project" -command {openproject} 
-
 	#############################################################################
 	# Menu for the object dictionary
 	#############################################################################
@@ -865,21 +871,21 @@ proc Editor::create { } {
 	        -helptext "Build Project"\
 		-command "BuildProject"]
 	pack $bb_build -side left -padx 4
-	set bb_rebuild [ButtonBox::add $bbox -image [Bitmap::get rebuild]\
-	    	-height 21\
-	        -width 21\
-	        -helptype balloon\
-	        -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
-	        -helptext "Rebuild Project"\
-		-command "YetToImplement"]
-	pack $bb_rebuild -side left -padx 4
+	#set bb_rebuild [ButtonBox::add $bbox -image [Bitmap::get rebuild]\
+	#    	-height 21\
+	#        -width 21\
+	#        -helptype balloon\
+	 #       -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
+	 #       -helptext "Rebuild Project"\
+	#	 -command "YetToImplement"]
+	#pack $bb_rebuild -side left -padx 4
 	set bb_clean [ButtonBox::add $bbox -image [Bitmap::get clean]\
 	    	-height 21\
     		-width 21\
 	        -helptype balloon\
 	        -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
 	        -helptext "clean Project"\
-    		-command "YetToImplement"]
+    		-command "CleanProject"]
 	pack $bb_clean -side left -padx 4
 
 
@@ -1487,6 +1493,7 @@ proc Saveproject {} {
 	if {$PjtDir == "" || $PjtDir == "None" || $PjtName == "" } {
 	#there is no project directory or project name no need to save
 	} else {
+puts "\n\nSaveProject PjtDir->$PjtDir PjtName->$PjtName\n\n"
 		set catchErrCode [SaveProject $PjtDir $PjtName]
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
 		if { $ErrCode != 0 } {
@@ -1500,11 +1507,40 @@ proc Saveproject {} {
 }
 
 proc _NewProject {} {
-	set result [CloseProjectWindow] 
-puts "\n _NewProject result->$result \n"
+	set result [SaveProjectWindow] 
+	puts "\n _NewProject result->$result \n"
 	if { $result != "cancel"} {
 		NewProjectWindow
 	}
+}
+
+proc _CloseProject {} {
+	global status_save
+	global PjtName
+
+	#before close should prompt to close
+	if {$status_save} {
+		set result [tk_messageBox -message "Save Project $PjtName Before closing?" -type yesnocancel -icon question -title "Question"]
+		switch -- $result {
+			yes {			 
+				Saveproject
+				conPuts "Project $PjtName is saved" info
+			}
+			no {
+				conPuts "Project $PjtName not saved" info
+			}
+			cancel {
+				return
+			}
+		}
+		CloseProject
+		puts "\n _CloseProject SaveProjectWindow result->$result \n"
+
+	} else {
+		set result [CloseProjectWindow]
+		puts "\n _CloseProject CloseProjectWindow result->$result \n"
+	}
+
 }
 
 ################################################################################################
@@ -2170,6 +2206,10 @@ proc TransferCDC {choice} {
 	#	}
 	#}
 
+	if {![file isfile [file join [file join $PjtDir $PjtName] $PjtName.cdc]]} {
+		tk_messageBox -message "CDC does not exist\nBuild the Project to Generate CDC" -icon info -title "Information"
+		return
+	}
 
 	set types {
         {"All Project Files"     {*.cdc } }
@@ -2185,18 +2225,21 @@ proc TransferCDC {choice} {
         if {$fileLocation_CDC == ""} {
                 return
         }
+
+	catch { file copy -force [file join [file join $PjtDir $PjtName] $PjtName.cdc] $fileLocation_CDC }
+	conPuts "CDC transfer complete"
 	#puts fileLocation_CDC:$fileLocation_CDC
-	set catchErrCode [GenerateCDC $fileLocation_CDC]
-	set ErrCode [ocfmRetCode_code_get $catchErrCode]
+	#set catchErrCode [GenerateCDC $fileLocation_CDC]
+	#set ErrCode [ocfmRetCode_code_get $catchErrCode]
 	##puts "ErrCode:$ErrCode"
-	if { $ErrCode != 0 } {
-		errorPuts "[ocfmRetCode_errorString_get $catchErrCode]"
-		tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
-		#tk_messageBox -message "ErrCode:$ErrCode" -title Warning -icon warning
-	} else {
-		conPuts "CDC generated" info
-	}
-	return $ErrCode
+	#if { $ErrCode != 0 } {
+	#	errorPuts "[ocfmRetCode_errorString_get $catchErrCode]"
+	#	tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+	#	#tk_messageBox -message "ErrCode:$ErrCode" -title Warning -icon warning
+	#} else {
+	#	conPuts "CDC generated" info
+	#}
+	#return $ErrCode
 }
 
 ################################################################################################
@@ -2225,6 +2268,11 @@ proc TransferXML {choice} {
 	#	}
 	#}
 
+	if {![file isfile [file join [file join $PjtDir $PjtName] $PjtName.xap]]} {
+		tk_messageBox -message "XAP does not exist\nBuild the Project to Generate XAP" -icon info -title "Information"
+		return
+	}
+
 	set types {
         {"All Project Files"     {*.xap } }
 	}
@@ -2235,23 +2283,28 @@ proc TransferXML {choice} {
 
 
 	# Validate filename
-	set fileLocation_XAP [tk_getSaveFile -filetypes $types -initialdir $PjtDir -initialfile [generateAutoName $PjtDir XAP .xap] -title "Generate XAP"]
+	set fileLocation_XAP [tk_getSaveFile -filetypes $types -initialdir $PjtDir -initialfile [generateAutoName $PjtDir XAP .xap] -title "Transfer XAP"]
         if {$fileLocation_XAP == ""} {
                 return
         }
+
+	catch { file copy -force [file join [file join $PjtDir $PjtName] $PjtName.xap] $fileLocation_XAP }
+	catch { file copy -force [file join [file join $PjtDir $PjtName] $PjtName.xap.h] $fileLocation_XAP.h }	
+	conPuts "XAP transfer complete"
+
 	#puts fileLocation_XAP:$fileLocation_XAP
-	set catchErrCode [GenerateXAP $fileLocation_XAP]
+	#set catchErrCode [GenerateXAP $fileLocation_XAP]
 	#puts "catchErrCode->$catchErrCode"
-	set ErrCode [ocfmRetCode_code_get $catchErrCode]
+	#set ErrCode [ocfmRetCode_code_get $catchErrCode]
 	#puts "ErrCode:$ErrCode"
-	if { $ErrCode != 0 } {
-		errorPuts "[ocfmRetCode_errorString_get $catchErrCode]"
-		tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
-		#tk_messageBox -message "ErrCode : $ErrCode" -title Warning -icon warning
-		return
-	} else {
-		conPuts "XAP generated" info
-	}
+	#if { $ErrCode != 0 } {
+	#	errorPuts "[ocfmRetCode_errorString_get $catchErrCode]"
+	#	tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+	#	#tk_messageBox -message "ErrCode : $ErrCode" -title Warning -icon warning
+	#	return
+	#} else {
+	#	conPuts "XAP generated" info
+	#}
 
 }
 
@@ -2263,7 +2316,17 @@ proc TransferXML {choice} {
 ################################################################################################
 proc BuildProject {} {
 	global PjtDir
-	global PjtName 
+	global PjtName
+	global nodeIdList
+	global savedValueList
+	global nodeSelect	
+	global updatetree
+	global mnCount
+	global cnCount
+	global f0
+	global f1
+	global f2
+
 
 	if {$PjtDir == "" || $PjtName == "" } {
 		errorPuts "No project to Build"
@@ -2278,14 +2341,118 @@ proc BuildProject {} {
 		no { 
 			return
 		}
-	}
-	set status [TransferCDC 0]
-	if {$status == 0} {
-		TransferXML 0
-	} else {
+	}	
+	puts "GenerateCDC [file join [file join $PjtDir $PjtName] $PjtName]"
+	set catchErrCode [GenerateCDC [file join [file join $PjtDir $PjtName] $PjtName.cdc]]
+	#puts "catchErrCode->$catchErrCode"
+	set ErrCode [ocfmRetCode_code_get $catchErrCode]
+	#puts "ErrCode:$ErrCode"
+
+
+	if { $ErrCode != 0 } {
 		#error in generating CDC dont generate XAP
-		errPuts "CDC is not generated so XAP "
+		errorPuts "Error in generating CDC. XAP not generated" error
+	} else {
+
+thread::send [tsv::get application importProgress] "StartProgress"
+
+ 		puts "\nfile copy -force [file join [file join $PjtDir $PjtName] $PjtName.cdc] \n"
+		catch { file copy -force [file join [file join $PjtDir $PjtName] $PjtName.cdc] [file join [pwd] $PjtName.cdc] }
+		catch { file rename -force [file join [pwd] $PjtName.cdc] [file join [pwd] CDC.cdc] }
+############################################################################
+		#reset all the globaly maintained list 
+		set nodeIdList ""
+		set savedValueList ""
+		set nodeSelect ""
+		set mnCount 0
+		set cnCount 0
+
+		#no index subindex or pdotable to be dispalyed
+		pack forget [lindex $f0 1]
+		pack forget [lindex $f1 1]
+		pack forget [lindex $f2 0]
+		[lindex $f2 1] cancelediting
+		[lindex $f2 1] configure -state disabled
+
+		catch {$updatetree delete PjtName}
+		InsertTree
+
+
+
+		set count [new_intp]
+		set catchErrCode [GetNodeCount 240 $count]
+		set ErrCode [ocfmRetCode_code_get $catchErrCode]
+		#puts "CN count:[intp_value $count]....ErrCode->$ErrCode"
+
+		set nodeCount [intp_value $count]
+		#set nodeType 0
+		puts "nodeCount->$nodeCount"
+		for {set inc 0} {$inc < $nodeCount} {incr inc} {
+			#API
+			#ocfmRetCode GetNodeAttributesbyNodePos(int NodePos, ENodeType* NodeType, int* Out_NodeID, char* Out_NodeName);
+			set tmp_nodeId [new_intp]			
+			#set nodeType [new_intp]
+			#set nodeName [new_charp]
+			set catchErrCode [GetNodeAttributesbyNodePos $inc $tmp_nodeId]
+			#puts "catchErrCode->$catchErrCode"
+			set ErrCode [ocfmRetCode_code_get [lindex $catchErrCode 0]]
+
+			#set nodeType 1			
+		
+			#puts "ErrCode:$ErrCode "
+			if { $ErrCode == 0 } {
+				set nodeId [intp_value $tmp_nodeId]
+				set nodeName [lindex $catchErrCode 1]
+				#set nodeName [charp_value $nodeName]
+				#puts "nodeId->$nodeId..nodeName->$nodeName.."
+				if {$nodeId == 240} {
+					set nodeType 0
+					$updatetree insert end PjtName MN-$mnCount -text "openPOWERLINK_MN(240)" -open 1 -image [Bitmap::get mn]
+					$updatetree insert end MN-$mnCount OBD-$mnCount-1 -text "OBD" -open 0 -image [Bitmap::get pdo]	
+					set node OBD-$mnCount-1	
+				} else {
+					set nodeType 1
+					set child [$updatetree insert end MN-$mnCount CN-$mnCount-$cnCount -text "$nodeName\($nodeId\)" -open 0 -image [Bitmap::get cn]]
+					set node CN-$mnCount-$cnCount
+				}
+puts "node->$node"
+				catch { Import $node $nodeType $nodeId }
+				incr cnCount
+				lappend nodeIdList $nodeId  
+				
+			} else {
+				#some error has occured
+				continue
+			}
+		}
+
+############################################################################
+
+		set catchErrCode [GenerateXAP [file join [file join $PjtDir $PjtName] $PjtName.xap]]
+		set ErrCode [ocfmRetCode_code_get $catchErrCode]
+		##puts "ErrCode:$ErrCode"
+		if { $ErrCode != 0 } {
+			errorPuts "XAP is not generated"
+		} else {
+			conPuts "CDC and XAP are successfully generated"
+			catch { file copy -force [file join [file join $PjtDir $PjtName] $PjtName.xap]  [file join [pwd] $PjtName.xap]}
+			catch { file rename -force [file join [pwd] $PjtName.xap] [file join [pwd] XAP.xap] }
+			catch { file copy -force [file join [file join $PjtDir $PjtName] $PjtName.xap.h]  [file join [pwd] $PjtName.xap.h]}
+			catch { file rename -force [file join [pwd] $PjtName.xap.h] [file join [pwd] XAPH.xap.h] }
+		}
+		thread::send -async [tsv::set application importProgress] "StopProgress"
 	}
+}
+
+proc CleanProject {} {
+	global PjtDir
+	global PjtName 
+	
+	set CleanFile [file join [file join $PjtDir $PjtName] $PjtName]
+	puts "CleanFile->$CleanFile"
+	catch {file delete -force $CleanFile.cdc}
+	catch {file delete -force $CleanFile.xap}
+	catch {file delete -force $CleanFile.xap.h}
 }
 
 ################################################################################################

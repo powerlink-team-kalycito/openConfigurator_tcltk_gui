@@ -70,35 +70,66 @@
 #Description : Validates whether an entry is IP address
 ###############################################################################################
 proc IsIP {str type} {
-   # modify these if you want to check specific ranges for
-   # each portion - now it look for 0 - 255 in each
-   set ipnum1 {\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]}
-   set ipnum2 {\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]}
-   set ipnum3 {\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]}
-   set ipnum4 {\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]}
-   set fullExp {^($ipnum1)\.($ipnum2)\.($ipnum3)\.($ipnum4)$}
-   set partialExp {^(($ipnum1)(\.(($ipnum2)(\.(($ipnum3)(\.(($ipnum4)?)?)?)?)?)?)?)?$}
-   set fullExp [subst -nocommands -nobackslashes $fullExp]
-   set partialExp [subst -nocommands -nobackslashes $partialExp]
-   if [string equal $type focusout] {
-      if [regexp -- $fullExp $str] {
-         return 1
-      } else {
-         #tk_messageBox -message "IP is NOT complete!" -title "IP Address" -parent .projconfig
-         return 0
-      }
-   } elseif [string equal $type dstry] {
-      if [regexp -- $fullExp $str] {
-         return 1
-      } else {
-         #tk_messageBox -message "IP is NOT complete!" -title "IP Address" -parent .projconfig
-         return 0
-      }
-   } else {
-      return [regexp -- $partialExp $str]
-   }
+	# modify these if you want to check specific ranges for
+	# each portion - now it look for 0 - 255 in each
+	set ipnum1 {\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]}
+	set ipnum2 {\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]}
+	set ipnum3 {\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]}
+	set ipnum4 {\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]}
+	set fullExp {^($ipnum1)\.($ipnum2)\.($ipnum3)\.($ipnum4)$}
+	set partialExp {^(($ipnum1)(\.(($ipnum2)(\.(($ipnum3)(\.(($ipnum4)?)?)?)?)?)?)?)?$}
+	set fullExp [subst -nocommands -nobackslashes $fullExp]
+	set partialExp [subst -nocommands -nobackslashes $partialExp]
+	if {[string equal $type focusout] || [string equal $type dstry] || [string equal $type forced]} {
+		if [regexp -- $fullExp $str] {
+			return 1
+		} else {
+			return 0
+		}
+	} else {
+		return [regexp -- $partialExp $str]
+	}
 } 
 
+proc IsMAC {str type} {
+	#puts "str->$str type->$type"
+	set macnum {[0-9a-fA-F]}
+	set len [string length $str]
+	#puts "len->$len"
+
+	if { $type == "forced" } {
+		set len 17
+	}
+
+	if { $len == 0 } {
+		return 1
+	} else {
+		if {$len > 17} {
+			return 0
+		} else {
+			set valExp ""
+			set flag 1
+			for { set chk 0 } {$chk < $len} {incr chk} {
+				if { $flag == 1 } {
+					set valExp $valExp\($macnum)
+					set flag 2
+				} elseif { $flag == 2 } {
+					set valExp $valExp\($macnum)
+					set flag 3
+				} elseif { $flag == 3 } {
+ 					set valExp $valExp\:
+					set flag 1
+				} else {
+					puts "\nthis condition never reach in IsMAC flag->$flag\n"
+				}
+			}
+			#puts "valExp->$valExp\n"
+			set valExp [subst -nocommands -nobackslashes $valExp]
+			#puts "valExp->$valExp\n"
+			return [regexp -- $valExp $str]
+		}
+	}
+}
 ###############################################################################################
 #proc IsInt
 #Input       : input, type
@@ -141,7 +172,7 @@ proc IsDec {input tmpValue mode idx} {
 	if { [string is int $tempInput] == 0 } {
 		return 0
 	} else {
-		after 1 SetValue $tmpValue $mode $idx $input
+		after 1 SetValue $tmpValue.en_value1 $mode $idx $input
 		return 1
 	}
 }
@@ -173,7 +204,7 @@ proc IsHex {input tmpValue mode idx} {
 		return 0
 	} else {
 		set tempInput 0x$tempInput
-		after 1 SetValue $tmpValue $mode $idx $tempInput
+		after 1 SetValue $tmpValue.en_value1 $mode $idx $tempInput
 		#puts "SetValue called"
 		return 1
 	}
@@ -232,48 +263,79 @@ proc IsTableHex {input len tbl row col} {
 		return 0
 	} else {
 		set no [$tbl cellcget $row,0 -text]
-		set mappEntr [$tbl cellcget $row,1 -text]
-		set index [$tbl cellcget $row,2 -text]
-		set subIndex [$tbl cellcget $row,3 -text]
-		set reserved [$tbl cellcget $row,4 -text]
-		set offset [$tbl cellcget $row,5 -text]
-		set length [$tbl cellcget $row,6 -text]
+		set mappEntr [$tbl cellcget $row,3 -text]
+		set index [$tbl cellcget $row,4 -text]
+		set subIndex [$tbl cellcget $row,5 -text]
+		set reserved [$tbl cellcget $row,6 -text]
+		set offset [$tbl cellcget $row,7 -text]
+		set length [$tbl cellcget $row,8 -text]
   		switch $col {
-			1 {
+			3 {
 				set length [string range $input 0 3]
 				set offset [string range $input 4 7]
 				set reserved [string range $input 8 9]
 				set subIndex [string range $input 10 11]
 				set index [string range $input 12 15]
-				$tbl cellconfigure $row,1 -text $input
-				$tbl cellconfigure $row,2 -text $index
-				$tbl cellconfigure $row,3 -text $subIndex
-				$tbl cellconfigure $row,4 -text $reserved
-				$tbl cellconfigure $row,5 -text $offset
-				$tbl cellconfigure $row,6 -text $length
+				$tbl cellconfigure $row,3 -text $input
+				$tbl cellconfigure $row,4 -text $index
+				$tbl cellconfigure $row,5 -text $subIndex
+				$tbl cellconfigure $row,6 -text $reserved
+				$tbl cellconfigure $row,7 -text $offset
+				$tbl cellconfigure $row,8 -text $length
             			
         		}
 
-        		2 {
+        		4 {
 				set mappEntr $length$offset$reserved$subIndex$input
         		}
 
-	        	3 {
+	        	5 {
 				set mappEntr $length$offset$reserved$input$index	
         		}
-        		4 {
+        		6 {
 				set mappEntr $length$offset$input$subIndex$index	
         		}
-        		5 {
+        		7 {
 				set mappEntr $length$input$reserved$subIndex$index
         		}
-       	 		6 {
+       	 		8 {
 				set mappEntr $input$offset$reserved$subIndex$index
  			}
     		}
-		$tbl cellconfigure $row,1 -text $mappEntr
+		$tbl cellconfigure $row,3 -text $mappEntr
 		#$tbl delete $row
 		#$tbl insert $row [list $no $mappEntr $index $subIndex $reserved $offset $length]
 		return 1
 	}
+}
+
+
+proc _ConvertHex {tmpVal} {
+	if { $tmpVal > 4294967295 } {
+		set calcVal $tmpVal
+		set finalVal ""
+		while { $calcVal > 4294967295 } {
+			set quo [expr $calcVal / 4294967296 ]
+			#puts "quo->$quo"
+			set rem [expr $calcVal - ( $quo * 4294967296) ]
+			#puts "rem->$rem"
+			if { $quo  > 4294967295 } {
+				#set rem [AppendZero [format %X $rem] 8]	
+				set finalVal [AppendZero [format %X $rem] 8]$finalVal		
+				#puts "rem->$rem...finalVal->$finalVal"
+			} else {
+				#set quo [AppendZero [format %X $quo] 8]
+				set finalVal [AppendZero [format %X $rem] 8]$finalVal	
+				#puts "final val after appending	$finalVal"
+				set finalVal [format %X $quo]$finalVal
+				#puts "quo->$quo...finalVal->$finalVal"
+			}
+			set calcVal $quo
+			puts "calcVal->$calcVal"
+		}
+		set tmpVal $finalVal
+	} else {
+		catch {set tmpVal [format %X $tmpVal]}
+	}
+	return $tmpVal
 }

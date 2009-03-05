@@ -231,7 +231,7 @@ proc Import {parentNode nodeType nodeID } {
 		#the node exist continue 
 	} else {
 		tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon 	warning
-		tk_messageBox -message "ErrCode : $ErrCode\nExistfFlag : $ExistfFlag" -title Warning -icon warning
+		#tk_messageBox -message "ErrCode : $ErrCode\nExistfFlag : $ExistfFlag" -title Warning -icon warning
 		#ImportProgress stop
 		return
 	}

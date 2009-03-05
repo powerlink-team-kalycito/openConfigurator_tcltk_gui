@@ -96,13 +96,13 @@ proc StartUp {} {
 	radiobutton $frame1.ra_default  -text "Open Sample Project"   -variable startVar -value 1 -font custom2 -command "SampleProjectText $frame1.t_desc" 
 	radiobutton $frame1.ra_newProj  -text "Create New Project"    -variable startVar -value 2 -font custom2 -command "NewProjectText $frame1.t_desc" 
 	radiobutton $frame1.ra_openProj -text "Open Existing Project" -variable startVar -value 3 -font custom2 -command "OpenProjectText $frame1.t_desc" 
-	$frame1.ra_newProj select
-	NewProjectText $frame1.t_desc
+	$frame1.ra_default select
+	SampleProjectText $frame1.t_desc
 	 
 	button $frame2.b_ok -text "  Ok  " -command { 
 		if {$startVar == 1} {
 
-			set samplePjt [file join [pwd] Default sample sample.oct]
+			set samplePjt [file join [pwd] Default Sample Sample.oct]
 			puts "open sample->$samplePjt"
 
 			if {[file exists $samplePjt]} {
@@ -993,10 +993,14 @@ thread::send -async [tsv::set application importProgress] "StopProgress"
 
 #folder for project is created only when there is no error
 #puts "file mkdir $PjtDir"
-			file mkdir [file join $PjtDir $PjtName]						
+			file mkdir [file join $PjtDir $PjtName]
+			file mkdir [file join $PjtDir $PjtName CDC_XAP]
+			file mkdir [file join $PjtDir $PjtName XDC]
 		} else {
 #puts "file mkdir $PjtDir"	
-			file mkdir [file join $PjtDir $PjtName]						
+			file mkdir [file join $PjtDir $PjtName]
+			file mkdir [file join $PjtDir $PjtName CDC_XAP]
+			file mkdir [file join $PjtDir $PjtName XDC]
 		}
 
 		$frame1.bt_cancel invoke

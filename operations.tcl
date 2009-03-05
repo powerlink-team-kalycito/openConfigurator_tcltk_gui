@@ -73,6 +73,7 @@ lappend auto_path $path_to_Tablelist
 
 package require Tablelist
 package require Thread
+
 tsv::set application main [thread::id]
 #puts ""
 tsv::set application importProgress [thread::create -joinable {
@@ -125,7 +126,6 @@ source [file join $dir option.tcl]
 global PjtDir 
 global PjtName
 
-variable status_run
 set status_run 0
 set cnCount 0
 set mnCount 0
@@ -668,7 +668,7 @@ proc Editor::create { } {
     
     
     
-	set result [catch {source [file join $RootDir/plk_configtool.cfg]} info]
+	set result [catch {source [file join $RootDir plk_configtool.cfg]} info]
 	variable configError $result
    
 	set prgtext "Please wait while loading ..."
@@ -703,7 +703,7 @@ proc Editor::create { } {
         	"&Actions" all options 0 {
         		{command "SDO Read/Write" {noFile} "Do SDO Read or Write" {} -command YetToImplement -state disabled}
             		{command "Transfer CDC   Ctrl+F5" {noFile} "Transfer CDC" {} -command "TransferCDC 1" }
-            		{command "Transfer XML   Ctrl+F6" {noFile} "Transfer XML" {} -command "TransferXML 1" }
+            		{command "Transfer XAP   Ctrl+F6" {noFile} "Transfer XAP" {} -command "TransferXAP 1" }
 	    		{separator}
             		{command "Start MN" {noFile} "Start the Managing Node" {} -command YetToImplement }
             		{command "Stop MN" {noFile} "Stop the Managing Node" {} -command YetToImplement }
@@ -749,7 +749,7 @@ proc Editor::create { } {
 	bind . <Key-F7> "BuildProject"
 	bind . <Control-Key-F7> "" ; #to prevent BuildProject called
 	bind . <Control-Key-F5> "TransferCDC 1"
-	bind . <Control-Key-F6> "TransferXML 1"
+	bind . <Control-Key-F6> "TransferXAP 1"
 	bind . <Control-Key-f> "FindDynWindow"
 	bind . <Control-Key-F> "FindDynWindow"
 	bind . <KeyPress-Escape> "EscapeTree"
@@ -927,8 +927,8 @@ proc Editor::create { } {
             	-width 21\
             	-helptype balloon\
             	-highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
-            	-helptext "Transfer XML"\
-    	    	-command "TransferXML 1"]
+            	-helptext "Transfer XAP"\
+    	    	-command "TransferXAP 1"]
 	pack $bb_xml -side left -padx 4
 	
 
@@ -1053,12 +1053,14 @@ proc Editor::create { } {
 	#set f2 [EditManager::create_table $notebook "PDO mapping" "pdo"]
 	set f2 [EditManager::create_table $alignFrame "PDO mapping" "pdo"]
 	[lindex $f2 1] columnconfigure 0 -background #e0e8f0 -width 6 -sortmode integer
-	[lindex $f2 1] columnconfigure 1 -background #e0e8f0 -width 23
-	[lindex $f2 1] columnconfigure 2 -background #e0e8f0 -width 11
-	[lindex $f2 1] columnconfigure 3 -background #e0e8f0 -width 11
+	[lindex $f2 1] columnconfigure 1 -background #e0e8f0 -width 14 
+	[lindex $f2 1] columnconfigure 2 -background #e0e8f0 -width 14 
+	[lindex $f2 1] columnconfigure 3 -background #e0e8f0 -width 23
 	[lindex $f2 1] columnconfigure 4 -background #e0e8f0 -width 11
 	[lindex $f2 1] columnconfigure 5 -background #e0e8f0 -width 11
 	[lindex $f2 1] columnconfigure 6 -background #e0e8f0 -width 11
+	[lindex $f2 1] columnconfigure 7 -background #e0e8f0 -width 11
+	[lindex $f2 1] columnconfigure 8 -background #e0e8f0 -width 11
 
 	#NoteBook::compute_size $notebook
 	#$notebook configure -width 750
@@ -1172,7 +1174,8 @@ proc Editor::SingleClickNode {node} {
 	global nodeSelect
 	global nodeIdList
 	global savedValueList
-
+    	global lastConv
+	global populatedPDOList
 	variable notebook
 
 
@@ -1226,11 +1229,104 @@ proc Editor::SingleClickNode {node} {
 	}
 
 	if {[string match "TPDO-*" $node] || [string match "RPDO-*" $node]} {
+		if {[string match "TPDO-*" $node] } {
+			set commParam "18"
+			set mappParam "1A"
+		} else {
+			#must be RPDO
+			set commParam "14"
+			set mappParam "16"
+		}
+			set commParamList ""
+			set mappParamList ""
 		[lindex $f2 1] configure -state normal
 		set idx [$updatetree nodes $node]
+		foreach tempIdx $idx {
+			set indexId [string range [$updatetree itemcget $tempIdx -text] end-4 end-1 ]
+			if {[string match "$commParam*" $indexId]} {
+				lappend commParamList [list $indexId $tempIdx]
+			} elseif {[string match "$mappParam*" $indexId]} {
+				lappend mappParamList [list $indexId $tempIdx]
+			}
+		}
+puts "commParamList->$commParamList"		
+puts "mappParamList->$mappParamList"		
+		set finalMappList ""
+ 		set populatedPDOList ""
+		
+		foreach chk $mappParamList {
+			set paramID [string range [lindex $chk 0] end-1 end]
+puts paramID->$paramID
+puts "lsearch $commParamList [list $commParam$paramID *]"
+			set find [lsearch $commParamList [list $commParam$paramID *]]
+			puts "find->$find"
+			if { $find != -1 } {
+				lappend finalMappList [lindex [lindex $commParamList $find] 1] [lindex $chk 1] 
+				lappend populatedPDOList [lindex $chk 1] 
+			} else {
+				lappend finalMappList [] [lindex $chk 1] 
+				lappend populatedPDOList [lindex $chk 1] 				
+			}
+		}
+puts "finalMappList->$finalMappList"
+puts "populatedPDOList->$populatedPDOList"
 		set popCount 0 
 		[lindex $f2 1] delete 0 end
-		foreach tempIdx $idx {
+		for {set count 0} { $count <= [expr [llength $finalMappList]-2] } {incr count 2} {
+			set tempIdx [lindex $finalMappList $count]
+			puts "tempIdx->$tempIdx"
+			set commParamValue ""
+			if { $tempIdx != "" } {
+				set indexId [string range [$updatetree itemcget $tempIdx -text] end-4 end-1 ]
+				set sidx [$updatetree nodes $tempIdx]
+				foreach tempSidx $sidx { 
+					set subIndexId [string range [$updatetree itemcget $tempSidx -text] end-2 end-1 ]
+					if {[string match "00" $subIndexId] == 0 } {
+						set indexPos [new_intp] ; #newly added
+						set subIndexPos [new_intp] ; #newly added
+						set catchErrCode [IfSubIndexExists $nodeId $nodeType $indexId $subIndexId $subIndexPos $indexPos] ; #newly added
+						set indexPos [intp_value $indexPos] ; #newly added
+						set subIndexPos [intp_value $subIndexPos] ; #newly added
+
+						#set tempIndexProp [GetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId 4]
+						set tempIndexProp [GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos 5 ] ; # 5 is passed to get the actual value
+#puts "tempIndexPropi PDO ->$tempIndexProp"
+	
+						set ErrCode [ocfmRetCode_code_get [lindex $tempIndexProp 0] ]		
+						if {$ErrCode != 0} {
+							puts "ErrCode in singleclick for TDDO and RPDO : $ErrCode"
+							#[lindex $f2 1] insert $popCount [list "" "" "" "" "" "" ""]
+							#incr popCount 1
+							lappend commParamValue []
+							continue	
+						}
+
+						set IndexActualValue [lindex $tempIndexProp 1]
+						if {[string match -nocase "0x*" $IndexActualValue] } {
+							#remove appende 0x
+							set IndexActualValue [string range $IndexActualValue 2 end]
+						} else {
+							# no 0x no need to do anything
+							#TODO CHECK WHETHER NEED TO CONVERT TO HEX
+						}
+						lappend commParamValue $IndexActualValue
+						#puts "IndexActualValue->$IndexActualValue"
+						#set DataSize [string range $IndexActualValue 0 3]
+						#set Offset [string range $IndexActualValue 4 7]
+						#set Reserved [string range $IndexActualValue 8 9]
+						#set listSubIndex [string range $IndexActualValue 10 11]
+						#set listIndex [string range $IndexActualValue 12 15]
+						#[lindex $f2 1] insert $popCount [list $popCount $IndexActualValue $listIndex $listSubIndex $Reserved $Offset $DataSize]
+						#incr popCount 1 
+					}
+				}
+			} else {
+				lappend commParamValue [] []
+			}
+############################################################################################################
+			puts "commParamValue->$commParamValue"
+			set tempIdx [lindex $finalMappList $count+1]
+			puts "tempIdx->$tempIdx"
 			set indexId [string range [$updatetree itemcget $tempIdx -text] end-4 end-1 ]
 			set sidx [$updatetree nodes $tempIdx]
 			foreach tempSidx $sidx { 
@@ -1244,12 +1340,12 @@ proc Editor::SingleClickNode {node} {
 
 					#set tempIndexProp [GetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId 4]
 					set tempIndexProp [GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos 5 ] ; # 5 is passed to get the actual value
-#puts "tempIndexPropi PDO ->$tempIndexProp"
+puts "tempIndexPropi PDO ->$tempIndexProp"
 
 					set ErrCode [ocfmRetCode_code_get [lindex $tempIndexProp 0] ]		
 					if {$ErrCode != 0} {
 						#puts "ErrCode in singleclick for TDDO and RPDO : $ErrCode"
-						[lindex $f2 1] insert $popCount [list "" "" "" "" "" "" ""]
+						[lindex $f2 1] insert $popCount [list "" "" "" "" "" "" "" "" ""]
 						incr popCount 1 
 						continue	
 					}
@@ -1268,7 +1364,7 @@ proc Editor::SingleClickNode {node} {
 					set Reserved [string range $IndexActualValue 8 9]
 					set listSubIndex [string range $IndexActualValue 10 11]
 					set listIndex [string range $IndexActualValue 12 15]
-					[lindex $f2 1] insert $popCount [list $popCount $IndexActualValue $listIndex $listSubIndex $Reserved $Offset $DataSize]
+					[lindex $f2 1] insert $popCount [list $popCount [lindex $commParamValue 0] [lindex $commParamValue 1] $IndexActualValue $listIndex $listSubIndex $Reserved $Offset $DataSize]
 					incr popCount 1 
 				}
 ############################################################################################################
@@ -1421,12 +1517,33 @@ proc Editor::SingleClickNode {node} {
 	$tmpInnerf1.en_pdo1 insert 0 [lindex $IndexProp 6]
 	$tmpInnerf1.en_pdo1 configure -state disabled
 
-	if {[string match -nocase "0x*" [lindex $IndexProp 5]]} {
-		$tmpInnerf1.frame1.ra_hex select
-		$tmpInnerf1.en_value1 configure -validate key -vcmd "IsHex %P $tmpInnerf1.en_value1 %d %i" -bg $savedBg
+
+
+	if { [lindex $IndexProp 2] == "IP_ADDRESS" } {
+		set lastConv ""
+		grid remove $tmpInnerf1.frame1.ra_dec
+		grid remove $tmpInnerf1.frame1.ra_hex
+		$tmpInnerf1.en_value1 configure -validate key -vcmd "IsIP %P %V" -bg $savedBg
+	} elseif { [lindex $IndexProp 2] == "MAC_ADDRESS" } {
+		set lastConv ""
+		grid remove $tmpInnerf1.frame1.ra_dec
+		grid remove $tmpInnerf1.frame1.ra_hex
+		$tmpInnerf1.en_value1 configure -validate key -vcmd "IsMAC %P %V" -bg $savedBg
 	} else {
-		$tmpInnerf1.frame1.ra_dec select
-		$tmpInnerf1.en_value1 configure -validate key -vcmd "IsDec %P $tmpInnerf1.en_value1 %d %i" -bg $savedBg
+
+		#grid remove $tmpInnerf1.frame1.ra_ip
+		#grid remove $tmpInnerf1.frame1.ra_mac
+		grid $tmpInnerf1.frame1.ra_dec
+		grid $tmpInnerf1.frame1.ra_hex
+		if {[string match -nocase "0x*" [lindex $IndexProp 5]]} {
+			set lastConv hex
+			$tmpInnerf1.frame1.ra_hex select
+			$tmpInnerf1.en_value1 configure -validate key -vcmd "IsHex %P $tmpInnerf1 %d %i" -bg $savedBg
+		} else {
+			set lastConv dec
+			$tmpInnerf1.frame1.ra_dec select
+			$tmpInnerf1.en_value1 configure -validate key -vcmd "IsDec %P $tmpInnerf1 %d %i" -bg $savedBg
+		}
 	}
 
 	return
@@ -1554,6 +1671,7 @@ proc CloseProject {} {
 	global PjtName
 	global nodeIdList
 	global savedValueList
+	global populatedPDOList
 	global nodeSelect	
 	global updatetree
 	global mnCount
@@ -1562,6 +1680,7 @@ proc CloseProject {} {
 	global f0
 	global f1
 	global f2
+	global lastConv
 
 
 	puts "CloseProject nodeIdList->$nodeIdList...length->[llength $nodeIdList]"
@@ -1581,15 +1700,17 @@ proc CloseProject {} {
 	}
 	
 
-	#reset all the globaly maintained list 
+	#reset all the globaly maintained values 
 	set nodeIdList ""
 	set savedValueList ""
+	set populatedPDOList ""
 	set nodeSelect ""
 	set mnCount 0
 	set cnCount 0
 	set status_save 0 ; # if zero no need to save
 	set PjtDir ""
 	set PjtName ""
+	set lastConv ""
 
 	#no index subindex or pdotable to be dispalyed
 	pack forget [lindex $f0 1]
@@ -2206,14 +2327,19 @@ proc TransferCDC {choice} {
 	#	}
 	#}
 
-	if {![file isfile [file join [file join $PjtDir $PjtName] $PjtName.cdc]]} {
-		tk_messageBox -message "CDC does not exist\nBuild the Project to Generate CDC" -icon info -title "Information"
-		return
-	}
+	#if {![file isfile [file join [pwd] config_data.cdc]]} {}
+	#if {![file isfile [file join $PjtDir config_data.cdc]]} {
+	#	tk_messageBox -message "CDC does not exist\nBuild the Project to Generate CDC" -icon info -title "Information"
+	#	return
+	#}
 
 	set types {
-        {"All Project Files"     {*.cdc } }
+        {"CDC files"     {*.cdc } }
 	}
+	set fileLocation_from_CDC [tk_getOpenFile -initialdir [file join $PjtDir CDC_XAP] -filetypes $types -parent . -title "Select CDC file to transfer"]
+        if {$fileLocation_from_CDC == ""} {
+                return
+        }
 	########### Before Closing Write the Data to the file ##########
 
 	#set file [tk_getSaveFile -filetypes $filePatternList -initialdir $EditorData(opti	ons,workingDir) \
@@ -2221,12 +2347,15 @@ proc TransferCDC {choice} {
 
 
 	# Validate filename
-	set fileLocation_CDC [tk_getSaveFile -filetypes $types -initialdir $PjtDir -initialfile [generateAutoName $PjtDir CDC .cdc ] -title "Transfer CDC"]
-        if {$fileLocation_CDC == ""} {
+	set fileLocation_to_CDC [tk_getSaveFile -filetypes $types -initialdir [file join $PjtDir CDC_XAP] -initialfile [generateAutoName [fule join $PjtDir CDC_XAP] CDC .cdc ] -title "Transfer CDC at"]
+        if {$fileLocation_to_CDC == ""} {
                 return
         }
 
-	catch { file copy -force [file join [file join $PjtDir $PjtName] $PjtName.cdc] $fileLocation_CDC }
+	#set fileLocation_CDC [file join .. .. openPOWERLINK_CFM_V1.3.0-3 config_dat.cdc]
+	puts "fileLocation_to_CDC->$fileLocation_to_CDC   fileLocation_from_CDC->$fileLocation_from_CDC"
+	#catch { file copy -force [file join [pwd] config_data.cdc] $fileLocation_CDC }
+	file copy -force $fileLocation_from_CDC $fileLocation_to_CDC
 	conPuts "CDC transfer complete"
 	#puts fileLocation_CDC:$fileLocation_CDC
 	#set catchErrCode [GenerateCDC $fileLocation_CDC]
@@ -2243,12 +2372,12 @@ proc TransferCDC {choice} {
 }
 
 ################################################################################################
-#proc TransferXML
+#proc TransferXAP
 #Input       : -
 #Output      : -
 #Description : Gets location where XAP is to be stored
 ################################################################################################
-proc TransferXML {choice} {
+proc TransferXAP {choice} {
 	global PjtDir
 	global PjtName 
 
@@ -2268,28 +2397,41 @@ proc TransferXML {choice} {
 	#	}
 	#}
 
-	if {![file isfile [file join [file join $PjtDir $PjtName] $PjtName.xap]]} {
-		tk_messageBox -message "XAP does not exist\nBuild the Project to Generate XAP" -icon info -title "Information"
-		return
-	}
+	#if {![file isfile [file join [pwd] XAP.xap]]} {}
+	#if {![file isfile [file join [pwd] XAP.xap]]} {
+	#	tk_messageBox -message "XAP does not exist\nBuild the Project to Generate XAP" -icon info -title "Information"
+	#	return
+	#}
 
 	set types {
-        {"All Project Files"     {*.xap } }
+        {"XAP Files"     {*.xap } }
 	}
+	set fileLocation_from_XAP [tk_getOpenFile -initialdir [file join $PjtDir CDC_XAP] -filetypes $types -parent . -title "Select XAP file to transfer"]
+        if {$fileLocation_from_XAP == ""} {
+                return
+        }
 	########### Before Closing Write the Data to the file ##########
 
-	#set file [tk_getSaveFile -filetypes $filePatternList -initialdir $EditorData(opti	ons,workingDir) \
+	#set file [tk_getSaveFile -filetypes $filePatternList -initialdir $EditorData(options,workingDir) \
         #     -initialfile $filename -defaultextension $defaultExt -title "Save File"]
 
 
 	# Validate filename
-	set fileLocation_XAP [tk_getSaveFile -filetypes $types -initialdir $PjtDir -initialfile [generateAutoName $PjtDir XAP .xap] -title "Transfer XAP"]
-        if {$fileLocation_XAP == ""} {
+	set fileLocation_to_XAP [tk_getSaveFile -filetypes $types -initialdir [file join $PjtDir CDC_XAP] -initialfile [generateAutoName [file join $PjtDir CDC_XAP] XAP .xap ] -title "Transfer XAP file at"]
+        if {$fileLocation_to_XAP == ""} {
                 return
         }
+	
+	
+	#set fileLocation_CDC [file join .. .. openPOWERLINK_CFM_V1.3.0-3 XAP.xap]
 
-	catch { file copy -force [file join [file join $PjtDir $PjtName] $PjtName.xap] $fileLocation_XAP }
-	catch { file copy -force [file join [file join $PjtDir $PjtName] $PjtName.xap.h] $fileLocation_XAP.h }	
+	#set fileLocation_XAP [file join .. .. openPOWERLINK_CFM_V1.3.0-3 Examples X86 Linux gnu demo_mn_8139_kernel xap.h]
+	puts "fileLocation_from_XAP->$fileLocation_from_XAP  fileLocation_to_XAP->$fileLocation_to_XAP"
+	#catch { file copy -force [file join [pwd] XAP.xap] $fileLocation_XAP }
+	#catch { file copy -force [file join [pwd] XAPH.xap] $fileLocation_XAP.h }
+	file copy -force $fileLocation_from_XAP $fileLocation_to_XAP
+	file copy -force $fileLocation_from_XAP.h $fileLocation_to_XAP.h
+	#file copy -force [file join [pwd] XAP.xap] $fileLocation_XAP
 	conPuts "XAP transfer complete"
 
 	#puts fileLocation_XAP:$fileLocation_XAP
@@ -2319,6 +2461,7 @@ proc BuildProject {} {
 	global PjtName
 	global nodeIdList
 	global savedValueList
+	global populatedPDOList
 	global nodeSelect	
 	global updatetree
 	global mnCount
@@ -2341,9 +2484,21 @@ proc BuildProject {} {
 		no { 
 			return
 		}
-	}	
-	puts "GenerateCDC [file join [file join $PjtDir $PjtName] $PjtName]"
-	set catchErrCode [GenerateCDC [file join [file join $PjtDir $PjtName] $PjtName.cdc]]
+	}
+	
+	set types {
+        {"CDC files"     {*.cdc } }
+	}
+	
+	#set fileLocation_CDC [tk_getSaveFile -filetypes $types -initialdir $PjtDir -initialfile [generateAutoName $PjtDir CDC .cdc ] -title "Transfer CDC"]
+        #if {$fileLocation_CDC == ""} {
+        #        return
+        #}
+	set fileLocation_CDC [generateAutoName [file join $PjtDir CDC_XAP] CDC .cdc ]
+
+thread::send [tsv::get application importProgress] "StartProgress"	
+	puts "GenerateCDC [file join $PjtDir CDC_XAP $fileLocation_CDC] fileLocation_CDC->$fileLocation_CDC"
+	set catchErrCode [GenerateCDC [file join $PjtDir CDC_XAP $fileLocation_CDC.cdc] ]
 	#puts "catchErrCode->$catchErrCode"
 	set ErrCode [ocfmRetCode_code_get $catchErrCode]
 	#puts "ErrCode:$ErrCode"
@@ -2352,20 +2507,25 @@ proc BuildProject {} {
 	if { $ErrCode != 0 } {
 		#error in generating CDC dont generate XAP
 		errorPuts "Error in generating CDC. XAP not generated" error
+thread::send [tsv::get application importProgress] "StartProgress"
+		return
 	} else {
 
-thread::send [tsv::get application importProgress] "StartProgress"
 
- 		puts "\nfile copy -force [file join [file join $PjtDir $PjtName] $PjtName.cdc] \n"
-		catch { file copy -force [file join [file join $PjtDir $PjtName] $PjtName.cdc] [file join [pwd] $PjtName.cdc] }
-		catch { file rename -force [file join [pwd] $PjtName.cdc] [file join [pwd] CDC.cdc] }
+
+ 		#puts "\nfile copy -force [file join [file join $PjtDir $PjtName] $PjtName.cdc] \n"
+		#catch { file copy -force [file join [file join $PjtDir $PjtName] $PjtName.cdc] [file join [pwd] $PjtName.cdc] }
+		#catch { file rename -force [file join [pwd] $PjtName.cdc] [file join [pwd] CDC.cdc] }
 ############################################################################
 		#reset all the globaly maintained list 
 		set nodeIdList ""
 		set savedValueList ""
+		set populatedPDOList ""
 		set nodeSelect ""
 		set mnCount 0
 		set cnCount 0
+		incr mnCount
+		incr cnCount 
 
 		#no index subindex or pdotable to be dispalyed
 		pack forget [lindex $f0 1]
@@ -2375,8 +2535,7 @@ thread::send [tsv::get application importProgress] "StartProgress"
 		[lindex $f2 1] configure -state disabled
 
 		catch {$updatetree delete PjtName}
-		InsertTree
-
+		$updatetree insert end root PjtName -text $PjtName -open 1 -image [Bitmap::get network]
 
 
 		set count [new_intp]
@@ -2428,19 +2587,28 @@ puts "node->$node"
 
 ############################################################################
 
-		set catchErrCode [GenerateXAP [file join [file join $PjtDir $PjtName] $PjtName.xap]]
+#		#set catchErrCode [GenerateXAP [file join [file join $PjtDir] $PjtName.xap]]
+		set fileLocation_XAP [generateAutoName [file join $PjtDir CDC_XAP] XAP .xap ]
+
+		puts "GenerateXAP [file join $PjtDir CDC_XAP $fileLocation_XAP.xap] fileLocation_XAP->fileLocation_XAP"
+		#set catchErrCode [GenerateCDC [file join $PjtDir CDC_XAP $fileLocation_CDC] ]
+		#set catchErrCode [GenerateXAP XAP]
+		set catchErrCode [GenerateXAP [file join $PjtDir CDC_XAP $fileLocation_XAP.xap] ]
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
 		##puts "ErrCode:$ErrCode"
 		if { $ErrCode != 0 } {
 			errorPuts "XAP is not generated"
+thread::send -async [tsv::set application importProgress] "StopProgress"			
+			return
 		} else {
 			conPuts "CDC and XAP are successfully generated"
-			catch { file copy -force [file join [file join $PjtDir $PjtName] $PjtName.xap]  [file join [pwd] $PjtName.xap]}
-			catch { file rename -force [file join [pwd] $PjtName.xap] [file join [pwd] XAP.xap] }
-			catch { file copy -force [file join [file join $PjtDir $PjtName] $PjtName.xap.h]  [file join [pwd] $PjtName.xap.h]}
-			catch { file rename -force [file join [pwd] $PjtName.xap.h] [file join [pwd] XAPH.xap.h] }
+			#catch { file copy -force [file join [file join $PjtDir $PjtName] $PjtName.xap]  [file join [pwd] $PjtName.xap]}
+			#catch { file rename -force [file join [pwd] $PjtName.xap] [file join [pwd] XAP.xap] }
+			#catch { file copy -force [file join [file join $PjtDir $PjtName] $PjtName.xap.h]  [file join [pwd] $PjtName.xap.h]}
+			#catch { file rename -force [file join [pwd] $PjtName.xap.h] [file join [pwd] XAPH.xap.h] }
+thread::send -async [tsv::set application importProgress] "StopProgress"
 		}
-		thread::send -async [tsv::set application importProgress] "StopProgress"
+
 	}
 }
 
@@ -2679,7 +2847,10 @@ proc DeleteTreeNode {} {
 			#puts "\n\n       DeleteTreeNode->Invalid cond 2!!!\n\n"
 			return
 		}
-
+		#clear the savedValueList of the deleted node
+		set savedValueList [DeleteList $savedValueList $node]			
+		
+		
 	}
 
 	#puts "catchErrCode->$catchErrCode"

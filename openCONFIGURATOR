@@ -86,7 +86,7 @@ lappend auto_path $path_to_BWidget
 	
 package require -exact BWidget 1.2.1
 Bitmap::get cut
-# this used for loading Bitmap namespace into the interpetator
+# this used for loading Bitmap namespace into the interpretator
 namespace eval Bitmap {
 	lappend path [file join $RootDir images]
 }
@@ -203,7 +203,15 @@ puts "$tcl_platform(platform)==$::env(HOME)"
 	set PjtDir ""
 	set PjtName ""
 
+	if { [ catch { package require Thread } ] } {
+		tk_messageBox -message "Package Thread not found" -title Info -icon error
+		exit
+	}
 
+	if { [ catch { package require Tk 8.5 } ] } {
+		tk_messageBox -message "Package TK 8.5 not found \n please install and rerun the tool" -title Info -icon error
+		exit
+	}
 
 	# Loading shared library
 	if { [catch {load ./Tcl_WrapperMain.so}] } {

@@ -102,8 +102,8 @@ proc StartUp {} {
 	button $frame2.b_ok -text "  Ok  " -command { 
 		if {$startVar == 1} {
 
-			set samplePjt [file join [pwd] Default Sample Sample.oct]
-			puts "open sample->$samplePjt"
+			set samplePjt [file join [pwd] Sample Sample.oct]
+			#puts "open sample->$samplePjt"
 
 			if {[file exists $samplePjt]} {
 				destroy .startUp

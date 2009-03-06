@@ -1588,6 +1588,8 @@ puts "tempIndexPropi PDO ->$tempIndexProp"
 				}
 				set lastConv dec
 				$tmpInnerf1.frame1.ra_dec select
+				
+				$tmpInnerf1.en_default1 configure -state disabled
 				$tmpInnerf1.en_value1 configure -validate key -vcmd "IsDec %P $tmpInnerf1 %d %i" -bg $savedBg
 			} elseif { [lindex [lindex $userPrefList $schRes] 1] == "hex" } {
 				if {[string match -nocase "0x*" [lindex $IndexProp 5]]} {
@@ -1597,6 +1599,8 @@ puts "tempIndexPropi PDO ->$tempIndexProp"
 				}
 				set lastConv hex
 				$tmpInnerf1.frame1.ra_hex select
+				
+				$tmpInnerf1.en_default1 configure -state disabled
 				$tmpInnerf1.en_value1 configure -validate key -vcmd "IsHex %P $tmpInnerf1 %d %i" -bg $savedBg
 			} else {
 				puts "\n\nInvalid userpref [lindex $userPrefList 1]\n\n"
@@ -1605,11 +1609,56 @@ puts "tempIndexPropi PDO ->$tempIndexProp"
 		} else {
 			if {[string match -nocase "0x*" [lindex $IndexProp 5]]} {
 				set lastConv hex
+				if {[string match -nocase "0x*" [lindex $IndexProp 4]]} {
+					#default value is already in hexadecimal no need to convert
+				} else {
+					$tmpInnerf1.en_default1 configure -state normal
+					set tmpVal [lindex $IndexProp 4]
+				        set tmpVal [string range $tmpVal 2 end]
+				        set tmpVal [string trimleft $tmpVal 0]
+					if { $tmpVal != "" } {
+					        if { [ catch {set tmpVal [expr 0x$tmpVal]} ] } {
+						#error raised should not convert
+					        } else {
+							$tmpInnerf1.en_default1 delete 0 end
+							$tmpInnerf1.en_default1 insert 0 $tmpVal
+					        }
+					} else {
+						#value is empty no need to insert
+					}
+					
+					
+					$tmpInnerf1.en_default1 configure -state disabled
+				}
 				$tmpInnerf1.frame1.ra_hex select
+				
+
 				$tmpInnerf1.en_value1 configure -validate key -vcmd "IsHex %P $tmpInnerf1 %d %i" -bg $savedBg
 			} else {
 				set lastConv dec
+				if {[string match -nocase "0x*" [lindex $IndexProp 4]]} {
+					#CONVERT DEFAULT HEXADECIMAL VALUE TO decimal
+					$tmpInnerf1.en_default1 configure -state normal
+					set tmpVal [lindex $IndexProp 4]
+					if { $tmpVal != "" } {
+						if { [ catch { set tmpVal [_ConvertHex $tmpVal] } ] } {
+							#raised an error dont convert
+						} else {
+						        $tmpInnerf1.en_default1 delete 0 end
+						        set tmpVal 0x$tmpVal
+							$tmpInnerf1.en_default1 insert 0 $tmpVal
+						}
+					} else {
+						# insert 0x
+						set tmpVal 0x
+						$tmpInnerf1.en_default1 insert 0 $tmpVal
+					}
+					$tmpInnerf1.en_default1 configure -state disabled
+				} else {
+					#default value is already in decimal no need to convert
+				}
 				$tmpInnerf1.frame1.ra_dec select
+				
 				$tmpInnerf1.en_value1 configure -validate key -vcmd "IsDec %P $tmpInnerf1 %d %i" -bg $savedBg
 			}
 		}
@@ -2517,6 +2566,7 @@ proc TransferXAP {choice} {
 	file copy -force $fileLocation_from_XAP.h $fileLocation_to_XAP.h
 	#file copy -force [file join [pwd] XAP.xap] $fileLocation_XAP
 	conPuts "XAP transfer complete"
+	conPuts "XAP.h also transferred"
 
 	#puts fileLocation_XAP:$fileLocation_XAP
 	#set catchErrCode [GenerateXAP $fileLocation_XAP]

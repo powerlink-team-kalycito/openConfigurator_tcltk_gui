@@ -556,11 +556,14 @@ proc InsertHex {tmpValue} {
 					puts "tmpVal->$tmpVal"
 				        $tmpValue.$tmp_entry delete 0 end
 				        set tmpVal 0x$tmpVal
-				    $tmpValue.$tmp_entry insert 0 $tmpVal
+					$tmpValue.$tmp_entry insert 0 $tmpVal
 				    #puts  "final ConvertHex->$tmpVal\n"
 				}
 			} else {
 			    #value is empty no need to insert
+			    $tmpValue.$tmp_entry delete 0 end
+			    set tmpVal 0x$tmpVal
+			    $tmpValue.$tmp_entry insert 0 $tmpVal
 			}
 	        }
 	}
@@ -664,7 +667,7 @@ proc SaveValue {frame0 frame1} {
 			#is is dec value convert to hex
 			set value [string trimleft $value 0]
 			#puts "value after trim for dec :$value"
-			set value [format %X $value]
+			set value [_ConvertHex $value]
 			#0x is appended to represent it as hex
 			set value $value
 			#puts "value after conv for dec :$value"

@@ -941,7 +941,8 @@ puts "DefaultPjtDir->$DefaultPjtDir"
 		CloseProject
 
 		set PjtName $tmpPjtName
-		set PjtDir $tmpPjtDir
+		set pjtName [string range $PjtName 0 end-[string length [file extension $PjtName]] ] 
+		set PjtDir [file join $tmpPjtDir  $pjtName]
 
 		catch {$Editor::projMenu delete 3} ; # to delete the close project if already present 
 		$Editor::projMenu add command -label "Close Project" -command "_CloseProject" 
@@ -995,14 +996,15 @@ thread::send -async [tsv::set application importProgress] "StopProgress"
 
 #folder for project is created only when there is no error
 #puts "file mkdir $PjtDir"
-			file mkdir [file join $PjtDir $PjtName]
-			file mkdir [file join $PjtDir $PjtName CDC_XAP]
-			file mkdir [file join $PjtDir $PjtName XDC]
+
+			file mkdir [file join $PjtDir ]
+			file mkdir [file join $PjtDir CDC_XAP]
+			file mkdir [file join $PjtDir XDC]
 		} else {
 #puts "file mkdir $PjtDir"	
-			file mkdir [file join $PjtDir $PjtName]
-			file mkdir [file join $PjtDir $PjtName CDC_XAP]
-			file mkdir [file join $PjtDir $PjtName XDC]
+			#file mkdir [file join $PjtDir $PjtName]
+			#file mkdir [file join $PjtDir $PjtName CDC_XAP]
+			#file mkdir [file join $PjtDir $PjtName XDC]
 		}
 
 		$frame1.bt_cancel invoke

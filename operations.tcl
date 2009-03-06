@@ -519,20 +519,43 @@ proc openproject { } {
 	    tk_messageBox -message "Extension $ext not supported" -title "Open Project Error" -icon error
 	    return
 	}
-	_openproject $projectfilename
+	
+	
+	#CloseProject is called to delete node and insert tree
+	CloseProject
+	
+	set tempPjtDir [file dirname $projectfilename]
+	set tempPjtName [file tail $projectfilename]
+	puts "\n\nPjtDir->$tempPjtDir PjtName->$tempPjtName \n\n"
 
+	thread::send [tsv::get application importProgress] "StartProgress"
+	#API for open project
+	#ocfmRetCode OpenProject(char* PjtPath, char* projectXmlFileName);
+	set catchErrCode [OpenProject $tempPjtDir $tempPjtName]
+	set ErrCode [ocfmRetCode_code_get $catchErrCode]
+	#puts "ErrCode:$ErrCode"
+	if { $ErrCode != 0 } {
+		tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+		#tk_messageBox -message "ErrCode : $ErrCode" -title Warning -icon warning
+		thread::send [tsv::set application importProgress] "StopProgress"
+		return
+	} else {
+		#conPuts "ReImported $tmpImpDir for Node ID:$nodeId"
+	}
+	set PjtDir $tempPjtDir
+	set PjtName $tempPjtName
+	
+	
+	RePopulate $PjtDir [string range $PjtName 0 end-[string length [file extension $PjtName]]]
+
+	thread::send [tsv::set application importProgress] "StopProgress"
 
 }
+
 proc _openproject {projectfilename} {
 	global PjtDir
 	global PjtName
-	global updatetree
-	global nodeIdList
-	global mnCount
-	global cnCount	
-	global status_run
-	global status_save
-
+	
 	#CloseProject is called to delete node and insert tree
 	CloseProject
 
@@ -556,9 +579,25 @@ proc _openproject {projectfilename} {
 	}
 	set PjtDir $tempPjtDir
 	set PjtName $tempPjtName
+	
+	RePopulate $PjtDir [string range $PjtName 0 end-[string length [file extension $PjtName]]]
 
-	$updatetree itemconfigure PjtName -text $PjtName
+	thread::send [tsv::set application importProgress] "StopProgress"
+	
+}
 
+proc RePopulate { PjtDir PjtName } {
+	global updatetree
+	global nodeIdList
+	global mnCount
+	global cnCount	
+
+	set mnCount 1
+	set cnCount 1
+
+	catch {$updatetree delete PjtName}
+	$updatetree insert end root PjtName -text $PjtName -open 1 -image [Bitmap::get network]
+	
 	set count [new_intp]
 	set catchErrCode [GetNodeCount 240 $count]
 	set ErrCode [ocfmRetCode_code_get $catchErrCode]
@@ -613,9 +652,9 @@ puts "node->$node"
 		puts nodeIdList->$nodeIdList
 
 	} else {
-		errorPuts "Error in opening Project [file join $PjtDir $PjtName]" error
+		errorPuts "MN node is not found" error
 	}
-	thread::send -async [tsv::set application importProgress] "StopProgress"
+
 }
 
 ################################################################################################
@@ -1176,6 +1215,7 @@ proc Editor::SingleClickNode {node} {
 	global savedValueList
     	global lastConv
 	global populatedPDOList
+	global userPrefList
 	variable notebook
 
 
@@ -1423,12 +1463,12 @@ puts "tempIndexPropi PDO ->$tempIndexProp"
 
 		$tmpInnerf0.en_idx1 configure -state normal
 		$tmpInnerf0.en_idx1 delete 0 end
-		$tmpInnerf0.en_idx1 insert 0 $indexId
+		$tmpInnerf0.en_idx1 insert 0 0x$indexId
 		$tmpInnerf0.en_idx1 configure -state disabled
 
 		$tmpInnerf0.en_sidx1 configure -state normal
 		$tmpInnerf0.en_sidx1 delete 0 end
-		$tmpInnerf0.en_sidx1 insert 0 $subIndexId
+		$tmpInnerf0.en_sidx1 insert 0 0x$subIndexId
 		$tmpInnerf0.en_sidx1 configure -state disabled
 
 		pack forget [lindex $f0 1]
@@ -1463,7 +1503,7 @@ puts "tempIndexPropi PDO ->$tempIndexProp"
 
 		$tmpInnerf0.en_idx1 configure -state normal
 		$tmpInnerf0.en_idx1 delete 0 end
-		$tmpInnerf0.en_idx1 insert 0 $indexId
+		$tmpInnerf0.en_idx1 insert 0 0x$indexId
 		$tmpInnerf0.en_idx1 configure -state disabled
 
 		pack [lindex $f0 1] -expand yes -fill both -padx 2 -pady 4
@@ -1535,14 +1575,43 @@ puts "tempIndexPropi PDO ->$tempIndexProp"
 		#grid remove $tmpInnerf1.frame1.ra_mac
 		grid $tmpInnerf1.frame1.ra_dec
 		grid $tmpInnerf1.frame1.ra_hex
-		if {[string match -nocase "0x*" [lindex $IndexProp 5]]} {
-			set lastConv hex
-			$tmpInnerf1.frame1.ra_hex select
-			$tmpInnerf1.en_value1 configure -validate key -vcmd "IsHex %P $tmpInnerf1 %d %i" -bg $savedBg
+		
+		puts "\nIN singleclicknode userPrefList->$userPrefList"
+		set schRes [lsearch $userPrefList [list $nodeSelect *]]
+		puts "\nschRes->$schRes\n"
+		if { $schRes != -1 } {
+			if { [lindex [lindex $userPrefList $schRes] 1] == "dec" } {
+				if {[string match -nocase "0x*" [lindex $IndexProp 5]]} {
+					InsertDec $tmpInnerf1
+				} else {
+					#already in decimal no need to do anything
+				}
+				set lastConv dec
+				$tmpInnerf1.frame1.ra_dec select
+				$tmpInnerf1.en_value1 configure -validate key -vcmd "IsDec %P $tmpInnerf1 %d %i" -bg $savedBg
+			} elseif { [lindex [lindex $userPrefList $schRes] 1] == "hex" } {
+				if {[string match -nocase "0x*" [lindex $IndexProp 5]]} {
+					#already in decimal no need to do anything
+				} else {
+					InsertHex $tmpInnerf1
+				}
+				set lastConv hex
+				$tmpInnerf1.frame1.ra_hex select
+				$tmpInnerf1.en_value1 configure -validate key -vcmd "IsHex %P $tmpInnerf1 %d %i" -bg $savedBg
+			} else {
+				puts "\n\nInvalid userpref [lindex $userPrefList 1]\n\n"
+				return 
+			}
 		} else {
-			set lastConv dec
-			$tmpInnerf1.frame1.ra_dec select
-			$tmpInnerf1.en_value1 configure -validate key -vcmd "IsDec %P $tmpInnerf1 %d %i" -bg $savedBg
+			if {[string match -nocase "0x*" [lindex $IndexProp 5]]} {
+				set lastConv hex
+				$tmpInnerf1.frame1.ra_hex select
+				$tmpInnerf1.en_value1 configure -validate key -vcmd "IsHex %P $tmpInnerf1 %d %i" -bg $savedBg
+			} else {
+				set lastConv dec
+				$tmpInnerf1.frame1.ra_dec select
+				$tmpInnerf1.en_value1 configure -validate key -vcmd "IsDec %P $tmpInnerf1 %d %i" -bg $savedBg
+			}
 		}
 	}
 
@@ -1610,8 +1679,9 @@ proc Saveproject {} {
 	if {$PjtDir == "" || $PjtDir == "None" || $PjtName == "" } {
 	#there is no project directory or project name no need to save
 	} else {
-puts "\n\nSaveProject PjtDir->$PjtDir PjtName->$PjtName\n\n"
-		set catchErrCode [SaveProject $PjtDir $PjtName]
+
+		set catchErrCode [SaveProject $PjtDir [string range $PjtName 0 end-[ string length [file extension $PjtName] ]]]
+puts "\n\nSaveProject $PjtDir [string range $PjtName 0 end-[ string length [file extension $PjtName] ]]\n\n"
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
 		if { $ErrCode != 0 } {
 			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
@@ -1667,11 +1737,25 @@ proc _CloseProject {} {
 #Description : -
 ################################################################################################
 proc CloseProject {} {
+	global updatetree
+
+	DeleteAllNode
+	
+	ResetGlobalData
+	
+	catch {$updatetree delete PjtName}
+	InsertTree
+		
+}
+
+proc ResetGlobalData {} {
+	
 	global PjtDir
 	global PjtName
 	global nodeIdList
 	global savedValueList
 	global populatedPDOList
+	global userPrefList
 	global nodeSelect	
 	global updatetree
 	global mnCount
@@ -1681,9 +1765,32 @@ proc CloseProject {} {
 	global f1
 	global f2
 	global lastConv
+	
+	#reset all the globaly maintained values 
+	set nodeIdList ""
+	set savedValueList ""
+	set populatedPDOList ""
+	set userPrefList ""
+	set nodeSelect ""
+	set mnCount 0
+	set cnCount 0
+	set status_save 0 ; # if zero no need to save
+	set PjtDir ""
+	set PjtName ""
+	set lastConv ""
 
+	#no index subindex or pdotable to be dispalyed
+	pack forget [lindex $f0 1]
+	pack forget [lindex $f1 1]
+	pack forget [lindex $f2 0]
+	[lindex $f2 1] cancelediting
+	[lindex $f2 1] configure -state disabled
+}
 
-	puts "CloseProject nodeIdList->$nodeIdList...length->[llength $nodeIdList]"
+proc DeleteAllNode {} {
+	global nodeIdList
+	
+	puts "DeleteAllNode nodeIdList->$nodeIdList...length->[llength $nodeIdList]"
 	if {[llength $nodeIdList] != 0} {
 		foreach nodeId $nodeIdList {
 			if {$nodeId == 240} {
@@ -1699,29 +1806,6 @@ proc CloseProject {} {
 		#there was no node created so continue with process
 	}
 	
-
-	#reset all the globaly maintained values 
-	set nodeIdList ""
-	set savedValueList ""
-	set populatedPDOList ""
-	set nodeSelect ""
-	set mnCount 0
-	set cnCount 0
-	set status_save 0 ; # if zero no need to save
-	set PjtDir ""
-	set PjtName ""
-	set lastConv ""
-
-	#no index subindex or pdotable to be dispalyed
-	pack forget [lindex $f0 1]
-	pack forget [lindex $f1 1]
-	pack forget [lindex $f2 0]
-	[lindex $f2 1] cancelediting
-	[lindex $f2 1] configure -state disabled
-
-	catch {$updatetree delete PjtName}
-	InsertTree
-		
 }
 
 ################################################################################################
@@ -2462,6 +2546,7 @@ proc BuildProject {} {
 	global nodeIdList
 	global savedValueList
 	global populatedPDOList
+	global userPrefList
 	global nodeSelect	
 	global updatetree
 	global mnCount
@@ -2496,7 +2581,7 @@ proc BuildProject {} {
         #}
 	set fileLocation_CDC [generateAutoName [file join $PjtDir CDC_XAP] CDC .cdc ]
 
-thread::send [tsv::get application importProgress] "StartProgress"	
+	thread::send [tsv::get application importProgress] "StartProgress"	
 	puts "GenerateCDC [file join $PjtDir CDC_XAP $fileLocation_CDC] fileLocation_CDC->$fileLocation_CDC"
 	set catchErrCode [GenerateCDC [file join $PjtDir CDC_XAP $fileLocation_CDC.cdc] ]
 	#puts "catchErrCode->$catchErrCode"
@@ -2507,7 +2592,7 @@ thread::send [tsv::get application importProgress] "StartProgress"
 	if { $ErrCode != 0 } {
 		#error in generating CDC dont generate XAP
 		errorPuts "Error in generating CDC. XAP not generated" error
-thread::send [tsv::get application importProgress] "StartProgress"
+		thread::send [tsv::get application importProgress] "StopProgress"
 		return
 	} else {
 
@@ -2518,79 +2603,90 @@ thread::send [tsv::get application importProgress] "StartProgress"
 		#catch { file rename -force [file join [pwd] $PjtName.cdc] [file join [pwd] CDC.cdc] }
 ############################################################################
 		#reset all the globaly maintained list 
-		set nodeIdList ""
-		set savedValueList ""
-		set populatedPDOList ""
-		set nodeSelect ""
-		set mnCount 0
-		set cnCount 0
-		incr mnCount
-		incr cnCount 
+		#set nodeIdList ""
+		#set savedValueList ""
+		#set populatedPDOList ""
+		#set userPrefList ""
+		#set nodeSelect ""
+		#set mnCount 0
+		#set cnCount 0
+		#incr mnCount
+		#incr cnCount 
 
 		#no index subindex or pdotable to be dispalyed
-		pack forget [lindex $f0 1]
-		pack forget [lindex $f1 1]
-		pack forget [lindex $f2 0]
-		[lindex $f2 1] cancelediting
-		[lindex $f2 1] configure -state disabled
+		#pack forget [lindex $f0 1]
+		#pack forget [lindex $f1 1]
+		#pack forget [lindex $f2 0]
+		#[lindex $f2 1] cancelediting
+		#[lindex $f2 1] configure -state disabled
+		
+		
 
-		catch {$updatetree delete PjtName}
-		$updatetree insert end root PjtName -text $PjtName -open 1 -image [Bitmap::get network]
+		set tempPjtDir $PjtDir
+		set tempPjtNmae $PjtName
+		ResetGlobalData
+		set PjtDir $tempPjtDir
+		set PjtName $tempPjtNmae
+		#catch {$updatetree delete PjtName}
+		#$updatetree insert end root PjtName -text [string range $PjtName 0 end-[string length [file extension $PjtName] ] ] -open 1 -image [Bitmap::get network]
+
+		RePopulate  $PjtDir [string range $PjtName 0 end-[string length [file extension $PjtName] ] ]
 
 
-		set count [new_intp]
-		set catchErrCode [GetNodeCount 240 $count]
-		set ErrCode [ocfmRetCode_code_get $catchErrCode]
+#tk_messageBox -message "check project name in tree"
+		#set count [new_intp]
+		#set catchErrCode [GetNodeCount 240 $count]
+		#set ErrCode [ocfmRetCode_code_get $catchErrCode]
 		#puts "CN count:[intp_value $count]....ErrCode->$ErrCode"
 
-		set nodeCount [intp_value $count]
-		#set nodeType 0
-		puts "nodeCount->$nodeCount"
-		for {set inc 0} {$inc < $nodeCount} {incr inc} {
-			#API
-			#ocfmRetCode GetNodeAttributesbyNodePos(int NodePos, ENodeType* NodeType, int* Out_NodeID, char* Out_NodeName);
-			set tmp_nodeId [new_intp]			
-			#set nodeType [new_intp]
-			#set nodeName [new_charp]
-			set catchErrCode [GetNodeAttributesbyNodePos $inc $tmp_nodeId]
-			#puts "catchErrCode->$catchErrCode"
-			set ErrCode [ocfmRetCode_code_get [lindex $catchErrCode 0]]
+		#set nodeCount [intp_value $count]
+		##set nodeType 0
+		#puts "nodeCount->$nodeCount"
+		#for {set inc 0} {$inc < $nodeCount} {incr inc} {
+		#	#API
+		#	#ocfmRetCode GetNodeAttributesbyNodePos(int NodePos, ENodeType* NodeType, int* Out_NodeID, char* Out_NodeName);
+		#	set tmp_nodeId [new_intp]			
+		#	#set nodeType [new_intp]
+		#	#set nodeName [new_charp]
+		#	set catchErrCode [GetNodeAttributesbyNodePos $inc $tmp_nodeId]
+		#	#puts "catchErrCode->$catchErrCode"
+		#	set ErrCode [ocfmRetCode_code_get [lindex $catchErrCode 0]]
 
-			#set nodeType 1			
-		
-			#puts "ErrCode:$ErrCode "
-			if { $ErrCode == 0 } {
-				set nodeId [intp_value $tmp_nodeId]
-				set nodeName [lindex $catchErrCode 1]
-				#set nodeName [charp_value $nodeName]
-				#puts "nodeId->$nodeId..nodeName->$nodeName.."
-				if {$nodeId == 240} {
-					set nodeType 0
-					$updatetree insert end PjtName MN-$mnCount -text "openPOWERLINK_MN(240)" -open 1 -image [Bitmap::get mn]
-					$updatetree insert end MN-$mnCount OBD-$mnCount-1 -text "OBD" -open 0 -image [Bitmap::get pdo]	
-					set node OBD-$mnCount-1	
-				} else {
-					set nodeType 1
-					set child [$updatetree insert end MN-$mnCount CN-$mnCount-$cnCount -text "$nodeName\($nodeId\)" -open 0 -image [Bitmap::get cn]]
-					set node CN-$mnCount-$cnCount
-				}
-puts "node->$node"
-				catch { Import $node $nodeType $nodeId }
-				incr cnCount
-				lappend nodeIdList $nodeId  
+		#	#set nodeType 1			
+		#
+		#	#puts "ErrCode:$ErrCode "
+		#	if { $ErrCode == 0 } {
+		#		set nodeId [intp_value $tmp_nodeId]
+		#		set nodeName [lindex $catchErrCode 1]
+		#		#set nodeName [charp_value $nodeName]
+		#		#puts "nodeId->$nodeId..nodeName->$nodeName.."
+		#		if {$nodeId == 240} {
+		#			set nodeType 0
+		#			$updatetree insert end PjtName MN-$mnCount -text "openPOWERLINK_MN(240)" -open 1 -image [Bitmap::get mn]
+		#			$updatetree insert end MN-$mnCount OBD-$mnCount-1 -text "OBD" -open 0 -image [Bitmap::get pdo]	
+		#			set node OBD-$mnCount-1	
+		#		} else {
+		#			set nodeType 1
+		#			set child [$updatetree insert end MN-$mnCount CN-$mnCount-$cnCount -text "$nodeName\($nodeId\)" -open 0 -image [Bitmap::get cn]]
+		#			set node CN-$mnCount-$cnCount
+		#		}
+#puts "node->$node"
+		#		catch { Import $node $nodeType $nodeId }
+		#		incr cnCount
+		#		lappend nodeIdList $nodeId  
 				
-			} else {
-				#some error has occured
-				continue
-			}
-		}
+		#	} else {
+		#		#some error has occured
+		#		continue
+		#	}
+		#}
 
 ############################################################################
 
 #		#set catchErrCode [GenerateXAP [file join [file join $PjtDir] $PjtName.xap]]
 		set fileLocation_XAP [generateAutoName [file join $PjtDir CDC_XAP] XAP .xap ]
 
-		puts "GenerateXAP [file join $PjtDir CDC_XAP $fileLocation_XAP.xap] fileLocation_XAP->fileLocation_XAP"
+		puts "GenerateXAP [file join $PjtDir CDC_XAP $fileLocation_XAP.xap] fileLocation_XAP->$fileLocation_XAP"
 		#set catchErrCode [GenerateCDC [file join $PjtDir CDC_XAP $fileLocation_CDC] ]
 		#set catchErrCode [GenerateXAP XAP]
 		set catchErrCode [GenerateXAP [file join $PjtDir CDC_XAP $fileLocation_XAP.xap] ]
@@ -2598,7 +2694,7 @@ puts "node->$node"
 		##puts "ErrCode:$ErrCode"
 		if { $ErrCode != 0 } {
 			errorPuts "XAP is not generated"
-thread::send -async [tsv::set application importProgress] "StopProgress"			
+			thread::send -async [tsv::set application importProgress] "StopProgress"			
 			return
 		} else {
 			conPuts "CDC and XAP are successfully generated"
@@ -2606,7 +2702,7 @@ thread::send -async [tsv::set application importProgress] "StopProgress"
 			#catch { file rename -force [file join [pwd] $PjtName.xap] [file join [pwd] XAP.xap] }
 			#catch { file copy -force [file join [file join $PjtDir $PjtName] $PjtName.xap.h]  [file join [pwd] $PjtName.xap.h]}
 			#catch { file rename -force [file join [pwd] $PjtName.xap.h] [file join [pwd] XAPH.xap.h] }
-thread::send -async [tsv::set application importProgress] "StopProgress"
+			thread::send -async [tsv::set application importProgress] "StopProgress"
 		}
 
 	}
@@ -2616,7 +2712,7 @@ proc CleanProject {} {
 	global PjtDir
 	global PjtName 
 	
-	set CleanFile [file join [file join $PjtDir $PjtName] $PjtName]
+	set CleanFile [file join $PjtDir CDC_XAP]
 	puts "CleanFile->$CleanFile"
 	catch {file delete -force $CleanFile.cdc}
 	catch {file delete -force $CleanFile.xap}
@@ -2716,7 +2812,8 @@ proc ReImport {} {
 			}
 		}
 		#catch {FreeNodeMemory $node} ; # no need to free memory
-		cleanSavedValueList $node
+		CleanList $node 0
+		CleanList $node 1
 		catch {$updatetree delete [$updatetree nodes $node]}
 		$updatetree itemconfigure $node -open 0
 		#Import parentNode nodeType nodeID 
@@ -2738,6 +2835,7 @@ proc DeleteTreeNode {} {
 	global nodeIdList
 	global nodeObj	
 	global savedValueList
+	global userPrefList
 	global status_save
 	#puts nodeIdList->$nodeIdList
 
@@ -2816,12 +2914,13 @@ proc DeleteTreeNode {} {
 		if {[string match "OBD*" $node]} {
 			#should not delete nodeId, obj, objNode from list since it is mn
 		} else {
-			set nodeIdList [DeleteList $nodeIdList $nodeId]		
+			set nodeIdList [DeleteList $nodeIdList $nodeId 0]		
 			#puts "after deletion nodeIdList->$nodeIdList "		
 		}
 
 		#to clear the list from child of the node from saved value list
-		cleanSavedValueList $node
+		CleanList $node 0
+		CleanList $node 1
 
 	} else {
 	
@@ -2848,8 +2947,11 @@ proc DeleteTreeNode {} {
 			return
 		}
 		#clear the savedValueList of the deleted node
-		set savedValueList [DeleteList $savedValueList $node]			
+		set savedValueList [DeleteList $savedValueList $node 0]
 		
+		puts "\nbefore delete userPrefList->$userPrefList\n"
+		set userPrefList [DeleteList $userPrefList $node 1]
+		puts "\nafter delete userPrefList->$userPrefList\n"
 		
 	}
 
@@ -2902,8 +3004,14 @@ proc DeleteTreeNode {} {
 #Description : searches a variable in list if present delete it 
 #	       used for deleting nodeId from nodeIdlist
 ################################################################################################
-proc DeleteList {tempList deleteVar} {
-	set res [lsearch $tempList $deleteVar] 
+proc DeleteList {tempList deleteVar choice} {
+	if { $choice == 0 } {
+		set res [lsearch $tempList $deleteVar]
+	} elseif { $choice == 1 } {
+		set res [lsearch $tempList [list $deleteVar *]]
+	} else {
+		
+	}
 	if {$res != -1} {
 		if {$res == 0} {
 			set resList [lrange $tempList 1 end]
@@ -2921,38 +3029,64 @@ proc DeleteList {tempList deleteVar} {
 }
 
 ################################################################################################
-#proc cleanSavedValueList
+#proc CleanList
 #Input       : node
 #Output      : -
 #Description : searches the savedValueList and deletes the node under it if they are present
 #	       
 ################################################################################################
-proc cleanSavedValueList {node} {
+proc CleanList {node choice} {
 	global savedValueList
+	global userPrefList
 
+	if { $choice == 0 } {
+		#called for cleaning savedValueList
+		set tempList $savedValueList
+	} elseif { $choice == 1 } {
+		set tempList $userPrefList
+		puts "\nb4 delete userPrefList->$userPrefList\n"
+	} else {
+		#invalid choice
+		return 
+	}
 #puts "bef clean savedValueList->$savedValueList"
 
-	set tempSavedValueList ""
+	set tempFinalList ""
 	set matchNode [split $node -]
 	set matchNode [lrange $matchNode 1 end]
 	set matchNode [join $matchNode -]
 	#puts "matchNode->$matchNode"
-	foreach tempValue $savedValueList {
-		if {[string match "*SubIndexValue*" $tempValue]} {
+	foreach tempValue $tempList {
+		if { $choice == 0 } {
+			set testValue $tempValue
+		} else {
+			set testValue [lindex $tempValue 0]
+			puts "testValue->$testValue"
+		}
+			
+		if {[string match "*SubIndexValue*" $testValue]} {
 			set tempMatchNode *-$matchNode-*-*
-		} elseif {[string match "*IndexValue*" $tempValue]} {
+		} elseif {[string match "*IndexValue*" $testValue]} {
 			set tempMatchNode *-$matchNode-*
 		} else {
 			#other than IndexValue and SubIndexValue no node should occur
 		}
 #puts "tempMatchNode->$tempMatchNode tempValue->$tempValue match->[string match $tempMatchNode $tempValue]"
-		if {[string match $tempMatchNode $tempValue]} {
+		if {[string match $tempMatchNode $testValue]} {
 			#matched so dont copy it
 		} else {
-			lappend tempSavedValueList $tempValue
+			lappend tempFinalList $tempValue
 		}
 	}
-	set savedValueList $tempSavedValueList
+	
+
+	if { $choice == 0 } {
+		set savedValueList $tempFinalList
+
+	} else {
+		set userPrefList $tempFinalList
+		puts "\nafter delete userPrefList->$userPrefList\n"
+	}
 
 #puts "aft clean savedValueList->$savedValueList"
 
@@ -3328,7 +3462,12 @@ proc AutoGenerateMNOBD {} {
 		catch {$updatetree delete [$updatetree nodes $node]}
 		$updatetree itemconfigure $node -open 0
 		#Import parentNode nodeType nodeID 
-		Import $node $nodeType $nodeId 
+		Import $node $nodeType $nodeId
+		
+		#to clear the list from child of the node from savedvaluelist and userpreflist
+		CleanList $node 0
+		CleanList $node 1
+		
 	}
 	#puts "**********\n"
 }

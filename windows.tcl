@@ -672,8 +672,10 @@ proc SaveProjectAsWindow {} {
 		#set fileLocation_CDC [tk_getSaveFile -filetypes $types -initialdir $PjtDir -initialfile [generateAutoName $PjtDir CDC .cdc ] -title "Transfer CDC"]
 		set projectDir [file dirname $saveProjectAs]
 		set projectName [file tail $saveProjectAs]
-		puts "In save project as SaveProject projectDir->$projectDir projectName->$projectName"
-		set catchErrCode [SaveProject $projectDir $projectName]
+
+		set catchErrCode [SaveProject $projectDir [string range $projectName 0 end-[string length [file extension $projectName]]]]
+		puts "In save project as SaveProject $projectDir [string range $projectName 0 end-[string length [file extension $projectName]]]"
+
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
 		if { $ErrCode != 0 } {
 			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
@@ -1364,7 +1366,7 @@ proc AddIndexWindow {} {
 
 #puts "child for parentNode===>[$updatetree nodes $parentNode] "
 
-		$updatetree insert $indexPosition $parentNode $indexNode -text [lindex $indexName 1]\($indexVar\) -open 0 -image [Bitmap::get index]
+		$updatetree insert $indexPosition $parentNode $indexNode -text [lindex $indexName 1]\(0x$indexVar\) -open 0 -image [Bitmap::get index]
 
 
 		#SortNode {nodeType nodeID nodePos choice {indexPos ""} {indexId ""}}
@@ -1375,7 +1377,7 @@ proc AddIndexWindow {} {
 			set subIndexName [GetSubIndexAttributesbyPositions $nodePos $indexPos $sortedSubIndexPos  0 ]
 			set subIndexId [GetSubIndexIDbyPositions $nodePos $indexPos $sortedSubIndexPos ]
 			set subIndexId [lindex $subIndexId 1]
-			$updatetree insert $tempSidxCount $indexNode $subIndexNode-$tempSidxCount -text [lindex $subIndexName 1]\($subIndexId\) -open 0 -image [Bitmap::get subindex]
+			$updatetree insert $tempSidxCount $indexNode $subIndexNode-$tempSidxCount -text [lindex $subIndexName 1]\(0x$subIndexId\) -open 0 -image [Bitmap::get subindex]
 
 #puts "$updatetree insert $tempSidxCount $indexNode $subIndexNode-$tempSidxCount -text [lindex $subIndexName 1]\($subIndexId\) -open 0 -image [Bitmap::get subindex]"
 
@@ -1519,11 +1521,11 @@ proc AddSubIndexWindow {} {
 		#puts "subIndexName->$subIndexName"
 
 		if {[string match "TPdo*" $node]} {
-			$updatetree insert $subIndexPos $node TPdoSubIndexValue-$nodePos-$count -text [lindex $subIndexName 1]\($subIndexVar\) -open 0 -image [Bitmap::get subindex]
+			$updatetree insert $subIndexPos $node TPdoSubIndexValue-$nodePos-$count -text [lindex $subIndexName 1]\(0x$subIndexVar\) -open 0 -image [Bitmap::get subindex]
 		} elseif {[string match "RPdo*" $node]} {
-			$updatetree insert $subIndexPos $node RPdoSubIndexValue-$nodePos-$count -text [lindex $subIndexName 1]\($subIndexVar\) -open 0 -image [Bitmap::get subindex]
+			$updatetree insert $subIndexPos $node RPdoSubIndexValue-$nodePos-$count -text [lindex $subIndexName 1]\(0x$subIndexVar\) -open 0 -image [Bitmap::get subindex]
 		} else {
-			$updatetree insert $subIndexPos $node SubIndexValue-$nodePos-$count -text [lindex $subIndexName 1]\($subIndexVar\) -open 0 -image [Bitmap::get subindex]
+			$updatetree insert $subIndexPos $node SubIndexValue-$nodePos-$count -text [lindex $subIndexName 1]\(0x$subIndexVar\) -open 0 -image [Bitmap::get subindex]
 		}
 
 		$frame2.bt_cancel invoke
@@ -1744,7 +1746,7 @@ proc AddPDOWindow {} {
 
 #puts "child for parentNode===>[$updatetree nodes $parentNode] "
 
-		$updatetree insert $indexPosition $parentNode $indexNode -text [lindex $indexName 1]\($pdoVar\) -open 0 -image [Bitmap::get index]
+		$updatetree insert $indexPosition $parentNode $indexNode -text [lindex $indexName 1]\(0x$pdoVar\) -open 0 -image [Bitmap::get index]
 
 
 		#SortNode {nodeType nodeID nodePos choice {indexPos ""} {indexId ""}}
@@ -1755,7 +1757,7 @@ proc AddPDOWindow {} {
 			set subIndexName [GetSubIndexAttributesbyPositions $nodePos $indexPos $sortedSubIndexPos  0 ]
 			set subIndexId [GetSubIndexIDbyPositions $nodePos $indexPos $sortedSubIndexPos ]
 			set subIndexId [lindex $subIndexId 1]
-			$updatetree insert $tempSidxCount $indexNode $subIndexNode-$tempSidxCount -text [lindex $subIndexName 1]\($subIndexId\) -open 0 -image [Bitmap::get subindex]
+			$updatetree insert $tempSidxCount $indexNode $subIndexNode-$tempSidxCount -text [lindex $subIndexName 1]\(0x$subIndexId\) -open 0 -image [Bitmap::get subindex]
 
 #puts "$updatetree insert $tempSidxCount $indexNode $subIndexNode-$tempSidxCount -text [lindex $subIndexName 1]\($subIndexId\) -open 0 -image [Bitmap::get subindex]"
 
@@ -1854,7 +1856,7 @@ proc PropertiesWindow {} {
 				return
 			}
 			set title1 "Name"
-			set display1 [string range [$updatetree itemcget $node -text] 0 end-3]
+			set display1 [string range [$updatetree itemcget $node -text] 0 end-[expr [string length $nodeId]+2]]
 		
 		}
 

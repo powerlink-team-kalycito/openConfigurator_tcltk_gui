@@ -274,7 +274,7 @@ proc Import {parentNode nodeType nodeID } {
 		#ocfmRetCode GetIndexAttributesbyPositions(int NodePos, int IndexPos, EAttributeType AttributeType, char* Out_AttributeValue);
 		set catchErr [GetIndexAttributesbyPositions $nodePos $sortedIndexPos 0 ]
 		set IndexName [lindex $catchErr 1]
-		$updatetree insert $inc $parentNode IndexValue-$parentId-$inc -text $IndexName\($IndexValue\) -open 0 -image [Bitmap::get index]
+		$updatetree insert $inc $parentNode IndexValue-$parentId-$inc -text $IndexName\(0x$IndexValue\) -open 0 -image [Bitmap::get index]
 		set sidxCorrList [SortNode $nodeType $nodeID $nodePos sub $sortedIndexPos $IndexValue]
 		#puts "IndexValue->$IndexValue\nsidxCorrList-->$sidxCorrList\n"
 
@@ -294,7 +294,7 @@ proc Import {parentNode nodeType nodeID } {
 			#set SIdxName [GetSubIndexAttributes $nodeID $nodeType $IndexValue $SIdxValue 0]
 			#set SIdxName [lindex $SIdxName 1]
 		#	#set SIdxName [CBaseIndex_getName $ObjSIdx]
-			$updatetree insert end IndexValue-$parentId-$inc SubIndexValue-$parentId-$inc-$tmpCount -text $SIdxName\($SIdxValue\) -open 0 -image [Bitmap::get subindex]
+			$updatetree insert end IndexValue-$parentId-$inc SubIndexValue-$parentId-$inc-$tmpCount -text $SIdxName\(0x$SIdxValue\) -open 0 -image [Bitmap::get subindex]
 		}
 		update idletasks
 	}
@@ -319,7 +319,7 @@ proc Import {parentNode nodeType nodeID } {
 		set IndexName [lindex $catchErr 1]
 		#set IndexName [GetIndexAttributes $nodeID $nodeType $IndexValue 0]
 		#set IndexName [lindex $IndexName 1]
-		$updatetree insert $inc TPDO-$parentId TPdoIndexValue-$parentId-$inc -text $IndexName\($IndexValue\) -open 0 -image [Bitmap::get index]
+		$updatetree insert $inc TPDO-$parentId TPdoIndexValue-$parentId-$inc -text $IndexName\(0x$IndexValue\) -open 0 -image [Bitmap::get index]
 		#set sidxCorrList [SortNode $nodeType $nodeID $nodePos $obj $objNode sub "" $sortedIndexPos $IndexValue]
 		set sidxCorrList [SortNode $nodeType $nodeID $nodePos sub $sortedIndexPos $IndexValue]
 		set SIdxCount [new_intp]
@@ -336,7 +336,7 @@ proc Import {parentNode nodeType nodeID } {
 			set SIdxName [lindex $catchErr 1]
 			#set SIdxName [GetSubIndexAttributes $nodeID $nodeType $IndexValue $SIdxValue 0]
 			#set SIdxName [lindex $SIdxName 1]
-			$updatetree insert end TPdoIndexValue-$parentId-$inc TPdoSubIndexValue-$parentId-$inc-$tmpCount -text $SIdxName\($SIdxValue\) -open 0 -image [Bitmap::get subindex]
+			$updatetree insert end TPdoIndexValue-$parentId-$inc TPdoSubIndexValue-$parentId-$inc-$tmpCount -text $SIdxName\(0x$SIdxValue\) -open 0 -image [Bitmap::get subindex]
 		}
 		update idletasks
 	}
@@ -357,7 +357,7 @@ proc Import {parentNode nodeType nodeID } {
 		set IndexName [lindex $catchErr 1]
 		#set IndexName [GetIndexAttributes $nodeID $nodeType $IndexValue 0]
 		#set IndexName [lindex $IndexName 1]
-		$updatetree insert $inc RPDO-$parentId RPdoIndexValue-$parentId-$inc -text $IndexName\($IndexValue\) -open 0 -image [Bitmap::get index]
+		$updatetree insert $inc RPDO-$parentId RPdoIndexValue-$parentId-$inc -text $IndexName\(0x$IndexValue\) -open 0 -image [Bitmap::get index]
 		#set sidxCorrList [SortNode $nodeType $nodeID $nodePos $obj $objNode sub "" $sortedIndexPos $IndexValue]
 		set sidxCorrList [SortNode $nodeType $nodeID $nodePos sub $sortedIndexPos $IndexValue]
 		set SIdxCount [new_intp]
@@ -374,7 +374,7 @@ proc Import {parentNode nodeType nodeID } {
 			#ocfmRetCode GetSubIndexAttributesbyPositions(int NodePos, int IndexPos, int SubIndexPos, EAttributeType AttributeType, char* Out_AttributeValue);
 			set catchErr [GetSubIndexAttributesbyPositions $nodePos $sortedIndexPos $sortedSubIndexPos 0 ]
 			set SIdxName [lindex $catchErr 1]
-			$updatetree insert end RPdoIndexValue-$parentId-$inc RPdoSubIndexValue-$parentId-$inc-$tmpCount -text $SIdxName\($SIdxValue\) -open 0 -image [Bitmap::get subindex]
+			$updatetree insert end RPdoIndexValue-$parentId-$inc RPdoSubIndexValue-$parentId-$inc-$tmpCount -text $SIdxName\(0x$SIdxValue\) -open 0 -image [Bitmap::get subindex]
 		}
 		update idletasks
 	}

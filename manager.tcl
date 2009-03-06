@@ -426,6 +426,9 @@ proc EditManager::create_treeWindow {nb } {
 ###############################################################################################
 proc ConvertDec {tmpValue} {
     	global lastConv
+	global userPrefList
+	global nodeSelect
+		
 	#set selVar [$tmpValue.frame1.ra_dec cget -variable]
 	#global $selVar
 	#set selVar [subst $[subst $selVar]]
@@ -436,27 +439,15 @@ proc ConvertDec {tmpValue} {
 	#puts "\nb4 trim ConvertDec->[subst $[subst $tmpVar]]--------tmpVal->$tmpVal"
 	if { $lastConv != "dec"} {
 		set lastConv dec
-		$tmpValue.en_value1 configure -validate none
-		$tmpValue.en_default1 configure -state normal
-		foreach tmp_entry [list en_value1 en_default1] {
-		    puts "\ntmp_entry->$tmp_entry [$tmpValue.$tmp_entry get]\n"
-		    if { $tmp_entry == "en_default1" && ![string match -nocase "0x*" [$tmpValue.$tmp_entry get]]} {
-			    #default is already in dec do nothing
-		    } else {
-			    #set tmpVar [$tmpValue.$tmp_entry cget -textvariable]
-			    #global $tmpVar
-			    #set tmpVal [subst $[subst $tmpVar]]
-			    		    puts "\ntmp_entry->$tmp_entry [$tmpValue.$tmp_entry get]\n"
-			    set tmpVal [$tmpValue.$tmp_entry get]
-			    set tmpVal [string range $tmpVal 2 end]
-			    #puts "b4 trim 0x remov ConvertDec->$tmpVal"
-			    set tmpVal [string trimleft $tmpVal 0]
-			    #puts "ConvertDec->$tmpVal"
-			    $tmpValue.$tmp_entry delete 0 end
-			    catch {set tmpVal [expr 0x$tmpVal]}
-			    $tmpValue.$tmp_entry insert 0 $tmpVal
-		    }
+		set schRes [lsearch $userPrefList [list $nodeSelect *]]
+		if {$schRes  == -1} {
+		    lappend userPrefList [list $nodeSelect dec]
+		} else {
+		    set userPrefList [lreplace $userPrefList $schRes $schRes [list $nodeSelect dec] ]
 		}
+
+		InsertDec $tmpValue
+
 		$tmpValue.en_value1 configure -validate key -vcmd "IsDec %P $tmpValue %d %i"
 		$tmpValue.en_default1 configure -state disabled	
 	} else {
@@ -466,6 +457,40 @@ proc ConvertDec {tmpValue} {
 	puts "***********"
 }
 
+
+proc InsertDec {tmpValue} {
+    
+	$tmpValue.en_value1 configure -validate none
+	$tmpValue.en_default1 configure -state normal
+	foreach tmp_entry [list en_value1 en_default1] {
+	        puts "\ntmp_entry->$tmp_entry [$tmpValue.$tmp_entry get]\n"
+		if { $tmp_entry == "en_default1" && ![string match -nocase "0x*" [$tmpValue.$tmp_entry get]]} {
+			#default is already in dec do nothing
+		} else {
+		        #set tmpVar [$tmpValue.$tmp_entry cget -textvariable]
+		        #global $tmpVar
+		        #set tmpVal [subst $[subst $tmpVar]]
+		        #puts "\ntmp_entry->$tmp_entry [$tmpValue.$tmp_entry get]\n"
+		        set tmpVal [$tmpValue.$tmp_entry get]
+			puts "b4 trim 0x remov ConvertDec->$tmpVal"
+		        set tmpVal [string range $tmpVal 2 end]
+		        #puts "b4 trim 0x remov ConvertDec->$tmpVal"
+		        set tmpVal [string trimleft $tmpVal 0]
+		        puts "InsertDec->$tmpVal"
+			if { $tmpVal != "" } {
+			        if { [ catch {set tmpVal [expr 0x$tmpVal]} ] } {
+					#error raised should not convert
+					puts "error raised INSERT DEC tmpVal->$tmpVal"
+			        } else {
+					$tmpValue.$tmp_entry delete 0 end
+					$tmpValue.$tmp_entry insert 0 $tmpVal
+			        }
+			} else {
+				#value is empty no need to insert
+			}
+		}
+	}
+}
 ###############################################################################################
 #proc ConvertHex
 #Input       : Entrybox path
@@ -474,6 +499,9 @@ proc ConvertDec {tmpValue} {
 ###############################################################################################
 proc ConvertHex {tmpValue} {
 	global lastConv
+	global userPrefList
+	global nodeSelect
+	
 	#set selVar [$tmpValue.frame1.ra_dec cget -variable]
 	#global $selVar
 	#set selVar [subst $[subst $selVar]]
@@ -483,31 +511,15 @@ proc ConvertHex {tmpValue} {
 
 	if { $lastConv != "hex"} {
 		set lastConv hex
-		$tmpValue.en_value1 configure -validate none
-		$tmpValue.en_default1 configure -state normal
-		foreach tmp_entry [list en_value1 en_default1] {
-		    puts "\ntmp_entry->$tmp_entry [$tmpValue.$tmp_entry get]\n"
-		    if { $tmp_entry == "en_default1" && [string match -nocase "0x*" [$tmpValue.$tmp_entry get]]} {
-			#default is already in hex do nothing
-		    } else {
-    		        #set tmpVar [$tmpValue.$tmp_entry cget -textvariable]
-		        #global $tmpVar	
-		        #set tmpVal [subst $[subst $tmpVar]]
-			set tmpVal [$tmpValue.$tmp_entry get]
-			puts "\ntmp_entry->$tmp_entry [$tmpValue.$tmp_entry get]\n"
-		        #puts "\nb4 trim ConvertHex->[subst $[subst $tmpVar]]--------tmpVal->$tmpVal"
-		        set tmpVal [string trimleft $tmpVal 0]
-		        #puts "ConvertHex->$tmpVal"
-		        $tmpValue.$tmp_entry configure -validate none
-		        $tmpValue.$tmp_entry delete 0 end
-puts "tmpVal->$tmpVal"	
-		        set tmpVal [_ConvertHex $tmpVal]
-puts "tmpVal->$tmpVal"	
-		        set tmpVal 0x$tmpVal
-		        $tmpValue.$tmp_entry insert 0 $tmpVal
-		        #puts  "final ConvertHex->$tmpVal\n"
-		    }
+		set schRes [lsearch $userPrefList [list $nodeSelect *]]
+		if {$schRes  == -1} {
+		    lappend userPrefList [list $nodeSelect hex]
+		} else {
+		    set userPrefList [lreplace $userPrefList $schRes $schRes [list $nodeSelect hex] ]
 		}
+		
+		InsertHex $tmpValue
+		
 		$tmpValue.en_value1 configure -validate key -vcmd "IsHex %P $tmpValue %d %i"
 		$tmpValue.en_default1 configure -state disabled
 	} else {
@@ -515,6 +527,43 @@ puts "tmpVal->$tmpVal"
 		#already hex is selected
 	}
 	puts "***********"
+}
+
+proc InsertHex {tmpValue} {
+    
+        $tmpValue.en_value1 configure -validate none
+        $tmpValue.en_default1 configure -state normal
+	foreach tmp_entry [list en_value1 en_default1] {
+		puts "\ntmp_entry->$tmp_entry [$tmpValue.$tmp_entry get]\n"
+		if { $tmp_entry == "en_default1" && [string match -nocase "0x*" [$tmpValue.$tmp_entry get]]} {
+			#default is already in hex do nothing
+		} else {
+			#set tmpVar [$tmpValue.$tmp_entry cget -textvariable]
+			#global $tmpVar	
+			#set tmpVal [subst $[subst $tmpVar]]
+			set tmpVal [$tmpValue.$tmp_entry get]
+			puts "\ntmp_entry->$tmp_entry [$tmpValue.$tmp_entry get]\n"
+			#puts "\nb4 trim ConvertHex->[subst $[subst $tmpVar]]--------tmpVal->$tmpVal"
+			set tmpVal [string trimleft $tmpVal 0]
+			#puts "ConvertHex->$tmpVal"
+			$tmpValue.$tmp_entry configure -validate none
+			puts "tmpVal->$tmpVal"
+			if {$tmpVal != ""} {
+			        if { [ catch { set tmpVal [_ConvertHex $tmpVal] } ] } {
+			        	#raised an error dont convert
+					puts "error raised in InsertHex tmpVal->$tmpVal"
+				} else {
+					puts "tmpVal->$tmpVal"
+				        $tmpValue.$tmp_entry delete 0 end
+				        set tmpVal 0x$tmpVal
+				    $tmpValue.$tmp_entry insert 0 $tmpVal
+				    #puts  "final ConvertHex->$tmpVal\n"
+				}
+			} else {
+			    #value is empty no need to insert
+			}
+	        }
+	}
 }
 ###############################################################################################
 #proc AppendZero
@@ -540,6 +589,8 @@ proc SaveValue {frame0 frame1} {
 	global nodeIdList
 	global updatetree
 	global savedValueList ; #this list contains Nodes whose value are changed using save option
+	global userPrefList
+	global lastConv
 	global status_save
 
 	#puts "\n\n   SaveValue \n"
@@ -551,11 +602,11 @@ proc SaveValue {frame0 frame1} {
 		set parent [$updatetree parent $nodeSelect]
 		set indexId [string range [$updatetree itemcget $parent -text ] end-4 end-1]
 		set indexId [string toupper $indexId]
-		set oldName [string range $oldName end-3 end ]
+		set oldName [string range $oldName end-5 end ]
 	} else {
 		set indexId [string range $oldName end-4 end-1 ]
 		set indexId [string toupper $indexId]
-		set oldName [string range $oldName end-5 end ]
+		set oldName [string range $oldName end-7 end ]
 	}
 
 	#gets the nodeId and Type of selected node
@@ -604,12 +655,12 @@ proc SaveValue {frame0 frame1} {
 				tk_messageBox -message "MAC address not complete\n values not saved" -title Warning -icon warning -parent .	
 				return
 			}
-		} elseif {$radioSel == "hex"} {
+		} elseif { $radioSel == "hex" && !($dataType == "MAC_ADDRESS" || $dataType == "IP_ADDRESS") } {
 			#it is hex value trim leading 0x
 			set value [string range $value 2 end]
 			set value [string toupper $value]
 			set value 0x$value
-		} elseif {$radioSel == "dec"} {  
+		} elseif { $radioSel == "dec" && !($dataType == "MAC_ADDRESS" || $dataType == "IP_ADDRESS") } {  
 			#is is dec value convert to hex
 			set value [string trimleft $value 0]
 			#puts "value after trim for dec :$value"
@@ -659,15 +710,34 @@ proc SaveValue {frame0 frame1} {
 	lappend savedValueList $nodeSelect
 	$frame0.en_nam1 configure -bg #fdfdd4
 	$frame1.en_value1 configure -bg #fdfdd4
-	#$frame1.en_value1 configure -validate none 
-	#$frame1.en_value1 delete 0 end
-	#$frame1.en_value1 insert 0 $value
-	#$frame1.en_value1 configure -validate key	
+	
+	
+	$frame1.en_data1 configure -state normal
+	set dataType [$frame1.en_data1 get]
+	$frame1.en_data1 configure -state disabled
+	
+	if { $dataType != "IP_ADDRESS" || $dataType != "MAC_ADDRESS" } {
+		#save user preference
+		if { $radioSel == "hex" } {
+			set schRes [lsearch $userPrefList [list $nodeSelect *]]
+			if {$schRes  == -1} {
+				lappend userPrefList [list $nodeSelect hex]
+			} else {
+			        set userPrefList [lreplace $userPrefList $schRes $schRes [list $nodeSelect hex] ]
+			}
+		} elseif { $radioSel == "dec" } {
+			set schRes [lsearch $userPrefList [list $nodeSelect *]]
+			if {$schRes  == -1} {
+			        lappend userPrefList [list $nodeSelect dec]
+			} else {
+			        set userPrefList [lreplace $userPrefList $schRes $schRes [list $nodeSelect dec] ]
+			}
+		} else {
+		    puts "In save value invalid radio button sel ->$radioSel"
+		}
+		    
+	}
 
-
-	#$frame1.frame1.ra_hex select
-	#always hex value is passed so it should be selected
-	#puts "savedValueList->$savedValueList"
 }
 
 ###############################################################################################
@@ -681,6 +751,7 @@ proc DiscardValue {frame0 frame1} {
 	#global nodeObj
 	global nodeIdList
 	global updatetree
+	global userPrefList
 
 	#puts "\n\n  DiscardValue \n"
 
@@ -730,14 +801,18 @@ proc DiscardValue {frame0 frame1} {
 		set tempIndexProp [GetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId 0]
 		set IndexName [lindex $tempIndexProp 1]
 		set tempIndexProp [GetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId 5]
-		set IndexActualValue [lindex $tempIndexProp 1]		
+		set IndexActualValue [lindex $tempIndexProp 1]
+		set tempIndexProp [GetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId 2]
+		set dataType [lindex $tempIndexProp 1]		
 		#set IndexActualValue []
 	} else {
 		#puts "GetIndexAttributes nodeId->$nodeId nodeType->$nodeType indexId->$indexId 0"
 		set tempIndexProp [GetIndexAttributes $nodeId $nodeType $indexId 0]
 		set IndexName [lindex $tempIndexProp 1]
 		set tempIndexProp [GetIndexAttributes $nodeId $nodeType $indexId 5]
-		set IndexActualValue [lindex $tempIndexProp 1]	
+		set IndexActualValue [lindex $tempIndexProp 1]
+		set tempIndexProp [GetIndexAttributes $nodeId $nodeType $indexId 2]
+		set dataType [lindex $tempIndexProp 1]	
 		#set IndexActualValue []
 	}
 
@@ -751,12 +826,55 @@ proc DiscardValue {frame0 frame1} {
 	#puts "IndexName->$IndexName"
 	#puts "IndexActualValue->$IndexActualValue"
 	#after inserting value select appropriate radio button
-	if {[string match -nocase "0x*" $IndexActualValue]} {
-		$frame1.frame1.ra_hex select 
-		$frame1.en_value1 configure -validate key -vcmd "IsHex %P $frame1 %d %i"
+	if { $dataType == "IP_ADDRESS" } {
+		$frame1.en_value1 configure -validate key -vcmd "IsIP %P %V" 
+	} elseif { $dataType == "MAC_ADDRESS" } {
+		$frame1.en_value1 configure -validate key -vcmd "IsMAC %P %V"
 	} else {
-		$frame1.frame1.ra_dec select	
-		$frame1.en_value1 configure -validate key -vcmd "IsDec %P $frame1 %d %i"
+		set schRes [lsearch $userPrefList [list $nodeSelect *]]
+		puts "\nschRes->$schRes  lsearch $userPrefList [list $nodeSelect *]\n"
+		if { $schRes != -1 } {
+		        if { [lindex [lindex $userPrefList $schRes] 1] == "dec" } {
+			        if {[string match -nocase "0x*" $IndexActualValue]} {
+			    		InsertDec $frame1
+			        } else {
+					#already in decimal no need to do anything
+			        }
+			        set lastConv dec
+			        $frame1.frame1.ra_dec select
+				
+				$frame1.en_default1 configure -state disabled
+			        $frame1.en_value1 configure -validate key -vcmd "IsDec %P $frame1 %d %i" 
+			} elseif { [lindex [lindex $userPrefList $schRes] 1] == "hex" } {
+			        if {[string match -nocase "0x*" $IndexActualValue]} {
+				        #already in decimal no need to do anything
+			        } else {
+					InsertHex $frame1
+				}
+				set lastConv hex
+				$frame1.frame1.ra_hex select
+				
+				$frame1.en_default1 configure -state disabled
+				$frame1.en_value1 configure -validate key -vcmd "IsHex %P $frame1 %d %i" 
+			} else {
+				puts "\n\nInvalid userpref [lindex $userPrefList 1]\n\n"
+				return 
+			}
+		} else {
+			if {[string match -nocase "0x*" $IndexActualValue]} {
+			        set lastConv hex
+			        $frame1.frame1.ra_hex select
+				
+				$frame1.en_default1 configure -state disabled
+			        $frame1.en_value1 configure -validate key -vcmd "IsHex %P $frame1 %d %i" 
+			} else {
+			        set lastConv dec
+			        $frame1.frame1.ra_dec select
+				
+				$frame1.en_default1 configure -state disabled
+			        $frame1.en_value1 configure -validate key -vcmd "IsDec %P $frame1 %d %i" 
+			}
+		}
 	}
 
 }

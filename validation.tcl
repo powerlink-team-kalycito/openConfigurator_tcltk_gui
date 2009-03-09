@@ -166,15 +166,34 @@ proc IsValidStr {input} {
 ###############################################################################################
 proc IsDec {input tmpValue mode idx} {
 
-	set tempInput [string trimleft $input 0]		
-	
+	#set tempInput [string trimleft $input 0] ; #trimming zero leads to error	
+	set tempInput $input
 	#puts "IsDec test input->$input tempInput->$tempInput isint->[string is int $tempInput]"
-	if { [string is int $tempInput] == 0 } {
+	#340282366920938463463374607431768211455 is the corresponding valu of ffffffffffffffffffffffffffffffff
+	#115792089237316195423570985008687907853269984665640564039457584007913129639935 is corresponding value of 64 F's
+	if { [Int $tempInput] == 0 || $tempInput > 115792089237316195423570985008687907853269984665640564039457584007913129639935 } {
 		return 0
 	} else {
 		after 1 SetValue $tmpValue.en_value1 $mode $idx $input
 		return 1
 	}
+}
+
+proc Int {input} {
+	set exp {[0-9]}
+	#puts "\n\n********"
+	for {set cnt 0} {$cnt < [string length $input]} {incr cnt} {
+		puts "string index $input $cnt ->[string index $input $cnt]"
+		set res [regexp -- $exp [string index $input $cnt] ]
+		if {$res == 1} {
+			#continue with process
+		} else {
+			#res is zero 
+			return 0
+		}
+	}
+	#puts "*********\n\n"
+	return 1
 }
 
 ###############################################################################################
@@ -198,9 +217,9 @@ proc IsHex {input tmpValue mode idx} {
 			set tempInput $input
 		}
 	}
+puts "string length $tempInput ->[string length $tempInput]"
 
-
-	if { [string is xdigit $tempInput ] == 0 } {
+	if { [string is xdigit $tempInput ] == 0 || [string length $tempInput] > 64 } {
 		return 0
 	} else {
 		set tempInput 0x$tempInput

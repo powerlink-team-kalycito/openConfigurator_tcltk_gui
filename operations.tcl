@@ -581,7 +581,8 @@ proc _openproject {projectfilename} {
 	set PjtName $tempPjtName
 	
 	RePopulate $PjtDir [string range $PjtName 0 end-[string length [file extension $PjtName]]]
-
+	
+	conPuts "Project [file join $PjtDir $PjtName] is successfully opened"
 	thread::send [tsv::set application importProgress] "StopProgress"
 	
 }
@@ -648,7 +649,6 @@ puts "node->$node"
 		$Editor::projMenu add command -label "Close Project" -command "_CloseProject" 
 		catch {$Editor::projMenu delete 4} ; # to delete the Properties if already present
 		$Editor::projMenu add command -label "Properties" -command "PropertiesWindow"
-		conPuts "Project [file join $PjtDir $PjtName] is successfully opened"
 		puts nodeIdList->$nodeIdList
 
 	} else {
@@ -1615,7 +1615,7 @@ puts "tempIndexPropi PDO ->$tempIndexProp"
 					$tmpInnerf1.en_default1 configure -state normal
 					set tmpVal [lindex $IndexProp 4]
 				        set tmpVal [string range $tmpVal 2 end]
-				        set tmpVal [string trimleft $tmpVal 0]
+				        #set tmpVal [string trimleft $tmpVal 0] ; trimming zero leads to error
 					if { $tmpVal != "" } {
 					        if { [ catch {set tmpVal [expr 0x$tmpVal]} ] } {
 						#error raised should not convert
@@ -3476,7 +3476,7 @@ proc AutoGenerateMNOBD {} {
 	}	
 	set tmpImpDir .
 	if {$tmpImpDir != ""} {
-		set result [tk_messageBox -message "Do you want to Autot Generate object dictionary for MN ?" -type yesno -icon question -title "Question"]
+		set result [tk_messageBox -message "Do you want to Auto Generate object dictionary for MN ?" -type yesno -icon question -title "Question"]
    		 switch -- $result {
    		     yes {
 			   conPuts "Auto Generating object dictionary for MN"

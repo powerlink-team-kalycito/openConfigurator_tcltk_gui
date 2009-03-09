@@ -475,7 +475,7 @@ proc InsertDec {tmpValue} {
 			puts "b4 trim 0x remov ConvertDec->$tmpVal"
 		        set tmpVal [string range $tmpVal 2 end]
 		        #puts "b4 trim 0x remov ConvertDec->$tmpVal"
-		        set tmpVal [string trimleft $tmpVal 0]
+		        #set tmpVal [string trimleft $tmpVal 0] ;#trimming zero gives problem
 		        puts "InsertDec->$tmpVal"
 			if { $tmpVal != "" } {
 			        if { [ catch {set tmpVal [expr 0x$tmpVal]} ] } {
@@ -486,7 +486,8 @@ proc InsertDec {tmpValue} {
 					$tmpValue.$tmp_entry insert 0 $tmpVal
 			        }
 			} else {
-				#value is empty no need to insert
+				#value is empty no need to insert delete the previous entry to clear 0x 
+				$tmpValue.$tmp_entry delete 0 end
 			}
 		}
 	}
@@ -544,7 +545,7 @@ proc InsertHex {tmpValue} {
 			set tmpVal [$tmpValue.$tmp_entry get]
 			puts "\ntmp_entry->$tmp_entry [$tmpValue.$tmp_entry get]\n"
 			#puts "\nb4 trim ConvertHex->[subst $[subst $tmpVar]]--------tmpVal->$tmpVal"
-			set tmpVal [string trimleft $tmpVal 0]
+			#set tmpVal [string trimleft $tmpVal 0] ; #trimming zero leads to problem
 			#puts "ConvertHex->$tmpVal"
 			$tmpValue.$tmp_entry configure -validate none
 			puts "tmpVal->$tmpVal"
@@ -560,7 +561,7 @@ proc InsertHex {tmpValue} {
 				    #puts  "final ConvertHex->$tmpVal\n"
 				}
 			} else {
-			    #value is empty no need to insert
+			    #value is empty  insert 0x
 			    $tmpValue.$tmp_entry delete 0 end
 			    set tmpVal 0x$tmpVal
 			    $tmpValue.$tmp_entry insert 0 $tmpVal
@@ -665,7 +666,7 @@ proc SaveValue {frame0 frame1} {
 			set value 0x$value
 		} elseif { $radioSel == "dec" && !($dataType == "MAC_ADDRESS" || $dataType == "IP_ADDRESS") } {  
 			#is is dec value convert to hex
-			set value [string trimleft $value 0]
+			#set value [string trimleft $value 0] ; trimming zero leads to error
 			#puts "value after trim for dec :$value"
 			set value [_ConvertHex $value]
 			#0x is appended to represent it as hex
@@ -684,12 +685,12 @@ proc SaveValue {frame0 frame1} {
 
 	if {[string match "*SubIndexValue*" $nodeSelect]} {
 		#DllExport ocfmRetCode SetSubIndexAttributes(int NodeID, ENodeType NodeType, char* IndexID, char* SubIndexID, char* IndexValue, char* IndexName);
-		#puts "SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName"
+		puts "SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName"
 		set catchErrCode [SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName]
 		#puts "catchErrCode->$catchErrCode"
 	} elseif {[string match "*IndexValue*" $nodeSelect]} {
 		#DllExport ocfmRetCode SetIndexAttributes(int NodeID, ENodeType NodeType, char* IndexID, char* IndexValue, char* IndexName);
-		#puts "SetIndexAttributes $nodeId $nodeType $indexId $value $newName"
+		puts "SetIndexAttributes $nodeId $nodeType $indexId $value $newName"
 		set catchErrCode [SetIndexAttributes $nodeId $nodeType $indexId $value $newName]
 		#puts "catchErrCode->$catchErrCode"
 	} else {

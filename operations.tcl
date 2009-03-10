@@ -645,10 +645,12 @@ puts "node->$node"
 			}
 		}
 
-		catch {$Editor::projMenu delete 3} ; # to delete the close project if already present 
-		$Editor::projMenu add command -label "Close Project" -command "_CloseProject" 
-		catch {$Editor::projMenu delete 4} ; # to delete the Properties if already present
-		$Editor::projMenu add command -label "Properties" -command "PropertiesWindow"
+		if { [$Editor::projMenu index 3] != "3" } {
+			$Editor::projMenu insert 3 command -label "Close Project" -command "_CloseProject"
+		}
+		if { [$Editor::projMenu index 4] != "4" } {
+			$Editor::projMenu insert 4 command -label "Properties" -command "PropertiesWindow"
+		}
 		puts nodeIdList->$nodeIdList
 
 	} else {
@@ -830,9 +832,12 @@ proc Editor::create { } {
 	#############################################################################
 
 	set Editor::projMenu [menu  .projMenu -tearoff 0]
-	$Editor::projMenu add command -label "Sample Project" -command "YetToImplement" 
-	$Editor::projMenu add command -label "New Project" -command { _NewProject}
-	$Editor::projMenu add command -label "Open Project" -command {openproject} 
+	#$Editor::projMenu add command -label "Sample Project" -command "YetToImplement" 
+	#$Editor::projMenu add command -label "New Project" -command { _NewProject}
+	#$Editor::projMenu add command -label "Open Project" -command {openproject}
+	$Editor::projMenu insert 0 command -label "Sample Project" -command "YetToImplement" 
+	$Editor::projMenu insert 1 command -label "New Project" -command { _NewProject}
+	$Editor::projMenu insert 2 command -label "Open Project" -command {openproject} 
 	#############################################################################
 	# Menu for the object dictionary
 	#############################################################################
@@ -1315,13 +1320,16 @@ puts "populatedPDOList->$populatedPDOList"
 		for {set count 0} { $count <= [expr [llength $finalMappList]-2] } {incr count 2} {
 			set tempIdx [lindex $finalMappList $count]
 			puts "tempIdx->$tempIdx"
-			set commParamValue ""
+			#set commParamValue ""
 			if { $tempIdx != "" } {
 				set indexId [string range [$updatetree itemcget $tempIdx -text] end-4 end-1 ]
 				set sidx [$updatetree nodes $tempIdx]
-				foreach tempSidx $sidx { 
+				set commParamValue ""
+				lappend commParamValue [] []
+				foreach tempSidx $sidx {
 					set subIndexId [string range [$updatetree itemcget $tempSidx -text] end-2 end-1 ]
-					if {[string match "00" $subIndexId] == 0 } {
+					#puts "commParamValue->$commParamValue subIndexId->$subIndexId"
+					if {[string match "01" $subIndexId] == 1 || [string match "02" $subIndexId] == 1} {
 						set indexPos [new_intp] ; #newly added
 						set subIndexPos [new_intp] ; #newly added
 						set catchErrCode [IfSubIndexExists $nodeId $nodeType $indexId $subIndexId $subIndexPos $indexPos] ; #newly added
@@ -1337,11 +1345,12 @@ puts "populatedPDOList->$populatedPDOList"
 							puts "ErrCode in singleclick for TDDO and RPDO : $ErrCode"
 							#[lindex $f2 1] insert $popCount [list "" "" "" "" "" "" ""]
 							#incr popCount 1
-							lappend commParamValue []
+							#lappend commParamValue []
 							continue	
 						}
 
 						set IndexActualValue [lindex $tempIndexProp 1]
+						#puts "IndexActualValue->$IndexActualValue"
 						if {[string match -nocase "0x*" $IndexActualValue] } {
 							#remove appende 0x
 							set IndexActualValue [string range $IndexActualValue 2 end]
@@ -1349,7 +1358,14 @@ puts "populatedPDOList->$populatedPDOList"
 							# no 0x no need to do anything
 							#TODO CHECK WHETHER NEED TO CONVERT TO HEX
 						}
-						lappend commParamValue $IndexActualValue
+						if {[string match "01" $subIndexId] == 1} {
+							set commParamValue [lreplace $commParamValue 0 0 $IndexActualValue]
+							puts "\n in subindexId 01 commParamValue->$commParamValue\n"
+						} elseif {[string match "02" $subIndexId] == 1} {
+							set commParamValue [lreplace $commParamValue 1 1 $IndexActualValue]
+						} else {
+							puts "SingleClickNode should not occur subIndexId->$subIndexId"
+						}
 						#puts "IndexActualValue->$IndexActualValue"
 						#set DataSize [string range $IndexActualValue 0 3]
 						#set Offset [string range $IndexActualValue 4 7]
@@ -1361,7 +1377,7 @@ puts "populatedPDOList->$populatedPDOList"
 					}
 				}
 			} else {
-				lappend commParamValue [] []
+				#set commParamValue [list "" "" ]
 			}
 ############################################################################################################
 			puts "commParamValue->$commParamValue"
@@ -1601,7 +1617,7 @@ puts "tempIndexPropi PDO ->$tempIndexProp"
 				$tmpInnerf1.frame1.ra_hex select
 				
 				$tmpInnerf1.en_default1 configure -state disabled
-				$tmpInnerf1.en_value1 configure -validate key -vcmd "IsHex %P $tmpInnerf1 %d %i" -bg $savedBg
+				$tmpInnerf1.en_value1 configure -validate key -vcmd "IsHex %P %s $tmpInnerf1 %d %i" -bg $savedBg
 			} else {
 				puts "\n\nInvalid userpref [lindex $userPrefList 1]\n\n"
 				return 
@@ -1614,14 +1630,13 @@ puts "tempIndexPropi PDO ->$tempIndexProp"
 				} else {
 					$tmpInnerf1.en_default1 configure -state normal
 					set tmpVal [lindex $IndexProp 4]
-				        set tmpVal [string range $tmpVal 2 end]
 				        #set tmpVal [string trimleft $tmpVal 0] ; trimming zero leads to error
 					if { $tmpVal != "" } {
-					        if { [ catch {set tmpVal [expr 0x$tmpVal]} ] } {
-						#error raised should not convert
+					        if { [ catch {set tmpVal [_ConvertHex $tmpVal] } ] } {
+							#error raised should not convert
 					        } else {
 							$tmpInnerf1.en_default1 delete 0 end
-							$tmpInnerf1.en_default1 insert 0 $tmpVal
+							$tmpInnerf1.en_default1 insert 0 0x$tmpVal
 					        }
 					} else {
 						#value is empty no need to insert
@@ -1631,26 +1646,26 @@ puts "tempIndexPropi PDO ->$tempIndexProp"
 					$tmpInnerf1.en_default1 configure -state disabled
 				}
 				$tmpInnerf1.frame1.ra_hex select
-				
-
-				$tmpInnerf1.en_value1 configure -validate key -vcmd "IsHex %P $tmpInnerf1 %d %i" -bg $savedBg
+				$tmpInnerf1.en_value1 configure -validate key -vcmd "IsHex %P %s $tmpInnerf1 %d %i" -bg $savedBg
 			} else {
 				set lastConv dec
+				#puts "singleclicknode inside decimal default [lindex $IndexProp 4]"
 				if {[string match -nocase "0x*" [lindex $IndexProp 4]]} {
-					#CONVERT DEFAULT HEXADECIMAL VALUE TO decimal
+					#puts "CONVERT DEFAULT HEXADECIMAL VALUE TO decimal"
 					$tmpInnerf1.en_default1 configure -state normal
 					set tmpVal [lindex $IndexProp 4]
 					if { $tmpVal != "" } {
-						if { [ catch { set tmpVal [_ConvertHex $tmpVal] } ] } {
+						set tmpVal [string range $tmpVal 2 end]
+						if { [ catch { set tmpVal [expr 0x$tmpVal] } ] } {
 							#raised an error dont convert
+							
 						} else {
 						        $tmpInnerf1.en_default1 delete 0 end
-						        set tmpVal 0x$tmpVal
 							$tmpInnerf1.en_default1 insert 0 $tmpVal
 						}
 					} else {
 						# insert 0x
-						set tmpVal 0x
+						set tmpVal []
 						$tmpInnerf1.en_default1 insert 0 $tmpVal
 					}
 					$tmpInnerf1.en_default1 configure -state disabled
@@ -1658,7 +1673,6 @@ puts "tempIndexPropi PDO ->$tempIndexProp"
 					#default value is already in decimal no need to convert
 				}
 				$tmpInnerf1.frame1.ra_dec select
-				
 				$tmpInnerf1.en_value1 configure -validate key -vcmd "IsDec %P $tmpInnerf1 %d %i" -bg $savedBg
 			}
 		}
@@ -2631,9 +2645,10 @@ proc BuildProject {} {
         #}
 	set fileLocation_CDC [generateAutoName [file join $PjtDir CDC_XAP] CDC .cdc ]
 
-	thread::send [tsv::get application importProgress] "StartProgress"	
-	puts "GenerateCDC [file join $PjtDir CDC_XAP $fileLocation_CDC] fileLocation_CDC->$fileLocation_CDC"
-	set catchErrCode [GenerateCDC [file join $PjtDir CDC_XAP $fileLocation_CDC.cdc] ]
+	#thread::send [tsv::get application importProgress] "StartProgress"	
+	puts "GenerateCDC [file join $PjtDir CDC_XAP ] fileLocation_CDC->$fileLocation_CDC"
+	#set catchErrCode [GenerateCDC [file join $PjtDir CDC_XAP $fileLocation_CDC.cdc] ]
+	set catchErrCode [GenerateCDC [file join $PjtDir CDC_XAP] ]
 	#puts "catchErrCode->$catchErrCode"
 	set ErrCode [ocfmRetCode_code_get $catchErrCode]
 	#puts "ErrCode:$ErrCode"
@@ -2642,7 +2657,7 @@ proc BuildProject {} {
 	if { $ErrCode != 0 } {
 		#error in generating CDC dont generate XAP
 		errorPuts "Error in generating CDC. XAP not generated" error
-		thread::send [tsv::get application importProgress] "StopProgress"
+		#thread::send [tsv::get application importProgress] "StopProgress"
 		return
 	} else {
 
@@ -2744,7 +2759,7 @@ proc BuildProject {} {
 		##puts "ErrCode:$ErrCode"
 		if { $ErrCode != 0 } {
 			errorPuts "XAP is not generated"
-			thread::send -async [tsv::set application importProgress] "StopProgress"			
+			#thread::send -async [tsv::set application importProgress] "StopProgress"			
 			return
 		} else {
 			conPuts "CDC and XAP are successfully generated"
@@ -2752,7 +2767,7 @@ proc BuildProject {} {
 			#catch { file rename -force [file join [pwd] $PjtName.xap] [file join [pwd] XAP.xap] }
 			#catch { file copy -force [file join [file join $PjtDir $PjtName] $PjtName.xap.h]  [file join [pwd] $PjtName.xap.h]}
 			#catch { file rename -force [file join [pwd] $PjtName.xap.h] [file join [pwd] XAPH.xap.h] }
-			thread::send -async [tsv::set application importProgress] "StopProgress"
+			#thread::send -async [tsv::set application importProgress] "StopProgress"
 		}
 
 	}

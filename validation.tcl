@@ -171,7 +171,7 @@ proc IsDec {input tmpValue mode idx} {
 	#puts "IsDec test input->$input tempInput->$tempInput isint->[string is int $tempInput]"
 	#340282366920938463463374607431768211455 is the corresponding valu of ffffffffffffffffffffffffffffffff
 	#115792089237316195423570985008687907853269984665640564039457584007913129639935 is corresponding value of 64 F's
-	if { [Int $tempInput] == 0 || $tempInput > 115792089237316195423570985008687907853269984665640564039457584007913129639935 } {
+	if { [Int $tempInput] == 0 || $tempInput > 115792089237316195423570985008687907853269984665640564039457584007913129639935 || [string length $tempInput] > 78 } {
 		return 0
 	} else {
 		after 1 SetValue $tmpValue.en_value1 $mode $idx $input
@@ -202,9 +202,9 @@ proc Int {input} {
 #Output      : 0 or 1
 #Description : Validates whether an entry is a hexa decimal and does not exceed specified range
 ###############################################################################################
-proc IsHex {input tmpValue mode idx} {
+proc IsHex {input preinput tmpValue mode idx} {
 	#puts "IsHex test"
-	#puts "IsHex input->$input"
+	#puts "IsHex preinput->$preinput 0x[string range $input 1 end]"
 	#set tmpVar [$tmpValue cget -textvariable]
 	if {[string match -nocase "0x*" $input]} {
 		set tempInput [string range $input 2 end]
@@ -212,6 +212,9 @@ proc IsHex {input tmpValue mode idx} {
 		set tempInput [string range $input 1 end]
 	} else {
 		if {[string match -nocase "*0x*" $input]} {
+			return 0
+		} elseif { $preinput == "0x[string range $input 1 end]" } {
+			#x is being deleted 
 			return 0
 		} else {
 			set tempInput $input
@@ -354,7 +357,10 @@ proc _ConvertHex {tmpVal} {
 		}
 		set tmpVal $finalVal
 	} else {
-		catch {set tmpVal [format %X $tmpVal]}
+		if { [catch {set tmpVal [format %X $tmpVal]}] } {
+			set tmpVal [string trimleft $tmpVal 0]
+			catch {set tmpVal [format %X $tmpVal]}
+		}
 	}
 	return $tmpVal
 }

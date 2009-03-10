@@ -521,7 +521,7 @@ proc ConvertHex {tmpValue} {
 		
 		InsertHex $tmpValue
 		
-		$tmpValue.en_value1 configure -validate key -vcmd "IsHex %P $tmpValue %d %i"
+		$tmpValue.en_value1 configure -validate key -vcmd "IsHex %P %s $tmpValue %d %i"
 		$tmpValue.en_default1 configure -state disabled
 	} else {
 		puts "ConvertHex already selected"
@@ -859,7 +859,7 @@ proc DiscardValue {frame0 frame1} {
 				$frame1.frame1.ra_hex select
 				
 				$frame1.en_default1 configure -state disabled
-				$frame1.en_value1 configure -validate key -vcmd "IsHex %P $frame1 %d %i" 
+				$frame1.en_value1 configure -validate key -vcmd "IsHex %P %s $frame1 %d %i" 
 			} else {
 				puts "\n\nInvalid userpref [lindex $userPrefList 1]\n\n"
 				return 
@@ -870,7 +870,7 @@ proc DiscardValue {frame0 frame1} {
 			        $frame1.frame1.ra_hex select
 				
 				$frame1.en_default1 configure -state disabled
-			        $frame1.en_value1 configure -validate key -vcmd "IsHex %P $frame1 %d %i" 
+			        $frame1.en_value1 configure -validate key -vcmd "IsHex %P %s $frame1 %d %i" 
 			} else {
 			        set lastConv dec
 			        $frame1.frame1.ra_dec select

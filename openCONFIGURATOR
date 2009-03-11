@@ -121,25 +121,7 @@ puts "$tcl_platform(platform)==$::env(HOME)"
 		option add *background #d7d5d3 userDefault
 	}
 	
-	#if {$tcl_platform(platform) == "unix"} {
-	#	set HOME $::env(HOME)
-	#	set DefaultPjtDir [file join $HOME openCONFIG_Projects]
-	#	if {![file exists $DefaultPjtDir]} {
-	#		file mkdir $DefaultPjtDir
-	#	} else {
-	#		#directory already exists
-	#		#puts "openCONFIG_Projects directory already exists"
-	#	}
-	#} elseif {$tcl_platform(platform) == "windows"} {
-	#	#if {} {
-	#
-	#	#}
-	#} else {
-
-	#}
-
-
-		set HOME $::env(HOME)
+	set HOME $::env(HOME)
 		set DefaultPjtDir [file join $HOME openCONFIGURATOR_Projects]
 		if {![file exists $DefaultPjtDir]} {
 			file mkdir $DefaultPjtDir
@@ -166,40 +148,9 @@ puts "$tcl_platform(platform)==$::env(HOME)"
 	}
 	StartUp 
 
-	#if {$argc >= 1} {
-	#	set cursor [. cget -cursor]
-	#	. configure -cursor watch
-	#	update
-	#	foreach filename $argv {
-	#		if {[file exists $filename]} {
-	#			Editor::openFile $filename
-	#		} elseif {[file exists [file join $EditorData(options,workingDir) $filename]]} {
-	#			Editor::openFile [file join $EditorData(options,workingDir) $filename]
-	#		}
-	#	}
-	#	. configure -cursor $cursor
-	#	update
-	#}
-	
+
 	$updatetree delete end root PjtName
 	
-	#set pjtFolder $EditorData(options,History)
-	#puts "pjtFolder->$pjtFolder"
-	#set tmpsplit [file split $pjtFolder ]
-	#set filename [lindex $tmpsplit end]
-	#set PjtName $filename.pjt
-	#set tempFile [file join $pjtFolder $PjtName]
-	#if {![file exists $tempFile]} {
-	#	set pjtFolder [file join $RootDir Default]
-	#	set PjtDir $pjtFolder
-	#} elseif {$pjtFolder == "None" || $pjtFolder == ""} {
-	#	
-	#	set pjtFolder [file join $RootDir Default]
-	#	set PjtDir $pjtFolder
-	#} 
-	#	set tmpsplit [file split $pjtFolder ]
-	#	set filename [lindex $tmpsplit end]
-	#	set PjtName $filename.oct
 	set PjtDir ""
 	set PjtName ""
 
@@ -214,12 +165,25 @@ puts "$tcl_platform(platform)==$::env(HOME)"
 	}
 
 	# Loading shared library
-	if { [catch {load ./Tcl_WrapperMain.so}] } {
+	if {"$tcl_platform(platform)" == "windows"} {
 		if {[catch {load openCONFIGURATORwrapper.dll openCONFIGURATORwrapper}]} {
 			tk_messageBox -message "Error loading Shared Library\nCannot proceed\nTry reinstalling the tool" -title Info -icon error
 			exit
 		}
+	} elseif { "$tcl_platform(platform)" == "unix"} {
+		if { [catch {load ./Tcl_WrapperMain.so}] } {
+			tk_messageBox -message "Error loading Shared Library\nCannot proceed\nTry reinstalling the tool" -title Info -icon error
+			exit
+		}
+	
+	} else {
+			tk_messageBox -message "Shared Library not created for $tcl_platform(platform) platform\nCannot proceed" -title Info -icon error
+			exit
 	}
+	
+	
+	
+
 	puts "Successfully loaded dll"
 
 	InsertTree

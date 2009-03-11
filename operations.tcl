@@ -673,7 +673,8 @@ proc Editor::create { } {
     	global f0
     	global f1
     	global f2
-
+	global LastTableFocus
+	
     	variable bb_connect
    	variable mainframe
     	variable _wfont
@@ -707,7 +708,7 @@ proc Editor::create { } {
     	variable idxMenu
     	variable sidxMenu	
     
-    
+	set LastTableFocus ""
     
 	set result [catch {source [file join $RootDir plk_configtool.cfg]} info]
 	variable configError $result
@@ -1068,6 +1069,8 @@ proc Editor::create { } {
 
 	bind $treeWindow <Enter> { BindTree }
 	bind $treeWindow <Leave> { UnbindTree }
+	
+	#bind . <Configure> {puts "\nCurrent window path ->%W\nFocus window [focus]"}
 
           
 	global EditorData
@@ -1106,6 +1109,31 @@ proc Editor::create { } {
 	[lindex $f2 1] columnconfigure 7 -background #e0e8f0 -width 11
 	[lindex $f2 1] columnconfigure 8 -background #e0e8f0 -width 11
 
+	bind [lindex $f2 1] <Enter> {
+		puts "enter tablelist LastTableFocus ->$LastTableFocus"
+		global LastTableFocus
+		if { [ winfo exists $LastTableFocus ] && [ string match "[lindex $f2 1]*" $LastTableFocus ] } {
+			focus $LastTableFocus
+		}
+		
+		bind . <Motion> {
+			global LastTableFocus
+			set LastTableFocus [focus]
+		}
+	}
+	
+	bind [lindex $f2 1] <Leave> {
+		bind . <Motion> {}
+		focus .
+	}
+	
+	bind [lindex $f2 1] <FocusOut> {
+		bind . <Motion> {}
+		global LastTableFocus
+	}
+	
+
+	
 	#NoteBook::compute_size $notebook
 	#$notebook configure -width 750
 	#pack $notebook -side left -fill both -expand yes -padx 4 -pady 4
@@ -1163,7 +1191,7 @@ proc BindTree {} {
 
 	#[lindex $f2 1] configure -takefocus 0
 
-#focus $updatetree ; temporary fix but not correct
+#focus $updatetree ; #temporary fix but not correct
 
 	#set node [$updatetree selection get]
 	#puts "BindTree node->$node"
@@ -1742,9 +1770,10 @@ proc Saveproject {} {
 	if {$PjtDir == "" || $PjtDir == "None" || $PjtName == "" } {
 	#there is no project directory or project name no need to save
 	} else {
-
-		set catchErrCode [SaveProject $PjtDir [string range $PjtName 0 end-[ string length [file extension $PjtName] ]]]
-puts "\n\nSaveProject $PjtDir [string range $PjtName 0 end-[ string length [file extension $PjtName] ]]\n\n"
+		set saveAsPjtName [string range $PjtName 0 end-[ string length [file extension $PjtName] ]]
+		set saveAsPjtDir [string range $PjtDir 0 end-[string length $saveAsPjtName] ]
+		puts "\n\nSaveProject $saveAsPjtDir $saveAsPjtName\n\n"
+		set catchErrCode [SaveProject $saveAsPjtDir $saveAsPjtName]
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
 		if { $ErrCode != 0 } {
 			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
@@ -2494,7 +2523,7 @@ proc TransferCDC {choice} {
 
 
 	# Validate filename
-	set fileLocation_to_CDC [tk_getSaveFile -filetypes $types -initialdir [file join $PjtDir CDC_XAP] -initialfile [generateAutoName [fule join $PjtDir CDC_XAP] CDC .cdc ] -title "Transfer CDC at"]
+	set fileLocation_to_CDC [tk_getSaveFile -filetypes $types -initialdir [file join $PjtDir CDC_XAP] -initialfile [generateAutoName [file join $PjtDir CDC_XAP] CDC .cdc ] -title "Transfer CDC at"]
         if {$fileLocation_to_CDC == ""} {
                 return
         }
@@ -2569,32 +2598,17 @@ proc TransferXAP {choice} {
                 return
         }
 	
-	
-	#set fileLocation_CDC [file join .. .. openPOWERLINK_CFM_V1.3.0-3 XAP.xap]
-
-	#set fileLocation_XAP [file join .. .. openPOWERLINK_CFM_V1.3.0-3 Examples X86 Linux gnu demo_mn_8139_kernel xap.h]
 	puts "fileLocation_from_XAP->$fileLocation_from_XAP  fileLocation_to_XAP->$fileLocation_to_XAP"
-	#catch { file copy -force [file join [pwd] XAP.xap] $fileLocation_XAP }
-	#catch { file copy -force [file join [pwd] XAPH.xap] $fileLocation_XAP.h }
+	
+	if { ![file isfile $fileLocation_from_XAP.h] } {
+		conPuts "XAP.h not found. XAP not transferred"
+		return
+	}
+	
 	file copy -force $fileLocation_from_XAP $fileLocation_to_XAP
 	file copy -force $fileLocation_from_XAP.h $fileLocation_to_XAP.h
-	#file copy -force [file join [pwd] XAP.xap] $fileLocation_XAP
 	conPuts "XAP transfer complete"
 	conPuts "XAP.h also transferred"
-
-	#puts fileLocation_XAP:$fileLocation_XAP
-	#set catchErrCode [GenerateXAP $fileLocation_XAP]
-	#puts "catchErrCode->$catchErrCode"
-	#set ErrCode [ocfmRetCode_code_get $catchErrCode]
-	#puts "ErrCode:$ErrCode"
-	#if { $ErrCode != 0 } {
-	#	errorPuts "[ocfmRetCode_errorString_get $catchErrCode]"
-	#	tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
-	#	#tk_messageBox -message "ErrCode : $ErrCode" -title Warning -icon warning
-	#	return
-	#} else {
-	#	conPuts "XAP generated" info
-	#}
 
 }
 

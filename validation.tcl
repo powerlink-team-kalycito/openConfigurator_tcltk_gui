@@ -279,18 +279,36 @@ proc IsValidIdx {input len} {
 #Output      : 0 or 1
 #Description : Validates whether an entry is a index and does not exceed specified range
 ###############################################################################################
-proc IsTableHex {input len tbl row col} {
+proc IsTableHex {input preinput mode idx len tbl row col win} {
 	#puts "tbl->$tbl==row->$row===col->$col"
+	
+	if {[string match -nocase "0x*" $input]} {
+		set input [string range $input 2 end]
+	} elseif {[string match -nocase "x*" $input]} {
+		#puts "starting with hex"
+		set input [string range $input 1 end]
+	} else {
+		if {[string match -nocase "*0x*" $input]} {
+			return 0
+		} elseif { $preinput == "0x[string range $input 1 end]" } {
+			#x is being deleted 
+			return 0
+		} else {
+			set input $input
+		}
+	}
+
 	if {[string is xdigit $input] == 0 || [string length $input] > $len } {
 		return 0
 	} else {
-		set no [$tbl cellcget $row,0 -text]
-		set mappEntr [$tbl cellcget $row,3 -text]
-		set index [$tbl cellcget $row,4 -text]
-		set subIndex [$tbl cellcget $row,5 -text]
-		set reserved [$tbl cellcget $row,6 -text]
-		set offset [$tbl cellcget $row,7 -text]
-		set length [$tbl cellcget $row,8 -text]
+		#puts "IsTableHex input->$input"
+		set no [string range [$tbl cellcget $row,0 -text] 2 end]
+		set mappEntr [string range [$tbl cellcget $row,3 -text] 2 end]
+		set index [string range [$tbl cellcget $row,4 -text] 2 end]
+		set subIndex [string range [$tbl cellcget $row,5 -text] 2 end]
+		set reserved [string range [$tbl cellcget $row,6 -text] 2 end]
+		set offset [string range [$tbl cellcget $row,7 -text] 2 end]
+		set length [string range [$tbl cellcget $row,8 -text] 2 end]
   		switch $col {
 			3 {
 				set length [string range $input 0 3]
@@ -298,13 +316,13 @@ proc IsTableHex {input len tbl row col} {
 				set reserved [string range $input 8 9]
 				set subIndex [string range $input 10 11]
 				set index [string range $input 12 15]
-				$tbl cellconfigure $row,3 -text $input
-				$tbl cellconfigure $row,4 -text $index
-				$tbl cellconfigure $row,5 -text $subIndex
-				$tbl cellconfigure $row,6 -text $reserved
-				$tbl cellconfigure $row,7 -text $offset
-				$tbl cellconfigure $row,8 -text $length
-            			
+				$tbl cellconfigure $row,4 -text 0x$index
+				$tbl cellconfigure $row,5 -text 0x$subIndex
+				$tbl cellconfigure $row,6 -text 0x$reserved
+				$tbl cellconfigure $row,7 -text 0x$offset
+				$tbl cellconfigure $row,8 -text 0x$length
+				after 1 SetTableValue $win $mode $idx 0x$input
+            			return 1
         		}
 
         		4 {
@@ -324,15 +342,28 @@ proc IsTableHex {input len tbl row col} {
 				set mappEntr $input$offset$reserved$subIndex$index
  			}
     		}
-		$tbl cellconfigure $row,3 -text $mappEntr
-		#$tbl delete $row
-		#$tbl insert $row [list $no $mappEntr $index $subIndex $reserved $offset $length]
+		$tbl cellconfigure $row,3 -text 0x$mappEntr
+		after 1 SetTableValue $win $mode $idx 0x$input
 		return 1
 	}
 }
 
+proc SetTableValue { win mode idx input } {
+	$win configure -validate none
+	$win delete 0 end
+	$win insert 0 $input
+	if {$mode == 0} {
+		#value has been deleted
+		$win icursor $idx
+	} else {
+		#value has been inserted
+		$win icursor [expr $idx+1] 
+	}
+	$win configure -validate key
+}
 
 proc _ConvertHex {tmpVal} {
+	#puts "_ConvertHex invoked"
 	if { $tmpVal > 4294967295 } {
 		set calcVal $tmpVal
 		set finalVal ""
@@ -356,10 +387,16 @@ proc _ConvertHex {tmpVal} {
 			puts "calcVal->$calcVal"
 		}
 		set tmpVal $finalVal
+	} elseif { $tmpVal == 0 } {
+		#puts "tmpVal equal to zero\n"
+		set tmpVal 0
+		
 	} else {
-		if { [catch {set tmpVal [format %X $tmpVal]}] } {
-			set tmpVal [string trimleft $tmpVal 0]
-			catch {set tmpVal [format %X $tmpVal]}
+		set tempVal [string trimleft $tmpVal 0] ; #zero is trimmed otherwise considered as octal
+		if { [catch {set tempVal [format %X $tempVal]}] } {
+			#raised an error return the sent value itself
+		} else {
+			set tmpVal $tempVal
 		}
 	}
 	return $tmpVal

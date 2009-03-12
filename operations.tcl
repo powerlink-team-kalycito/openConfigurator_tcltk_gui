@@ -674,6 +674,7 @@ proc Editor::create { } {
     	global f1
     	global f2
 	global LastTableFocus
+	global width
 	
     	variable bb_connect
    	variable mainframe
@@ -707,6 +708,14 @@ proc Editor::create { } {
     	variable pdoMenu
     	variable idxMenu
     	variable sidxMenu	
+    
+    
+	if { "$tcl_platform(platform)" == "windows" } {
+		set width 10
+	} elseif { "$tcl_platform(platform)" == "unix" } {
+		set width 7
+	}
+    
     
 	set LastTableFocus ""
     
@@ -1110,7 +1119,7 @@ proc Editor::create { } {
 	[lindex $f2 1] columnconfigure 8 -background #e0e8f0 -width 11
 
 	bind [lindex $f2 1] <Enter> {
-		puts "enter tablelist LastTableFocus ->$LastTableFocus"
+		#puts "enter tablelist LastTableFocus ->$LastTableFocus"
 		global LastTableFocus
 		if { [ winfo exists $LastTableFocus ] && [ string match "[lindex $f2 1]*" $LastTableFocus ] } {
 			focus $LastTableFocus
@@ -1448,7 +1457,7 @@ puts "tempIndexPropi PDO ->$tempIndexProp"
 					set Reserved [string range $IndexActualValue 8 9]
 					set listSubIndex [string range $IndexActualValue 10 11]
 					set listIndex [string range $IndexActualValue 12 15]
-					[lindex $f2 1] insert $popCount [list $popCount [lindex $commParamValue 0] [lindex $commParamValue 1] $IndexActualValue $listIndex $listSubIndex $Reserved $Offset $DataSize]
+					[lindex $f2 1] insert $popCount [list 0x$popCount 0x[lindex $commParamValue 0] 0x[lindex $commParamValue 1] 0x$IndexActualValue 0x$listIndex 0x$listSubIndex 0x$Reserved 0x$Offset 0x$DataSize]
 					incr popCount 1 
 				}
 ############################################################################################################

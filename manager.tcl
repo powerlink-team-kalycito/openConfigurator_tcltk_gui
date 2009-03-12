@@ -86,6 +86,7 @@ proc EditManager::create_tab {nb filename choice} {
     	global tmpValue$_newPageCounter
     	#global hexDec$_newPageCounter
 	global ra_dataType
+	global ra_gen
     	set pageName "page$_newPageCounter"
     	#set frame [$nb insert end $pageName -text $filename ]
 
@@ -105,12 +106,16 @@ proc EditManager::create_tab {nb filename choice} {
 	set tabInnerf0 [$tabTitlef0 getframe]
 	set tabTitlef1 [TitleFrame $uf.tabTitlef1 -text "Properties" ]
 	set tabInnerf1 [$tabTitlef1 getframe]
+	set tabInnerf0_1 [frame $tabInnerf0.frame1 ]
 
 	label $tabInnerf0.l_idx     -text "Index  " 
         label $tabInnerf0.l_empty1 -text "" 
         label $tabInnerf0.l_empty2 -text "" 
 	label $tabInnerf0.l_nam     -text "Name           " 
-        label $tabInnerf0.l_empty3 -text ""  
+        label $tabInnerf0.l_empty3 -text ""
+	#label $tabInnerf0_1.l_generate -text "Include index in CDC generation? "
+	label $tabInnerf0.l_generate -text "Include index in CDC generation? "
+	#label $tabInnerf0.l_empty7 -text ""
 	label $tabInnerf1.l_obj     -text "Object Type" 
         label $tabInnerf1.l_empty4 -text "" 
 	label $tabInnerf1.l_data    -text "Data Type"  
@@ -142,6 +147,11 @@ proc EditManager::create_tab {nb filename choice} {
 	set ra_ip  [radiobutton $frame1.ra_ip -text "IP address" -variable ra_dataType -value ip -command "ConvertIP $tabInnerf1"]
 	set ra_mac  [radiobutton $frame1.ra_mac -text "MAC address" -variable ra_dataType -value mac -command "ConvertMAC $tabInnerf1"]
         #$frame1.ra_dec select
+	
+	set ra_genYes [radiobutton $tabInnerf0_1.ra_genYes -text "Yes" -variable ra_gen -value genYes]
+	set ra_genNo [radiobutton $tabInnerf0_1.ra_genNo -text "No" -variable ra_gen -value genNo]
+	$tabInnerf0_1.ra_genYes select
+	
 	grid config $tabTitlef0 -row 0 -column 0 -sticky ew
 	label $uf.l_empty -text ""
 	grid config $uf.l_empty -row 1 -column 0
@@ -151,6 +161,13 @@ proc EditManager::create_tab {nb filename choice} {
 	grid config $tabInnerf0.en_idx1 -row 0 -column 1 -padx 5
 	grid config $tabInnerf0.l_empty1 -row 1 -column 0 -columnspan 2
 	grid config $tabInnerf0.l_empty2 -row 3 -column 0 -columnspan 2
+	grid config $tabInnerf0.l_generate -row 4 -column 0 -columnspan 2 -sticky w
+	#grid config $tabInnerf0_1 -row 4 -column 2 -columnspan 2 -sticky w
+	grid config $tabInnerf0_1 -row 4 -column 1 -columnspan 2 -sticky e
+	grid config $tabInnerf0_1.ra_genYes -row 0 -column 0 -sticky e
+	grid config $tabInnerf0_1.ra_genNo -row 0 -column 1 -sticky e
+	grid config $tabInnerf0.l_empty3 -row 5 -column 0 -columnspan 2
+	
 	grid config $tabInnerf1.l_data -row 0 -column 0 -sticky w 
 	grid config $tabInnerf1.en_data1 -row 0 -column 1 -padx 5
 	grid config $tabInnerf1.l_upper -row 0 -column 2 -sticky w
@@ -244,30 +261,10 @@ proc EditManager::create_table {nb filename choice} {
     	catch "font delete custom1"
     	font create custom1 -size 9 -family TkDefaultFont
 
-    	if {$choice == "ind"} {
-		set st [tablelist::tablelist $st \
-			-columns {0 "Label" left
-		      	0 "Value" center} \
-	    		-setgrid no -width 0 -height 1 \
-	    		-stripebackground gray98  \
-	    		-labelcommand "" \
-	    		-resizable 1 -movablecolumns 0 -movablerows 0 \
-	    		-showseparators 1 -spacing 10 -font custom1]
-
-		set fram [frame $frame.f1]  
-		label $fram.l_empty -text "  " -height 1 
-		button $fram.b_sav -text " Save " -command "YetToImplement"
-		label $fram.l_empty1 -text "  "
-		button $fram.b_dis -text "Discard" -command "YetToImplement"
-		grid config $fram.l_empty -row 0 -column 0 -columnspan 2
-		grid config $fram.b_sav -row 1 -column 0 -sticky s
-		grid config $fram.l_empty1 -row 1 -column 1 -sticky s
-		grid config $fram.b_dis -row 1 -column 2 -sticky s
-		pack $fram -side bottom
-    	} elseif {$choice == "pdo"} {
+	if {$choice == "pdo"} {
 
 
-	#tablelist::addBWidgetEntry
+		#tablelist::addBWidgetEntry
 
 		set st [tablelist::tablelist $st \
 	    		-columns {0 "No" left
@@ -295,7 +292,9 @@ proc EditManager::create_table {nb filename choice} {
 		$st columnconfigure 6 -editable yes -editwindow entry
 		$st columnconfigure 7 -editable yes -editwindow entry
 		$st columnconfigure 8 -editable yes -editwindow entry
-   	}
+   	} else {
+		#invalid choice
+	}
 
 	
 
@@ -885,27 +884,27 @@ proc DiscardValue {frame0 frame1} {
 
 proc StartEdit {tbl row col text} {
 	#puts "tbl->$tbl==row->$row===col->$col"
-	set w [$tbl editwinpath]
+	set win [$tbl editwinpath]
   	switch $col {
 		3 {
-            		$w configure -invalidcommand bell -validate key  -validatecommand "IsTableHex %P 16 $tbl $row $col"
+            		$win configure -invalidcommand bell -validate key  -validatecommand "IsTableHex %P %s %d %i 16 $tbl $row $col $win"
         	}
 
         	4 {
-			$w configure -invalidcommand bell -validate key  -validatecommand "IsTableHex %P 4 $tbl $row $col"
+			$win configure -invalidcommand bell -validate key  -validatecommand "IsTableHex %P %s %d %i 4 $tbl $row $col $win"
         	}
 
 	        5 {
-			$w configure -invalidcommand bell -validate key  -validatecommand "IsTableHex %P 2 $tbl $row $col"
+			$win configure -invalidcommand bell -validate key  -validatecommand "IsTableHex %P %s %d %i 2 $tbl $row $col $win"
         	}
         	6 {
-			$w configure -invalidcommand bell -validate key  -validatecommand "IsTableHex %P 2 $tbl $row $col"
+			$win configure -invalidcommand bell -validate key  -validatecommand "IsTableHex %P %s %d %i 2 $tbl $row $col $win"
         	}
         	7 {
-            		$w configure -invalidcommand bell -validate key  -validatecommand "IsTableHex %P 4 $tbl $row $col"
+            		$win configure -invalidcommand bell -validate key  -validatecommand "IsTableHex %P %s %d %i 4 $tbl $row $col $win"
         	}
        	 	8 {
-            		$w configure -invalidcommand bell -validate key  -validatecommand "IsTableHex %P 4 $tbl $row $col"
+            		$win configure -invalidcommand bell -validate key  -validatecommand "IsTableHex %P %s %d %i 4 $tbl $row $col $win"
         	}
     	}
 
@@ -913,6 +912,11 @@ proc StartEdit {tbl row col text} {
 }
 
 proc EndEdit {tbl row col text} {
+	if { [string match -nocase "0x*" $text] } {
+		set text [string range $text 2 end]
+	} else {
+		$tbl rejectinput
+	}
   	switch $col {
 		3 {
 			if {[string length $text] != 16} {
@@ -965,7 +969,7 @@ proc EndEdit {tbl row col text} {
 			}
         	}
     	}
-	 return $text
+	 return 0x$text
 }
 
 proc SaveTable {tableWid} {

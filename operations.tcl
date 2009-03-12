@@ -741,27 +741,15 @@ proc Editor::create { } {
         	"&Project" {} {} 0 {
             		{command "Build Project    F7" {noFile} "Generate CDC and XML" {} -command BuildProject }
             		{command "Clean Project" {noFile} "Clean" {} -command CleanProject }
-	    		{command "Stop Build" {}  "Reserved" {} -command YetToImplement -state disabled}
             		{separator}
             		{command "Project Settings" {}  "Project Settings" {} -command YetToImplement }
         	}
-        	"&Connection" all options 0 {
-            		{command "Connect to POWERLINK network" {connect} "Establish connection with POWERLINK network" {} -command Editor::Connect }
-            		{command "Disconnect from POWERLINK network" {disconnect} "Disconnect from POWERLINK network" {} -command Editor::Disconnect -state disabled }
-	    		{separator}
-            		{command "Connection Settings" {}  "Connection Settings" {} -command ConnectionSettingWindow -state normal}
-        	}
         	"&Actions" all options 0 {
-        		{command "SDO Read/Write" {noFile} "Do SDO Read or Write" {} -command YetToImplement -state disabled}
             		{command "Transfer CDC   Ctrl+F5" {noFile} "Transfer CDC" {} -command "TransferCDC 1" }
             		{command "Transfer XAP   Ctrl+F6" {noFile} "Transfer XAP" {} -command "TransferXAP 1" }
 	    		{separator}
             		{command "Start MN" {noFile} "Start the Managing Node" {} -command YetToImplement }
             		{command "Stop MN" {noFile} "Stop the Managing Node" {} -command YetToImplement }
-            		{separator}
-            		{command "Configure SDO connection" {}  "Reserved" {} -command YetToImplement -state disabled}
-            		{command "Configure CDC Transfer" {}  "Reserved" {} -command YetToImplement -state disabled}
-            		{command "Configure XML Transfer" {}  "Reserved" {} -command YetToImplement -state disabled}
         	}
         	"&View" all options 0 {
             		{checkbutton "Show Output Console" {all option} "Show Console Window" {}
@@ -884,9 +872,7 @@ proc Editor::create { } {
 	set Editor::prgindic -1
 	set Editor::status ""
 	set mainframe [MainFrame::create .mainframe \
-	        -menu $descmenu  \
-        	-textvariable Editor::status ]
-	$mainframe showstatusbar status
+	        -menu $descmenu  ]
 
     	# toolbar 1 creation
 	set tb1  [MainFrame::addtoolbar $mainframe]
@@ -946,25 +932,6 @@ proc Editor::create { } {
 
 	set sep2 [Separator::create $tb1.sep2 -orient vertical]
 	pack $sep2 -side left -fill y -padx 4 -anchor w
-
-
-
-
-	set bbox [ButtonBox::create $tb1.bbox6 -spacing 1 -padx 1 -pady 1]
-	pack $bbox -side left -anchor w
-	set bb_connect [ButtonBox::add $bbox -image [Bitmap::get connect]\
-	    	-height 21\
-    		-width 21\
-	        -helptype balloon\
-	        -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
-	        -helptext "connection"\
-	    	-command Editor::TogConnect ]
-	pack $bb_connect -side left -padx 4  
-
-
-	set sep3 [Separator::create $tb1.sep3 -orient vertical]
-	pack $sep3 -side left -fill y -padx 4 -anchor w
-
 
 	set bbox [ButtonBox::create $tb1.bbox4 -spacing 1 -padx 1 -pady 1]
 	pack $bbox -side left -anchor w
@@ -1041,7 +1008,6 @@ proc Editor::create { } {
    
 	$Editor::mainframe showtoolbar 0 $Editor::toolbar1
 	set temp [MainFrame::addindicator $mainframe -textvariable Editor::connect_status ]
-	set Editor::connect_status "Disconnected from IP :0.0.0.0"
 	$temp configure -relief flat 
 	# NoteBook creation
 	set frame [$mainframe getframe]
@@ -1985,56 +1951,6 @@ proc AddCN {cnName tmpImpDir nodeId} {
 ################################################################################################
 proc YetToImplement {} {
 	tk_messageBox -message "Yet to be Implemented !" -title Info -icon info
-}
-
-################################################################################################
-#proc Editor::TogConnect
-#Input       : -
-#Output      : -
-#Description : Toggles image and calls appropriate procedures for connect and disconect  
-################################################################################################
-proc Editor::TogConnect {} {
-	variable bb_connect
-	set tog [$bb_connect cget -image]
-	#puts $tog
-	#to toggle image, the value varies according to images added 
-	if {$tog == "image15"} {
-		Editor::Connect	       
-	} else {
-		Editor::Disconnect
-	}
-}
-
-################################################################################################
-#proc Editor::Connect
-#Input       : -
-#Output      : -
-#Description : Enables the menu for connect
-################################################################################################
-proc Editor::Connect {} {
-	variable bb_connect
-        variable mainframe
-	$bb_connect configure -image [Bitmap::get disconnect]
-	$mainframe setmenustate connect disabled
-	$mainframe setmenustate disconnect normal
-	set Editor::connect_status "Connected to IP :0.0.0.0"
-	YetToImplement
-}
-
-################################################################################################
-#proc Editor::Disconnect
-#Input       : -
-#Output      : -
-#Description : Enables the menu for disconnect
-################################################################################################
-proc Editor::Disconnect {} {
-	variable bb_connect
-        variable mainframe
-	$bb_connect configure -image [Bitmap::get connect]
-	$mainframe setmenustate disconnect disabled
-	$mainframe setmenustate connect normal
-	set Editor::connect_status "Disconnected from IP :0.0.0.0"
-	YetToImplement
 }
 
 ################################################################################################

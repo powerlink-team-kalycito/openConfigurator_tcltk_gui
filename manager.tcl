@@ -161,12 +161,7 @@ proc EditManager::create_tab {nb filename choice} {
 	grid config $tabInnerf0.en_idx1 -row 0 -column 1 -padx 5
 	grid config $tabInnerf0.l_empty1 -row 1 -column 0 -columnspan 2
 	grid config $tabInnerf0.l_empty2 -row 3 -column 0 -columnspan 2
-	grid config $tabInnerf0.l_generate -row 4 -column 0 -columnspan 2 -sticky w
-	#grid config $tabInnerf0_1 -row 4 -column 2 -columnspan 2 -sticky w
-	grid config $tabInnerf0_1 -row 4 -column 1 -columnspan 2 -sticky e
-	grid config $tabInnerf0_1.ra_genYes -row 0 -column 0 -sticky e
-	grid config $tabInnerf0_1.ra_genNo -row 0 -column 1 -sticky e
-	grid config $tabInnerf0.l_empty3 -row 5 -column 0 -columnspan 2
+	
 	
 	grid config $tabInnerf1.l_data -row 0 -column 0 -sticky w 
 	grid config $tabInnerf1.en_data1 -row 0 -column 1 -padx 5
@@ -207,6 +202,11 @@ proc EditManager::create_tab {nb filename choice} {
 		grid config $tabInnerf0.en_idx1 -row 0 -column 1 -sticky w -padx 0
 		grid config $tabInnerf0.l_nam -row 2 -column 0 -sticky w 
 		grid config $tabInnerf0.en_nam1 -row 2 -column 1  -sticky w -columnspan 1
+		grid config $tabInnerf0.l_generate -row 4 -column 0 -columnspan 2 -sticky w
+		grid config $tabInnerf0_1 -row 4 -column 1 -columnspan 2 -sticky e
+		grid config $tabInnerf0_1.ra_genYes -row 0 -column 0 -sticky e
+		grid config $tabInnerf0_1.ra_genNo -row 0 -column 1 -sticky e
+		grid config $tabInnerf0.l_empty3 -row 5 -column 0 -columnspan 2
 	} elseif {$choice == "sub"} {
 		$tabTitlef0 configure -text "Sub Index" 
 		$tabTitlef1 configure -text "Properties" 

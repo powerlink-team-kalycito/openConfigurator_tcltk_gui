@@ -636,12 +636,18 @@ proc RePopulate { PjtDir PjtName } {
 					set node CN-$mnCount-$cnCount
 				}
 puts "node->$node"
-				catch { Import $node $nodeType $nodeId }
+				if { [ catch { Import $node $nodeType $nodeId } ] } {
+					#some error has occured
+					CloseProject
+					return
+				}
 				incr cnCount
 				lappend nodeIdList $nodeId 
 			} else {
 				#some error has occured
-				continue
+				#continue
+				CloseProject
+				return
 			}
 		}
 
@@ -674,7 +680,6 @@ proc Editor::create { } {
     	global f1
     	global f2
 	global LastTableFocus
-	global width
 	
     	variable bb_connect
    	variable mainframe
@@ -708,13 +713,6 @@ proc Editor::create { } {
     	variable pdoMenu
     	variable idxMenu
     	variable sidxMenu	
-    
-    
-	if { "$tcl_platform(platform)" == "windows" } {
-		set width 10
-	} elseif { "$tcl_platform(platform)" == "unix" } {
-		set width 7
-	}
     
     
 	set LastTableFocus ""
@@ -1297,15 +1295,15 @@ proc Editor::SingleClickNode {node} {
 				lappend mappParamList [list $indexId $tempIdx]
 			}
 		}
-puts "commParamList->$commParamList"		
-puts "mappParamList->$mappParamList"		
+		#puts "commParamList->$commParamList"		
+		#puts "mappParamList->$mappParamList"		
 		set finalMappList ""
  		set populatedPDOList ""
 		
 		foreach chk $mappParamList {
 			set paramID [string range [lindex $chk 0] end-1 end]
-puts paramID->$paramID
-puts "lsearch $commParamList [list $commParam$paramID *]"
+		#puts paramID->$paramID
+		#puts "lsearch $commParamList [list $commParam$paramID *]"
 			set find [lsearch $commParamList [list $commParam$paramID *]]
 			puts "find->$find"
 			if { $find != -1 } {
@@ -1316,8 +1314,8 @@ puts "lsearch $commParamList [list $commParam$paramID *]"
 				lappend populatedPDOList [lindex $chk 1] 				
 			}
 		}
-puts "finalMappList->$finalMappList"
-puts "populatedPDOList->$populatedPDOList"
+		#puts "finalMappList->$finalMappList"
+		#puts "populatedPDOList->$populatedPDOList"
 		set popCount 0 
 		[lindex $f2 1] delete 0 end
 		for {set count 0} { $count <= [expr [llength $finalMappList]-2] } {incr count 2} {
@@ -1338,11 +1336,9 @@ puts "populatedPDOList->$populatedPDOList"
 						set catchErrCode [IfSubIndexExists $nodeId $nodeType $indexId $subIndexId $subIndexPos $indexPos] ; #newly added
 						set indexPos [intp_value $indexPos] ; #newly added
 						set subIndexPos [intp_value $subIndexPos] ; #newly added
-
 						#set tempIndexProp [GetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId 4]
 						set tempIndexProp [GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos 5 ] ; # 5 is passed to get the actual value
-#puts "tempIndexPropi PDO ->$tempIndexProp"
-	
+						#puts "tempIndexPropi PDO ->$tempIndexProp"
 						set ErrCode [ocfmRetCode_code_get [lindex $tempIndexProp 0] ]		
 						if {$ErrCode != 0} {
 							puts "ErrCode in singleclick for TDDO and RPDO : $ErrCode"
@@ -1351,7 +1347,6 @@ puts "populatedPDOList->$populatedPDOList"
 							#lappend commParamValue []
 							continue	
 						}
-
 						set IndexActualValue [lindex $tempIndexProp 1]
 						#puts "IndexActualValue->$IndexActualValue"
 						if {[string match -nocase "0x*" $IndexActualValue] } {
@@ -1383,9 +1378,9 @@ puts "populatedPDOList->$populatedPDOList"
 				#set commParamValue [list "" "" ]
 			}
 ############################################################################################################
-			puts "commParamValue->$commParamValue"
+			#puts "commParamValue->$commParamValue"
 			set tempIdx [lindex $finalMappList $count+1]
-			puts "tempIdx->$tempIdx"
+			#puts "tempIdx->$tempIdx"
 			set indexId [string range [$updatetree itemcget $tempIdx -text] end-4 end-1 ]
 			set sidx [$updatetree nodes $tempIdx]
 			foreach tempSidx $sidx { 
@@ -1399,7 +1394,7 @@ puts "populatedPDOList->$populatedPDOList"
 
 					#set tempIndexProp [GetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId 4]
 					set tempIndexProp [GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos 5 ] ; # 5 is passed to get the actual value
-puts "tempIndexPropi PDO ->$tempIndexProp"
+					#puts "tempIndexPropi PDO ->$tempIndexProp"
 
 					set ErrCode [ocfmRetCode_code_get [lindex $tempIndexProp 0] ]		
 					if {$ErrCode != 0} {
@@ -1423,7 +1418,7 @@ puts "tempIndexPropi PDO ->$tempIndexProp"
 					set Reserved [string range $IndexActualValue 8 9]
 					set listSubIndex [string range $IndexActualValue 10 11]
 					set listIndex [string range $IndexActualValue 12 15]
-					[lindex $f2 1] insert $popCount [list 0x$popCount 0x[lindex $commParamValue 0] 0x[lindex $commParamValue 1] 0x$IndexActualValue 0x$listIndex 0x$listSubIndex 0x$Reserved 0x$Offset 0x$DataSize]
+					[lindex $f2 1] insert $popCount [list $popCount 0x[lindex $commParamValue 0] 0x[lindex $commParamValue 1] 0x$IndexActualValue 0x$listIndex 0x$listSubIndex 0x$Reserved 0x$Offset 0x$DataSize]
 					incr popCount 1 
 				}
 ############################################################################################################
@@ -1461,7 +1456,7 @@ puts "tempIndexPropi PDO ->$tempIndexProp"
 	set catchErrCode [IfSubIndexExists $nodeId $nodeType $indexId $subIndexId $subIndexPos $indexPos] ; #newly added
 	set indexPos [intp_value $indexPos] ; #newly added
 	set subIndexPos [intp_value $subIndexPos] ; #newly added
-#puts "\n\n\tindexPos->$indexPos====subIndexPos->$subIndexPos\n"
+	#puts "\n\n\tindexPos->$indexPos====subIndexPos->$subIndexPos\n"
 
 
 	set IndexProp []
@@ -1815,6 +1810,12 @@ proc CloseProject {} {
 		
 }
 
+################################################################################################
+#proc ResetGlobalData
+#Input       : -
+#Output      : -
+#Description : -
+################################################################################################
 proc ResetGlobalData {} {
 	
 	global PjtDir
@@ -1854,6 +1855,12 @@ proc ResetGlobalData {} {
 	[lindex $f2 1] configure -state disabled
 }
 
+################################################################################################
+#proc DeleteAllNode
+#Input       : -
+#Output      : -
+#Description : -
+################################################################################################
 proc DeleteAllNode {} {
 	global nodeIdList
 	
@@ -2224,107 +2231,6 @@ proc FindSpace::Find { searchStr {node ""} {mode 0} } {
 }
 
 ################################################################################################
-#proc FindSpace::FindPdo
-#Input       : pdo node, search string
-#Output      : nodes containing search string
-#Description : Finds nodes containing search string in PDO
-################################################################################################
-proc FindSpace::FindPdo {pdoNode searchStr mode node flag prev next chk } {
-	global updatetree
-
-#puts "mode->$mode"
-#puts "node->$node"
-#puts "flag->$flag"
-#puts "prev->$prev"
-#puts "next->$next"
-#puts "chk->$chk"
-		
-	set childPdo [$updatetree nodes $pdoNode]
-	foreach tempPdo $childPdo {
-		if {$tempPdo == $node && $mode != 0} {
-			if {$mode == "prev"} {
-				return $prev
-			} else {
-				set flag 1
-			}
-		}
-		set idx [$updatetree nodes $tempPdo]
-		foreach tempIdx $idx { 
-			if {$tempIdx == $node && $mode != 0} {
-				if {$mode == "prev"} {
-					return $prev
-				} else {
-					set flag 1
-					set chk 1
-				}
-						
-#puts "flag 1 in idx ->$tempIdx"	
-			}
-			if {[string match -nocase "*$searchStr*" [$updatetree itemcget $tempIdx -text]] && $chk == 0} {
-				#lappend FindSpace::findList $tempIdx
-				#puts -nonewline "......MATCH idx......"
-				if { $mode == 0 } {
-					FindSpace::OpenParent $updatetree $tempIdx
-					return 1
-				} elseif {$mode == "prev" } {
-					set prev $tempIdx
-#puts "prev in pdo idx ->$prev"
-				} elseif {$mode == "next" } {
-					if {$flag == 0} {
-						#do nothing
-					} elseif {$flag == 1} {
-						set next $tempIdx
-#puts "next in pdo sidx ->$next"
-						return $next
-					}
-	
-				}
-			} elseif {$chk == 1} {
-				set chk 0
-			}
-			set sidx [$updatetree nodes $tempIdx]
-			foreach tempSidx $sidx { 
-				if {$tempSidx == $node && $mode != 0} {
-					if {$mode == "prev"} {
-						return $prev
-					} else {
-						set flag 1
-						set chk 1
-					}
-						
-#puts "flag 1 in idx ->$tempIdx"	
-				}
-				if {[string match -nocase "*$searchStr*" [$updatetree itemcget $tempSidx -text]] && $chk == 0} {
-					#lappend FindSpace::findList $tempSidx
-					#puts -nonewline "......MATCH sidx......"
-					if {$tempSidx == $node && $mode == 1 && $flag ==0 } {
-						set flag 1
-					}
-					if { $mode == 0 } {
-						FindSpace::OpenParent $updatetree $tempSidx
-						return 1
-					} elseif {$mode == "prev" } {
-						set prev $tempSidx
-#puts "prev in pdo sidx ->$prev"
-					} elseif {$mode == "next" } {
-						if {$flag == 0} {
-							#do nothing
-						} elseif {$flag == 1} {
-							set next $tempSidx
-#puts "next in pdo sidx ->$next"
-							return $next
-						}
-		
-					}
-				} elseif {$chk == 1} {
-					set chk 0
-				}
-			}
-		}	
-	}
-	return "no_match"
-}
-################################################################################################
 #proc FindSpace::OpenParent
 #Input       : pdo node, search string
 #Output      : nodes containing search string
@@ -2693,7 +2599,8 @@ proc BuildProject {} {
 		puts "GenerateXAP [file join $PjtDir CDC_XAP $fileLocation_XAP.xap] fileLocation_XAP->$fileLocation_XAP"
 		#set catchErrCode [GenerateCDC [file join $PjtDir CDC_XAP $fileLocation_CDC] ]
 		#set catchErrCode [GenerateXAP XAP]
-		set catchErrCode [GenerateXAP [file join $PjtDir CDC_XAP $fileLocation_XAP.xap] ]
+		#set catchErrCode [GenerateXAP [file join $PjtDir CDC_XAP $fileLocation_XAP.xap] ]
+		set catchErrCode [GenerateXAP [file join $PjtDir CDC_XAP XAP] ]
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
 		##puts "ErrCode:$ErrCode"
 		if { $ErrCode != 0 } {

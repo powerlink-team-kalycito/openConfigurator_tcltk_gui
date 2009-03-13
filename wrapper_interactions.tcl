@@ -199,26 +199,14 @@ proc SortNode {nodeType nodeID nodePos choice {indexPos ""} {indexId ""}} {
 #Description : Reads an XDC/XDD file and populates tree
 ###############################################################################################
 proc Import {parentNode nodeType nodeID } {
-#puts "start of import"
 	global updatetree
 	global cnCount
-	#ImportProgress start
-
-#thread::send [tsv::set application importProgress] "StartProgress" ; #
-#after 10000
 
 	global LocvarProgbar
 	set LocvarProgbar 0
 	set errorString []
-	#puts "\n\n\t******Import*****"
 
 	set nodePos [new_intp]
-	#puts "IfNodeExists nodeID->$nodeID nodeType->$nodeType nodePos->$nodePos"
-	#IfNodeExists API is used to get the nodePosition which is needed fro various operation	
-	#set catchErrCode [IfNodeExists $nodeID $nodeType $nodePos]
-
-
-
 
 	#TODO waiting for new so then implement it
 	set ExistfFlag [new_boolp]
@@ -230,9 +218,13 @@ proc Import {parentNode nodeType nodeID } {
 	if { $ErrCode == 0 && $ExistfFlag == 1 } {
 		#the node exist continue 
 	} else {
-		tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon 	warning
-		#tk_messageBox -message "ErrCode : $ErrCode\nExistfFlag : $ExistfFlag" -title Warning -icon warning
-		#ImportProgress stop
+		#tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+		if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+		} else {
+			tk_messageBox -message "Unknown Error" -title Warning -icon warning
+                        puts "Unknown Error in Import ->[ocfmRetCode_errorString_get $catchErrCode]\n"
+		}
 		return
 	}
 
@@ -251,8 +243,6 @@ proc Import {parentNode nodeType nodeID } {
 	set count [intp_value $count]
 	#puts COUNT$count
 	if {$count == 0} {
-		#thread::send -async [tsv::set application importProgress] "StopProgress"
-		#ImportProgress stop
       		return
 	}
 
@@ -293,7 +283,7 @@ proc Import {parentNode nodeType nodeID } {
 			set SIdxName [lindex $catchErr 1]
 			#set SIdxName [GetSubIndexAttributes $nodeID $nodeType $IndexValue $SIdxValue 0]
 			#set SIdxName [lindex $SIdxName 1]
-		#	#set SIdxName [CBaseIndex_getName $ObjSIdx]
+			#set SIdxName [CBaseIndex_getName $ObjSIdx]
 			$updatetree insert end IndexValue-$parentId-$inc SubIndexValue-$parentId-$inc-$tmpCount -text $SIdxName\(0x$SIdxValue\) -open 0 -image [Bitmap::get subindex]
 		}
 		update idletasks
@@ -380,7 +370,5 @@ proc Import {parentNode nodeType nodeID } {
 	}
 	#puts "errorString->$errorString...nodeType->$nodeType...nodeID->$nodeID..."
 	set LocvarProgbar 100
-	#ImportProgress stop
-#tk_messageBox -message "clicing ok destroys progress window"
 }
 

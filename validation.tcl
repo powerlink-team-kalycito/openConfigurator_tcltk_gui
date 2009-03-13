@@ -169,9 +169,9 @@ proc IsDec {input tmpValue mode idx} {
 	#set tempInput [string trimleft $input 0] ; #trimming zero leads to error	
 	set tempInput $input
 	#puts "IsDec test input->$input tempInput->$tempInput isint->[string is int $tempInput]"
-	#340282366920938463463374607431768211455 is the corresponding valu of ffffffffffffffffffffffffffffffff
+	#340282366920938463463374607431768211455 is the corresponding value of 32 F's
 	#115792089237316195423570985008687907853269984665640564039457584007913129639935 is corresponding value of 64 F's
-	if { [Int $tempInput] == 0 || $tempInput > 115792089237316195423570985008687907853269984665640564039457584007913129639935 || [string length $tempInput] > 78 } {
+	if { [string length $tempInput] > 78 || $tempInput > 115792089237316195423570985008687907853269984665640564039457584007913129639935 || [Int $tempInput] == 0  } {
 		return 0
 	} else {
 		after 1 SetValue $tmpValue.en_value1 $mode $idx $input
@@ -183,7 +183,7 @@ proc Int {input} {
 	set exp {[0-9]}
 	#puts "\n\n********"
 	for {set cnt 0} {$cnt < [string length $input]} {incr cnt} {
-		puts "string index $input $cnt ->[string index $input $cnt]"
+		#puts "string index $input $cnt ->[string index $input $cnt]"
 		set res [regexp -- $exp [string index $input $cnt] ]
 		if {$res == 1} {
 			#continue with process
@@ -193,6 +193,7 @@ proc Int {input} {
 		}
 	}
 	#puts "*********\n\n"
+	#tk_messageBox -message "Issue"
 	return 1
 }
 
@@ -220,9 +221,9 @@ proc IsHex {input preinput tmpValue mode idx} {
 			set tempInput $input
 		}
 	}
-puts "string length $tempInput ->[string length $tempInput]"
+#puts "string length $tempInput ->[string length $tempInput]"
 
-	if { [string is xdigit $tempInput ] == 0 || [string length $tempInput] > 64 } {
+	if { [string length $tempInput] > 64 || [string is xdigit $tempInput ] == 0 } {
 		return 0
 	} else {
 		set tempInput 0x$tempInput
@@ -236,12 +237,13 @@ puts "string length $tempInput ->[string length $tempInput]"
 #proc SetValue
 #Input       : input
 #Output      : 0 or 1
-#Description : 
+#Description : #used to insert data into entry widget mainly for entry displaying actualValue
 ###############################################################################################
 proc SetValue {tmpValue mode idx {str no_input}  } {
 	puts "SetValue invoked mode->$mode idx->$idx str->$str"
 	set tmpVar [$tmpValue cget -textvariable]
-	$tmpValue configure -validate none
+	set state [$tmpValue cget -state]
+	$tmpValue configure -state normal -validate none
 	#puts SetValue->[$tmpValue cget -vcmd]
 	$tmpValue delete 0 end
 	if {$str != "no_input"} {
@@ -256,7 +258,7 @@ proc SetValue {tmpValue mode idx {str no_input}  } {
 	} else {
 		#entry box made empty no need to insert value	
 	}
-	$tmpValue configure -validate key
+	$tmpValue configure -state $state -validate key
 }
 
 ###############################################################################################
@@ -302,47 +304,47 @@ proc IsTableHex {input preinput mode idx len tbl row col win} {
 		return 0
 	} else {
 		#puts "IsTableHex input->$input"
-		set no [string range [$tbl cellcget $row,0 -text] 2 end]
-		set mappEntr [string range [$tbl cellcget $row,3 -text] 2 end]
-		set index [string range [$tbl cellcget $row,4 -text] 2 end]
-		set subIndex [string range [$tbl cellcget $row,5 -text] 2 end]
-		set reserved [string range [$tbl cellcget $row,6 -text] 2 end]
-		set offset [string range [$tbl cellcget $row,7 -text] 2 end]
-		set length [string range [$tbl cellcget $row,8 -text] 2 end]
-  		switch $col {
-			3 {
-				set length [string range $input 0 3]
-				set offset [string range $input 4 7]
-				set reserved [string range $input 8 9]
-				set subIndex [string range $input 10 11]
-				set index [string range $input 12 15]
-				$tbl cellconfigure $row,4 -text 0x$index
-				$tbl cellconfigure $row,5 -text 0x$subIndex
-				$tbl cellconfigure $row,6 -text 0x$reserved
-				$tbl cellconfigure $row,7 -text 0x$offset
-				$tbl cellconfigure $row,8 -text 0x$length
-				after 1 SetTableValue $win $mode $idx 0x$input
-            			return 1
-        		}
-
-        		4 {
-				set mappEntr $length$offset$reserved$subIndex$input
-        		}
-
-	        	5 {
-				set mappEntr $length$offset$reserved$input$index	
-        		}
-        		6 {
-				set mappEntr $length$offset$input$subIndex$index	
-        		}
-        		7 {
-				set mappEntr $length$input$reserved$subIndex$index
-        		}
-       	 		8 {
-				set mappEntr $input$offset$reserved$subIndex$index
- 			}
-    		}
-		$tbl cellconfigure $row,3 -text 0x$mappEntr
+#		set no [string range [$tbl cellcget $row,0 -text] 2 end]
+#		set mappEntr [string range [$tbl cellcget $row,3 -text] 2 end]
+#		set index [string range [$tbl cellcget $row,4 -text] 2 end]
+#		set subIndex [string range [$tbl cellcget $row,5 -text] 2 end]
+#		set reserved [string range [$tbl cellcget $row,6 -text] 2 end]
+#		set offset [string range [$tbl cellcget $row,7 -text] 2 end]
+#		set length [string range [$tbl cellcget $row,8 -text] 2 end]
+#  		switch -- $col {
+#			3 {
+#				set length [string range $input 0 3]
+#				set offset [string range $input 4 7]
+#				set reserved [string range $input 8 9]
+#				set subIndex [string range $input 10 11]
+#				set index [string range $input 12 15]
+#				$tbl cellconfigure $row,4 -text 0x$index
+#				$tbl cellconfigure $row,5 -text 0x$subIndex
+#				$tbl cellconfigure $row,6 -text 0x$reserved
+#				$tbl cellconfigure $row,7 -text 0x$offset
+#				$tbl cellconfigure $row,8 -text 0x$length
+#				after 1 SetTableValue $win $mode $idx 0x$input
+#            			return 1
+#        		}
+#
+#        		4 {
+#				set mappEntr $length$offset$reserved$subIndex$input
+#        		}
+#
+#	        	5 {
+#				set mappEntr $length$offset$reserved$input$index	
+#        		}
+#        		6 {
+#				set mappEntr $length$offset$input$subIndex$index	
+#        		}
+#        		7 {
+#				set mappEntr $length$input$reserved$subIndex$index
+#        		}
+#       	 		8 {
+#				set mappEntr $input$offset$reserved$subIndex$index
+# 			}
+#    		}
+#		$tbl cellconfigure $row,3 -text 0x$mappEntr
 		after 1 SetTableValue $win $mode $idx 0x$input
 		return 1
 	}
@@ -363,8 +365,10 @@ proc SetTableValue { win mode idx input } {
 }
 
 proc _ConvertHex {tmpVal} {
-	#puts "_ConvertHex invoked"
+	puts "_ConvertHex invoked"
 	if { $tmpVal > 4294967295 } {
+		set cnt [CntLeadZero $tmpVal] ; #counting the leading zero if they are present
+		
 		set calcVal $tmpVal
 		set finalVal ""
 		while { $calcVal > 4294967295 } {
@@ -387,16 +391,24 @@ proc _ConvertHex {tmpVal} {
 			puts "calcVal->$calcVal"
 		}
 		set tmpVal $finalVal
+		puts " AppendZero $tmpVal [expr $cnt+[string length $tmpVal] ] -> [ AppendZero $tmpVal [expr $cnt+[string length $tmpVal] ] ]"
+		set tmpVal [ AppendZero $tmpVal [expr $cnt+[string length $tmpVal] ] ] ; #appending trimmed leading zero if any
+		
 	} elseif { $tmpVal == 0 } {
 		#puts "tmpVal equal to zero\n"
-		set tmpVal 0
-		
+		#do not trim any zero pass as it is
 	} else {
+		set cnt [CntLeadZero $tmpVal] ; #counting the leading zero if they are present
+		puts "cnt->$cnt"
 		set tempVal [string trimleft $tmpVal 0] ; #zero is trimmed otherwise considered as octal
 		if { [catch {set tempVal [format %X $tempVal]}] } {
-			#raised an error return the sent value itself
+			puts "raised an error return the sent value itself tempVal->$tempVal"
+			set tempVal [format %X $tempVal]
 		} else {
 			set tmpVal $tempVal
+			puts " AppendZero $tmpVal [expr $cnt+[string length $tmpVal] ] -> [ AppendZero $tmpVal [expr $cnt+[string length $tmpVal] ] ]"
+			set tmpVal [ AppendZero $tmpVal [expr $cnt+[string length $tmpVal] ] ] ; #appending trimmed leading zero if any
+			
 		}
 	}
 	return $tmpVal

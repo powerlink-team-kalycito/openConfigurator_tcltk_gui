@@ -98,17 +98,11 @@ tsv::set application importProgress [thread::create -joinable {
 	proc StartProgress {} {
 		puts "invoked thread start progress"
 		ImportProgress start
-		#thread::send -async [tsv::get application main] "ImportProgress start"
-		#ImportProgress start
 		after 1
 		puts "StartProgress called"
-		#thread::wait
-		#tsv::set application flag 1
 	}
 	proc StopProgress {} {
-		#thread::send [tsv::set application main] "ImportProgress stop"
 		ImportProgress stop
-		#tsv::set application flag 0
 	}
 	proc exit_thread {} {
 		wm protocol . WM_DELETE_WINDOW ""
@@ -132,7 +126,10 @@ set mnCount 0
 set nodeIdList ""
 set savedValueList ""
 set lastXD ""
+set lastOpenPjt ""
 set status_save 0 ; #if zero no need to save
+#set chkPrompt 1 ; #if zero values are not saved prompt message used for PROMPT mode
+set ra_proj 2 ; # TODO TEMPORARY FIX
 ###############################################################################################
 
 namespace eval Editor {
@@ -199,7 +196,7 @@ proc Editor::aboutBox {} {\
     	wm title	 $aboutWindow	"About"
     	wm protocol $aboutWindow WM_DELETE_WINDOW "destroy $aboutWindow"
     	label $aboutWindow.l_msg -image [Bitmap::get info] -compound left -text "\n      openCONFIGURATOR Tool           \n       Designed by       \nKalycito Infotech Private Limited.  \n"
-    	button $aboutWindow.bt_ok -text Ok -command "destroy $aboutWindow"
+    	button $aboutWindow.bt_ok -text Ok -width 8 -command "destroy $aboutWindow"
     	grid config $aboutWindow.l_msg -row 0 -column 0 
     	grid config $aboutWindow.bt_ok -row 1 -column 0
     	bind $aboutWindow <KeyPress-Return> "destroy $aboutWindow"
@@ -230,7 +227,7 @@ proc Editor::RunStatusInfo {} {\
     		"A Run is in progress" \
    	 	-type ok \
    	 	-title {Information} \
-    	 	-icon info
+    	 	-icon info -parent .
 }
 
 ################################################################################################
@@ -434,12 +431,12 @@ proc Editor::exit_app {} {
 	Editor::RunStatusInfo
 	return
     }
-    if {$PjtDir != "None"} {
+    if {$PjtDir != ""} {
 
 	#check whether project has changed
 	if {$status_save} {
 		#Prompt for Saving the Existing Project
-		set result [tk_messageBox -message "Save Project $PjtName ?" -type yesnocancel -icon question -title 			"Question"]
+		set result [tk_messageBox -message "Save Project $PjtName ?" -type yesnocancel -icon question -title "Question" -parent .]
    		 switch -- $result {
    		     yes {			 
    		             Saveproject
@@ -474,16 +471,19 @@ proc openproject { } {
 	global cnCount	
 	global status_run
 	global status_save
+	global lastOpenPjt
+	global defaultPjtDir
+	
 	if { $status_run == 1 } {
 		Editor::RunStatusInfo
 		return
 	}
 
-	if {$PjtDir != "None"} {
+	if { $PjtDir != "" } {
 		#check whether project has changed
 		if {$status_save} {
 			#Prompt for Saving the Existing Project
-			set result [tk_messageBox -message "Save Project $PjtName ?" -type yesnocancel -icon question -title 			"Question"]
+			set result [tk_messageBox -message "Save Project $PjtName ?" -type yesnocancel -icon question -title "Question" -parent .]
 	   		switch -- $result {
 	   		     yes {
 				#conPuts "Project $PjtName Saved" info
@@ -502,53 +502,69 @@ proc openproject { } {
 
 	
 	set types {
-        {"All Project Files"     {*.oct } }
+		{"All Project Files"     {*.oct } }
 	}
 
+
+	#if { ![file isdirectory $lastOpenPjt] && [file exists $lastOpenPjt] } {
+	#	set lastOpenFile [file tail $lastOpenPjt]
+	#	set lastOpenDir [file dirname $lastOpenPjt]
+	#	set projectfilename [tk_getOpenFile -title "Open Project" -initialdir $lastOpenDir -initialfile $lastOpenFile -filetypes $types -parent .]
+	#} else {
+	#	set projectfilename [tk_getOpenFile -title "Open Project" -initialdir $defaultPjtDir -filetypes $types -parent .]
+	#}
+	
 	# Validate filename
 	set projectfilename [tk_getOpenFile -filetypes $types -parent .]
         if {$projectfilename == ""} {
                 return
         }
+	
+	set lastOpenPjt $projectfilename
+	
 	#set tmpsplit [file split $projectfilename ]
 	set tempPjtName [file tail $projectfilename]
 	#puts "Project name->$PjtName"
 	set ext [file extension $projectfilename]
         if {[string compare $ext ".oct"]} {
-	    set PjtDir None
-	    tk_messageBox -message "Extension $ext not supported" -title "Open Project Error" -icon error
+	    set PjtDir ""
+	    tk_messageBox -message "Extension $ext not supported" -title "Open Project Error" -icon error -parent .
 	    return
 	}
 	
-	
-	#CloseProject is called to delete node and insert tree
-	CloseProject
-	
-	set tempPjtDir [file dirname $projectfilename]
-	set tempPjtName [file tail $projectfilename]
-	puts "\n\nPjtDir->$tempPjtDir PjtName->$tempPjtName \n\n"
-
-	thread::send [tsv::get application importProgress] "StartProgress"
-	#API for open project
-	#ocfmRetCode OpenProject(char* PjtPath, char* projectXmlFileName);
-	set catchErrCode [OpenProject $tempPjtDir $tempPjtName]
-	set ErrCode [ocfmRetCode_code_get $catchErrCode]
-	#puts "ErrCode:$ErrCode"
-	if { $ErrCode != 0 } {
-		tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
-		#tk_messageBox -message "ErrCode : $ErrCode" -title Warning -icon warning
-		thread::send [tsv::set application importProgress] "StopProgress"
-		return
-	} else {
-		#conPuts "ReImported $tmpImpDir for Node ID:$nodeId"
-	}
-	set PjtDir $tempPjtDir
-	set PjtName $tempPjtName
-	
-	
-	RePopulate $PjtDir [string range $PjtName 0 end-[string length [file extension $PjtName]]]
-
-	thread::send [tsv::set application importProgress] "StopProgress"
+	_openproject $projectfilename
+	##CloseProject is called to delete node and insert tree
+	#CloseProject
+	#
+	#set tempPjtDir [file dirname $projectfilename]
+	#puts "\n\nPjtDir->$tempPjtDir PjtName->$tempPjtName \n\n"
+	#
+	#thread::send [tsv::get application importProgress] "StartProgress"
+	##API for open project
+	##ocfmRetCode OpenProject(char* PjtPath, char* projectXmlFileName);
+	#puts "OpenProject $tempPjtDir $tempPjtName "
+	#set catchErrCode [OpenProject $tempPjtDir $tempPjtName ]
+	#set ErrCode [ocfmRetCode_code_get $catchErrCode]
+	##puts "ErrCode:$ErrCode"
+	#if { $ErrCode != 0 } {
+	#	if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+	#		tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+	#	} else {
+	#		tk_messageBox -message "Unknown Error" -title Warning -icon warning
+	#		puts "Unknown Error ->[ocfmRetCode_errorString_get $catchErrCode]"
+	#	}
+	#	thread::send [tsv::set application importProgress] "StopProgress"
+	#	return
+	#} else {
+	#	#conPuts "ReImported $tmpImpDir for Node ID:$nodeId"
+	#}
+	#set PjtDir $tempPjtDir
+	#set PjtName $tempPjtName
+	#
+	#
+	#RePopulate $PjtDir [string range $PjtName 0 end-[string length [file extension $PjtName]]]
+	#
+	#thread::send [tsv::set application importProgress] "StopProgress"
 
 }
 
@@ -570,8 +586,12 @@ proc _openproject {projectfilename} {
 	set ErrCode [ocfmRetCode_code_get $catchErrCode]
 	#puts "ErrCode:$ErrCode"
 	if { $ErrCode != 0 } {
-		tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
-		#tk_messageBox -message "ErrCode : $ErrCode" -title Warning -icon warning
+		if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -parent . -title Warning -icon warning
+		} else {
+			tk_messageBox -message "Unknown Error" -parent . -title Warning -icon warning
+                        puts "Unknown Error ->[ocfmRetCode_errorString_get $catchErrCode]"
+		}
 		thread::send -async [tsv::set application importProgress] "StopProgress"
 		return
 	} else {
@@ -740,7 +760,7 @@ proc Editor::create { } {
             		{command "Build Project    F7" {noFile} "Generate CDC and XML" {} -command BuildProject }
             		{command "Clean Project" {noFile} "Clean" {} -command CleanProject }
             		{separator}
-            		{command "Project Settings" {}  "Project Settings" {} -command YetToImplement }
+            		{command "Project Settings" {}  "Project Settings" {} -command ProjectSettingWindow }
         	}
         	"&Actions" all options 0 {
             		{command "Transfer CDC   Ctrl+F5" {noFile} "Transfer CDC" {} -command "TransferCDC 1" }
@@ -761,13 +781,6 @@ proc Editor::create { } {
                 		-variable Editor::options(showTree)
                 		-command  {set EditorData(options,showTree) $Editor::options(showTree)
                     			Editor::showTreeWin $EditorData(options,showTree)
-                    			update idletasks
-                		}
-            		}
-            		{checkbutton "Solely Console" {all option} "Only Console Window" {}
-                		-variable Editor::options(solelyConsole)
-                		-command  {set EditorData(options,solelyConsole) $Editor::options(solelyConsole)
-                    			Editor::showSolelyConsole $EditorData(options,solelyConsole)
                     			update idletasks
                 		}
             		}
@@ -831,7 +844,14 @@ proc Editor::create { } {
 	#$Editor::projMenu add command -label "Sample Project" -command "YetToImplement" 
 	#$Editor::projMenu add command -label "New Project" -command { _NewProject}
 	#$Editor::projMenu add command -label "Open Project" -command {openproject}
-	$Editor::projMenu insert 0 command -label "Sample Project" -command "YetToImplement" 
+	$Editor::projMenu insert 0 command -label "Sample Project" -command {
+		set samplePjt [file join [pwd] Sample Sample.oct]
+		if {[file exists $samplePjt]} {
+			_openproject $samplePjt
+		} else {
+			errorPuts "Sample project is not present" error	
+		}
+	} 
 	$Editor::projMenu insert 1 command -label "New Project" -command { _NewProject}
 	$Editor::projMenu insert 2 command -label "Open Project" -command {openproject} 
 	#############################################################################
@@ -1074,19 +1094,18 @@ proc Editor::create { } {
 	set f2 [EditManager::create_table $alignFrame "PDO mapping" "pdo"]
 	[lindex $f2 1] columnconfigure 0 -background #e0e8f0 -width 6 -sortmode integer
 	[lindex $f2 1] columnconfigure 1 -background #e0e8f0 -width 14 
-	[lindex $f2 1] columnconfigure 2 -background #e0e8f0 -width 14 
-	[lindex $f2 1] columnconfigure 3 -background #e0e8f0 -width 23
+	[lindex $f2 1] columnconfigure 2 -background #e0e8f0 -width 11
+	[lindex $f2 1] columnconfigure 3 -background #e0e8f0 -width 11
 	[lindex $f2 1] columnconfigure 4 -background #e0e8f0 -width 11
 	[lindex $f2 1] columnconfigure 5 -background #e0e8f0 -width 11
-	[lindex $f2 1] columnconfigure 6 -background #e0e8f0 -width 11
-	[lindex $f2 1] columnconfigure 7 -background #e0e8f0 -width 11
-	[lindex $f2 1] columnconfigure 8 -background #e0e8f0 -width 11
-
+	
 	bind [lindex $f2 1] <Enter> {
 		#puts "enter tablelist LastTableFocus ->$LastTableFocus"
 		global LastTableFocus
 		if { [ winfo exists $LastTableFocus ] && [ string match "[lindex $f2 1]*" $LastTableFocus ] } {
 			focus $LastTableFocus
+		} else {
+			focus [lindex $f2 1]
 		}
 		
 		bind . <Motion> {
@@ -1097,12 +1116,20 @@ proc Editor::create { } {
 	
 	bind [lindex $f2 1] <Leave> {
 		bind . <Motion> {}
-		focus .
+		global LastTableFocus
+		global treeFrame
+		
+		if { "$LastTableFocus" == "$treeFrame.en_find" } {
+				focus $treeFrame.en_find
+		} else {
+				focus .
+		}
 	}
 	
 	bind [lindex $f2 1] <FocusOut> {
 		bind . <Motion> {}
 		global LastTableFocus
+		set LastTableFocus [focus]
 	}
 	
 
@@ -1222,15 +1249,64 @@ proc Editor::SingleClickNode {node} {
     	global lastConv
 	global populatedPDOList
 	global userPrefList
+	global LastTableFocus
+	#global chkPrompt
 	variable notebook
 
+	global  ra_proj
+	global indexSaveBtn
+	global subindexSaveBtn
+	global tableSaveBtn
 
 #conPuts "$node"
+#puts "ra_proj->$ra_proj"
+
+	
+	
+	if { $nodeSelect == "" || ![$updatetree exists $nodeSelect] || [string match "root" $nodeSelect] || [string match "PjtName" $nodeSelect] || [string match "MN-*" $nodeSelect] || [string match "OBD-*" $nodeSelect] || [string match "CN-*" $nodeSelect] || [string match "PDO-*" $nodeSelect] } {
+		#should not check for project settings option
+	} else {
+		if { $ra_proj == "0"} {
+			if { [string match "TPDO-*" $nodeSelect] || [string match "RPDO-*" $nodeSelect] } {
+				$tableSaveBtn invoke
+			} elseif { [string match "*SubIndex*" $nodeSelect] } {
+				$subindexSaveBtn invoke
+			} elseif { [string match "*Index*" $nodeSelect] } {	
+				$indexSaveBtn invoke
+			} else {
+				#must be root, PjtName, MN, OBD or CN
+			}
+		} elseif { $ra_proj == "1" } {
+			#if { $chkPrompt == 1 } {
+				set result [tk_messageBox -message "Do you want to save ?" -parent . -type yesno -icon question]
+				switch -- $result {
+					yes {
+						#save the value
+						if { [string match "TPDO-*" $nodeSelect] || [string match "RPDO-*" $nodeSelect] } {
+							$tableSaveBtn invoke
+						} elseif { [string match "*SubIndex*" $nodeSelect] } {
+							$subindexSaveBtn invoke
+						} elseif { [string match "*Index*" $nodeSelect] } {	
+							$indexSaveBtn invoke
+						} else {
+							#must be root, PjtName, MN, OBD or CN
+						}
+					}
+					no  {#continue}
+				}
+			#}
+			# else it must have been saved
+		} elseif { $ra_proj == "2" } {
+			
+		} else {
+			puts "\nInvalid Cond in SingleClickNode ra_proj->$ra_proj !!!\n"
+			return
+		}
+	}
 
 	$updatetree selection set $node
 	set nodeSelect $node
 	#puts "node====>$node"
-	
 
 	if {[string match "root" $node] || [string match "PjtName" $node] || [string match "MN-*" $node] || [string match "OBD-*" $node] || [string match "CN-*" $node] || [string match "PDO-*" $node]} {
 		#$notebook itemconfigure Page1 -state disabled
@@ -1247,7 +1323,8 @@ proc Editor::SingleClickNode {node} {
 	#getting Id and Type of node
 	set result [GetNodeIdType $node]
 	if {$result == ""} {
-		#the node is not an index or a subindex	do nothing
+		#the node is not an index, subindex, TPDO or RPDO do nothing
+		return
 	} else {
 		# it is index or subindex
 		set nodeId [lindex $result 0]
@@ -1256,7 +1333,7 @@ proc Editor::SingleClickNode {node} {
 
 	set nodePos [new_intp]
 	puts "IfNodeExists nodeId->$nodeId nodeType->$nodeType nodePos->$nodePos"
-	#IfNodeExists API is used to get the nodePosition which is needed fro various operation	
+	#IfNodeExists API is used to get the nodePosition which is needed for various operation	
 	#set catchErrCode [IfNodeExists $nodeId $nodeType $nodePos]
 
 	#TODO waiting for new so then implement it
@@ -1269,12 +1346,22 @@ proc Editor::SingleClickNode {node} {
 	if { $ErrCode == 0 && $ExistfFlag == 1 } {
 		#the node exist continue 
 	} else {
-		tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
-		#tk_messageBox -message "ErrCode : $ErrCode\nExistfFlag : $ExistfFlag" -title Warning -icon warning
+		#tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+		##tk_messageBox -message "ErrCode : $ErrCode\nExistfFlag : $ExistfFlag" -title Warning -icon warning
+		if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -parent . -title Warning -icon warning
+		} else {
+			tk_messageBox -message "Unknown Error" -parent . -title Warning -icon warning
+                        puts "Unknown Error ->[ocfmRetCode_errorString_get $catchErrCode]"
+		}
 		return
 	}
 
 	if {[string match "TPDO-*" $node] || [string match "RPDO-*" $node]} {
+		
+		#the LastTableFocus is cleared just in case of avoiding potential bugs
+		set LastTableFocus ""
+		
 		if {[string match "TPDO-*" $node] } {
 			set commParam "18"
 			set mappParam "1A"
@@ -1392,14 +1479,30 @@ proc Editor::SingleClickNode {node} {
 					set indexPos [intp_value $indexPos] ; #newly added
 					set subIndexPos [intp_value $subIndexPos] ; #newly added
 
+					set tempIndexProp [GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos 3 ] ; # 3 is passed to get the accesstype
+					if {$ErrCode != 0} {
+						puts "ErrCode in singleclick for access type TDDO and RPDO : $ErrCode"
+						[lindex $f2 1] insert $popCount [list "" "" "" "" "" ""]
+						foreach col [list 2 3 4 5 ] {
+							[lindex $f2 1] cellconfigure $popCount,$col -editable no
+						}
+						incr popCount 1 
+						continue	
+					} 
+					set accessType [lindex $tempIndexProp 1]
+					
+					
 					#set tempIndexProp [GetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId 4]
 					set tempIndexProp [GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos 5 ] ; # 5 is passed to get the actual value
 					#puts "tempIndexPropi PDO ->$tempIndexProp"
 
 					set ErrCode [ocfmRetCode_code_get [lindex $tempIndexProp 0] ]		
 					if {$ErrCode != 0} {
-						#puts "ErrCode in singleclick for TDDO and RPDO : $ErrCode"
-						[lindex $f2 1] insert $popCount [list "" "" "" "" "" "" "" "" ""]
+						puts "ErrCode in singleclick for actual value TDDO and RPDO : $ErrCode"
+						[lindex $f2 1] insert $popCount [list "" "" "" "" "" ""]
+						foreach col [list 2 3 4 5 ] {
+							[lindex $f2 1] cellconfigure $popCount,$col -editable no
+						}
 						incr popCount 1 
 						continue	
 					}
@@ -1413,12 +1516,25 @@ proc Editor::SingleClickNode {node} {
 						#TODO CHECK WHETHER NEED TO CONVERT TO HEX
 					}
 					#puts "IndexActualValue->$IndexActualValue"
-					set DataSize [string range $IndexActualValue 0 3]
-					set Offset [string range $IndexActualValue 4 7]
-					set Reserved [string range $IndexActualValue 8 9]
+					
+
+					
+					set length [string range $IndexActualValue 0 3]
+					set offset [string range $IndexActualValue 4 7]
+					set reserved [string range $IndexActualValue 8 9]
 					set listSubIndex [string range $IndexActualValue 10 11]
 					set listIndex [string range $IndexActualValue 12 15]
-					[lindex $f2 1] insert $popCount [list $popCount 0x[lindex $commParamValue 0] 0x[lindex $commParamValue 1] 0x$IndexActualValue 0x$listIndex 0x$listSubIndex 0x$Reserved 0x$Offset 0x$DataSize]
+					#[lindex $f2 1] insert $popCount [list $popCount 0x[lindex $commParamValue 0] 0x[lindex $commParamValue 1] 0x$IndexActualValue 0x$listIndex 0x$listSubIndex 0x$reserved 0x$offset 0x$length]
+					[lindex $f2 1] insert $popCount [list $popCount 0x[lindex $commParamValue 0] 0x$offset 0x$length 0x$listIndex 0x$listSubIndex ]
+					if { $accessType == "ro" || $accessType == "const" } {
+						foreach col [list 2 3 4 5 ] {
+							[lindex $f2 1] cellconfigure $popCount,$col -editable no
+						}							
+					} else {
+						foreach col [list 2 3 4 5 ] {
+							[lindex $f2 1] cellconfigure $popCount,$col -editable yes
+						}	
+					}
 					incr popCount 1 
 				}
 ############################################################################################################
@@ -1427,6 +1543,8 @@ proc Editor::SingleClickNode {node} {
 		pack forget [lindex $f0 1]
 		pack forget [lindex $f1 1]
 		pack [lindex $f2 0] -expand yes -fill both -padx 2 -pady 4
+		
+		#set chkPrompt 0
 		return 
 	} else {
 	}
@@ -1446,32 +1564,27 @@ proc Editor::SingleClickNode {node} {
 		# ocfmRetCode GetSubIndexAttributes(int NodeID, ENodeType NodeType, char* IndexID, char* SubIndexID, EAttributeType AttributeType, char* AttributeValue) ; # dont pass arguments for Attribute value
 
 
-	set subIndexId [string range [$updatetree itemcget $node -text] end-2 end-1]
-	set parent [$updatetree parent $node]
-	set indexId [string range [$updatetree itemcget $parent -text] end-4 end-1]
+		set subIndexId [string range [$updatetree itemcget $node -text] end-2 end-1]
+		set parent [$updatetree parent $node]
+		set indexId [string range [$updatetree itemcget $parent -text] end-4 end-1]
 
-	#DllExport ocfmRetCode IfSubIndexExists(int NodeID, ENodeType NodeType, char* IndexID, char* SubIndexID, int* SubIndexPos, int* IndexPos);
-	set indexPos [new_intp] ; #newly added
-	set subIndexPos [new_intp] ; #newly added
-	set catchErrCode [IfSubIndexExists $nodeId $nodeType $indexId $subIndexId $subIndexPos $indexPos] ; #newly added
-	set indexPos [intp_value $indexPos] ; #newly added
-	set subIndexPos [intp_value $subIndexPos] ; #newly added
-	#puts "\n\n\tindexPos->$indexPos====subIndexPos->$subIndexPos\n"
+		#DllExport ocfmRetCode IfSubIndexExists(int NodeID, ENodeType NodeType, char* IndexID, char* SubIndexID, int* SubIndexPos, int* IndexPos);
+		set indexPos [new_intp] 
+		set subIndexPos [new_intp] 
+		set catchErrCode [IfSubIndexExists $nodeId $nodeType $indexId $subIndexId $subIndexPos $indexPos]
+		set indexPos [intp_value $indexPos] 
+		set subIndexPos [intp_value $subIndexPos] 
 
+		set IndexProp []
+		for {set cnt 0 } {$cnt <= 8} {incr cnt} {
 
-	set IndexProp []
-	for {set cnt 0 } {$cnt <= 8} {incr cnt} {
-
-		set tempIndexProp [GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos $cnt ]
-		set ErrCode [ocfmRetCode_code_get [lindex $tempIndexProp 0]]
-		#puts "ErrCode:$ErrCode"
-		#set ErrStr [ocfmRetCode_errorString_get [lindex $tempIndexProp 0]]
-		#puts "Errstr:$ErrStr"
-		if {$ErrCode == 0} {	
-			lappend IndexProp [lindex $tempIndexProp 1]
-		} else {
-			lappend IndexProp []
-		}
+			set tempIndexProp [GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos $cnt ]
+			set ErrCode [ocfmRetCode_code_get [lindex $tempIndexProp 0]]
+			if {$ErrCode == 0} {	
+				lappend IndexProp [lindex $tempIndexProp 1]
+			} else {
+				lappend IndexProp []
+			}
 
 	}
 
@@ -1496,12 +1609,12 @@ proc Editor::SingleClickNode {node} {
 
 		#DllExport ocfmRetCode GetIndexAttributes(int NodeID, ENodeType NodeType, char* IndexID, EAttributeType AttributeType,char* AttributeValue) ; # dont pass arguments for Attribute value
 		set indexId [string range [$updatetree itemcget $node -text] end-4 end-1]
-		set indexPos [new_intp] ; #newly added
+		set indexPos [new_intp] 
 		#DllExport ocfmRetCode IfIndexExists(int NodeID, ENodeType NodeType, char* IndexID, int* IndexPos)
-		set catchErrCode [IfIndexExists $nodeId $nodeType $indexId $indexPos] ; #newly added
-		set indexPos [intp_value $indexPos] ; #newly added
+		set catchErrCode [IfIndexExists $nodeId $nodeType $indexId $indexPos] 
+		set indexPos [intp_value $indexPos] 
 		set IndexProp []
-		for {set cnt 0 } {$cnt <= 8} {incr cnt} {
+		for {set cnt 0 } {$cnt <= 9} {incr cnt} {
 			#puts "\nGetIndexAttributes nodeId->$nodeId nodeType->$nodeType indexId->$indexId $cnt\n"
 			#set tempIndexProp [GetIndexAttributes $nodeId $nodeType $indexId $cnt]
 			set tempIndexProp [GetIndexAttributesbyPositions $nodePos $indexPos $cnt ]
@@ -1510,6 +1623,7 @@ proc Editor::SingleClickNode {node} {
 			if {$ErrCode == 0} {
 				lappend IndexProp [lindex $tempIndexProp 1]
 			} else {
+				puts "Error occured for property no :$cnt ErrCode:$ErrCode ErrStr:[ocfmRetCode_errorString_get [lindex $tempIndexProp 0]]]"
 				lappend IndexProp []
 			}
 
@@ -1525,6 +1639,13 @@ proc Editor::SingleClickNode {node} {
 		pack forget [lindex $f2 0]
 		[lindex $f2 1] cancelediting
 		[lindex $f2 1] configure -state disabled
+		
+		puts "***include index ? [lindex $IndexProp 9]***"
+		if { [lindex $IndexProp 9] == "1" } {
+			$tmpInnerf0.frame1.ch_gen select
+		} else {
+			$tmpInnerf0.frame1.ch_gen deselect
+		}
 
 	}
 
@@ -1552,7 +1673,8 @@ proc Editor::SingleClickNode {node} {
 	$tmpInnerf1.en_default1 insert 0 [lindex $IndexProp 4]
 	$tmpInnerf1.en_default1 configure -state disabled
 
-	$tmpInnerf1.en_value1 configure -validate none 
+	#puts "#en_value1 is configured to state normal to prevent potential bugs $tmpInnerf1.en_value1"
+	$tmpInnerf1.en_value1 configure -state normal -validate none 
 	$tmpInnerf1.en_value1 delete 0 end
 	$tmpInnerf1.en_value1 insert 0 [lindex $IndexProp 5]
 
@@ -1570,9 +1692,7 @@ proc Editor::SingleClickNode {node} {
 	$tmpInnerf1.en_pdo1 delete 0 end
 	$tmpInnerf1.en_pdo1 insert 0 [lindex $IndexProp 6]
 	$tmpInnerf1.en_pdo1 configure -state disabled
-
-
-
+	
 	if { [lindex $IndexProp 2] == "IP_ADDRESS" } {
 		set lastConv ""
 		grid remove $tmpInnerf1.frame1.ra_dec
@@ -1592,13 +1712,22 @@ proc Editor::SingleClickNode {node} {
 		
 		puts "\nIN singleclicknode userPrefList->$userPrefList"
 		set schRes [lsearch $userPrefList [list $nodeSelect *]]
-		puts "\nschRes->$schRes\n"
+		puts "schRes->$schRes\n STATE=[$tmpInnerf1.en_value1 cget -state] \t $tmpInnerf1.en_value1\n"
 		if { $schRes != -1 } {
 			if { [lindex [lindex $userPrefList $schRes] 1] == "dec" } {
 				if {[string match -nocase "0x*" [lindex $IndexProp 5]]} {
-					InsertDec $tmpInnerf1
+					$tmpInnerf1.en_value1 configure -validate none
+					InsertDec $tmpInnerf1.en_value1
+					
 				} else {
-					#already in decimal no need to do anything
+					puts "# ACTUALVALUE already in decimal no need to do anything"
+				}
+				
+				if {[string match -nocase "0x*" [lindex $IndexProp 4]]} {
+					$tmpInnerf1.en_default1 configure -state normal
+					InsertDec $tmpInnerf1.en_default1
+				} else {
+					puts "# DEFAULTVALUE already in decimal no need to do anything"
 				}
 				set lastConv dec
 				$tmpInnerf1.frame1.ra_dec select
@@ -1607,10 +1736,19 @@ proc Editor::SingleClickNode {node} {
 				$tmpInnerf1.en_value1 configure -validate key -vcmd "IsDec %P $tmpInnerf1 %d %i" -bg $savedBg
 			} elseif { [lindex [lindex $userPrefList $schRes] 1] == "hex" } {
 				if {[string match -nocase "0x*" [lindex $IndexProp 5]]} {
-					#already in decimal no need to do anything
+					puts "# ACTUALVALUE already in hexadecimal no need to do anything"
 				} else {
-					InsertHex $tmpInnerf1
+					$tmpInnerf1.en_value1 configure -validate none
+					InsertHex $tmpInnerf1.en_value1
 				}
+				
+				if {[string match -nocase "0x*" [lindex $IndexProp 4]]} {
+					puts "# DEFAULTVALUE already in hexadecimal no need to do anything"
+				} else {
+					$tmpInnerf1.en_default1 configure -state normal
+					InsertHex $tmpInnerf1.en_default1
+				}
+					
 				set lastConv hex
 				$tmpInnerf1.frame1.ra_hex select
 				
@@ -1624,23 +1762,25 @@ proc Editor::SingleClickNode {node} {
 			if {[string match -nocase "0x*" [lindex $IndexProp 5]]} {
 				set lastConv hex
 				if {[string match -nocase "0x*" [lindex $IndexProp 4]]} {
-					#default value is already in hexadecimal no need to convert
+					puts "#default value is already in hexadecimal no need to convert"
 				} else {
 					$tmpInnerf1.en_default1 configure -state normal
-					set tmpVal [lindex $IndexProp 4]
-				        #set tmpVal [string trimleft $tmpVal 0] ; trimming zero leads to error
-					if { $tmpVal != "" } {
-					        if { [ catch {set tmpVal [_ConvertHex $tmpVal] } ] } {
-							#error raised should not convert
-					        } else {
-							$tmpInnerf1.en_default1 delete 0 end
-							$tmpInnerf1.en_default1 insert 0 0x$tmpVal
-					        }
-					} else {
-						#value is empty no need to insert
-					}
-					
-					
+				#	set tmpVal [lindex $IndexProp 4]
+				#        #set tmpVal [string trimleft $tmpVal 0] ; #trimming zero leads to error
+				#	if { $tmpVal != "" } {
+				#	        if { [ catch {set tmpVal [_ConvertHex $tmpVal] } ] } {
+				#			#error raised should not convert
+				#	        } else {
+				#			$tmpInnerf1.en_default1 delete 0 end
+				#			$tmpInnerf1.en_default1 insert 0 0x$tmpVal
+				#	        }
+				#	} else {
+				#		#value is empty insert 0x
+				#		$tmpInnerf1.en_default1 insert 0 0x
+				#	}
+				
+					InsertHex $tmpInnerf1.en_default1
+				
 					$tmpInnerf1.en_default1 configure -state disabled
 				}
 				$tmpInnerf1.frame1.ra_hex select
@@ -1649,32 +1789,42 @@ proc Editor::SingleClickNode {node} {
 				set lastConv dec
 				#puts "singleclicknode inside decimal default [lindex $IndexProp 4]"
 				if {[string match -nocase "0x*" [lindex $IndexProp 4]]} {
-					#puts "CONVERT DEFAULT HEXADECIMAL VALUE TO decimal"
+					puts "#CONVERT DEFAULT HEXADECIMAL VALUE TO decimal"
 					$tmpInnerf1.en_default1 configure -state normal
-					set tmpVal [lindex $IndexProp 4]
-					if { $tmpVal != "" } {
-						set tmpVal [string range $tmpVal 2 end]
-						if { [ catch { set tmpVal [expr 0x$tmpVal] } ] } {
-							#raised an error dont convert
-							
-						} else {
-						        $tmpInnerf1.en_default1 delete 0 end
-							$tmpInnerf1.en_default1 insert 0 $tmpVal
-						}
-					} else {
-						# insert 0x
-						set tmpVal []
-						$tmpInnerf1.en_default1 insert 0 $tmpVal
-					}
+					#set tmpVal [lindex $IndexProp 4]
+					#if { $tmpVal != "" } {
+					#	set tmpVal [string range $tmpVal 2 end]
+					#	if { [ catch { set tmpVal [expr 0x$tmpVal] } ] } {
+					#		puts "#raised an error dont convert"
+					#	} else {
+					#	        $tmpInnerf1.en_default1 delete 0 end
+					#		$tmpInnerf1.en_default1 insert 0 $tmpVal
+					#	}
+					#} else {
+					#	set tmpVal []
+					#	$tmpInnerf1.en_default1 insert 0 $tmpVal
+					#}
+					
+					InsertDec $tmpInnerf1.en_default1
+					
 					$tmpInnerf1.en_default1 configure -state disabled
 				} else {
-					#default value is already in decimal no need to convert
+					puts "#default value is already in decimal no need to convert"
 				}
 				$tmpInnerf1.frame1.ra_dec select
 				$tmpInnerf1.en_value1 configure -validate key -vcmd "IsDec %P $tmpInnerf1 %d %i" -bg $savedBg
 			}
 		}
 	}
+	
+	if { [lindex $IndexProp 3] == "const" || [lindex $IndexProp 3] == "ro" } {
+		puts "#the field is non editable"
+		$tmpInnerf1.en_value1 configure -state "disabled"
+	} else {
+		$tmpInnerf1.en_value1 configure -state "normal"
+	}
+	
+	#set chkPrompt 0
 
 	return
 }
@@ -1714,45 +1864,29 @@ proc Saveproject {} {
 	global PjtDir
 	global status_save
 
-
-	#if {$tcl_platform(platform) == "unix"} {
-	#	set fileSeperator /
-	#} elseif {$tcl_platform(platform) == "windows"} {
-	#	set fileSeperator \		
-  	#} elseif {$tcl_platform(platform) == "macintosh"} {
-	#	set fileSeperator :	
-	#} else {
-	#	#platform other than unix, windows and macintosh
-	#}
-	
-	#if { [string index $PjtDir end] == $fileSeperator } {
-	#	#it is appende with file seperator continue
-	#	set savePjtDir $PjtDir
-        #} else {
-	#	set savePjtDir $PjtDir$fileSeperator
-        #}
-
-	
-	#YetToImplement
-	#ocfmRetCode SaveProject(char* ProjectPath);
-	#calling the API to ave the project
-
-	if {$PjtDir == "" || $PjtDir == "None" || $PjtName == "" } {
-	#there is no project directory or project name no need to save
+	if {$PjtDir == "" || $PjtName == "" } {
+		#there is no project directory or project name no need to save
 	} else {
-		set saveAsPjtName [string range $PjtName 0 end-[ string length [file extension $PjtName] ]]
-		set saveAsPjtDir [string range $PjtDir 0 end-[string length $saveAsPjtName] ]
-		puts "\n\nSaveProject $saveAsPjtDir $saveAsPjtName\n\n"
-		set catchErrCode [SaveProject $saveAsPjtDir $saveAsPjtName]
+		set savePjtName [string range $PjtName 0 end-[ string length [file extension $PjtName] ]]
+		set savePjtDir [string range $PjtDir 0 end-[string length $savePjtName] ]
+		puts "\n\nSaveProject $savePjtDir $savePjtName\n\n"
+		set catchErrCode [SaveProject $savePjtDir $savePjtName]
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
 		if { $ErrCode != 0 } {
-			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+			#tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+			if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+				tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -parent . -title Warning -icon warning
+			} else {
+				tk_messageBox -message "Unknown Error" -parent . -title Warning -icon warning
+				puts "Unknown Error ->[ocfmRetCode_errorString_get $catchErrCode]\n"
+			}
 			return 
 		}
 		
-		#project is saved so change status to zero
-		set status_save 0
+		
 	}
+	#project is saved so change status to zero
+	set status_save 0
 }
 
 proc _NewProject {} {
@@ -1769,7 +1903,7 @@ proc _CloseProject {} {
 
 	#before close should prompt to close
 	if {$status_save} {
-		set result [tk_messageBox -message "Save Project $PjtName Before closing?" -type yesnocancel -icon question -title "Question"]
+		set result [tk_messageBox -message "Save Project $PjtName Before closing?" -parent . -type yesnocancel -icon question -title "Question"]
 		switch -- $result {
 			yes {			 
 				Saveproject
@@ -1817,7 +1951,7 @@ proc CloseProject {} {
 #Description : -
 ################################################################################################
 proc ResetGlobalData {} {
-	
+	#puts "ResetGlobalData called"
 	global PjtDir
 	global PjtName
 	global nodeIdList
@@ -1833,7 +1967,10 @@ proc ResetGlobalData {} {
 	global f1
 	global f2
 	global lastConv
-	
+	global LastTableFocus
+	#global chkPrompt
+	global ra_proj
+
 	#reset all the globaly maintained values 
 	set nodeIdList ""
 	set savedValueList ""
@@ -1846,13 +1983,19 @@ proc ResetGlobalData {} {
 	set PjtDir ""
 	set PjtName ""
 	set lastConv ""
-
-	#no index subindex or pdotable to be dispalyed
+	set LastTableFocus ""
+	#set chkPrompt 0
+	set ra_proj 2 ; #TODO TEMPORARY FIX
+	#no need to reset lastOpenPjt, lastXD, tableSaveBtn, indexSaveBtn and subindexSaveBtn
+	
+	#no index subindex or pdo table should be displayed
 	pack forget [lindex $f0 1]
 	pack forget [lindex $f1 1]
 	pack forget [lindex $f2 0]
 	[lindex $f2 1] cancelediting
 	[lindex $f2 1] configure -state disabled
+	
+	update
 }
 
 ################################################################################################
@@ -1902,7 +2045,13 @@ proc AddCN {cnName tmpImpDir nodeId} {
 	#set catchErrCode [lindex $obj 0]
 	set ErrCode [ocfmRetCode_code_get $catchErrCode]
 	if { $ErrCode != 0 } {
-		tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+		#tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+		if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]"  -title Warning -icon warning
+		} else {
+			tk_messageBox -message "Unknown Error" -title Warning -icon warning
+                        puts "Unknown Error in AddCN ->[ocfmRetCode_errorString_get $catchErrCode]\n"
+		}
 		return 
 	}
 
@@ -1923,8 +2072,13 @@ proc AddCN {cnName tmpImpDir nodeId} {
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
 		#puts "ErrCode:$ErrCode"
 		if { $ErrCode != 0 } {
-			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
-			#tk_messageBox -message "ErrCode : $ErrCode" -title Warning -icon warning
+			#tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+			if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+				tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+			} else {
+				tk_messageBox -message "Unknown Error" -title Warning -icon warning
+	                        puts "Unknown Error ->[ocfmRetCode_errorString_get $catchErrCode]\n"
+			}
 			return 
 		} else {
 			conPuts "Imported $tmpImpDir for Node ID: $nodeId"
@@ -1936,10 +2090,13 @@ proc AddCN {cnName tmpImpDir nodeId} {
 	puts "nodeIdList->$nodeIdList"
 		#creating the GUI for CN
 		set child [$updatetree insert end $node CN-$parentId-$cnCount -text "$cnName\($nodeId\)" -open 0 -image [Bitmap::get cn]]
+		
+                thread::send -async [tsv::set application importProgress] "StartProgress"
 		#creating the GUI for imported objects
 		#Import parentNode nodeType nodeID 
 		Import CN-$parentId-$cnCount 1 $nodeId 
-
+		thread::send -async [tsv::set application importProgress] "StopProgress"
+		
 	} else {
 		#lappend nodeIdList CN-1-$cnCount
 		lappend nodeIdList $nodeId 
@@ -2470,7 +2627,7 @@ proc BuildProject {} {
 		return	
 	}
 
-	set result [tk_messageBox -message "Do you want to Build Project ?" -type yesno -icon question -title "Question"]
+	set result [tk_messageBox -message "Do you want to Build Project ?" -type yesno -icon question -title "Question" -parent .]
 	switch -- $result {
 		yes {
 			#continue
@@ -2490,7 +2647,7 @@ proc BuildProject {} {
         #}
 	set fileLocation_CDC [generateAutoName [file join $PjtDir CDC_XAP] CDC .cdc ]
 
-	#thread::send [tsv::get application importProgress] "StartProgress"	
+	thread::send [tsv::get application importProgress] "StartProgress"	
 	puts "GenerateCDC [file join $PjtDir CDC_XAP ] fileLocation_CDC->$fileLocation_CDC"
 	#set catchErrCode [GenerateCDC [file join $PjtDir CDC_XAP $fileLocation_CDC.cdc] ]
 	set catchErrCode [GenerateCDC [file join $PjtDir CDC_XAP] ]
@@ -2502,36 +2659,9 @@ proc BuildProject {} {
 	if { $ErrCode != 0 } {
 		#error in generating CDC dont generate XAP
 		errorPuts "Error in generating CDC. XAP not generated" error
-		#thread::send [tsv::get application importProgress] "StopProgress"
+		thread::send [tsv::get application importProgress] "StopProgress"
 		return
 	} else {
-
-
-
- 		#puts "\nfile copy -force [file join [file join $PjtDir $PjtName] $PjtName.cdc] \n"
-		#catch { file copy -force [file join [file join $PjtDir $PjtName] $PjtName.cdc] [file join [pwd] $PjtName.cdc] }
-		#catch { file rename -force [file join [pwd] $PjtName.cdc] [file join [pwd] CDC.cdc] }
-############################################################################
-		#reset all the globaly maintained list 
-		#set nodeIdList ""
-		#set savedValueList ""
-		#set populatedPDOList ""
-		#set userPrefList ""
-		#set nodeSelect ""
-		#set mnCount 0
-		#set cnCount 0
-		#incr mnCount
-		#incr cnCount 
-
-		#no index subindex or pdotable to be dispalyed
-		#pack forget [lindex $f0 1]
-		#pack forget [lindex $f1 1]
-		#pack forget [lindex $f2 0]
-		#[lindex $f2 1] cancelediting
-		#[lindex $f2 1] configure -state disabled
-		
-		
-
 		set tempPjtDir $PjtDir
 		set tempPjtNmae $PjtName
 		ResetGlobalData
@@ -2541,59 +2671,6 @@ proc BuildProject {} {
 		#$updatetree insert end root PjtName -text [string range $PjtName 0 end-[string length [file extension $PjtName] ] ] -open 1 -image [Bitmap::get network]
 
 		RePopulate  $PjtDir [string range $PjtName 0 end-[string length [file extension $PjtName] ] ]
-
-
-#tk_messageBox -message "check project name in tree"
-		#set count [new_intp]
-		#set catchErrCode [GetNodeCount 240 $count]
-		#set ErrCode [ocfmRetCode_code_get $catchErrCode]
-		#puts "CN count:[intp_value $count]....ErrCode->$ErrCode"
-
-		#set nodeCount [intp_value $count]
-		##set nodeType 0
-		#puts "nodeCount->$nodeCount"
-		#for {set inc 0} {$inc < $nodeCount} {incr inc} {
-		#	#API
-		#	#ocfmRetCode GetNodeAttributesbyNodePos(int NodePos, ENodeType* NodeType, int* Out_NodeID, char* Out_NodeName);
-		#	set tmp_nodeId [new_intp]			
-		#	#set nodeType [new_intp]
-		#	#set nodeName [new_charp]
-		#	set catchErrCode [GetNodeAttributesbyNodePos $inc $tmp_nodeId]
-		#	#puts "catchErrCode->$catchErrCode"
-		#	set ErrCode [ocfmRetCode_code_get [lindex $catchErrCode 0]]
-
-		#	#set nodeType 1			
-		#
-		#	#puts "ErrCode:$ErrCode "
-		#	if { $ErrCode == 0 } {
-		#		set nodeId [intp_value $tmp_nodeId]
-		#		set nodeName [lindex $catchErrCode 1]
-		#		#set nodeName [charp_value $nodeName]
-		#		#puts "nodeId->$nodeId..nodeName->$nodeName.."
-		#		if {$nodeId == 240} {
-		#			set nodeType 0
-		#			$updatetree insert end PjtName MN-$mnCount -text "openPOWERLINK_MN(240)" -open 1 -image [Bitmap::get mn]
-		#			$updatetree insert end MN-$mnCount OBD-$mnCount-1 -text "OBD" -open 0 -image [Bitmap::get pdo]	
-		#			set node OBD-$mnCount-1	
-		#		} else {
-		#			set nodeType 1
-		#			set child [$updatetree insert end MN-$mnCount CN-$mnCount-$cnCount -text "$nodeName\($nodeId\)" -open 0 -image [Bitmap::get cn]]
-		#			set node CN-$mnCount-$cnCount
-		#		}
-#puts "node->$node"
-		#		catch { Import $node $nodeType $nodeId }
-		#		incr cnCount
-		#		lappend nodeIdList $nodeId  
-				
-		#	} else {
-		#		#some error has occured
-		#		continue
-		#	}
-		#}
-
-############################################################################
-
-#		#set catchErrCode [GenerateXAP [file join [file join $PjtDir] $PjtName.xap]]
 		set fileLocation_XAP [generateAutoName [file join $PjtDir CDC_XAP] XAP .xap ]
 
 		puts "GenerateXAP [file join $PjtDir CDC_XAP $fileLocation_XAP.xap] fileLocation_XAP->$fileLocation_XAP"
@@ -2605,7 +2682,7 @@ proc BuildProject {} {
 		##puts "ErrCode:$ErrCode"
 		if { $ErrCode != 0 } {
 			errorPuts "XAP is not generated"
-			#thread::send -async [tsv::set application importProgress] "StopProgress"			
+			thread::send -async [tsv::set application importProgress] "StopProgress"			
 			return
 		} else {
 			conPuts "CDC and XAP are successfully generated"
@@ -2613,7 +2690,7 @@ proc BuildProject {} {
 			#catch { file rename -force [file join [pwd] $PjtName.xap] [file join [pwd] XAP.xap] }
 			#catch { file copy -force [file join [file join $PjtDir $PjtName] $PjtName.xap.h]  [file join [pwd] $PjtName.xap.h]}
 			#catch { file rename -force [file join [pwd] $PjtName.xap.h] [file join [pwd] XAPH.xap.h] }
-			#thread::send -async [tsv::set application importProgress] "StopProgress"
+			thread::send -async [tsv::set application importProgress] "StopProgress"
 		}
 
 	}
@@ -2691,7 +2768,7 @@ proc ReImport {} {
 		set lastXD $tmpImpDir
 		#API 
 		#ReImportXML(char* fileName, char* errorString, int NodeID, ENodeType NodeType);
-		set result [tk_messageBox -message "Do you want to Import $tmpImpDir ?" -type yesno -icon question -title "Question"]
+		set result [tk_messageBox -message "Do you want to Import $tmpImpDir ?" -type yesno -icon question -title "Question" -parent .]
    		 switch -- $result {
    		     yes {
 			   conPuts "Importing file $tmpImpDir for Node ID : $nodeId"
@@ -2706,8 +2783,13 @@ proc ReImport {} {
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
 		#puts "ErrCode:$ErrCode"
 		if { $ErrCode != 0 } {
-			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
-			#tk_messageBox -message "ErrCode : $ErrCode" -title Warning -icon warning
+			#tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+			if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+				tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning -parent .
+			} else {
+				tk_messageBox -message "Unknown Error" -title Warning -icon warning -parent .
+			        puts "Unknown Error in ReImport ->[ocfmRetCode_errorString_get $catchErrCode]\n"
+			}
 			return
 		} else {
 			#conPuts "ReImported $tmpImpDir for Node ID:$nodeId"
@@ -2727,8 +2809,12 @@ proc ReImport {} {
 		CleanList $node 1
 		catch {$updatetree delete [$updatetree nodes $node]}
 		$updatetree itemconfigure $node -open 0
+		
+		thread::send -async [tsv::set application importProgress] "StartProgress"
 		#Import parentNode nodeType nodeID 
-		Import $node $nodeType $nodeId 
+		Import $node $nodeType $nodeId
+		thread::send -async [tsv::set application importProgress] "StopProgress"
+		
 	}
 	#puts "**********\n"
 
@@ -2789,7 +2875,7 @@ proc DeleteTreeNode {} {
 	set nodeList [GetNodeList]
 	#puts nodeList->$nodeList...
 	if {[lsearch -exact $nodeList $node ]!=-1} {
-		set result [tk_messageBox -message "Do you want to delete node?" -type yesno -icon question -title "Question"]
+		set result [tk_messageBox -message "Do you want to delete node?" -type yesno -icon question -title "Question" -parent .]
    		 switch -- $result {
    		     yes {			 
    		         #continue with process
@@ -2870,8 +2956,13 @@ proc DeleteTreeNode {} {
 	set ErrCode [ocfmRetCode_code_get $catchErrCode]
 	#puts "ErrCode:$ErrCode"
 	if { $ErrCode != 0 } {
-		tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
-		#tk_messageBox -message "ErrCode : $ErrCode" -title Warning -icon warning
+		#tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+		if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning -parent .
+		} else {
+			tk_messageBox -message "Unknown Error" -title Warning -icon warning -parent .
+                        puts "Unknown Error in DeleteTreeNode->[ocfmRetCode_errorString_get $catchErrCode]\n"
+		}
 		return
 	}
 
@@ -3337,7 +3428,7 @@ proc AutoGenerateMNOBD {} {
 	}	
 	set tmpImpDir .
 	if {$tmpImpDir != ""} {
-		set result [tk_messageBox -message "Do you want to Auto Generate object dictionary for MN ?" -type yesno -icon question -title "Question"]
+		set result [tk_messageBox -message "Do you want to Auto Generate object dictionary for MN ?" -type yesno -icon question -title "Question" -parent .]
    		 switch -- $result {
    		     yes {
 			   conPuts "Auto Generating object dictionary for MN"
@@ -3353,8 +3444,13 @@ proc AutoGenerateMNOBD {} {
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
 		#puts "ErrCode:$ErrCode"
 		if { $ErrCode != 0 } {
-			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
-			#tk_messageBox -message "ErrCode : $ErrCode" -title Warning -icon warning
+			#tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+			if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+				tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning -parent .
+			} else {
+				tk_messageBox -message "Unknown Error" -title Warning -icon warning -parent .
+			        puts "Unknown Error ->[ocfmRetCode_errorString_get $catchErrCode]\n"
+			}
 			return
 		} else {
 			#conPuts "ReImported $tmpImpDir for Node ID:$nodeId"
@@ -3372,8 +3468,11 @@ proc AutoGenerateMNOBD {} {
 		#catch {FreeNodeMemory $node} ; # no need to free memory
 		catch {$updatetree delete [$updatetree nodes $node]}
 		$updatetree itemconfigure $node -open 0
+		
+		thread::send -async [tsv::set application importProgress] "StartProgress"
 		#Import parentNode nodeType nodeID 
 		Import $node $nodeType $nodeId
+		thread::send -async [tsv::set application importProgress] "StopProgress"
 		
 		#to clear the list from child of the node from savedvaluelist and userpreflist
 		CleanList $node 0

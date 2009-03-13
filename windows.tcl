@@ -101,7 +101,6 @@ proc StartUp {} {
 	 
 	button $frame2.b_ok -width 8 -text "  Ok  " -command { 
 		if {$startVar == 1} {
-
 			set samplePjt [file join [pwd] Sample Sample.oct]
 			#puts "open sample->$samplePjt"
 
@@ -145,6 +144,7 @@ proc StartUp {} {
 	bind $winStartUp <KeyPress-Return> "$frame2.b_ok invoke"
 	bind $winStartUp <KeyPress-Escape> "$frame2.b_cancel invoke"
 
+	focus $winStartUp
 	$winStartUp configure -takefocus 1
 	centerW $winStartUp
 }
@@ -247,6 +247,105 @@ proc ConnectionSettingWindow {} {
 	centerW $winConnSett
 }
 
+proc ProjectSettingWindow {} {
+	global ra_proj
+	global ra_auto
+	set ra_auto 0
+	
+	#ocfmRetCode GetProjectSettings(EAutoGenerate autoGen, EAutoSave autoSave)
+	set ra_autop [new_intp]
+	set ra_projp [new_intp]
+
+	#set catchErrCode [GetProjectSettings $ra_autop $ra_projp]
+	#set catchErrCode [GetProjectSettings $ra_auto $ra_proj]
+	#set ErrCode [ocfmRetCode_code_get $catchErrCode]
+	#puts "ErrCode:$ErrCode"
+	#if { $ErrCode != 0 } {
+	#	if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+	#		tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+	#	} else {
+	#		tk_messageBox -message "Unknown Error" -title Warning -icon warning
+	#               puts "Unknown Error ->[ocfmRetCode_errorString_get $catchErrCode]\n"
+	#	}
+	#}
+	#set ra_auto [intp_value $ra_autop]
+	#set ra_proj [intp_value $ra_projp]
+	
+	puts "ra_auto->$ra_auto ra_proj->$ra_proj"
+	
+	set winProjSett .projSett
+	catch "destroy $winProjSett"
+	toplevel     $winProjSett
+	wm title     $winProjSett "Project Settings"
+	wm resizable $winProjSett 0 0
+	wm transient $winProjSett .
+	wm deiconify $winProjSett
+	grab $winProjSett
+	
+	set frame1 [frame $winProjSett.frame1]
+	set frame2 [frame $winProjSett.frame2]
+	set frame3 [frame $winProjSett.frame3]
+
+	label $winProjSett.l_save -text "Project Settings"
+	label $winProjSett.l_auto -text "Auto Generate"
+	label $winProjSett.l_empty1 -text ""
+	label $winProjSett.l_empty2 -text ""
+	
+	radiobutton $frame1.ra_autoSave -variable ra_proj -value 0 -text "Auto Save"
+	radiobutton $frame1.ra_prompt -variable ra_proj -value 1 -text "Prompt"
+	radiobutton $frame1.ra_discard -variable ra_proj -value 2 -text "Discard"
+	
+	radiobutton $frame2.ra_genYes -variable ra_auto -value 1 -text Yes
+	radiobutton $frame2.ra_genNo -variable ra_auto -value 0 -text No
+	
+	button $frame3.bt_ok -width 8 -text "Ok" -command {
+		puts "SetProjectSettings $ra_auto $ra_proj"
+		set catchErrCode [SetProjectSettings $ra_auto $ra_proj]
+		set ErrCode [ocfmRetCode_code_get $catchErrCode]
+		#puts "ErrCode:$ErrCode"
+		if { $ErrCode != 0 } {
+			if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+				tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning -parent .projSett
+			} else {
+				tk_messageBox -message "Unknown Error" -title Warning -icon warning -parent .projSett
+				puts "Unknown Error ->[ocfmRetCode_errorString_get $catchErrCode]\n"
+			}
+		}
+		
+		destroy .projSett
+	}
+	
+	button $frame3.bt_cancel -width 8 -text "Cancel" -command {
+		destroy .projSett
+	}
+	
+	grid config $winProjSett.l_empty1 -row 0 -column 0
+	
+	grid config $winProjSett.l_save -row 1 -column 0 -sticky w
+	
+	grid config $frame1 -row 2 -column 0 -padx 10
+	grid config $frame1.ra_autoSave -row 0 -column 0
+	grid config $frame1.ra_prompt -row 0 -column 1 -padx 5
+	grid config $frame1.ra_discard -row 0 -column 2
+	
+	grid config $winProjSett.l_empty2 -row 3 -column 0
+	
+	grid config $winProjSett.l_auto -row 4 -column 0 -sticky w
+	
+	grid config $frame2 -row 5 -column 0
+	grid config $frame2.ra_genYes -row 0 -column 0 -padx 2
+	grid config $frame2.ra_genNo -row 0 -column 1 -padx 2
+	
+	grid config $frame3 -row 6 -column 0 -pady 10 
+	grid config $frame3.bt_ok -row 0 -column 0
+	grid config $frame3.bt_cancel -row 0 -column 1
+	
+	wm protocol .projSett WM_DELETE_WINDOW "$frame3.bt_cancel invoke"
+	bind $winProjSett <KeyPress-Return> "$frame3.bt_ok invoke"
+	bind $winProjSett <KeyPress-Escape> "$frame3.bt_cancel invoke"
+	
+	
+}
 ###############################################################################################
 #proc InterCNWindow
 #Input       : -
@@ -560,11 +659,12 @@ proc SaveProjectAsWindow {} {
 	global PjtName
 	global PjtDir
 
-	if {$PjtDir == "" || $PjtDir == "None" || $PjtName == "" } {
+	if {$PjtDir == "" || $PjtName == "" } {
 		conPuts "No Project Selected" info
 		return
 	} else {
-		set saveProjectAs [tk_getSaveFile -parent . -title "Save Project As"]
+		puts "Save Project As->[file join $PjtDir $PjtName]"
+		set saveProjectAs [tk_getSaveFile -parent . -title "Save Project As" -initialdir $PjtDir -initialfile $PjtName] 
 		#set fileLocation_CDC [tk_getSaveFile -filetypes $types -initialdir $PjtDir -initialfile [generateAutoName $PjtDir CDC .cdc ] -title "Transfer CDC"]
 		set projectDir [file dirname $saveProjectAs]
 		set projectName [file tail $saveProjectAs]
@@ -574,7 +674,13 @@ proc SaveProjectAsWindow {} {
 
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
 		if { $ErrCode != 0 } {
-			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+			#tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+			if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+				tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning -parent .
+			} else {
+				tk_messageBox -message "Unknown Error" -title Warning -icon warning -parent .
+			        puts "Unknown Error in SaveProjectAsWindow ->[ocfmRetCode_errorString_get $catchErrCode]\n"
+			}
 			return 
 		}
 	}
@@ -608,13 +714,13 @@ proc NewProjectWindow {} {
 	global nodeIdList
 	global PjtName
 	global PjtDir
-	global DefaultPjtDir
-	global HOME
+	global defaultPjtDir
 	global status_save
 	global lastXD
 	global tcl_platform
-
-	#puts "DefaultPjtDir->$DefaultPjtDir"
+	#global PjtSett
+	
+	#puts "defaultPjtDir->$defaultPjtDir"
 
 	set winNewProj .newprj
 	catch "destroy $winNewProj"
@@ -741,9 +847,9 @@ proc NewProjectWindow {} {
 	} 
 	$titleInnerFrame2_2.ra_def select
 	
-	radiobutton $frame4_2.ra_yes -text "Yes" -variable ra_auto -value yes -command {
+	radiobutton $frame4_2.ra_yes -text "Yes" -variable ra_auto -value 1 -command {
 	}
-	radiobutton $frame4_2.ra_no -text "No" -variable ra_auto -value no -command {
+	radiobutton $frame4_2.ra_no -text "No" -variable ra_auto -value 0 -command {
 	}
 	$frame4_2.ra_no select
 
@@ -797,9 +903,27 @@ proc NewProjectWindow {} {
 				return
 			}
 		}
-		
-		NewProjectCreate $tmpPjtDir $tmpPjtName $tmpImpDir $conf
-		#IF CONNECTION SETTINGS NEDD TO BE IMPLEMENTED COMMENT THE ABOVE LINE
+
+		catch { destroy .newprj }
+		NewProjectCreate $tmpPjtDir $tmpPjtName $tmpImpDir $conf $ra_proj $ra_auto
+		unset tmpPjtName
+		unset tmpPjtDir
+		unset tmpImpDir
+		unset frame1
+		unset frame3_2
+		unset frame2_3
+		unset titleInnerFrame1
+		unset titleInnerFrame2
+		#unset ra_proj
+		unset ra_auto
+		unset tmpIPaddr
+		unset newProjectFrame2
+		unset titleInnerFrame1_2
+		unset titleInnerFrame2_2
+		unset titleInnerFrame2_3
+		unset winNewProj
+		catch { destroy .newprj }
+		#IF CONNECTION SETTINGS NEED TO BE IMPLEMENTED COMMENT THE ABOVE 18 LINES
 		#AND UNCOMMENT FOLLOWING $ LINES
 		#grid remove $winNewProj.frame1
 		#grid remove $winNewProj.frame2
@@ -865,19 +989,19 @@ proc NewProjectWindow {} {
 	label $titleInnerFrame2_1.l_empty5 -text "" -width 5
 
 	entry $titleInnerFrame1.en_pjname -textvariable tmpPjtName -background white -relief ridge -validate key -vcmd "IsValidStr %P" -width 35
-	set tmpPjtName  [generateAutoName $DefaultPjtDir Project ""]
+	set tmpPjtName  [generateAutoName $defaultPjtDir Project ""]
 
 	$titleInnerFrame1.en_pjname selection range 0 end
 	$titleInnerFrame1.en_pjname icursor end
 
 	entry $titleInnerFrame1.en_pjpath -textvariable tmpPjtDir -background white -relief ridge -width 35 
-	set tmpPjtDir $DefaultPjtDir
+	set tmpPjtDir $defaultPjtDir
 	
-	radiobutton $titleInnerFrame2_1.ra_save -text "Auto Save" -variable ra_proj -value save -command {
+	radiobutton $titleInnerFrame2_1.ra_save -text "Auto Save" -variable ra_proj -value 0 -command {
 	}
-	radiobutton $titleInnerFrame2_1.ra_prompt -text "Prompt" -variable ra_proj -value prompt -command {
+	radiobutton $titleInnerFrame2_1.ra_prompt -text "Prompt" -variable ra_proj -value 1 -command {
 	}
-	radiobutton $titleInnerFrame2_1.ra_discard -text "Discard" -variable ra_proj -value discard -command {
+	radiobutton $titleInnerFrame2_1.ra_discard -text "Discard" -variable ra_proj -value 2 -command {
 	}
 	$titleInnerFrame2_1.ra_discard select
 	
@@ -885,7 +1009,7 @@ proc NewProjectWindow {} {
 	
 
 	button $titleInnerFrame1.bt_pjpath -width 8 -text Browse -command {
-		set tmpPjtDir [tk_chooseDirectory -title "Project Location" -initialdir $DefaultPjtDir -parent .newprj]
+		set tmpPjtDir [tk_chooseDirectory -title "Project Location" -initialdir $defaultPjtDir -parent .newprj]
 		if {$tmpPjtDir == ""} {
 			focus .newprj
 			return
@@ -896,7 +1020,7 @@ proc NewProjectWindow {} {
 	button $frame1.bt_next -width 8 -text " Next " -command {
 		set tmpPjtName [string trim $tmpPjtName]
 		if {$tmpPjtName == "" } {
-			tk_messageBox -message "Enter Project Name" -title "Set Project Name error" -icon warning
+			tk_messageBox -message "Enter Project Name" -title "Set Project Name error" -icon warning -parent .newprj
 			focus .newprj
 			return
 		}
@@ -906,7 +1030,7 @@ proc NewProjectWindow {} {
 			return
 		}
 		if {![file writable $tmpPjtDir]} {
-			tk_messageBox -message "Entered path for Project is write protected" -icon info -parent .newprj
+			tk_messageBox -message "Entered path for Project is write protected\nChoose another path" -icon info -parent .newprj
 			focus .newprj
 			return
 		}
@@ -947,7 +1071,7 @@ proc NewProjectWindow {} {
 		unset titleInnerFrame2_2
 		unset titleInnerFrame2_3
 		unset winNewProj
-		destroy .newprj
+		catch { destroy .newprj }
 		return
 	}
 
@@ -989,8 +1113,9 @@ proc NewProjectWindow {} {
 	
 }
 
-proc NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf} {
+proc NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf tempRa_proj tempRa_auto} {
 	
+	global ra_proj
 	global updatetree
 	global mnCount
 	global PjtName
@@ -1003,7 +1128,7 @@ proc NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf} {
 	set PjtName $tmpPjtName
 	set pjtName [string range $PjtName 0 end-[string length [file extension $PjtName]] ] 
 	set PjtDir [file join $tmpPjtDir  $pjtName]
-
+	puts "PjtDir->$PjtDir PjtName->$PjtName"
 
 	if { [$Editor::projMenu index 3] != "3" } {
 		$Editor::projMenu insert 3 command -label "Close Project" -command "_CloseProject"
@@ -1019,7 +1144,13 @@ proc NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf} {
 	set ErrCode [ocfmRetCode_code_get $catchErrCode]
 	#puts "ErrCode:$ErrCode"
 	if { $ErrCode != 0 } {
-		tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Info -parent .newprj -icon info
+		#tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Info -parent .newprj -icon info
+		if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning -parent .
+		} else {
+			tk_messageBox -message "Unknown Error" -title Warning -icon warning -parent .
+                        puts "Unknown Error ->[ocfmRetCode_errorString_get $catchErrCode]\n"
+		}
 		return
 	}
 
@@ -1040,8 +1171,13 @@ proc NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf} {
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
 		#puts "ErrCode:$ErrCode"
 		if { $ErrCode != 0 } {
-			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning	
-			#$frame1.bt_cancel invoke
+			#tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning	
+			if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+				tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning -parent .
+			} else {
+				tk_messageBox -message "Unknown Error" -title Warning -icon warning -parent .
+			        puts "Unknown Error in NewProjectCreate->[ocfmRetCode_errorString_get $catchErrCode]\n"
+			}
 			return
 		}
 		$updatetree insert end MN-$mnCount OBD-$mnCount-1 -text "OBD" -open 0 -image [Bitmap::get pdo]
@@ -1058,6 +1194,20 @@ proc NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf} {
 		#file mkdir [file join $PjtDir XDC]
 	}
 	
+	#ocfmRetCode SetProjectSettings(EAutoGenerate autoGen, EAutoSave autoSave)
+	puts "SetProjectSettings $tempRa_auto $tempRa_proj"
+	set catchErrCode [SetProjectSettings $tempRa_auto $tempRa_proj]
+	set ErrCode [ocfmRetCode_code_get $catchErrCode]
+	#puts "ErrCode:$ErrCode"
+	if { $ErrCode != 0 } {
+		if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning -parent .
+		} else {
+			tk_messageBox -message "Unknown Error" -title Warning -icon warning -parent .
+	               puts "Unknown Error ->[ocfmRetCode_errorString_get $catchErrCode]\n"
+		}
+	}
+	set ra_proj $tempRa_proj
 }
 
 ###############################################################################################
@@ -1072,13 +1222,13 @@ proc SaveProjectWindow {} {
 	global updatetree
 	global status_save	
 
-	if {$PjtDir == "" || $PjtDir == "None" || $PjtName == "" } {
+	if {$PjtDir == "" || $PjtName == "" } {
 		conPuts "No Project Selected" info
 		return
 	} else {	
 		#check whether project has changed from last saved
 		if {$status_save} {
-			set result [tk_messageBox -message "Save Project $PjtName ?" -type yesno -icon question -title "Question"]
+			set result [tk_messageBox -message "Save Project $PjtName ?" -type yesno -icon question -title "Question" -parent .]
 			switch -- $result {
 				yes {			 
 					Saveproject
@@ -1106,13 +1256,13 @@ proc CloseProjectWindow {} {
 	global updatetree
 	global status_save	
 
-	if {$PjtDir == "" || $PjtDir == "None" || $PjtName == "" } {
+	if {$PjtDir == "" || $PjtName == "" } {
 		conPuts "No Project Selected" info
 		CloseProject
 		return
 	} else {	
 		#TODO only for testing remove for delivery
-		set result [tk_messageBox -message "Close Project $PjtName ?" -type okcancel -icon question -title "Question"]
+		set result [tk_messageBox -message "Close Project $PjtName ?" -type okcancel -icon question -title "Question" -parent .]
    		 switch -- $result {
 			ok {
 				CloseProject
@@ -1304,8 +1454,14 @@ proc AddIndexWindow {} {
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
 		#puts "ErrCode:$ErrCode"
 		if { $ErrCode != 0 } {
-			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning -parent .addIdx
+			#tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning -parent .addIdx
 			#tk_messageBox -message "ErrCode : $ErrCode" -title Warning -icon warning
+			if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+				tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning -parent .addIdx
+			} else {
+				tk_messageBox -message "Unknown Error" -title Warning -icon warning -parent .addIdx
+			        puts "Unknown Error in AddIndexWindow 1 ->[ocfmRetCode_errorString_get $catchErrCode]\n"
+			}
 			$frame2.bt_cancel invoke
 		}
 
@@ -1337,8 +1493,14 @@ proc AddIndexWindow {} {
 		if { $ErrCode == 0 && $ExistfFlag == 1 } {
 			#the node exist continue 
 		} else {
-			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon 	warning -parent .addIdx
+			#tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon 	warning -parent .addIdx
 			#tk_messageBox -message "ErrCode : $ErrCode\nExistfFlag : $ExistfFlag" -title Warning -icon warning -parent .addIdx
+			if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+				tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning -parent .addIdx
+			} else {
+				tk_messageBox -message "Unknown Error" -title Warning -icon warning -parent .addIdx
+			        puts "Unknown Error in AddIndexWindow 2 ->[ocfmRetCode_errorString_get $catchErrCode]\n"
+			}
 			$frame2.bt_cancel invoke
 		}
 
@@ -1456,7 +1618,9 @@ proc AddSubIndexWindow {} {
 	set subIndexVar ""
 
 	button $frame2.bt_ok -width 8 -text "  Ok  " -command {
-		if {[string length $subIndexVar] != 2} {
+		if {[string length $subIndexVar] == 1} {
+			set subIndexVar 0$subIndexVar
+		} elseif { [string length $subIndexVar] != 2 } {
 			set res [tk_messageBox -message "Invalid SubIndex" -type ok -parent .addSidx]
 			focus .addSidx
 			return
@@ -1516,8 +1680,14 @@ proc AddSubIndexWindow {} {
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
 		#puts "ErrCode:$ErrCode"
 		if { $ErrCode != 0 } {
-			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+			#tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
 			#tk_messageBox -message "ErrCode : $ErrCode" -title Warning -icon warning
+			if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+				tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning -parent .addSidx
+			} else {
+				tk_messageBox -message "Unknown Error" -title Warning -icon warning -parent .addSidx
+			        puts "Unknown Error in AddSubindexWindow ->[ocfmRetCode_errorString_get $catchErrCode]\n"
+			}
 			$frame2.bt_cancel invoke
 		}
 
@@ -1685,7 +1855,13 @@ proc AddPDOWindow {} {
 		set catchErrCode [AddIndex $nodeId $nodeType $pdoVar]
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
 		if { $ErrCode != 0 } {
-			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning -parent .addPdo
+			#tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning -parent .addPdo
+			if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+				tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning -parent .addPdo
+			} else {
+				tk_messageBox -message "Unknown Error" -title Warning -icon warning -parent .addPdo
+			        puts "Unknown Error in AddPDOWindow 1 ->[ocfmRetCode_errorString_get $catchErrCode]\n"
+			}
 			$frame2.bt_cancel invoke
 		}
 
@@ -1703,8 +1879,14 @@ proc AddPDOWindow {} {
 		if { $ErrCode == 0 && $ExistfFlag == 1 } {
 			#the node exist continue 
 		} else {
-			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon 	warning -parent .addPdo
+			#tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon 	warning -parent .addPdo
 			#tk_messageBox -message "ErrCode : $ErrCode\nExistfFlag : $ExistfFlag" -title Warning -icon warning -parent .addPdo
+			if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+				tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning -parent .addPdo
+			} else {
+				tk_messageBox -message "Unknown Error" -title Warning -icon warning -parent .addPdo
+			        puts "Unknown Error in AddPDOWindow 2 ->[ocfmRetCode_errorString_get $catchErrCode]\n"
+			}
 			$frame2.bt_cancel invoke
 		}
 
@@ -1934,7 +2116,9 @@ proc PropertiesWindow {} {
 		#should not occur
 	}
 	
-	
+	wm protocol .prop WM_DELETE_WINDOW "$winProp.bt_ok invoke"
+	bind $winProp <KeyPress-Return> "$winProp.bt_ok invoke"
+	bind $winProp <KeyPress-Escape> "$winProp.bt_ok invoke"
 	centerW $winProp
 	
 }

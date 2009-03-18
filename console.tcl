@@ -319,6 +319,18 @@ proc warnPuts {var {tag output} {win {}} {flash 0} {see 1}} {
 	return
 }
 
+proc ClearMsgs {} {
+	global conWindow
+	global warWindow
+	global errWindow
+	
+	foreach window [list [lindex $conWindow 0] [lindex $warWindow 0]  [lindex $errWindow 0] ] {
+		$window configure -state normal
+		$window delete 1.0 end
+		$window configure -state disabled
+	}
+}
+
 # this won't be executed if console.tcl is sourced by another app
 if {[string compare [info script] $argv0] == 0} {
 	consoleInit .

@@ -148,7 +148,15 @@ proc EditManager::create_tab {nb filename choice} {
 	#not maintaining for project setting save
 	entry $tabInnerf1.en_value1 -textvariable tmpValue$_newPageCounter  -relief ridge -justify center -bg white -validate key -vcmd "IsDec %P $tabInnerf1 %d %i"
 	
-	
+	set objCoList [list DEFTYPE DEFSTRUCT VAR ARRAY RECORD]
+	ComboBox $tabInnerf1.co_obj1 -values $objCoList -modifycmd "" -editable no
+	#set dataCoList ""
+	#ComboBox $tabInnerf1.co_data1 -values $dataCoList -modifycmd "" -editable no
+	set accessCoList [list const ro wr rw readWriteInput readWriteOutput noAccess]
+	ComboBox $tabInnerf1.co_access1 -values $accessCoList -modifycmd "" -editable no
+	set pdoColist [list NO DEFAULT OPTIONAL RPDO TPDO]
+	ComboBox $tabInnerf1.co_pdo1 -values $pdoColist -modifycmd "" -editable no
+
 	#raises the reinserting bug
 	#entry $tabInnerf1.en_value1 -textvariable abcdefgh  -relief ridge -justify center -bg white -validate key -vcmd "IsDec %P $tabInnerf1 %d %i"
 	
@@ -179,22 +187,39 @@ proc EditManager::create_tab {nb filename choice} {
 	grid config $tabInnerf0.l_empty2 -row 3 -column 0 -columnspan 2
 	
 	
-	grid config $tabInnerf1.l_data -row 0 -column 0 -sticky w 
+	grid config $tabInnerf1.l_data -row 0 -column 0 -sticky w
+	#grid config $tabInnerf1.co_data1 -row 0 -column 1 -padx 5
+	#grid remove $tabInnerf1.co_data1
 	grid config $tabInnerf1.en_data1 -row 0 -column 1 -padx 5
+
 	grid config $tabInnerf1.l_upper -row 0 -column 2 -sticky w
 	grid config $tabInnerf1.en_upper1 -row 0 -column 3 -padx 5
-	grid config $tabInnerf1.l_access -row 0 -column 4 -sticky w 
+
+	grid config $tabInnerf1.l_access -row 0 -column 4 -sticky w
+	grid config $tabInnerf1.co_access1 -row 0 -column 5 -padx 5 
+	grid remove $tabInnerf1.co_access1
 	grid config $tabInnerf1.en_access1 -row 0 -column 5 -padx 5 
+
 	grid config $tabInnerf1.l_empty4 -row 1 -column 0 -columnspan 2
+
 	grid config $tabInnerf1.l_obj -row 2 -column 0 -sticky w 
+	grid config $tabInnerf1.co_obj1 -row 2 -column 1 -padx 5
+	grid remove $tabInnerf1.co_obj1
 	grid config $tabInnerf1.en_obj1 -row 2 -column 1 -padx 5
+
 	grid config $tabInnerf1.l_lower -row 2 -column 2 -sticky w
 	grid config $tabInnerf1.en_lower1 -row 2 -column 3 -padx 5
+
 	grid config $tabInnerf1.l_pdo -row 2 -column 4 -sticky w
+	grid config $tabInnerf1.co_pdo1 -row 2 -column 5 -padx 5
+	grid remove $tabInnerf1.co_pdo1
 	grid config $tabInnerf1.en_pdo1 -row 2 -column 5 -padx 5
+
 	grid config $tabInnerf1.l_empty5 -row 3 -column 0 -columnspan 2
+
 	grid config $tabInnerf1.l_value -row 4 -column 0 -sticky w
 	grid config $tabInnerf1.en_value1 -row 4 -column 1 -padx 5 
+
 	grid config $frame1 -row 4 -column 3 -padx 5 -columnspan 2 -sticky w
 	#grid config $frame1 -row 4 -column 2 -padx 5 -columnspan 2 
 	grid config $tabInnerf1.l_default -row 4 -column 4 -sticky w
@@ -466,14 +491,14 @@ proc ConvertDec {tmpValue} {
 
 		set state [$tmpValue.en_value1 cget -state]
 		$tmpValue.en_value1 configure -validate none -state normal
-		$tmpValue.en_default1 configure -state normal
-
-		#InsertDec $tmpValue
 		InsertDec $tmpValue.en_value1
-		InsertDec $tmpValue.en_default1
-
 		$tmpValue.en_value1 configure -validate key -vcmd "IsDec %P $tmpValue %d %i" -state $state
-		$tmpValue.en_default1 configure -state disabled	
+		
+		set state [$tmpValue.en_default1 cget -state]
+		$tmpValue.en_default1 configure -state normal
+		#InsertDec $tmpValue
+		InsertDec $tmpValue.en_default1
+		$tmpValue.en_default1 configure -state $state	
 	} else {
 		#puts "ConvertDec already selected"
 		#already dec is selected
@@ -561,18 +586,17 @@ proc ConvertHex {tmpValue} {
 		} else {
 		    set userPrefList [lreplace $userPrefList $schRes $schRes [list $nodeSelect hex] ]
 		}
-		set state [$tmpValue.en_value1 cget -state]
 		
+		set state [$tmpValue.en_value1 cget -state]
 		puts "ConvertHex state->$state"
 	        $tmpValue.en_value1 configure -validate none -state normal
-		$tmpValue.en_default1 configure -state normal
-		
-		#InsertHex $tmpValue
 		InsertHex $tmpValue.en_value1
-		InsertHex $tmpValue.en_default1
-		
 		$tmpValue.en_value1 configure -validate key -vcmd "IsHex %P %s $tmpValue %d %i" -state $state
-		$tmpValue.en_default1 configure -state disabled 
+		
+		set state [$tmpValue.en_default1 cget -state]
+		$tmpValue.en_default1 configure -state normal
+		InsertHex $tmpValue.en_default1
+		$tmpValue.en_default1 configure -state $state
 	} else {
 		puts "ConvertHex already selected"
 		#already hex is selected
@@ -692,26 +716,23 @@ proc SaveValue {frame0 frame1} {
 		set oldName [string range $oldName end-7 end ]
 	}
 
-	#gets the nodeId and Type of selected node
-	set result [GetNodeIdType $nodeSelect]
-	if {$result != "" } {
-		set nodeId [lindex $result 0]
+
+
+        #gets the nodeId and Type of selected node
+        set result [GetNodeIdType $nodeSelect]
+        if {$result != "" } {
+        	set nodeId [lindex $result 0]
 		set nodeType [lindex $result 1]
 	} else {
 		#must be some other node this condition should never reach
 		#puts "\n\nSaveValue->SHOULD NEVER HAPPEN 1!!\n\n"
 		return
 	}
-
-puts "\n\****SaveValue****n"
-#focus $frame0.en_nam1
-
+	
 	set tmpVar0 [$frame0.en_nam1 cget -textvariable]
 	global $tmpVar0
-	
 	set newName [subst $[subst $tmpVar0]]
 	puts "newName->[subst $[subst $tmpVar0]]->[$frame0.en_nam1 get]"
-#focus $frame1.en_value1
 	
 	puts "state=[$frame1.en_value1 cget -state]"
 	set state [$frame1.en_value1 cget -state]
@@ -720,75 +741,117 @@ puts "\n\****SaveValue****n"
 	global $tmpVar1	
 	set value [string toupper [subst $[subst $tmpVar1]] ]
 	puts "value->$value"
-	#puts "value->[subst $[subst $tmpVar1]]"
-
-	set radioSel [$frame1.frame1.ra_dec cget -variable]
-	global $radioSel
-	puts "radioSel->$radioSel"
-	set radioSel [subst $[subst $radioSel]]
-	puts "radioSel after sub ->$radioSel"
 	
-	$frame1.en_data1 configure -state normal
-	set dataType [$frame1.en_data1 get]
-	$frame1.en_data1 configure -state disabled
-	puts "dataType->$dataType"
-
-	if {$value != ""} {
-		#$frame1.en_data1 configure -state normal
-		#set dataType [$frame1.en_data1 get]
-		#$frame1.en_data1 configure -state disabled
-		#puts "dataType->$dataType"
-		if { $dataType == "IP_ADDRESS" } {
-			set result [$frame1.en_value1 validate]
-			if {$result == 0} {
-				tk_messageBox -message "IP address not complete\n values not saved" -title Warning -icon warning -parent .
-				return
-			}
-		} elseif { $dataType == "MAC_ADDRESS" } {	
-			set result [$frame1.en_value1 validate]
-			if {$result == 0} {
-				tk_messageBox -message "MAC address not complete\n values not saved" -title Warning -icon warning -parent .	
-				return
-			}
-		} elseif { $radioSel == "hex" && !($dataType == "MAC_ADDRESS" || $dataType == "IP_ADDRESS") } {
-			puts "#it is hex value trim leading 0x"
-			set value [string range $value 2 end]
-			set value [string toupper $value]
-			if { $value == "" } {
-				set value []
-			} else {
-				set value 0x$value
-			}
-		} elseif { $radioSel == "dec" && !($dataType == "MAC_ADDRESS" || $dataType == "IP_ADDRESS") } {  
-			puts "#is is dec value convert to hex"
-			#set value [string trimleft $value 0] ; trimming zero leads to error
-			#puts "value after trim for dec :$value"
-			set value [_ConvertHex $value]
-			#0x is appended to represent it as hex
-			set value $value
-			#puts "value after conv for dec :$value"
-			set value [string toupper $value]
-			set value 0x$value
-		} else {
-			#puts "\n\n\nSaveValue->Should Never Happen 1!!!\n\n\n"
-		}
+	
+	
+	if { [expr 0x$indexId > 0x1fff] } {
+		puts "\nSAVE NOT IMPLEMENTED FOR INDEX ABOVE 1FFF AND ITS SUBINDEX  \n"
+		tk_messageBox -message "SAVE NOT IMPLEMENTED FOR INDEX ABOVE 1FFF AND ITS SUBINDEX" -parent .
+		#puts "0x$indexId is greater than 0x1fff save not yet implemented"
+		return
+		
+		set dataType [$frame1.en_data1 get]
+		puts "frame1.co_access1 get ->[$frame1.co_access1 cget -values]"
+		set accessType [GetComboValue $frame1.co_access1]
+		#set objectType [$frame1.co_obj1 getvalue]
+		set objectType [GetComboValue $frame1.co_obj1]
+		set pdoType [GetComboValue $frame1.co_pdo1]
+		set upperLimit [$frame1.en_upper1 get]
+		set lowerLimit [$frame1.en_lower1 get]
+		set default [$frame1.en_default1 get]
 	} else {
-		#no value has been inputed by user
-		set value []
+		#continue
+	
+
+		#puts "value->[subst $[subst $tmpVar1]]"
+    
+		set radioSel [$frame1.frame1.ra_dec cget -variable]
+		global $radioSel
+		puts "radioSel->$radioSel"
+		set radioSel [subst $[subst $radioSel]]
+		puts "radioSel after sub ->$radioSel"
+	
+		$frame1.en_data1 configure -state normal
+		set dataType [$frame1.en_data1 get]
+		$frame1.en_data1 configure -state disabled
+		puts "dataType->$dataType"
+
+		if {$value != ""} {
+			#$frame1.en_data1 configure -state normal
+			#set dataType [$frame1.en_data1 get]
+			#$frame1.en_data1 configure -state disabled
+			#puts "dataType->$dataType"
+			if { $dataType == "IP_ADDRESS" } {
+				set result [$frame1.en_value1 validate]
+				if {$result == 0} {
+					tk_messageBox -message "IP address not complete\n values not saved" -title Warning -icon warning -parent .
+					return
+				}
+			} elseif { $dataType == "MAC_ADDRESS" } {	
+				set result [$frame1.en_value1 validate]
+				if {$result == 0} {
+					tk_messageBox -message "MAC address not complete\n values not saved" -title Warning -icon warning -parent .	
+					return
+				}	
+			} elseif { $radioSel == "hex" && !($dataType == "MAC_ADDRESS" || $dataType == "IP_ADDRESS") } {
+				puts "#it is hex value trim leading 0x"
+				set value [string range $value 2 end]
+				set value [string toupper $value]
+				if { $value == "" } {
+					set value []
+				} else {
+					set value 0x$value
+				}
+			} elseif { $radioSel == "dec" && !($dataType == "MAC_ADDRESS" || $dataType == "IP_ADDRESS") } {  
+				puts "#is is dec value convert to hex"
+				#set value [string trimleft $value 0] ; trimming zero leads to error
+				#puts "value after trim for dec :$value"
+				set value [_ConvertHex $value]
+				#0x is appended to represent it as hex
+				set value $value
+				#puts "value after conv for dec :$value"
+				set value [string toupper $value]
+				set value 0x$value
+			} else {
+				#puts "\n\n\nSaveValue->Should Never Happen 1!!!\n\n\n"
+			}
+		} else {
+			#no value has been inputed by user
+			set value []
+		}
 	}
 	
 	if {[string match "*SubIndexValue*" $nodeSelect]} {
-		#DllExport ocfmRetCode SetSubIndexAttributes(int NodeID, ENodeType NodeType, char* IndexID, char* SubIndexID, char* IndexValue, char* IndexName);
-		puts "SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName"
-		set catchErrCode [SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName]
-		#puts "catchErrCode->$catchErrCode"
+	    	if { [expr 0x$indexId > 0x1fff] } {
+			#DllExport ocfmRetCode SetALLSubIndexAttributes(int NodeID, ENodeType NodeType, 
+			#char* IndexID, char* SubIndexID, char* ActualValue,
+			#char* IndexName, char* Access, char* dataTypeName,
+			#char* pdoMappingVal, char* defaultValue, char* highLimit,
+			#char* lowLimit, char* objType, EFlag flagIfIncludedInCdc);	
+			puts "SetALLSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName $accessType $dataType $pdoType $default $upperLimit $lowerLimit $objectType flag"
+			return
+		} else {
+	        	#DllExport ocfmRetCode SetSubIndexAttributes(int NodeID, ENodeType NodeType, char* IndexID, char* SubIndexID, char* IndexValue, char* IndexName);
+			puts "SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName"
+			set catchErrCode [SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName]
+			#puts "catchErrCode->$catchErrCode"
+		}
 	} elseif {[string match "*IndexValue*" $nodeSelect]} {
 	    	set chkGen [$frame0.frame1.ch_gen cget -variable]
 		global $chkGen
-		#DllExport ocfmRetCode SetIndexAttributes(int NodeID, ENodeType NodeType, char* IndexID, char* IndexValue, char* IndexName);
-		puts "SetIndexAttributes $nodeId $nodeType $indexId $value $newName $chkGen->[subst $[subst $chkGen]]"
-		set catchErrCode [SetIndexAttributes $nodeId $nodeType $indexId $value $newName [subst $[subst $chkGen]] ]
-		#puts "catchErrCode->$catchErrCode"
+		if { [expr 0x$indexId > 0x1fff] } {
+			#DllExport ocfmRetCode SetALLIndexAttributes(int NodeID, ENodeType NodeType, 
+			#char* IndexID, char* ActualValue, char* IndexName, char* Access, char* dataTypeName,
+			#char* pdoMappingVal, char* defaultValue, char* highLimit,char* lowLimit,
+			#char* objType, EFlag flagIfIncludedInCdc);
+			puts "SetALLSubIndexAttributes $nodeId $nodeType $indexId $value $newName $accessType $dataType $pdoType $default $upperLimit $lowerLimit $objectType [subst $[subst $chkGen]]"
+			return
+		} else {
+			#DllExport ocfmRetCode SetIndexAttributes(int NodeID, ENodeType NodeType, char* IndexID, char* IndexValue, char* IndexName);
+			puts "SetIndexAttributes $nodeId $nodeType $indexId $value $newName $chkGen->[subst $[subst $chkGen]]"
+			set catchErrCode [SetIndexAttributes $nodeId $nodeType $indexId $value $newName [subst $[subst $chkGen]] ]
+			#puts "catchErrCode->$catchErrCode"
+		}
 	} else {
 		puts "\n\n\nSaveValue->Should Never Happen 2!!!$nodeSelect->$$nodeSelect\n\n\n"
 		return
@@ -813,14 +876,19 @@ puts "\n\****SaveValue****n"
 	set newName [append newName $oldName]
 	#puts "newName->$newName"
 	$updatetree itemconfigure $nodeSelect -text $newName
-	lappend savedValueList $nodeSelect
-	$frame0.en_nam1 configure -bg #fdfdd4
-	$frame1.en_value1 configure -bg #fdfdd4
+	
+	if { [expr 0x$indexId > 0x1fff] } {
+	    
+	} else {
+	        lappend savedValueList $nodeSelect
+	        $frame0.en_nam1 configure -bg #fdfdd4
+	        $frame1.en_value1 configure -bg #fdfdd4
+	}
 	
 	
-	$frame1.en_data1 configure -state normal
-	set dataType [$frame1.en_data1 get]
-	$frame1.en_data1 configure -state disabled
+	#$frame1.en_data1 configure -state normal
+	#set dataType [$frame1.en_data1 get]
+	#$frame1.en_data1 configure -state disabled
 	
 	#if { $dataType != "IP_ADDRESS" || $dataType != "MAC_ADDRESS" } {
 	#	#save user preference
@@ -845,6 +913,8 @@ puts "\n\****SaveValue****n"
 	#}
 	
 	$frame1.en_value1 configure -state $state
+	
+	ResetPromptFlag
 puts "****end of save value*****\n"
 
 }
@@ -876,12 +946,20 @@ proc DiscardValue {frame0 frame1} {
 		set parent [$updatetree parent $nodeSelect]
 		set indexId [string range [$updatetree itemcget $parent -text] end-4 end-1]
 		set parent [$updatetree parent $parent]
+		if {}
 
 	} else {
 		set indexId [string range $oldName end-4 end-1 ]
 		set parent [$updatetree parent $nodeSelect]
 	}
 
+	if { [expr 0x$indexId > 0x1fff] } {
+		ResetPromptFlag
+		Editor::SingleClickNode $nodeSelect
+		return
+	} else {
+	    
+	}
 
 	
 	#gets the nodeId and Type of selected node
@@ -930,13 +1008,19 @@ proc DiscardValue {frame0 frame1} {
 		set tempIndexProp [GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos 0 ]
 		#set tempIndexProp [GetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId 0]
 		set IndexName [lindex $tempIndexProp 1]
-		set tempIndexProp [GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos 5 ]
-		#set tempIndexProp [GetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId 5]
-		set IndexActualValue [lindex $tempIndexProp 1]
+		
 		set tempIndexProp [GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos 2 ]
 		#set tempIndexProp [GetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId 2]
 		set dataType [lindex $tempIndexProp 1]		
-		#set IndexActualValue []
+		
+		set tempIndexProp [GetIndexAttributesbyPositions $nodePos $indexPos 4 ]
+		set DefaultValue [lindex $tempIndexProp 1]
+		
+		set tempIndexProp [GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos 5 ]
+		#set tempIndexProp [GetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId 5]
+		set IndexActualValue [lindex $tempIndexProp 1]
+		
+		
 	} else {
 	    	set indexPos [new_intp] 
 		#DllExport ocfmRetCode IfIndexExists(int NodeID, ENodeType NodeType, char* IndexID, int* IndexPos)
@@ -973,18 +1057,21 @@ proc DiscardValue {frame0 frame1} {
 		}
 	}
 
+	$frame0.en_nam1 configure -validate none
 	$frame0.en_nam1 delete 0 end
 	$frame0.en_nam1 insert 0 $IndexName
+	$frame0.en_nam1 configure -validate key
 
 	set state [$frame1.en_value1 cget -state]
 	$frame1.en_value1 configure -validate none  -state normal
 	$frame1.en_value1 delete 0 end
 	$frame1.en_value1 insert 0 $IndexActualValue
 
+	set defaultState [$frame1.en_default1 cget -state]
 	$frame1.en_default1 configure -state normal
 	$frame1.en_default1 delete 0 end
 	$frame1.en_default1 insert 0 $DefaultValue
-	$frame1.en_default1 configure -state disabled
+	$frame1.en_default1 configure -state $defaultState
 
 	#puts "IndexName->$IndexName"
 	#puts "IndexActualValue->$IndexActualValue"
@@ -1061,6 +1148,7 @@ proc DiscardValue {frame0 frame1} {
 			if {[string match -nocase "0x*" $DefaultValue ]} {
 				#default value is already in hexadecimal no need to convert
 			} else {
+				set defaultState [$frame1.en_default1 cget -state]
 				$frame1.en_default1 configure -state normal
 				#set tmpVal $DefaultValue
 				##set tmpVal [string trimleft $tmpVal 0] ; trimming zero leads to error
@@ -1078,7 +1166,7 @@ proc DiscardValue {frame0 frame1} {
 				
 				InsertHex $frame1.en_default1
 				
-				$frame1.en_default1 configure -state disabled
+				$frame1.en_default1 configure -state $defaultState
 			}
 			$frame1.frame1.ra_hex select
 			$frame1.en_value1 configure -validate key -vcmd "IsHex %P %s $frame1 %d %i" 
@@ -1094,6 +1182,7 @@ proc DiscardValue {frame0 frame1} {
 			
 			if {[string match -nocase "0x*" $DefaultValue]} {
 				puts "CONVERT DEFAULT HEXADECIMAL VALUE TO decimal $DefaultValue"
+				set defaultState [$frame1.en_default1 cget -state]
 				$frame1.en_default1 configure -state normal
 				#set tmpVal $DefaultValue
 				#if { $tmpVal != "" } {
@@ -1111,7 +1200,7 @@ proc DiscardValue {frame0 frame1} {
 				
 				InsertDec $frame1.en_default1
 				
-				$frame1.en_default1 configure -state disabled
+				$frame1.en_default1 configure -state $defaultState
 			} else {
 				#default value is already in decimal no need to convert
 			}
@@ -1121,6 +1210,8 @@ proc DiscardValue {frame0 frame1} {
 	}
 	
 	$frame1.en_value1 configure -state $state
+	ResetPromptFlag
+	
 }
 
 proc StartEdit {tbl row col text} {
@@ -1208,26 +1299,38 @@ proc SaveTable {tableWid} {
 	set nodeId [lindex $result 0]
 	set nodeType [lindex $result 1]
 	set rowCount 0
-	#foreach childIndex [$updatetree nodes $nodeSelect] 
+	#foreach childIndex [$updatetree nodes $nodeSelect]
+	set flag 0
 	foreach childIndex $populatedPDOList {
 	 	set indexId [string range [$updatetree itemcget $childIndex -text] end-4 end-1]
 		foreach childSubIndex [$updatetree nodes $childIndex] {
 			set subIndexId [string range [$updatetree itemcget $childSubIndex -text] end-2 end-1]
 			if {[string match "00" $subIndexId]} {
 			} else {
-				set name [string range [$updatetree itemcget $childSubIndex -text] 0 end-6]
-				set offset [string range [$tableWid cellcget $rowCount,2 -text] 2 end]
-				set length [string range [$tableWid cellcget $rowCount,3 -text] 2 end]
+				set name [string range [$updatetree itemcget $childSubIndex -text] 0 end-6] 
+				#set offset [AppendZero [string range [$tableWid cellcget $rowCount,2 -text] 2 end] 4]
+				#set length [AppendZero [string range [$tableWid cellcget $rowCount,3 -text] 2 end] 4]
+				#set reserved 00
+				#set index [AppendZero [string range [$tableWid cellcget $rowCount,4 -text] 2 end] 4]
+				#set subindex [AppendZero [string range [$tableWid cellcget $rowCount,5 -text] 2 end] 2]
+				
+				set offset [string range [$tableWid cellcget $rowCount,2 -text] 2 end] 
+				set length [string range [$tableWid cellcget $rowCount,3 -text] 2 end] 
 				set reserved 00
-				set index [string range [$tableWid cellcget $rowCount,4 -text] 2 end]
+				set index [string range [$tableWid cellcget $rowCount,4 -text] 2 end] 
 				set subindex [string range [$tableWid cellcget $rowCount,5 -text] 2 end]
+
 				set value $length$offset$reserved$subindex$index
+				
 				#puts "tableWid cellcget $rowCount,1 -text ====>$value"
 				#0x is appended when saving value to indicate it is a hexa decimal number
 				#puts "SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId 0x$value $name"
 				
-				if {$value == "00"} {
-					set value [] 
+				if { [string length $value] != 16 } {
+					puts "NOT SAVED -> SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $name"
+					set flag 1
+					incr rowCount
+					continue
 				} else {
 					set value 0x$value
 				}
@@ -1237,6 +1340,10 @@ proc SaveTable {tableWid} {
 			}
 		}
 	}
+	
+	if { $flag == 1} {
+	    conPuts "\nValues which are not completely filled are not saved\n "
+	}
 
 	#PDO entries value is changed need to save 
 	set status_save 1
@@ -1244,6 +1351,8 @@ proc SaveTable {tableWid} {
 	#set chkPrompt 0
 
 	set populatedPDOList ""
+	ResetPromptFlag
+
 
 #	set size [$tableWid size] ; # SIZE GIVES NO OF ROWS
 #	#puts size->$size
@@ -1253,6 +1362,19 @@ proc SaveTable {tableWid} {
 proc DiscardTable {tableWid} {
 	global nodeSelect
 
+	ResetPromptFlag
+
 	Editor::SingleClickNode $nodeSelect
 	#$tableWid finishediting
+}
+
+proc GetComboValue {comboPath} {
+    set value [$comboPath getvalue]
+    if { $value == -1 } {
+	#nothing was selected
+	return []
+    }
+    set valueList [$comboPath cget -values]
+    return [lindex $valueList $value]
+    
 }

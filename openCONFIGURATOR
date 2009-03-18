@@ -69,10 +69,19 @@
 exec wish "$0" ${1+"$@"}
 
 set pwd [pwd]
-package require Tk 8.5
+#puts [package require Tk]
+if { [ catch { package require Tk 8.5 } ] } {
+	tk_messageBox -message "Package TK 8.5 not found \n please install and rerun the tool" -title Info -icon error
+	exit
+}
+
+if { [ catch { package require Thread } ] } {
+	tk_messageBox -message "Package Thread not found" -title Info -icon error
+	exit
+}
 
 global RootDir
-global HOME
+global home
 global defaultPjtDir
 global EditorData
 global conWindow
@@ -80,6 +89,13 @@ global warWindow
 global errWindow
 
 set RootDir [pwd]
+
+source [file join $RootDir console.tcl]
+source [file join $RootDir manager.tcl]
+source [file join $RootDir wrapper_interactions.tcl]
+source [file join $RootDir windows.tcl]
+source [file join $RootDir validation.tcl]
+source [file join $RootDir operations.tcl]
 
 set path_to_BWidget [file join $RootDir BWidget-1.2.1]
 lappend auto_path $path_to_BWidget
@@ -90,12 +106,6 @@ Bitmap::get cut
 namespace eval Bitmap {
 	lappend path [file join $RootDir images]
 }
-source [file join $RootDir operations.tcl]
-source [file join $RootDir console.tcl]
-source [file join $RootDir manager.tcl]
-source [file join $RootDir wrapper_interactions.tcl]
-source [file join $RootDir windows.tcl]
-source [file join $RootDir validation.tcl]
 
 ###############################################################################################
 #proc initOPN_CFGRATOR
@@ -121,15 +131,34 @@ puts "$tcl_platform(platform)==$::env(HOME)"
 		option add *background #d7d5d3 userDefault
 	}
 	
-	set HOME $::env(HOME)
-		set defaultPjtDir [file join $HOME openCONFIGURATOR_Projects]
-		if {![file exists $defaultPjtDir]} {
-			file mkdir $defaultPjtDir
+	set home [file join $::env(HOME) Documents]
+	if {[file exists $home] && ![file isfile $home]} {
+		#folder exists
+	} else {
+		set home [file join $::env(HOME) "My Documents"]
+		if { [file exists $home] && ![file isfile $home] } {
+			#folder exists
 		} else {
-			#directory already exists
-			puts "openCONFIG_Projects directory already exists"
+			#both the folder does not exist create new folde with Documents
+			set result [tk_messageBox -message "Folder \"Documents\" and \"My Documents\" are not present. \n Do you want to create one? " -type yesno -title Info -icon error]
+			switch -- $result {
+				yes {
+					set home [file join $::env(HOME) Documents]
+					file mkdir $home
+				}
+				no { exit }
+			}
 		}
+	}
+	
 
+	set defaultPjtDir [file join $home openCONFIGURATOR_Projects]
+	if { [file exists $defaultPjtDir] && ![file isfile $defaultPjtDir] } {
+		#directory already exists
+		puts "openCONFIG_Projects directory already exists"
+	} else {
+		file mkdir $defaultPjtDir
+	}
 
 	wm withdraw .
 	wm title . "openCONFIGURATOR"
@@ -154,15 +183,6 @@ puts "$tcl_platform(platform)==$::env(HOME)"
 	set PjtDir ""
 	set PjtName ""
 
-	if { [ catch { package require Thread } ] } {
-		tk_messageBox -message "Package Thread not found" -title Info -icon error
-		exit
-	}
-
-	if { [ catch { package require Tk 8.5 } ] } {
-		tk_messageBox -message "Package TK 8.5 not found \n please install and rerun the tool" -title Info -icon error
-		exit
-	}
 
 	# Loading shared library
 	if {"$tcl_platform(platform)" == "windows"} {

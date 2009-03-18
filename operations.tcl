@@ -125,11 +125,13 @@ set cnCount 0
 set mnCount 0
 set nodeIdList ""
 set savedValueList ""
+set nodeSelect ""
 set lastXD ""
 set lastOpenPjt ""
 set status_save 0 ; #if zero no need to save
-#set chkPrompt 1 ; #if zero values are not saved prompt message used for PROMPT mode
-set ra_proj 2 ; # TODO TEMPORARY FIX
+ResetPromptFlag ; #set chkPrompt 0 ;  #if zero values are not saved prompt message used for PROMPT mode
+#set ra_proj 2 ; # TODO TEMPORARY FIX
+#set ra_auto 0 ; # TODO TEMPORARY FIX
 ###############################################################################################
 
 namespace eval Editor {
@@ -195,7 +197,7 @@ proc Editor::aboutBox {} {\
     	grab $aboutWindow
     	wm title	 $aboutWindow	"About"
     	wm protocol $aboutWindow WM_DELETE_WINDOW "destroy $aboutWindow"
-    	label $aboutWindow.l_msg -image [Bitmap::get info] -compound left -text "\n      openCONFIGURATOR Tool           \n       Designed by       \nKalycito Infotech Private Limited.  \n"
+    	label $aboutWindow.l_msg -image [Bitmap::get info] -compound left -text "\n          openCONFIGURATOR Tool\n                    Designed by\n                        Kalycito\nwww.kalycito.com\n"
     	button $aboutWindow.bt_ok -text Ok -width 8 -command "destroy $aboutWindow"
     	grid config $aboutWindow.l_msg -row 0 -column 0 
     	grid config $aboutWindow.bt_ok -row 1 -column 0
@@ -571,6 +573,9 @@ proc openproject { } {
 proc _openproject {projectfilename} {
 	global PjtDir
 	global PjtName
+	global ra_proj
+	global ra_auto
+	
 	
 	#CloseProject is called to delete node and insert tree
 	CloseProject
@@ -600,10 +605,38 @@ proc _openproject {projectfilename} {
 	set PjtDir $tempPjtDir
 	set PjtName $tempPjtName
 	
-	RePopulate $PjtDir [string range $PjtName 0 end-[string length [file extension $PjtName]]]
-	
-	conPuts "Project [file join $PjtDir $PjtName] is successfully opened"
+	set result [ RePopulate $PjtDir [string range $PjtName 0 end-[string length [file extension $PjtName]]] ]
 	thread::send [tsv::set application importProgress] "StopProgress"
+	
+	 #ocfmRetCode GetProjectSettings(EAutoGenerate autoGen, EAutoSave autoSave)
+	set ra_autop [new_EAutoGeneratep]
+	set ra_projp [new_EAutoSavep]
+
+	set catchErrCode [GetProjectSettings $ra_autop $ra_projp]
+	set ErrCode [ocfmRetCode_code_get $catchErrCode]
+	puts "ErrCode:$ErrCode"
+	if { $ErrCode != 0 } {
+		if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]\nAuto generate is set to \"No\" and project Setting set to \"Discard\" " -title Warning -icon warning
+		} else {
+			 tk_messageBox -message "Unknown Error\nAuto generate is set to \"No\" and project Setting set to \"Discard\" " -title Warning -icon warning
+			puts "Unknown Error ->[ocfmRetCode_errorString_get $catchErrCode]\n"
+		}
+		set ra_auto 0
+		set ra_proj 2
+	} else {
+		set ra_auto [EAutoGeneratep_value $ra_autop]
+		set ra_proj [EAutoSavep_value $ra_projp]
+	}
+	
+	
+	
+	ClearMsgs
+	if { $result == 1 } {
+		conPuts "Project [file join $PjtDir $PjtName] is successfully opened"
+	} else {
+		errorPuts "Error in opening project [file join $PjtDir $PjtName]"
+	}
 	
 }
 
@@ -659,7 +692,7 @@ puts "node->$node"
 				if { [ catch { Import $node $nodeType $nodeId } ] } {
 					#some error has occured
 					CloseProject
-					return
+					return 0
 				}
 				incr cnCount
 				lappend nodeIdList $nodeId 
@@ -667,7 +700,7 @@ puts "node->$node"
 				#some error has occured
 				#continue
 				CloseProject
-				return
+				return 0
 			}
 		}
 
@@ -683,6 +716,7 @@ puts "node->$node"
 		errorPuts "MN node is not found" error
 	}
 
+	return 1
 }
 
 ################################################################################################
@@ -766,8 +800,8 @@ proc Editor::create { } {
             		{command "Transfer CDC   Ctrl+F5" {noFile} "Transfer CDC" {} -command "TransferCDC 1" }
             		{command "Transfer XAP   Ctrl+F6" {noFile} "Transfer XAP" {} -command "TransferXAP 1" }
 	    		{separator}
-            		{command "Start MN" {noFile} "Start the Managing Node" {} -command YetToImplement }
-            		{command "Stop MN" {noFile} "Stop the Managing Node" {} -command YetToImplement }
+            		{command "Start MN" {noFile} "Start the Managing Node" {} -command StartStack }
+            		{command "Stop MN" {noFile} "Stop the Managing Node" {} -command StopStack }
         	}
         	"&View" all options 0 {
             		{checkbutton "Show Output Console" {all option} "Show Console Window" {}
@@ -814,10 +848,12 @@ proc Editor::create { } {
 	#	 -command {set cursor [. cget -cursor]
 	#		YetToImplement
 	#	 }
-	$Editor::cnMenu add cascade -label "Add" -menu $Editor::IndexaddMenu
-	menu $Editor::IndexaddMenu -tearoff 0
-	$Editor::IndexaddMenu add command -label "Add Index" -command "AddIndexWindow"
-	$Editor::IndexaddMenu add command -label "Inter CN Communication" -command {InterCNWindow}   
+	
+	#$Editor::cnMenu add cascade -label "Add" -menu $Editor::IndexaddMenu
+	#menu $Editor::IndexaddMenu -tearoff 0
+	#$Editor::IndexaddMenu add command -label "Add Index" -command "AddIndexWindow"
+	#$Editor::IndexaddMenu add command -label "Inter CN Communication" -command {InterCNWindow}
+	$Editor::cnMenu add command -label "Add Index" -command "AddIndexWindow"
 	$Editor::cnMenu add command -label "Import XDC/XDD" -command {ReImport}
 	$Editor::cnMenu add separator
 	$Editor::cnMenu add command -label "Delete" -command {DeleteTreeNode}
@@ -845,7 +881,8 @@ proc Editor::create { } {
 	#$Editor::projMenu add command -label "New Project" -command { _NewProject}
 	#$Editor::projMenu add command -label "Open Project" -command {openproject}
 	$Editor::projMenu insert 0 command -label "Sample Project" -command {
-		set samplePjt [file join [pwd] Sample Sample.oct]
+		global RootDir
+		set samplePjt [file join $RootDir Sample Sample.oct]
 		if {[file exists $samplePjt]} {
 			_openproject $samplePjt
 		} else {
@@ -979,7 +1016,7 @@ proc Editor::create { } {
             	-height 21\
             	-width 21\
             	-highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
-            	-helptext "Start stack" -command {YetToImplement}]
+            	-helptext "Start stack" -command StartStack]
 	pack $bb_start -side left -padx 4
 	pack $bbox -side left -anchor w -padx 2
 	
@@ -991,7 +1028,7 @@ proc Editor::create { } {
             	-helptype balloon\
             	-highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
             	-helptext "Stop stack"\
-	   	-command "YetToImplement"]
+	   	-command StopStack]
 	pack $bb_stop -side left -padx 4
 
 	#set bb_reconfig [ButtonBox::add $bbox -image [Bitmap::get reconfig]\
@@ -1250,7 +1287,7 @@ proc Editor::SingleClickNode {node} {
 	global populatedPDOList
 	global userPrefList
 	global LastTableFocus
-	#global chkPrompt
+	global chkPrompt
 	variable notebook
 
 	global  ra_proj
@@ -1260,7 +1297,6 @@ proc Editor::SingleClickNode {node} {
 
 #conPuts "$node"
 #puts "ra_proj->$ra_proj"
-
 	
 	
 	if { $nodeSelect == "" || ![$updatetree exists $nodeSelect] || [string match "root" $nodeSelect] || [string match "PjtName" $nodeSelect] || [string match "MN-*" $nodeSelect] || [string match "OBD-*" $nodeSelect] || [string match "CN-*" $nodeSelect] || [string match "PDO-*" $nodeSelect] } {
@@ -1277,7 +1313,7 @@ proc Editor::SingleClickNode {node} {
 				#must be root, PjtName, MN, OBD or CN
 			}
 		} elseif { $ra_proj == "1" } {
-			#if { $chkPrompt == 1 } {
+			if { $chkPrompt == 1 } {
 				set result [tk_messageBox -message "Do you want to save ?" -parent . -type yesno -icon question]
 				switch -- $result {
 					yes {
@@ -1294,8 +1330,9 @@ proc Editor::SingleClickNode {node} {
 					}
 					no  {#continue}
 				}
-			#}
-			# else it must have been saved
+			}
+			ResetPromptFlag
+			# else it must have been saved or values are not changed
 		} elseif { $ra_proj == "2" } {
 			
 		} else {
@@ -1405,6 +1442,8 @@ proc Editor::SingleClickNode {node} {
 		#puts "populatedPDOList->$populatedPDOList"
 		set popCount 0 
 		[lindex $f2 1] delete 0 end
+		
+		set commParamValue ""
 		for {set count 0} { $count <= [expr [llength $finalMappList]-2] } {incr count 2} {
 			set tempIdx [lindex $finalMappList $count]
 			puts "tempIdx->$tempIdx"
@@ -1568,6 +1607,14 @@ proc Editor::SingleClickNode {node} {
 		set parent [$updatetree parent $node]
 		set indexId [string range [$updatetree itemcget $parent -text] end-4 end-1]
 
+		if { [expr 0x$indexId > 0x1fff] } {
+			set entryState normal
+			puts "0x$indexId is greater than 0x1fff state->$entryState"
+		} else {
+			set entryState disabled
+			puts "0x$indexId is lesser than 0x1fff state->$entryState"
+		}
+
 		#DllExport ocfmRetCode IfSubIndexExists(int NodeID, ENodeType NodeType, char* IndexID, char* SubIndexID, int* SubIndexPos, int* IndexPos);
 		set indexPos [new_intp] 
 		set subIndexPos [new_intp] 
@@ -1592,11 +1639,13 @@ proc Editor::SingleClickNode {node} {
 		$tmpInnerf0.en_idx1 delete 0 end
 		$tmpInnerf0.en_idx1 insert 0 0x$indexId
 		$tmpInnerf0.en_idx1 configure -state disabled
+		#$tmpInnerf0.en_idx1 configure -state $entryState
 
 		$tmpInnerf0.en_sidx1 configure -state normal
 		$tmpInnerf0.en_sidx1 delete 0 end
 		$tmpInnerf0.en_sidx1 insert 0 0x$subIndexId
 		$tmpInnerf0.en_sidx1 configure -state disabled
+		#$tmpInnerf0.en_sidx1 configure -state $entryState
 
 		pack forget [lindex $f0 1]
 		pack [lindex $f1 1] -expand yes -fill both -padx 2 -pady 4
@@ -1609,6 +1658,15 @@ proc Editor::SingleClickNode {node} {
 
 		#DllExport ocfmRetCode GetIndexAttributes(int NodeID, ENodeType NodeType, char* IndexID, EAttributeType AttributeType,char* AttributeValue) ; # dont pass arguments for Attribute value
 		set indexId [string range [$updatetree itemcget $node -text] end-4 end-1]
+		
+		if { [expr 0x$indexId > 0x1fff] } {
+			set entryState normal
+			puts "0x$indexId is greater than 0x1fff state->$entryState"
+		} else {
+			set entryState disabled
+			puts "0x$indexId is lesser than 0x1fff state->$entryState"
+		}
+		
 		set indexPos [new_intp] 
 		#DllExport ocfmRetCode IfIndexExists(int NodeID, ENodeType NodeType, char* IndexID, int* IndexPos)
 		set catchErrCode [IfIndexExists $nodeId $nodeType $indexId $indexPos] 
@@ -1633,6 +1691,7 @@ proc Editor::SingleClickNode {node} {
 		$tmpInnerf0.en_idx1 delete 0 end
 		$tmpInnerf0.en_idx1 insert 0 0x$indexId
 		$tmpInnerf0.en_idx1 configure -state disabled
+		#$tmpInnerf0.en_idx1 configure -state $entryState
 
 		pack [lindex $f0 1] -expand yes -fill both -padx 2 -pady 4
 		pack forget [lindex $f1 1]
@@ -1648,181 +1707,371 @@ proc Editor::SingleClickNode {node} {
 		}
 
 	}
-
+	
+	#if not configured to validate none forcing the validating condition thus setting the chkPrompt value
+	$tmpInnerf0.en_nam1 configure -validate none
 	$tmpInnerf0.en_nam1 delete 0 end
 	$tmpInnerf0.en_nam1 insert 0 [lindex $IndexProp 0]
-	$tmpInnerf0.en_nam1 configure -bg $savedBg
-
-	$tmpInnerf1.en_obj1 configure -state normal
-	$tmpInnerf1.en_obj1 delete 0 end
-	$tmpInnerf1.en_obj1 insert 0 [lindex $IndexProp 1]
-	$tmpInnerf1.en_obj1 configure -state disabled
+	$tmpInnerf0.en_nam1 configure -bg $savedBg -validate key
 
 	$tmpInnerf1.en_data1 configure -state normal
 	$tmpInnerf1.en_data1 delete 0 end
 	$tmpInnerf1.en_data1 insert 0 [lindex $IndexProp 2]
-	$tmpInnerf1.en_data1 configure -state disabled
+	#$tmpInnerf1.en_data1 configure -state disabled
+	$tmpInnerf1.en_data1 configure -state $entryState -bg white
 
-	$tmpInnerf1.en_access1 configure -state normal
-	$tmpInnerf1.en_access1 delete 0 end
-	$tmpInnerf1.en_access1 insert 0 [lindex $IndexProp 3]
-	$tmpInnerf1.en_access1 configure -state disabled
-
+	
 	$tmpInnerf1.en_default1 configure -state normal
 	$tmpInnerf1.en_default1 delete 0 end
 	$tmpInnerf1.en_default1 insert 0 [lindex $IndexProp 4]
-	$tmpInnerf1.en_default1 configure -state disabled
+	#$tmpInnerf1.en_default1 configure -state disabled
+	$tmpInnerf1.en_default1 configure -state $entryState -bg white
 
 	#puts "#en_value1 is configured to state normal to prevent potential bugs $tmpInnerf1.en_value1"
-	$tmpInnerf1.en_value1 configure -state normal -validate none 
+	$tmpInnerf1.en_value1 configure -state normal -validate none -bg $savedBg
 	$tmpInnerf1.en_value1 delete 0 end
 	$tmpInnerf1.en_value1 insert 0 [lindex $IndexProp 5]
 
 	$tmpInnerf1.en_lower1 configure -state normal
 	$tmpInnerf1.en_lower1 delete 0 end
 	$tmpInnerf1.en_lower1 insert 0 [lindex $IndexProp 7]
-	$tmpInnerf1.en_lower1 configure -state disabled
+	#$tmpInnerf1.en_lower1 configure -state disabled
+	$tmpInnerf1.en_lower1 configure -state $entryState -bg white
 
 	$tmpInnerf1.en_upper1 configure -state normal
 	$tmpInnerf1.en_upper1 delete 0 end
 	$tmpInnerf1.en_upper1 insert 0 [lindex $IndexProp 8]
-	$tmpInnerf1.en_upper1 configure -state disabled
+	#$tmpInnerf1.en_upper1 configure -state disabled
+	$tmpInnerf1.en_upper1 configure -state $entryState -bg white
 
-	$tmpInnerf1.en_pdo1 configure -state normal
-	$tmpInnerf1.en_pdo1 delete 0 end
-	$tmpInnerf1.en_pdo1 insert 0 [lindex $IndexProp 6]
-	$tmpInnerf1.en_pdo1 configure -state disabled
+	if { $entryState == "disabled" } {
+		grid remove $tmpInnerf1.co_obj1
+		grid $tmpInnerf1.en_obj1
+		$tmpInnerf1.en_obj1 configure -state normal
+		$tmpInnerf1.en_obj1 delete 0 end
+		$tmpInnerf1.en_obj1 insert 0 [lindex $IndexProp 1]
+		$tmpInnerf1.en_obj1 configure -state disabled
+		#$tmpInnerf1.en_obj1 configure -state $entryState
 	
-	if { [lindex $IndexProp 2] == "IP_ADDRESS" } {
-		set lastConv ""
-		grid remove $tmpInnerf1.frame1.ra_dec
-		grid remove $tmpInnerf1.frame1.ra_hex
-		$tmpInnerf1.en_value1 configure -validate key -vcmd "IsIP %P %V" -bg $savedBg
-	} elseif { [lindex $IndexProp 2] == "MAC_ADDRESS" } {
-		set lastConv ""
-		grid remove $tmpInnerf1.frame1.ra_dec
-		grid remove $tmpInnerf1.frame1.ra_hex
-		$tmpInnerf1.en_value1 configure -validate key -vcmd "IsMAC %P %V" -bg $savedBg
-	} else {
+		#grid remove $tmpInnerf1.co_data1
+		##grid $tmpInnerf1.en_data1	
+		#$tmpInnerf1.en_data1 configure -state normal
+		#$tmpInnerf1.en_data1 delete 0 end
+		#$tmpInnerf1.en_data1 insert 0 [lindex $IndexProp 2]
+		#$tmpInnerf1.en_data1 configure -state disabled
+		#$tmpInnerf1.en_data1 configure -state $entryState
 
-		#grid remove $tmpInnerf1.frame1.ra_ip
-		#grid remove $tmpInnerf1.frame1.ra_mac
-		grid $tmpInnerf1.frame1.ra_dec
-		grid $tmpInnerf1.frame1.ra_hex
+		grid remove $tmpInnerf1.co_access1
+		grid $tmpInnerf1.en_access1
+		$tmpInnerf1.en_access1 configure -state normal
+		$tmpInnerf1.en_access1 delete 0 end
+		$tmpInnerf1.en_access1 insert 0 [lindex $IndexProp 3]
+		$tmpInnerf1.en_access1 configure -state disabled
+		#$tmpInnerf1.en_access1 configure -state $entryState
 		
-		puts "\nIN singleclicknode userPrefList->$userPrefList"
-		set schRes [lsearch $userPrefList [list $nodeSelect *]]
-		puts "schRes->$schRes\n STATE=[$tmpInnerf1.en_value1 cget -state] \t $tmpInnerf1.en_value1\n"
-		if { $schRes != -1 } {
-			if { [lindex [lindex $userPrefList $schRes] 1] == "dec" } {
-				if {[string match -nocase "0x*" [lindex $IndexProp 5]]} {
-					$tmpInnerf1.en_value1 configure -validate none
-					InsertDec $tmpInnerf1.en_value1
-					
-				} else {
-					puts "# ACTUALVALUE already in decimal no need to do anything"
-				}
-				
-				if {[string match -nocase "0x*" [lindex $IndexProp 4]]} {
-					$tmpInnerf1.en_default1 configure -state normal
-					InsertDec $tmpInnerf1.en_default1
-				} else {
-					puts "# DEFAULTVALUE already in decimal no need to do anything"
-				}
-				set lastConv dec
-				$tmpInnerf1.frame1.ra_dec select
-				
-				$tmpInnerf1.en_default1 configure -state disabled
-				$tmpInnerf1.en_value1 configure -validate key -vcmd "IsDec %P $tmpInnerf1 %d %i" -bg $savedBg
-			} elseif { [lindex [lindex $userPrefList $schRes] 1] == "hex" } {
-				if {[string match -nocase "0x*" [lindex $IndexProp 5]]} {
-					puts "# ACTUALVALUE already in hexadecimal no need to do anything"
-				} else {
-					$tmpInnerf1.en_value1 configure -validate none
-					InsertHex $tmpInnerf1.en_value1
-				}
-				
-				if {[string match -nocase "0x*" [lindex $IndexProp 4]]} {
-					puts "# DEFAULTVALUE already in hexadecimal no need to do anything"
-				} else {
-					$tmpInnerf1.en_default1 configure -state normal
-					InsertHex $tmpInnerf1.en_default1
-				}
-					
-				set lastConv hex
-				$tmpInnerf1.frame1.ra_hex select
-				
-				$tmpInnerf1.en_default1 configure -state disabled
-				$tmpInnerf1.en_value1 configure -validate key -vcmd "IsHex %P %s $tmpInnerf1 %d %i" -bg $savedBg
-			} else {
-				puts "\n\nInvalid userpref [lindex $userPrefList 1]\n\n"
-				return 
-			}
+		grid remove $tmpInnerf1.co_pdo1
+		grid $tmpInnerf1.en_pdo1
+		$tmpInnerf1.en_pdo1 configure -state normal
+		$tmpInnerf1.en_pdo1 delete 0 end
+		$tmpInnerf1.en_pdo1 insert 0 [lindex $IndexProp 6]
+		$tmpInnerf1.en_pdo1 configure -state disabled
+		#$tmpInnerf1.en_pdo1 configure -state $entryState
+		
+		
+		
+		
+		
+		
+		
+		if { [lindex $IndexProp 2] == "IP_ADDRESS" } {
+			set lastConv ""
+			grid remove $tmpInnerf1.frame1.ra_dec
+			grid remove $tmpInnerf1.frame1.ra_hex
+			$tmpInnerf1.en_value1 configure -validate key -vcmd "IsIP %P %V" -bg $savedBg
+		} elseif { [lindex $IndexProp 2] == "MAC_ADDRESS" } {
+			set lastConv ""
+			grid remove $tmpInnerf1.frame1.ra_dec
+			grid remove $tmpInnerf1.frame1.ra_hex
+			$tmpInnerf1.en_value1 configure -validate key -vcmd "IsMAC %P %V" -bg $savedBg
 		} else {
-			if {[string match -nocase "0x*" [lindex $IndexProp 5]]} {
-				set lastConv hex
-				if {[string match -nocase "0x*" [lindex $IndexProp 4]]} {
-					puts "#default value is already in hexadecimal no need to convert"
+
+			#grid remove $tmpInnerf1.frame1.ra_ip
+			#grid remove $tmpInnerf1.frame1.ra_mac
+			grid $tmpInnerf1.frame1.ra_dec
+			grid $tmpInnerf1.frame1.ra_hex
+			
+			puts "\nIN singleclicknode userPrefList->$userPrefList"
+			set schRes [lsearch $userPrefList [list $nodeSelect *]]
+			puts "schRes->$schRes\n STATE=[$tmpInnerf1.en_value1 cget -state] \t $tmpInnerf1.en_value1\n"
+			if { $schRes != -1 } {
+				if { [lindex [lindex $userPrefList $schRes] 1] == "dec" } {
+					if {[string match -nocase "0x*" [lindex $IndexProp 5]]} {
+						$tmpInnerf1.en_value1 configure -validate none
+						InsertDec $tmpInnerf1.en_value1
+						$tmpInnerf1.en_value1 configure -validate key -vcmd "IsDec %P $tmpInnerf1 %d %i" -bg $savedBg	
+					} else {
+						puts "# ACTUALVALUE already in decimal no need to do anything"
+					}
+				
+					if {[string match -nocase "0x*" [lindex $IndexProp 4]]} {
+						set state [$tmpInnerf1.en_default1 cget -state]
+						$tmpInnerf1.en_default1 configure -state normal
+						InsertDec $tmpInnerf1.en_default1
+						$tmpInnerf1.en_default1 configure -state $state
+					} else {
+						puts "# DEFAULTVALUE already in decimal no need to do anything"
+					}
+					set lastConv dec
+					$tmpInnerf1.frame1.ra_dec select
+				} elseif { [lindex [lindex $userPrefList $schRes] 1] == "hex" } {
+					if {[string match -nocase "0x*" [lindex $IndexProp 5]]} {
+						puts "# ACTUALVALUE already in hexadecimal no need to do anything"
+					} else {
+						$tmpInnerf1.en_value1 configure -validate none
+						InsertHex $tmpInnerf1.en_value1
+						$tmpInnerf1.en_value1 configure -validate key -vcmd "IsHex %P %s $tmpInnerf1 %d %i" -bg $savedBg
+					}
+				
+					if {[string match -nocase "0x*" [lindex $IndexProp 4]]} {
+						puts "# DEFAULTVALUE already in hexadecimal no need to do anything"
+					} else {
+						set state [$tmpInnerf1.en_default1 cget -state]
+						$tmpInnerf1.en_default1 configure -state normal
+						InsertHex $tmpInnerf1.en_default1
+						$tmpInnerf1.en_default1 configure -state $state
+					}
+						
+					set lastConv hex
+					$tmpInnerf1.frame1.ra_hex select
 				} else {
-					$tmpInnerf1.en_default1 configure -state normal
-				#	set tmpVal [lindex $IndexProp 4]
-				#        #set tmpVal [string trimleft $tmpVal 0] ; #trimming zero leads to error
-				#	if { $tmpVal != "" } {
-				#	        if { [ catch {set tmpVal [_ConvertHex $tmpVal] } ] } {
-				#			#error raised should not convert
-				#	        } else {
-				#			$tmpInnerf1.en_default1 delete 0 end
-				#			$tmpInnerf1.en_default1 insert 0 0x$tmpVal
-				#	        }
-				#	} else {
-				#		#value is empty insert 0x
-				#		$tmpInnerf1.en_default1 insert 0 0x
-				#	}
-				
-					InsertHex $tmpInnerf1.en_default1
-				
-					$tmpInnerf1.en_default1 configure -state disabled
+					puts "\n\nInvalid userpref [lindex $userPrefList 1]\n\n"
+					return 
 				}
-				$tmpInnerf1.frame1.ra_hex select
-				$tmpInnerf1.en_value1 configure -validate key -vcmd "IsHex %P %s $tmpInnerf1 %d %i" -bg $savedBg
 			} else {
-				set lastConv dec
-				#puts "singleclicknode inside decimal default [lindex $IndexProp 4]"
-				if {[string match -nocase "0x*" [lindex $IndexProp 4]]} {
-					puts "#CONVERT DEFAULT HEXADECIMAL VALUE TO decimal"
-					$tmpInnerf1.en_default1 configure -state normal
-					#set tmpVal [lindex $IndexProp 4]
-					#if { $tmpVal != "" } {
-					#	set tmpVal [string range $tmpVal 2 end]
-					#	if { [ catch { set tmpVal [expr 0x$tmpVal] } ] } {
-					#		puts "#raised an error dont convert"
+				if {[string match -nocase "0x*" [lindex $IndexProp 5]]} {
+					set lastConv hex
+					if {[string match -nocase "0x*" [lindex $IndexProp 4]]} {
+						puts "#default value is already in hexadecimal no need to convert"
+					} else {
+						set state [$tmpInnerf1.en_default1 cget -state]
+						$tmpInnerf1.en_default1 configure -state normal
+					#	set tmpVal [lindex $IndexProp 4]
+					#        #set tmpVal [string trimleft $tmpVal 0] ; #trimming zero leads to error
+					#	if { $tmpVal != "" } {
+					#	        if { [ catch {set tmpVal [_ConvertHex $tmpVal] } ] } {
+					#			#error raised should not convert
+					#	        } else {
+					#			$tmpInnerf1.en_default1 delete 0 end
+					#			$tmpInnerf1.en_default1 insert 0 0x$tmpVal
+					#	        }
 					#	} else {
-					#	        $tmpInnerf1.en_default1 delete 0 end
-					#		$tmpInnerf1.en_default1 insert 0 $tmpVal
+					#		#value is empty insert 0x
+					#		$tmpInnerf1.en_default1 insert 0 0x
 					#	}
-					#} else {
-					#	set tmpVal []
-					#	$tmpInnerf1.en_default1 insert 0 $tmpVal
-					#}
-					
-					InsertDec $tmpInnerf1.en_default1
-					
-					$tmpInnerf1.en_default1 configure -state disabled
+				
+						InsertHex $tmpInnerf1.en_default1
+						$tmpInnerf1.en_default1 configure -state $state
+					}
+					$tmpInnerf1.frame1.ra_hex select
+					$tmpInnerf1.en_value1 configure -validate key -vcmd "IsHex %P %s $tmpInnerf1 %d %i" -bg $savedBg
 				} else {
-					puts "#default value is already in decimal no need to convert"
+					set lastConv dec
+					#puts "singleclicknode inside decimal default [lindex $IndexProp 4]"
+					if {[string match -nocase "0x*" [lindex $IndexProp 4]]} {
+						puts "#CONVERT DEFAULT HEXADECIMAL VALUE TO decimal"
+						set state [$tmpInnerf1.en_default1 cget -state]
+						$tmpInnerf1.en_default1 configure -state normal
+						#set tmpVal [lindex $IndexProp 4]
+						#if { $tmpVal != "" } {
+						#	set tmpVal [string range $tmpVal 2 end]
+						#	if { [ catch { set tmpVal [expr 0x$tmpVal] } ] } {
+						#		puts "#raised an error dont convert"
+						#	} else {
+						#	        $tmpInnerf1.en_default1 delete 0 end
+						#		$tmpInnerf1.en_default1 insert 0 $tmpVal
+						#	}
+						#} else {
+						#	set tmpVal []
+						#	$tmpInnerf1.en_default1 insert 0 $tmpVal
+						#}
+					
+						InsertDec $tmpInnerf1.en_default1
+						
+						$tmpInnerf1.en_default1 configure -state $state
+					} else {
+						puts "#default value is already in decimal no need to convert"
+					}
+					$tmpInnerf1.frame1.ra_dec select
+					$tmpInnerf1.en_value1 configure -validate key -vcmd "IsDec %P $tmpInnerf1 %d %i" -bg $savedBg
 				}
-				$tmpInnerf1.frame1.ra_dec select
-				$tmpInnerf1.en_value1 configure -validate key -vcmd "IsDec %P $tmpInnerf1 %d %i" -bg $savedBg
 			}
 		}
+	
+		if { [lindex $IndexProp 3] == "const" || [lindex $IndexProp 3] == "ro" || [lindex $IndexProp 3] == "" } {
+			puts "#the field is non editable"
+			$tmpInnerf1.en_value1 configure -state "disabled"
+		} else {
+			$tmpInnerf1.en_value1 configure -state "normal"
+		}
+	
+		
+		
+	} else {
+		
+		grid remove $tmpInnerf1.frame1.ra_dec
+		grid remove $tmpInnerf1.frame1.ra_hex
+		
+		grid $tmpInnerf1.co_obj1
+		grid remove $tmpInnerf1.en_obj1
+		
+		#grid $tmpInnerf1.co_data1
+		#grid remove $tmpInnerf1.en_data1	
+		
+		grid $tmpInnerf1.co_access1
+		grid remove $tmpInnerf1.en_access1
+		
+		grid $tmpInnerf1.co_pdo1
+		grid remove $tmpInnerf1.en_pdo1
 	}
 	
-	if { [lindex $IndexProp 3] == "const" || [lindex $IndexProp 3] == "ro" } {
-		puts "#the field is non editable"
-		$tmpInnerf1.en_value1 configure -state "disabled"
-	} else {
-		$tmpInnerf1.en_value1 configure -state "normal"
-	}
+	
+	
+	#if { [lindex $IndexProp 2] == "IP_ADDRESS" } {
+	#	set lastConv ""
+	#	grid remove $tmpInnerf1.frame1.ra_dec
+	#	grid remove $tmpInnerf1.frame1.ra_hex
+	#	$tmpInnerf1.en_value1 configure -validate key -vcmd "IsIP %P %V" -bg $savedBg
+	#} elseif { [lindex $IndexProp 2] == "MAC_ADDRESS" } {
+	#	set lastConv ""
+	#	grid remove $tmpInnerf1.frame1.ra_dec
+	#	grid remove $tmpInnerf1.frame1.ra_hex
+	#	$tmpInnerf1.en_value1 configure -validate key -vcmd "IsMAC %P %V" -bg $savedBg
+	#} else {
+	#
+	#	#grid remove $tmpInnerf1.frame1.ra_ip
+	#	#grid remove $tmpInnerf1.frame1.ra_mac
+	#	grid $tmpInnerf1.frame1.ra_dec
+	#	grid $tmpInnerf1.frame1.ra_hex
+	#	
+	#	puts "\nIN singleclicknode userPrefList->$userPrefList"
+	#	set schRes [lsearch $userPrefList [list $nodeSelect *]]
+	#	puts "schRes->$schRes\n STATE=[$tmpInnerf1.en_value1 cget -state] \t $tmpInnerf1.en_value1\n"
+	#	if { $schRes != -1 } {
+	#		if { [lindex [lindex $userPrefList $schRes] 1] == "dec" } {
+	#			if {[string match -nocase "0x*" [lindex $IndexProp 5]]} {
+	#				$tmpInnerf1.en_value1 configure -validate none
+	#				InsertDec $tmpInnerf1.en_value1
+	#				$tmpInnerf1.en_value1 configure -validate key -vcmd "IsDec %P $tmpInnerf1 %d %i" -bg $savedBg	
+	#			} else {
+	#				puts "# ACTUALVALUE already in decimal no need to do anything"
+	#			}
+	#			
+	#			if {[string match -nocase "0x*" [lindex $IndexProp 4]]} {
+	#				set state [$tmpInnerf1.en_default1 cget -state]
+	#				$tmpInnerf1.en_default1 configure -state normal
+	#				InsertDec $tmpInnerf1.en_default1
+	#				$tmpInnerf1.en_default1 configure -state $state
+	#			} else {
+	#				puts "# DEFAULTVALUE already in decimal no need to do anything"
+	#			}
+	#			set lastConv dec
+	#			$tmpInnerf1.frame1.ra_dec select
+	#		} elseif { [lindex [lindex $userPrefList $schRes] 1] == "hex" } {
+	#			if {[string match -nocase "0x*" [lindex $IndexProp 5]]} {
+	#				puts "# ACTUALVALUE already in hexadecimal no need to do anything"
+	#			} else {
+	#				$tmpInnerf1.en_value1 configure -validate none
+	#				InsertHex $tmpInnerf1.en_value1
+	#				$tmpInnerf1.en_value1 configure -validate key -vcmd "IsHex %P %s $tmpInnerf1 %d %i" -bg $savedBg
+	#			}
+	#			
+	#			if {[string match -nocase "0x*" [lindex $IndexProp 4]]} {
+	#				puts "# DEFAULTVALUE already in hexadecimal no need to do anything"
+	#			} else {
+	#				set state [$tmpInnerf1.en_default1 cget -state]
+	#				$tmpInnerf1.en_default1 configure -state normal
+	#				InsertHex $tmpInnerf1.en_default1
+	#				$tmpInnerf1.en_default1 configure -state $state
+	#			}
+	#				
+	#			set lastConv hex
+	#			$tmpInnerf1.frame1.ra_hex select
+	#		} else {
+	#			puts "\n\nInvalid userpref [lindex $userPrefList 1]\n\n"
+	#			return 
+	#		}
+	#	} else {
+	#		if {[string match -nocase "0x*" [lindex $IndexProp 5]]} {
+	#			set lastConv hex
+	#			if {[string match -nocase "0x*" [lindex $IndexProp 4]]} {
+	#				puts "#default value is already in hexadecimal no need to convert"
+	#			} else {
+	#				set state [$tmpInnerf1.en_default1 cget -state]
+	#				$tmpInnerf1.en_default1 configure -state normal
+	#			#	set tmpVal [lindex $IndexProp 4]
+	#			#        #set tmpVal [string trimleft $tmpVal 0] ; #trimming zero leads to error
+	#			#	if { $tmpVal != "" } {
+	#			#	        if { [ catch {set tmpVal [_ConvertHex $tmpVal] } ] } {
+	#			#			#error raised should not convert
+	#			#	        } else {
+	#			#			$tmpInnerf1.en_default1 delete 0 end
+	#			#			$tmpInnerf1.en_default1 insert 0 0x$tmpVal
+	#			#	        }
+	#			#	} else {
+	#			#		#value is empty insert 0x
+	#			#		$tmpInnerf1.en_default1 insert 0 0x
+	#			#	}
+	#			
+	#				InsertHex $tmpInnerf1.en_default1
+	#				$tmpInnerf1.en_default1 configure -state $state
+	#			}
+	#			$tmpInnerf1.frame1.ra_hex select
+	#			$tmpInnerf1.en_value1 configure -validate key -vcmd "IsHex %P %s $tmpInnerf1 %d %i" -bg $savedBg
+	#		} else {
+	#			set lastConv dec
+	#			#puts "singleclicknode inside decimal default [lindex $IndexProp 4]"
+	#			if {[string match -nocase "0x*" [lindex $IndexProp 4]]} {
+	#				puts "#CONVERT DEFAULT HEXADECIMAL VALUE TO decimal"
+	#				set state [$tmpInnerf1.en_default1 cget -state]
+	#				$tmpInnerf1.en_default1 configure -state normal
+	#				#set tmpVal [lindex $IndexProp 4]
+	#				#if { $tmpVal != "" } {
+	#				#	set tmpVal [string range $tmpVal 2 end]
+	#				#	if { [ catch { set tmpVal [expr 0x$tmpVal] } ] } {
+	#				#		puts "#raised an error dont convert"
+	#				#	} else {
+	#				#	        $tmpInnerf1.en_default1 delete 0 end
+	#				#		$tmpInnerf1.en_default1 insert 0 $tmpVal
+	#				#	}
+	#				#} else {
+	#				#	set tmpVal []
+	#				#	$tmpInnerf1.en_default1 insert 0 $tmpVal
+	#				#}
+	#				
+	#				InsertDec $tmpInnerf1.en_default1
+	#				
+	#				$tmpInnerf1.en_default1 configure -state $state
+	#			} else {
+	#				puts "#default value is already in decimal no need to convert"
+	#			}
+	#			$tmpInnerf1.frame1.ra_dec select
+	#			$tmpInnerf1.en_value1 configure -validate key -vcmd "IsDec %P $tmpInnerf1 %d %i" -bg $savedBg
+	#		}
+	#	}
+	#}
+	#
+	#if { $entryState == "disabled" } {
+	#	#the index is less than 1fff
+	#	if { [lindex $IndexProp 3] == "const" || [lindex $IndexProp 3] == "ro" || [lindex $IndexProp 3] == "" } {
+	#		puts "#the field is non editable"
+	#		$tmpInnerf1.en_value1 configure -state "disabled"
+	#	} else {
+	#		$tmpInnerf1.en_value1 configure -state "normal"
+	#	}
+	#} else {
+	#	#the index is more than 2000 should always be editable
+	#	$tmpInnerf1.en_value1 configure -state "normal"
+	#}
 	
 	#set chkPrompt 0
 
@@ -1866,6 +2115,7 @@ proc Saveproject {} {
 
 	if {$PjtDir == "" || $PjtName == "" } {
 		#there is no project directory or project name no need to save
+		return
 	} else {
 		set savePjtName [string range $PjtName 0 end-[ string length [file extension $PjtName] ]]
 		set savePjtDir [string range $PjtDir 0 end-[string length $savePjtName] ]
@@ -1887,6 +2137,8 @@ proc Saveproject {} {
 	}
 	#project is saved so change status to zero
 	set status_save 0
+	
+	conPuts "Project [file join $PjtDir $PjtName] is saved"
 }
 
 proc _NewProject {} {
@@ -1940,6 +2192,18 @@ proc CloseProject {} {
 	ResetGlobalData
 	
 	catch {$updatetree delete PjtName}
+	
+	#delete in reverse order to get coorect output
+	if { [$Editor::projMenu index 4] == "4" } {
+		catch {$Editor::projMenu delete 4}
+	}
+	if { [$Editor::projMenu index 3] == "3" } {
+		catch {$Editor::projMenu delete 3}
+	}
+
+	
+
+	
 	InsertTree
 		
 }
@@ -1963,13 +2227,15 @@ proc ResetGlobalData {} {
 	global mnCount
 	global cnCount
 	global status_save
+	global status_run
 	global f0
 	global f1
 	global f2
 	global lastConv
 	global LastTableFocus
-	#global chkPrompt
+	global chkPrompt
 	global ra_proj
+	global ra_auto
 
 	#reset all the globaly maintained values 
 	set nodeIdList ""
@@ -1980,12 +2246,14 @@ proc ResetGlobalData {} {
 	set mnCount 0
 	set cnCount 0
 	set status_save 0 ; # if zero no need to save
+	set status_run 0 ; #if zero no other operation is running
 	set PjtDir ""
 	set PjtName ""
 	set lastConv ""
 	set LastTableFocus ""
-	#set chkPrompt 0
+	#set chkPrompt 0 ; ResetPromptFlag
 	set ra_proj 2 ; #TODO TEMPORARY FIX
+	set ra_auto 0 ; # TODO TEMPORARY FIX
 	#no need to reset lastOpenPjt, lastXD, tableSaveBtn, indexSaveBtn and subindexSaveBtn
 	
 	#no index subindex or pdo table should be displayed
@@ -2464,6 +2732,14 @@ proc FindSpace::Next {} {
 	}
 }
 
+proc StartStack {} {
+	
+}
+
+proc StopStack {} {
+	
+}
+
 ################################################################################################
 #proc TransferCDC
 #Input       : -
@@ -2609,6 +2885,7 @@ proc TransferXAP {choice} {
 proc BuildProject {} {
 	global PjtDir
 	global PjtName
+	global ra_proj
 	global nodeIdList
 	global savedValueList
 	global populatedPDOList
@@ -2663,10 +2940,12 @@ proc BuildProject {} {
 		return
 	} else {
 		set tempPjtDir $PjtDir
-		set tempPjtNmae $PjtName
+		set tempPjtName $PjtName
+		set tempRa_proj $ra_proj
 		ResetGlobalData
 		set PjtDir $tempPjtDir
-		set PjtName $tempPjtNmae
+		set PjtName $tempPjtName
+		set ra_proj $tempRa_proj
 		#catch {$updatetree delete PjtName}
 		#$updatetree insert end root PjtName -text [string range $PjtName 0 end-[string length [file extension $PjtName] ] ] -open 1 -image [Bitmap::get network]
 
@@ -2700,11 +2979,12 @@ proc CleanProject {} {
 	global PjtDir
 	global PjtName 
 	
-	set CleanFile [file join $PjtDir CDC_XAP]
-	puts "CleanFile->$CleanFile"
-	catch {file delete -force $CleanFile.cdc}
-	catch {file delete -force $CleanFile.xap}
-	catch {file delete -force $CleanFile.xap.h}
+	#TODO finalise the files to be cleaned
+	foreach tempFile [list mnobd.txt mnobd.cdc XAP XAP.h] {
+		set CleanFile [file join $PjtDir CDC_XAP $tempFile]
+		puts "CleanFile->$CleanFile"
+		catch {file delete -force $CleanFile}
+	}
 }
 
 ################################################################################################
@@ -2927,6 +3207,11 @@ proc DeleteTreeNode {} {
 			#gets SubIndexId of selected node
 			set sidx [string range [$updatetree itemcget $node -text] end-2 end-1 ]
 			#puts sidx->$sidx
+			if { $sidx == "00" } {
+				#should not allow to delete 00 subindex
+				tk_messageBox -message "Do not delete SubIndex 00" -parent .
+				return
+			}
 
 			#gets the IndexId of selected SubIndex
 			set idxNode [$updatetree parent $node]
@@ -2978,6 +3263,7 @@ proc DeleteTreeNode {} {
 		$updatetree selection set $parent
 		#if TPDO or RPDO is selected Gui should be deleted before calling procedure Editor::SingleClickNode
 		catch {$updatetree delete $node}
+		ResetPromptFlag
 		Editor::SingleClickNode $parent
 		return
 	} else {
@@ -2992,8 +3278,11 @@ proc DeleteTreeNode {} {
 		}
 			catch {set nxtSel [lindex $nxtSelList $nxtSelCnt] }
 			catch {$updatetree selection set $nxtSel}
-			#should display content of currently highlighted node after deleting
+			catch {$updatetree delete $node}
+			#should display logical next node after deleting currently highlighted node
+			ResetPromptFlag
 			Editor::SingleClickNode $nxtSel
+			return
 	}
 	catch {$updatetree delete $node}
 	#puts "*************$xdcId"

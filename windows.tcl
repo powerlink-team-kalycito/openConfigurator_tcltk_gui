@@ -101,7 +101,8 @@ proc StartUp {} {
 	 
 	button $frame2.b_ok -width 8 -text "  Ok  " -command { 
 		if {$startVar == 1} {
-			set samplePjt [file join [pwd] Sample Sample.oct]
+			global RootDir
+			set samplePjt [file join $RootDir Sample Sample.oct]
 			#puts "open sample->$samplePjt"
 
 			if {[file exists $samplePjt]} {
@@ -250,26 +251,28 @@ proc ConnectionSettingWindow {} {
 proc ProjectSettingWindow {} {
 	global ra_proj
 	global ra_auto
-	set ra_auto 0
+	#set ra_auto 0
 	
 	#ocfmRetCode GetProjectSettings(EAutoGenerate autoGen, EAutoSave autoSave)
-	set ra_autop [new_intp]
-	set ra_projp [new_intp]
+	set ra_autop [new_EAutoGeneratep]
+	set ra_projp [new_EAutoSavep]
 
-	#set catchErrCode [GetProjectSettings $ra_autop $ra_projp]
-	#set catchErrCode [GetProjectSettings $ra_auto $ra_proj]
-	#set ErrCode [ocfmRetCode_code_get $catchErrCode]
-	#puts "ErrCode:$ErrCode"
-	#if { $ErrCode != 0 } {
-	#	if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
-	#		tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
-	#	} else {
-	#		tk_messageBox -message "Unknown Error" -title Warning -icon warning
-	#               puts "Unknown Error ->[ocfmRetCode_errorString_get $catchErrCode]\n"
-	#	}
-	#}
-	#set ra_auto [intp_value $ra_autop]
-	#set ra_proj [intp_value $ra_projp]
+	set catchErrCode [GetProjectSettings $ra_autop $ra_projp]
+	set ErrCode [ocfmRetCode_code_get $catchErrCode]
+	puts "ErrCode:$ErrCode"
+	if { $ErrCode != 0 } {
+		if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]\nAuto generate is set to \"No\" and project Setting set to \"Discard\" " -title Warning -icon warning
+		} else {
+			tk_messageBox -message "Unknown Error\nAuto generate is set to \"No\" and project Setting set to \"Discard\" " -title Warning -icon warning
+			puts "Unknown Error ->[ocfmRetCode_errorString_get $catchErrCode]\n"
+		}
+		set ra_auto 0
+		set ra_proj 2
+	} else {
+		set ra_auto [EAutoGeneratep_value $ra_autop]
+		set ra_proj [EAutoSavep_value $ra_projp]
+	}
 	
 	puts "ra_auto->$ra_auto ra_proj->$ra_proj"
 	
@@ -323,7 +326,7 @@ proc ProjectSettingWindow {} {
 	
 	grid config $winProjSett.l_save -row 1 -column 0 -sticky w
 	
-	grid config $frame1 -row 2 -column 0 -padx 10
+	grid config $frame1 -row 2 -column 0 -padx 10 -sticky w
 	grid config $frame1.ra_autoSave -row 0 -column 0
 	grid config $frame1.ra_prompt -row 0 -column 1 -padx 5
 	grid config $frame1.ra_discard -row 0 -column 2
@@ -332,7 +335,7 @@ proc ProjectSettingWindow {} {
 	
 	grid config $winProjSett.l_auto -row 4 -column 0 -sticky w
 	
-	grid config $frame2 -row 5 -column 0
+	grid config $frame2 -row 5 -column 0 -padx 10 -sticky w
 	grid config $frame2.ra_genYes -row 0 -column 0 -padx 2
 	grid config $frame2.ra_genNo -row 0 -column 1 -padx 2
 	
@@ -352,90 +355,90 @@ proc ProjectSettingWindow {} {
 #Output      : -
 #Description : Creates the GUI for adding PDO to CN
 ###############################################################################################
-proc InterCNWindow {} {
-	global updatetree
-	global frame2	
-
-	set node [$updatetree selection get]
-	set siblingList ""
-	set dispList ""
-	foreach sibling [$updatetree nodes [$updatetree parent $node]] {
-		if {[string match "OBD*" $sibling] || [string match $node $sibling]} {
-			# should not add it to the list
-		} else {
-			lappend siblingList $sibling
-			lappend dispList [$updatetree itemcget $sibling -text]
-		}
-
-	}
-	if {$siblingList == ""} {
-		tk_messageBox -message "only one CN present" -icon info
-		return
-	}
-	
-
-	set winInterCN .interCN
-	catch "destroy $winInterCN"
-	toplevel     $winInterCN
-	wm title     $winInterCN "Inter CN Communication"
-	wm resizable $winInterCN 0 0
-	wm transient $winInterCN .
-	wm deiconify $winInterCN
-	grab $winInterCN
-
-	set titleFrame1 [TitleFrame $winInterCN.titleFrame1 -text "PDO Configuration" ]
-	set titleInnerFrame1 [$titleFrame1 getframe]
-	set frame1 [frame $titleInnerFrame1.fram1 -padx 5 -pady 5]
-	set frame2 [frame $titleInnerFrame1.fram2]
-	set frame3 [frame $titleInnerFrame1.fram3]
-
-	label $winInterCN.l_empty1 -text ""	
-	label $winInterCN.l_empty2 -text ""
-	label $frame1.l_cn -text "CN 's :  "
-	label $frame1.l_noRpdo -text "Number of RPDO :  "
-	label $frame1.l_dispRpdo -text ""
-	
-	ComboBox $frame1.co_cn -values $dispList -modifycmd "dispRpdo $frame1 [list $siblingList] [list $dispList]" -editable no
- 	
-	button $frame2.bt_ok -width 8 -text "  Ok  " -command {
-		destroy .interCN
-		YetToImplement
-	}
-
-	button $frame2.bt_cancel -width 8 -text "Cancel" -command {
-		unset frame2
-		destroy .interCN
-	}
-
-	grid config $winInterCN.l_empty1 -row 0 -column 0 -sticky "news"
-	grid config $titleFrame1 -row 1 -column 0 -padx 5 -sticky "news"
-	grid config $winInterCN.l_empty2 -row 2 -column 0 -sticky "news"
-
-	#grid config $titleInnerFrame1 -row 0 -column 0 
-
-	grid config $frame1 -row 0 -column 0 
-	grid config $frame1.l_cn  -row 0 -column 0 -sticky e 
-	grid config $frame1.co_cn -row 0 -column 1 -sticky w
-	grid config $frame1.l_noRpdo  -row 1 -column 0 -sticky e
-	grid config $frame1.l_dispRpdo -row 1 -column 1 -sticky w
-
-	grid config $frame2 -row 1 -column 0 
-	grid config $frame2.bt_ok  -row 0 -column 0 
-	grid config $frame2.bt_cancel -row 0 -column 1
-
-	wm protocol .interCN WM_DELETE_WINDOW "$frame2.bt_cancel invoke"
-	bind $winInterCN <KeyPress-Return> "$frame2.bt_ok invoke"
-	bind $winInterCN <KeyPress-Escape> "$frame2.bt_cancel invoke"
-
-	centerW $winInterCN
-
-}
-
-proc dispRpdo {frame1 siblingList dispList} {
-	#puts "frame->$frame1==siblingList->$siblingList==dispList->$dispList"
-	#puts [$frame1.co_cn getvalue]
-
-}
+#proc InterCNWindow {} {
+#	global updatetree
+#	global frame2	
+#
+#	set node [$updatetree selection get]
+#	set siblingList ""
+#	set dispList ""
+#	foreach sibling [$updatetree nodes [$updatetree parent $node]] {
+#		if {[string match "OBD*" $sibling] || [string match $node $sibling]} {
+#			# should not add it to the list
+#		} else {
+#			lappend siblingList $sibling
+#			lappend dispList [$updatetree itemcget $sibling -text]
+#		}
+#
+#	}
+#	if {$siblingList == ""} {
+#		tk_messageBox -message "only one CN present" -icon info
+#		return
+#	}
+#	
+#
+#	set winInterCN .interCN
+#	catch "destroy $winInterCN"
+#	toplevel     $winInterCN
+#	wm title     $winInterCN "Inter CN Communication"
+#	wm resizable $winInterCN 0 0
+#	wm transient $winInterCN .
+#	wm deiconify $winInterCN
+#	grab $winInterCN
+#
+#	set titleFrame1 [TitleFrame $winInterCN.titleFrame1 -text "PDO Configuration" ]
+#	set titleInnerFrame1 [$titleFrame1 getframe]
+#	set frame1 [frame $titleInnerFrame1.fram1 -padx 5 -pady 5]
+#	set frame2 [frame $titleInnerFrame1.fram2]
+#	set frame3 [frame $titleInnerFrame1.fram3]
+#
+#	label $winInterCN.l_empty1 -text ""	
+#	label $winInterCN.l_empty2 -text ""
+#	label $frame1.l_cn -text "CN 's :  "
+#	label $frame1.l_noRpdo -text "Number of RPDO :  "
+#	label $frame1.l_dispRpdo -text ""
+#	
+#	ComboBox $frame1.co_cn -values $dispList -modifycmd "dispRpdo $frame1 [list $siblingList] [list $dispList]" -editable no
+# 	
+#	button $frame2.bt_ok -width 8 -text "  Ok  " -command {
+#		destroy .interCN
+#		YetToImplement
+#	}
+#
+#	button $frame2.bt_cancel -width 8 -text "Cancel" -command {
+#		unset frame2
+#		destroy .interCN
+#	}
+#
+#	grid config $winInterCN.l_empty1 -row 0 -column 0 -sticky "news"
+#	grid config $titleFrame1 -row 1 -column 0 -padx 5 -sticky "news"
+#	grid config $winInterCN.l_empty2 -row 2 -column 0 -sticky "news"
+#
+#	#grid config $titleInnerFrame1 -row 0 -column 0 
+#
+#	grid config $frame1 -row 0 -column 0 
+#	grid config $frame1.l_cn  -row 0 -column 0 -sticky e 
+#	grid config $frame1.co_cn -row 0 -column 1 -sticky w
+#	grid config $frame1.l_noRpdo  -row 1 -column 0 -sticky e
+#	grid config $frame1.l_dispRpdo -row 1 -column 1 -sticky w
+#
+#	grid config $frame2 -row 1 -column 0 
+#	grid config $frame2.bt_ok  -row 0 -column 0 
+#	grid config $frame2.bt_cancel -row 0 -column 1
+#
+#	wm protocol .interCN WM_DELETE_WINDOW "$frame2.bt_cancel invoke"
+#	bind $winInterCN <KeyPress-Return> "$frame2.bt_ok invoke"
+#	bind $winInterCN <KeyPress-Escape> "$frame2.bt_cancel invoke"
+#
+#	centerW $winInterCN
+#
+#}
+#
+#proc dispRpdo {frame1 siblingList dispList} {
+#	#puts "frame->$frame1==siblingList->$siblingList==dispList->$dispList"
+#	#puts [$frame1.co_cn getvalue]
+#
+#}
 
 ###############################################################################################
 #proc AddCNWindow
@@ -569,7 +572,8 @@ proc AddCNWindow {} {
 			set chk [AddCN $cnName $tmpImpCnDir $nodeId]
 		} else {
 			#import the default cn xdd file
-			set tmpImpCnDir [file join [pwd] cn.xdd]
+			global RootDir
+			set tmpImpCnDir [file join $RootDir openPOWERLINK_CN.xdd]
 			if {[file exists $tmpImpCnDir]} {
 				set chk [AddCN $cnName $tmpImpCnDir $nodeId]
 			} else {
@@ -681,8 +685,10 @@ proc SaveProjectAsWindow {} {
 				tk_messageBox -message "Unknown Error" -title Warning -icon warning -parent .
 			        puts "Unknown Error in SaveProjectAsWindow ->[ocfmRetCode_errorString_get $catchErrCode]\n"
 			}
-			return 
+			errorPuts "Error in saving project $saveProjectAs"
+			return
 		}
+		conPuts "project $saveProjectAs is saved"
 	}
 }
 
@@ -698,17 +704,17 @@ proc NewProjectWindow {} {
 	global tmpImpDir
 	global frame1
 	global frame3_2
-	global frame2_3
+	#global frame2_3
 	global titleInnerFrame1
 	global titleInnerFrame2
 	global winNewProj
 	global ra_proj
 	global ra_auto
-	global tmpIPaddr
+	#global tmpIPaddr
 	global newProjectFrame2
 	global titleInnerFrame1_2
 	global titleInnerFrame2_2
-	global titleInnerFrame2_3
+	#global titleInnerFrame2_3
 
 	global updatetree
 	global nodeIdList
@@ -733,59 +739,59 @@ proc NewProjectWindow {} {
 	grab $winNewProj
 
 #########################################################################################################
-	set newProjectFrame3 [frame $winNewProj.frame3 -width 650 -height 470 ]
-	grid configure $newProjectFrame3 -row 0 -column 0 -sticky news
-	
-	set titleFrame1_3 [TitleFrame $newProjectFrame3.titleFrame1 -text "Create New Project" ]
-	set titleInnerFrame1_3 [$titleFrame1_3 getframe]
-	set frame2_3 [frame $titleInnerFrame1_3.frame2 ]
-	set titleFrame2_3 [TitleFrame $titleInnerFrame1_3.titleFrame3 -text "Connection Settings" ]
-	set titleInnerFrame2_3 [$titleFrame2_3 getframe]
-	set frame1_3 [frame $titleInnerFrame2_3.frame1]
-	
-	label $titleInnerFrame1_3.l_empty -text "" -height 8
-	label $titleInnerFrame2_3.l_ip -text "IP Address : " -justify left
-	label $titleInnerFrame2_3.l_empty1 -text "" -width 32 ; # used for aligning
-	
-	entry $titleInnerFrame2_3.en_IPaddr -textvariable tmpIPaddr -background white -relief ridge -validate key -vcmd "IsIP %P %V"
-	set tmpIPaddr 0.0.0.0
-	
-	button $frame2_3.bt_back -width 8 -text " Back " -command {
-		grid remove $winNewProj.frame1
-		grid  $winNewProj.frame2
-		grid remove $winNewProj.frame3
-		bind $winNewProj <KeyPress-Return> "$frame3_2.bt_next invoke"
-		
-	}
-	button $frame2_3.bt_ok -width 8 -text "  Ok  " -command {
-		set result [$titleInnerFrame2_3.en_IPaddr validate]
-		if { $result  == 0 } {
-			tk_messageBox -message "Enter a Valid IP Address " -icon warning -parent .newprj
-			focus .newprj
-			return
-		}
-		NewProjectCreate $tmpPjtDir $tmpPjtName $tmpImpDir $conf
-		$frame1.bt_cancel invoke
-		
-	}
-	button $frame2_3.bt_cancel -width 8 -text "Cancel" -command {
-		$frame1.bt_cancel invoke
-	}
-	grid configure $titleFrame1_3 -row 0 -column 0 -sticky news -padx 10 -pady 10
-	
-	grid configure $titleFrame2_3 -row 0 -column 0 -sticky news
-	grid configure $titleInnerFrame2_3.l_ip -row 0 -column 0 -sticky news
-	grid configure $titleInnerFrame2_3.en_IPaddr -row 0 -column 1 -sticky news -pady 5
-	grid configure $titleInnerFrame2_3.l_empty1 -row 0 -column 2 -sticky news
-	
-	grid configure $titleInnerFrame1_3.l_empty -row 1 -column 0 -pady 4
-	
-	grid configure $frame2_3 -row 2 -column 0 -columnspan 2 
-	grid configure $frame2_3.bt_back -row 0 -column 0 
-	grid configure $frame2_3.bt_ok -row 0 -column 1 -padx 5
-	grid configure $frame2_3.bt_cancel -row 0 -column 2
+	#set newProjectFrame3 [frame $winNewProj.frame3 -width 650 -height 470 ]
+	#grid configure $newProjectFrame3 -row 0 -column 0 -sticky news
+	#
+	#set titleFrame1_3 [TitleFrame $newProjectFrame3.titleFrame1 -text "Create New Project" ]
+	#set titleInnerFrame1_3 [$titleFrame1_3 getframe]
+	#set frame2_3 [frame $titleInnerFrame1_3.frame2 ]
+	#set titleFrame2_3 [TitleFrame $titleInnerFrame1_3.titleFrame3 -text "Connection Settings" ]
+	#set titleInnerFrame2_3 [$titleFrame2_3 getframe]
+	#set frame1_3 [frame $titleInnerFrame2_3.frame1]
+	#
+	#label $titleInnerFrame1_3.l_empty -text "" -height 8
+	#label $titleInnerFrame2_3.l_ip -text "IP Address : " -justify left
+	#label $titleInnerFrame2_3.l_empty1 -text "" -width 32 ; # used for aligning
+	#
+	#entry $titleInnerFrame2_3.en_IPaddr -textvariable tmpIPaddr -background white -relief ridge -validate key -vcmd "IsIP %P %V"
+	#set tmpIPaddr 0.0.0.0
+	#
+	#button $frame2_3.bt_back -width 8 -text " Back " -command {
+	#	grid remove $winNewProj.frame1
+	#	grid  $winNewProj.frame2
+	#	grid remove $winNewProj.frame3
+	#	bind $winNewProj <KeyPress-Return> "$frame3_2.bt_next invoke"
+	#	
+	#}
+	#button $frame2_3.bt_ok -width 8 -text "  Ok  " -command {
+	#	set result [$titleInnerFrame2_3.en_IPaddr validate]
+	#	if { $result  == 0 } {
+	#		tk_messageBox -message "Enter a Valid IP Address " -icon warning -parent .newprj
+	#		focus .newprj
+	#		return
+	#	}
+	#	NewProjectCreate $tmpPjtDir $tmpPjtName $tmpImpDir $conf
+	#	$frame1.bt_cancel invoke
+	#	
+	#}
+	#button $frame2_3.bt_cancel -width 8 -text "Cancel" -command {
+	#	$frame1.bt_cancel invoke
+	#}
+	#grid configure $titleFrame1_3 -row 0 -column 0 -sticky news -padx 10 -pady 10
+	#
+	#grid configure $titleFrame2_3 -row 0 -column 0 -sticky news
+	#grid configure $titleInnerFrame2_3.l_ip -row 0 -column 0 -sticky news
+	#grid configure $titleInnerFrame2_3.en_IPaddr -row 0 -column 1 -sticky news -pady 5
+	#grid configure $titleInnerFrame2_3.l_empty1 -row 0 -column 2 -sticky news
+	#
+	#grid configure $titleInnerFrame1_3.l_empty -row 1 -column 0 -pady 4
+	#
+	#grid configure $frame2_3 -row 2 -column 0 -columnspan 2 
+	#grid configure $frame2_3.bt_back -row 0 -column 0 
+	#grid configure $frame2_3.bt_ok -row 0 -column 1 -padx 5
+	#grid configure $frame2_3.bt_cancel -row 0 -column 2
 #########################################################################################################
-	grid remove $winNewProj.frame3
+	#grid remove $winNewProj.frame3
 	
 	set newProjectFrame2 [frame $winNewProj.frame2 -width 650 -height 470 ]
 	grid configure $newProjectFrame2 -row 0 -column 0 -sticky news
@@ -895,7 +901,8 @@ proc NewProjectWindow {} {
 			}
 			set lastXD $tmpImpDir
 		} else {
-			set tmpImpDir [file join [pwd] mn.xdd]
+			global RootDir
+			set tmpImpDir [file join $RootDir openPOWERLINK_MN.xdd]
 			if {![file isfile $tmpImpDir]} {
 				##TODO: discuss what to do
 				tk_messageBox -message "Default mn.xdd is not found" -icon warning -parent .newprj
@@ -911,16 +918,16 @@ proc NewProjectWindow {} {
 		unset tmpImpDir
 		unset frame1
 		unset frame3_2
-		unset frame2_3
+		#unset frame2_3
 		unset titleInnerFrame1
 		unset titleInnerFrame2
 		#unset ra_proj
-		unset ra_auto
-		unset tmpIPaddr
+		#unset ra_auto
+		#unset tmpIPaddr
 		unset newProjectFrame2
 		unset titleInnerFrame1_2
 		unset titleInnerFrame2_2
-		unset titleInnerFrame2_3
+		#unset titleInnerFrame2_3
 		unset winNewProj
 		catch { destroy .newprj }
 		#IF CONNECTION SETTINGS NEED TO BE IMPLEMENTED COMMENT THE ABOVE 18 LINES
@@ -988,7 +995,7 @@ proc NewProjectWindow {} {
 	label $titleInnerFrame1.l_empty4 -text "               " -width 62
 	label $titleInnerFrame2_1.l_empty5 -text "" -width 5
 
-	entry $titleInnerFrame1.en_pjname -textvariable tmpPjtName -background white -relief ridge -validate key -vcmd "IsValidStr %P" -width 35
+	entry $titleInnerFrame1.en_pjname -textvariable tmpPjtName -background white -relief ridge -validate key -vcmd "IsValidProjectName %P" -width 35
 	set tmpPjtName  [generateAutoName $defaultPjtDir Project ""]
 
 	$titleInnerFrame1.en_pjname selection range 0 end
@@ -1051,7 +1058,7 @@ proc NewProjectWindow {} {
 		
 		grid remove $winNewProj.frame1
 		grid $winNewProj.frame2
-		grid remove $winNewProj.frame3
+		#grid remove $winNewProj.frame3
 		bind $winNewProj <KeyPress-Return> "$frame3_2.bt_next invoke"
 	}
 	
@@ -1061,15 +1068,15 @@ proc NewProjectWindow {} {
 		unset tmpImpDir
 		unset frame1
 		unset frame3_2
-		unset frame2_3
+		#unset frame2_3
 		unset titleInnerFrame1
 		unset titleInnerFrame2
 		unset ra_proj
-		unset tmpIPaddr
+		#unset tmpIPaddr
 		unset newProjectFrame2
 		unset titleInnerFrame1_2
 		unset titleInnerFrame2_2
-		unset titleInnerFrame2_3
+		#unset titleInnerFrame2_3
 		unset winNewProj
 		catch { destroy .newprj }
 		return
@@ -1130,14 +1137,6 @@ proc NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf tempRa_proj tempRa_au
 	set PjtDir [file join $tmpPjtDir  $pjtName]
 	puts "PjtDir->$PjtDir PjtName->$PjtName"
 
-	if { [$Editor::projMenu index 3] != "3" } {
-		$Editor::projMenu insert 3 command -label "Close Project" -command "_CloseProject"
-	}
-	if { [$Editor::projMenu index 4] != "4" } {
-		$Editor::projMenu insert 4 command -label "Properties" -command "PropertiesWindow"
-	}
-
-
 	$updatetree itemconfigure PjtName -text $tmpPjtName
 
 	set catchErrCode [NodeCreate 240 0 openPOWERLINK_MN]
@@ -1188,6 +1187,14 @@ proc NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf tempRa_proj tempRa_au
 		file mkdir [file join $PjtDir ]
 		file mkdir [file join $PjtDir CDC_XAP]
 		file mkdir [file join $PjtDir XDC]
+		
+		if { [$Editor::projMenu index 3] != "3" } {
+			$Editor::projMenu insert 3 command -label "Close Project" -command "_CloseProject"
+		}
+		if { [$Editor::projMenu index 4] != "4" } {
+			$Editor::projMenu insert 4 command -label "Properties" -command "PropertiesWindow"
+		}
+		
 	} else {
 		#file mkdir [file join $PjtDir ]
 		#file mkdir [file join $PjtDir CDC_XAP]
@@ -1208,6 +1215,8 @@ proc NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf tempRa_proj tempRa_au
 		}
 	}
 	set ra_proj $tempRa_proj
+	
+	ClearMsgs
 }
 
 ###############################################################################################
@@ -1374,13 +1383,15 @@ proc AddIndexWindow {} {
 
 	set frame1 [frame $winAddIdx.fram1]
 	set frame2 [frame $winAddIdx.fram2]
+	set frame3 [frame $frame1.fram3]
 
 	label $winAddIdx.l_empty1 -text "               "	
-	label $frame1.l_index -text "Enter the Index"
+	label $frame1.l_index -text "Enter the Index :"
 	label $winAddIdx.l_empty2 -text "               "	
 	label $winAddIdx.l_empty3 -text "               "
+	label $frame3.l_hex -text "0x"
 
-	entry $frame1.en_index -textvariable indexVar -background white -relief ridge -validate key -vcmd "IsValidIdx %P 4"
+	entry $frame3.en_index -textvariable indexVar -background white -relief ridge -validate key -vcmd "IsValidIdx %P 4"
 	set indexVar ""
 
 	button $frame2.bt_ok -width 8 -text "  Ok  " -command {
@@ -1571,7 +1582,10 @@ $updatetree itemconfigure $subIndexNode-$tempSidxCount -open 0
 	grid config $winAddIdx.l_empty3 -row 4 -column 0 
 
 	grid config $frame1.l_index -row 0 -column 0 -padx 5
-	grid config $frame1.en_index -row 0 -column 1 -padx 5
+	grid config $frame3 -row 0 -column 1 -padx 5
+	grid config $frame3.l_hex -row 0 -column 0
+	grid config $frame3.en_index -row 0 -column 1
+	
 
 	grid config $frame2.bt_ok -row 0 -column 0 -padx 5
 	grid config $frame2.bt_cancel -row 0 -column 1 -padx 5
@@ -1580,7 +1594,7 @@ $updatetree itemconfigure $subIndexNode-$tempSidxCount -open 0
 	bind $winAddIdx <KeyPress-Return> "$frame2.bt_ok invoke"
 	bind $winAddIdx <KeyPress-Escape> "$frame2.bt_cancel invoke"
 
-	focus $frame1.en_index
+	focus $frame3.en_index
 	centerW $winAddIdx
 }
 
@@ -1608,13 +1622,15 @@ proc AddSubIndexWindow {} {
 
 	set frame1 [frame $winAddSidx.fram1]
 	set frame2 [frame $winAddSidx.fram2]
+	set frame3 [frame $frame1.fram3]
 
 	label $winAddSidx.l_empty1 -text "               "	
-	label $frame1.l_subindex -text "Enter the SubIndex"
+	label $frame1.l_subindex -text "Enter the SubIndex :"
 	label $winAddSidx.l_empty2 -text "               "	
 	label $winAddSidx.l_empty3 -text "               "
+	label $frame3.l_hex -text "0x"
 
-	entry $frame1.en_subindex -textvariable subIndexVar -background white -relief ridge -validate key -vcmd "IsValidIdx %P 2"
+	entry $frame3.en_subindex -textvariable subIndexVar -background white -relief ridge -validate key -vcmd "IsValidIdx %P 2"
 	set subIndexVar ""
 
 	button $frame2.bt_ok -width 8 -text "  Ok  " -command {
@@ -1716,13 +1732,16 @@ proc AddSubIndexWindow {} {
 		return
 	}
 	grid config $winAddSidx.l_empty1 -row 0 -column 0 
-	grid config $frame1 -row 1 -column 0 
+	grid config $frame1 -row 1 -column 0
 	grid config $winAddSidx.l_empty2 -row 2 -column 0 
 	grid config $frame2 -row 3 -column 0  
 	grid config $winAddSidx.l_empty3 -row 4 -column 0 
 
 	grid config $frame1.l_subindex -row 0 -column 0 -padx 5
-	grid config $frame1.en_subindex -row 0 -column 1 -padx 5
+	grid config $frame3 -row 0 -column 1 -padx 5
+	grid config $frame3.l_hex -row 0 -column 0
+	grid config $frame3.en_subindex -row 0 -column 1
+	#grid config $frame1.en_subindex -row 0 -column 1 -padx 5
 
 	grid config $frame2.bt_ok -row 0 -column 0 -padx 5
 	grid config $frame2.bt_cancel -row 0 -column 1 -padx 5
@@ -1731,7 +1750,7 @@ proc AddSubIndexWindow {} {
 	bind $winAddSidx <KeyPress-Return> "$frame2.bt_ok invoke"
 	bind $winAddSidx <KeyPress-Escape> "$frame2.bt_cancel invoke"
 
-	focus $frame1.en_subindex
+	focus $frame3.en_subindex
 	centerW $winAddSidx
 }
 
@@ -1759,13 +1778,15 @@ proc AddPDOWindow {} {
 
 	set frame1 [frame $winAddPdo.fram1]
 	set frame2 [frame $winAddPdo.fram2]
+	set frame3 [frame $frame1.fram3]
 
 	label $winAddPdo.l_empty1 -text "               "	
-	label $frame1.l_index -text "Enter the PDO Index"
+	label $frame1.l_index -text "Enter the PDO Index :"
 	label $winAddPdo.l_empty2 -text "               "	
 	label $winAddPdo.l_empty3 -text "               "
+	label $frame3.l_hex -text "0x"
 
-	entry $frame1.en_index -textvariable pdoVar -background white -relief ridge -validate key -vcmd "IsValidIdx %P 4"
+	entry $frame3.en_index -textvariable pdoVar -background white -relief ridge -validate key -vcmd "IsValidIdx %P 4"
 	set pdoVar ""
 
 	button $frame2.bt_ok -width 8 -text "  Ok  " -command {
@@ -1947,7 +1968,10 @@ proc AddPDOWindow {} {
 	grid config $winAddPdo.l_empty3 -row 4 -column 0 
 
 	grid config $frame1.l_index -row 0 -column 0 -padx 5
-	grid config $frame1.en_index -row 0 -column 1 -padx 5
+	grid config $frame3 -row 0 -column 1 -padx 5
+	grid config $frame3.l_hex -row 0 -column 0
+	grid config $frame3.en_index -row 0 -column 1
+	#grid config $frame3.en_index -row 0 -column 1 -padx 5
 
 	grid config $frame2.bt_ok -row 0 -column 0 -padx 5
 	grid config $frame2.bt_cancel -row 0 -column 1 -padx 5
@@ -1956,7 +1980,7 @@ proc AddPDOWindow {} {
 	bind $winAddPdo <KeyPress-Return> "$frame2.bt_ok invoke"
 	bind $winAddPdo <KeyPress-Escape> "$frame2.bt_cancel invoke"
 
-	focus $frame1.en_index
+	focus $frame3.en_index
 	centerW $winAddPdo
 }
 

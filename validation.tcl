@@ -70,6 +70,8 @@
 #Description : Validates whether an entry is IP address
 ###############################################################################################
 proc IsIP {str type} {
+	puts "IsIP type->$type"
+	#set
 	# modify these if you want to check specific ranges for
 	# each portion - now it look for 0 - 255 in each
 	set ipnum1 {\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]}
@@ -82,12 +84,20 @@ proc IsIP {str type} {
 	set partialExp [subst -nocommands -nobackslashes $partialExp]
 	if {[string equal $type focusout] || [string equal $type dstry] || [string equal $type forced]} {
 		if [regexp -- $fullExp $str] {
+			SetPromptFlag
 			return 1
 		} else {
 			return 0
 		}
 	} else {
-		return [regexp -- $partialExp $str]
+		if [regexp -- $partialExp $str] {
+			SetPromptFlag
+			return 1
+		} else {
+			return 0
+		}
+		
+		
 	}
 } 
 
@@ -102,6 +112,7 @@ proc IsMAC {str type} {
 	}
 
 	if { $len == 0 } {
+		SetPromptFlag
 		return 1
 	} else {
 		if {$len > 17} {
@@ -126,7 +137,12 @@ proc IsMAC {str type} {
 			#puts "valExp->$valExp\n"
 			set valExp [subst -nocommands -nobackslashes $valExp]
 			#puts "valExp->$valExp\n"
-			return [regexp -- $valExp $str]
+			if [regexp -- $valExp $str] {
+				SetPromptFlag
+				return 1
+			} else {
+				return 0
+			}
 		}
 	}
 }
@@ -154,10 +170,18 @@ proc IsValidStr {input} {
 	if { [string is wordchar $input] == 0 || [string length $input] > 32 } {
 		return 0
 	} else {
+		SetPromptFlag
 		return 1
 	}
 }
 
+proc IsValidProjectName { input } {
+	if { [string is wordchar $input] == 0 || [string length $input] > 32 } {
+		return 0
+	} else {
+		return 1
+	}
+}
 ###############################################################################################
 #proc IsDec
 #Input       : input
@@ -175,6 +199,9 @@ proc IsDec {input tmpValue mode idx} {
 		return 0
 	} else {
 		after 1 SetValue $tmpValue.en_value1 $mode $idx $input
+		
+		SetPromptFlag
+		
 		return 1
 	}
 }
@@ -194,6 +221,9 @@ proc Int {input} {
 	}
 	#puts "*********\n\n"
 	#tk_messageBox -message "Issue"
+	
+	SetPromptFlag
+	
 	return 1
 }
 
@@ -229,6 +259,9 @@ proc IsHex {input preinput tmpValue mode idx} {
 		set tempInput 0x$tempInput
 		after 1 SetValue $tmpValue.en_value1 $mode $idx $tempInput
 		#puts "SetValue called"
+		
+		SetPromptFlag
+		
 		return 1
 	}
 }
@@ -271,6 +304,7 @@ proc IsValidIdx {input len} {
 	if {[string is xdigit $input] == 0 || [string length $input] > $len } {
 		return 0
 	} else {
+		SetPromptFlag
 		return 1
 	}
 }
@@ -346,6 +380,9 @@ proc IsTableHex {input preinput mode idx len tbl row col win} {
 #    		}
 #		$tbl cellconfigure $row,3 -text 0x$mappEntr
 		after 1 SetTableValue $win $mode $idx 0x$input
+		
+		SetPromptFlag
+		
 		return 1
 	}
 }
@@ -365,27 +402,38 @@ proc SetTableValue { win mode idx input } {
 }
 
 proc _ConvertHex {tmpVal} {
-	puts "_ConvertHex invoked"
+	
+	puts "\n\n_ConvertHex invoked tmpVal->$tmpVal"
+	
+	if { $tmpVal == 0 } {
+		#puts "tmpVal equal to zero\n"
+		#do not trim any zero pass as it is
+		return $tmpVal
+	}
+	
+	set cnt [CntLeadZero $tmpVal] ; #counting the leading zero if they are present
+	puts "after counting zero tmpVal->$tmpVal"
+	set tmpVal [string trimleft $tmpVal 0]
+	puts "tmpVal->$tmpVal cnt->$cnt"
+	
 	if { $tmpVal > 4294967295 } {
-		set cnt [CntLeadZero $tmpVal] ; #counting the leading zero if they are present
-		
 		set calcVal $tmpVal
 		set finalVal ""
 		while { $calcVal > 4294967295 } {
 			set quo [expr $calcVal / 4294967296 ]
-			#puts "quo->$quo"
+			puts "quo->$quo"
 			set rem [expr $calcVal - ( $quo * 4294967296) ]
-			#puts "rem->$rem"
+			puts "rem->$rem"
 			if { $quo  > 4294967295 } {
 				#set rem [AppendZero [format %X $rem] 8]	
 				set finalVal [AppendZero [format %X $rem] 8]$finalVal		
-				#puts "rem->$rem...finalVal->$finalVal"
+				puts "rem->$rem...finalVal->$finalVal"
 			} else {
 				#set quo [AppendZero [format %X $quo] 8]
 				set finalVal [AppendZero [format %X $rem] 8]$finalVal	
-				#puts "final val after appending	$finalVal"
+				puts "final val after appending	$finalVal"
 				set finalVal [format %X $quo]$finalVal
-				#puts "quo->$quo...finalVal->$finalVal"
+				puts "quo->$quo...finalVal->$finalVal"
 			}
 			set calcVal $quo
 			puts "calcVal->$calcVal"
@@ -394,22 +442,33 @@ proc _ConvertHex {tmpVal} {
 		puts " AppendZero $tmpVal [expr $cnt+[string length $tmpVal] ] -> [ AppendZero $tmpVal [expr $cnt+[string length $tmpVal] ] ]"
 		set tmpVal [ AppendZero $tmpVal [expr $cnt+[string length $tmpVal] ] ] ; #appending trimmed leading zero if any
 		
-	} elseif { $tmpVal == 0 } {
-		#puts "tmpVal equal to zero\n"
-		#do not trim any zero pass as it is
 	} else {
-		set cnt [CntLeadZero $tmpVal] ; #counting the leading zero if they are present
-		puts "cnt->$cnt"
-		set tempVal [string trimleft $tmpVal 0] ; #zero is trimmed otherwise considered as octal
-		if { [catch {set tempVal [format %X $tempVal]}] } {
+		#set cnt [CntLeadZero $tmpVal] ; #counting the leading zero if they are present
+		#puts "cnt->$cnt"
+		#set tempVal [string trimleft $tmpVal 0] ; #zero is trimmed otherwise considered as octal
+		if { [catch {set tmpVal [format %X $tmpVal]}] } {
 			puts "raised an error return the sent value itself tempVal->$tempVal"
-			set tempVal [format %X $tempVal]
+			#set tmpVal [format %X $tmpVal] ; # TODO just to check what the error is REMOVE LATER
 		} else {
-			set tmpVal $tempVal
+			#set tmpVal $tempVal
 			puts " AppendZero $tmpVal [expr $cnt+[string length $tmpVal] ] -> [ AppendZero $tmpVal [expr $cnt+[string length $tmpVal] ] ]"
 			set tmpVal [ AppendZero $tmpVal [expr $cnt+[string length $tmpVal] ] ] ; #appending trimmed leading zero if any
 			
 		}
 	}
+	puts "**************\n\n"
 	return $tmpVal
+}
+
+proc SetPromptFlag {} {
+	global chkPrompt
+	set chkPrompt 1
+	puts "\tchkprompt SET\t"
+	#set
+}
+
+proc ResetPromptFlag {} {
+	global chkPrompt
+	set chkPrompt 0
+	puts "\tchkprompt RESET\t"
 }

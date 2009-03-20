@@ -134,60 +134,43 @@ ResetPromptFlag ; #set chkPrompt 0 ;  #if zero values are not saved prompt messa
 #set ra_auto 0 ; # TODO TEMPORARY FIX
 ###############################################################################################
 
-namespace eval Editor {
-    	variable initDone 0
-    	#variable _wfont
-    	variable notebook
-    	variable list_notebook
-    	variable con_notebook
-    	variable pw1
-    	variable pw2
-    	#variable procWindow
-    	#variable markWindow
-    	variable mainframe
-    	variable status
-    	variable prgtext
-    	variable prgindic
-    	#variable font
-    	#variable font_name
-    	#variable Font_var
-    	#variable FontSize_var
-    	variable toolbar1  1
-    	variable showConsoleWindow 1
-    	variable sortProcs 1
-    	variable showProc 1
-    	#variable checkNestedProc 1
-    	variable showProcWindow 1
-    	variable current
-    	variable last
-    	#variable text_win
-    	#variable index_counter 0
-    	#variable index
-    	#variable slaves
-    	#variable startTime [clock seconds]
-    	#variable options
-    	#variable lineNo
-    	#variable lineEntryCombo
-    	#variable toolbarButtons
-    	#variable searchResults
-    	#variable procMarks
-    	variable mnMenu
+namespace eval WindowConfig {
+	variable mnMenu
     	variable cnMenu
     	variable projMenu    
     	variable obdMenu    
     	variable idxMenu    
     	variable mnCount
     	variable cnCount
+    	variable initialized 0
+	variable notebook
+	variable tree_notebook
+	variable infotabs_notebook
+	variable pannedwindow1
+	variable pannedwindow2
+	variable mainframe
+	#variable status
+	variable progressmsg
+	variable prgressindicator
+       	variable showtoolbar  1
+    	#variable showinfotabs 1
+    	#variable sortProcs 1
+    	#variable showProc 1
+    	#variable showProcWindow 1
+    	#variable current
+    	#variable last
+
+
 
 }
 
 ################################################################################################
-#proc Editor::aboutBox
+#proc WindowConfig::about
 #Input       : -
 #Output      : -
 #Description : Creates the GUI displaying about application
 ################################################################################################
-proc Editor::aboutBox {} {\
+proc WindowConfig::about {} {\
     	set aboutWindow .about
     	catch "destroy $aboutWindow"
     	toplevel $aboutWindow
@@ -217,12 +200,12 @@ proc centerW w {
 }
 
 ################################################################################################
-#proc Editor::RunStatusInfo
+#proc WindowConfig::RunStatusInfo
 #Input       : -
 #Output      : -
 #Description : Displays message when user interrupts a run in pprogress
 ################################################################################################
-proc Editor::RunStatusInfo {} {\
+proc WindowConfig::RunStatusInfo {} {\
 
     	option add *Font {helvetica 10 normal}
     	tk_messageBox -message \
@@ -233,204 +216,204 @@ proc Editor::RunStatusInfo {} {\
 }
 
 ################################################################################################
-#proc Editor::getWindowPositions
+#proc WindowConfig::WindowsConfigData
 #Input       : -
 #Output      : -
 #Description : Stores the size of various window in application
 ################################################################################################
-proc Editor::getWindowPositions {} {
-    	global EditorData
-    	variable pw1
-    	variable pw2
-    	variable notebook
-    	variable list_notebook
-    	variable con_notebook
-    	variable current
+#proc WindowConfig::WindowsConfigData {} {
+#    	global ConfigData
+#    	variable pannedwindow1
+#    	variable pannedwindow2
+ #   	variable notebook
+ #   	variable tree_notebook
+ #   	variable infotabs_notebook
+ #   	#variable current
+#    
+#    	update idletasks
     
-    	update idletasks
     
-    
-    	set EditorData(options,notebookWidth) [winfo width $notebook]
-    	set EditorData(options,notebookHeight) [winfo height $notebook]
-    	set EditorData(options,list_notebookWidth) [winfo width $list_notebook]
-    	set EditorData(options,list_notebookHeight) [winfo height $list_notebook]
-    	set EditorData(options,con_notebookWidth) [winfo width $con_notebook]
-    	set EditorData(options,con_notebookHeight) [winfo height $con_notebook]
-   	 #    get position of mainWindow
-    	set EditorData(options,mainWinSize) [wm geom .]
-}
+#    	set ConfigData(options,notebookWidth) [winfo width $notebook]
+#    	set ConfigData(options,notebookHeight) [winfo height $notebook]
+#    	set ConfigData(options,list_notebookWidth) [winfo width $tree_notebook]
+#    	set ConfigData(options,list_notebookHeight) [winfo height $tree_notebook]
+#    	set ConfigData(options,con_notebookWidth) [winfo width $infotabs_notebook]
+#    	set ConfigData(options,con_notebookHeight) [winfo height $infotabs_notebook]
+#   	 #    get position of mainWindow
+#    	set ConfigData(options,mainWinSize) [wm geom .]
+#}
 
 ################################################################################################
-#proc Editor::restoreWindowPositions
+#proc WindowConfig::restoreWindowPositions
 #Input       : -
 #Output      : -
 #Description : Restores the size of various window in application
 ################################################################################################
-proc Editor::restoreWindowPositions {} {
-    	global EditorData
+#proc WindowConfig::restoreWindowPositions {} {
+#    	global ConfigData
 
-    	variable pw1
-    	variable pw2
-    	variable notebook
-    	variable list_notebook
-    	variable con_notebook
+#    	variable pannedwindow1
+#    	variable pannedwindow2
+#    	variable notebook
+#	variable tree_notebook
+#     	variable infotabs_notebook
     
-    	$notebook configure -width $EditorData(options,notebookWidth)
-    	$notebook configure -height $EditorData(options,notebookHeight)
-    	$list_notebook configure -width $EditorData(options,list_notebookWidth)
-    	$list_notebook configure -height $EditorData(options,list_notebookHeight)
-    	$con_notebook configure -width $EditorData(options,con_notebookWidth)
-    	$con_notebook configure -height $EditorData(options,con_notebookHeight)
-    	showConsole $EditorData(options,showConsole)
-    	showTreeWin $EditorData(options,showTree)
-}
+#    	$notebook configure -width $ConfigData(options,notebookWidth)
+#    	$notebook configure -height $ConfigData(options,notebookHeight)
+#    	$tree_notebook configure -width $ConfigData(options,list_notebookWidth)
+#    	$tree_notebook configure -height $ConfigData(options,list_notebookHeight)
+#    	$infotabs_notebook configure -width $ConfigData(options,con_notebookWidth)
+#    	$infotabs_notebook configure -height $ConfigData(options,con_notebookHeight)
+#    	DisplayConsole $ConfigData(options,DisplayConsole)
+#    	DisplayTreeWin $ConfigData(options,showTree)
+#}
 
 ################################################################################################
-#proc Editor::tselect
+#proc WindowConfig::tselect
 #Input       : node
 #Output      : -
 #Description : Selects a node in tree when clicked
 ################################################################################################
-proc Editor::tselect {node} {
+proc WindowConfig::tselect {node} {
    	variable treeWindow
 	$treeWindow selection clear
 	$treeWindow selection set $node 
 }
 
 ################################################################################################
-#proc Editor::tselectright
+#proc WindowConfig::tselectright
 #Input       : x position, y position, node
 #Output      : -
 #Description : Popsup corresponding menu when node in tree is right clicked
 ################################################################################################
-proc Editor::tselectright {x y node} {
+proc WindowConfig::tselectright {x y node} {
    	variable treeWindow
 	$treeWindow selection clear
 	$treeWindow selection set $node 
 	set CurrentNode $node
 	if { [string match "PjtName" $node] == 1 } {
-		tk_popup $Editor::projMenu $x $y 
+		tk_popup $WindowConfig::projMenu $x $y 
 	} elseif { [string match "MN-*" $node] == 1 } {
-		tk_popup $Editor::mnMenu $x $y	
+		tk_popup $WindowConfig::mnMenu $x $y	
 	} elseif { [string match "CN-*" $node] == 1 } { 
-		tk_popup $Editor::cnMenu $x $y 
+		tk_popup $WindowConfig::cnMenu $x $y 
 	} elseif { [string match "OBD-*" $node] == 1 } { 
-		tk_popup $Editor::obdMenu $x $y	
+		tk_popup $WindowConfig::obdMenu $x $y	
 	} elseif { [string match "PDO-*" $node] == 1 } { 
-		tk_popup $Editor::pdoMenu $x $y	
+		tk_popup $WindowConfig::pdoMenu $x $y	
 	} elseif {[string match "IndexValue-*" $node] == 1 || [string match "*PdoIndexValue-*" $node] == 1} { 
-		tk_popup $Editor::idxMenu $x $y		
+		tk_popup $WindowConfig::idxMenu $x $y		
 	} elseif {[string match "SubIndexValue-*" $node] == 1 || [string match "*PdoSubIndexValue-*" $node] == 1} { 
-		tk_popup $Editor::sidxMenu $x $y	
+		tk_popup $WindowConfig::sidxMenu $x $y	
 	} else {
 		return 
 	}   
 }
 
 ################################################################################################
-#proc Editor::showConsole
-#Input       : show
+#proc WindowConfig::DisplayConsole
+#Input       : option
 #Output      : -
-#Description : Displays or not Console window according to show
+#Description : Displays or not Console window according to option
 ################################################################################################
-proc Editor::showConsole {show} {
-    variable con_notebook
+proc WindowConfig::DisplayConsole {option} {
+    variable infotabs_notebook
     
-    set win [winfo parent $con_notebook]
-    set win [winfo parent $win]
-    set panedWin [winfo parent $win]
+    set window [winfo parent $infotabs_notebook]
+    set window [winfo parent $window]
+    set pannedWindow [winfo parent $window]
     update idletasks
-    if {$show} {
-        grid configure $panedWin.f0 -rowspan 1
-        grid $panedWin.sash1
-        grid $win
-        grid rowconfigure $panedWin 2 -minsize 100
+    if {$option} {
+        grid configure $pannedWindow.f0 -rowspan 1
+        grid $pannedWindow.sash1
+        grid $window
+        grid rowconfigure $pannedWindow 2 -minsize 100
     } else  {
-        grid remove $win
-        grid remove $panedWin.sash1
-        grid configure $panedWin.f0 -rowspan 3
+        grid remove $window
+        grid remove $pannedWindow.sash1
+        grid configure $pannedWindow.f0 -rowspan 3
     }
 }
 
 ################################################################################################
-#proc Editor::showTreeWin
-#Input       : show
+#proc WindowConfig::DisplayTreeWin
+#Input       : option
 #Output      : -
-#Description : Displays or not Tree window according to show
+#Description : Displays or not Tree window according to option
 ################################################################################################
-proc Editor::showTreeWin {show} {
-    variable list_notebook
+proc WindowConfig::DisplayTreeWin {option} {
+    variable tree_notebook
     
-    set win [winfo parent $list_notebook]
-    set win [winfo parent $win]
-    set panedWin [winfo parent $win]
+    set window [winfo parent $tree_notebook]
+    set window [winfo parent $window]
+    set pannedWindow [winfo parent $window]
     update idletasks
-    #puts show->$show
-    if {$show} {
-        grid configure $panedWin.f1 -column 2 -columnspan 1
-        grid $panedWin.sash1
-        grid $win
-        grid columnconfigure $panedWin 0 -minsize 250
+    #puts show->$option
+    if {$option} {
+        grid configure $pannedWindow.f1 -column 2 -columnspan 1
+        grid $pannedWindow.sash1
+        grid $window
+        grid columnconfigure $pannedWindow 0 -minsize 250
     } else  {
-        grid remove $win
-        grid remove $panedWin.sash1
-        grid configure $panedWin.f1 -column 0 -columnspan 3
+        grid remove $window
+        grid remove $pannedWindow.sash1
+        grid configure $pannedWindow.f1 -column 0 -columnspan 3
     }
 }
 
 ################################################################################################
-#proc Editor::showSolelyConsole
-#Input       : show
+#proc WindowConfig::DisplayConsoleOnly
+#Input       : option
 #Output      : -
 #Description : Displays Console window alone or not
 ################################################################################################
-proc Editor::showSolelyConsole {show} {
+proc WindowConfig::DisplayConsoleOnly {option} {
     variable notebook
     
-    set win [winfo parent $notebook]
-    set win [winfo parent $win]
-    set panedWin [winfo parent $win]
-    set frame [winfo parent $panedWin]
-    set frame [winfo parent $frame]
-    set panedWin [winfo parent $frame]
+    set window [winfo parent $notebook]
+    set window [winfo parent $window]
+    set pannedWindow [winfo parent $window]
+    set framePath [winfo parent $pannedWindow]
+    set framePath [winfo parent $framePath]
+    set pannedWindow [winfo parent $framePath]
     update idletasks
     
-    if {$show} {
-        grid remove $frame
-        grid remove $panedWin.sash1
-        grid configure $panedWin.f1 -rowspan 3
-        grid rowconfigure $panedWin 2 -weight 100
-        grid rowconfigure $panedWin 2 -minsize 100
+    if {$option} {
+        grid remove $framePath
+        grid remove $pannedWindow.sash1
+        grid configure $pannedWindow.f1 -rowspan 3
+        grid rowconfigure $pannedWindow 2 -weight 100
+        grid rowconfigure $pannedWindow 2 -minsize 100
     } else  {
-        grid configure $panedWin.f1 -rowspan 1
-        grid $panedWin.sash1
-        grid $frame
-        grid rowconfigure $panedWin 2 -minsize 100
+        grid configure $pannedWindow.f1 -rowspan 1
+        grid $pannedWindow.sash1
+        grid $framePath
+        grid rowconfigure $pannedWindow 2 -minsize 100
     }
 }
 
 ################################################################################################
-#proc Editor::exit_app
+#proc WindowConfig::exit_app
 #Input       : -
 #Output      : -
 #Description : Called when application is exited
 ################################################################################################
-proc Editor::exit_app {} {
-    global EditorData
+proc WindowConfig::exit_app {} {
+    global ConfigData
     global RootDir
     variable notebook
-    variable current
+    #variable current
     variable index
-    variable text_win
+    #variable text_win
 
     global PjtDir
     global PjtName
     global status_run
     global status_save
 
-    set EditorData(options,History) "$PjtDir"
+    set ConfigData(options,History) "$PjtDir"
     if { $status_run == 1 } {
-	Editor::RunStatusInfo
+	WindowConfig::RunStatusInfo
 	return
     }
     if {$PjtDir != ""} {
@@ -442,12 +425,12 @@ proc Editor::exit_app {} {
    		 switch -- $result {
    		     yes {			 
    		             Saveproject
-			     conPuts "Project $PjtName is saved" info
+			     DisplayInfo "Project $PjtName is saved" info
    		     }
-   		     no  {conPuts "Project $PjtName not saved" info
+   		     no  {DisplayInfo "Project $PjtName not saved" info
 		     }
    		     cancel {
-			     conPuts "Exit Canceled" info
+			     DisplayInfo "Exit Canceled" info
 			     return
 		     }
    		}
@@ -467,7 +450,7 @@ proc Editor::exit_app {} {
 proc openproject { } {
 	global PjtDir
 	global PjtName
-	global updatetree
+	global treePath
 	global nodeIdList
 	global mnCount
 	global cnCount	
@@ -477,7 +460,7 @@ proc openproject { } {
 	global defaultPjtDir
 	
 	if { $status_run == 1 } {
-		Editor::RunStatusInfo
+		WindowConfig::RunStatusInfo
 		return
 	}
 
@@ -488,14 +471,14 @@ proc openproject { } {
 			set result [tk_messageBox -message "Save Project $PjtName ?" -type yesnocancel -icon question -title "Question" -parent .]
 	   		switch -- $result {
 	   		     yes {
-				#conPuts "Project $PjtName Saved" info
+				#DisplayInfo "Project $PjtName Saved" info
 				Saveproject
 				}
 	   		     no  {
-				conPuts "Project $PjtName Not Saved" info
+				DisplayInfo "Project $PjtName Not Saved" info
 				}
 	   		     cancel {
-				conPuts "Open Project Canceled" info
+				DisplayInfo "Open Project Canceled" info
 				return
 				}
 	   		}
@@ -558,7 +541,7 @@ proc openproject { } {
 	#	thread::send [tsv::set application importProgress] "StopProgress"
 	#	return
 	#} else {
-	#	#conPuts "ReImported $tmpImpDir for Node ID:$nodeId"
+	#	#DisplayInfo "ReImported $tmpImpDir for Node ID:$nodeId"
 	#}
 	#set PjtDir $tempPjtDir
 	#set PjtName $tempPjtName
@@ -600,7 +583,7 @@ proc _openproject {projectfilename} {
 		thread::send -async [tsv::set application importProgress] "StopProgress"
 		return
 	} else {
-		#conPuts "ReImported $tmpImpDir for Node ID:$nodeId"
+		#DisplayInfo "ReImported $tmpImpDir for Node ID:$nodeId"
 	}
 	set PjtDir $tempPjtDir
 	set PjtName $tempPjtName
@@ -633,15 +616,15 @@ proc _openproject {projectfilename} {
 	
 	ClearMsgs
 	if { $result == 1 } {
-		conPuts "Project [file join $PjtDir $PjtName] is successfully opened"
+		DisplayInfo "Project [file join $PjtDir $PjtName] is successfully opened"
 	} else {
-		errorPuts "Error in opening project [file join $PjtDir $PjtName]"
+		DisplayErrMsg "Error in opening project [file join $PjtDir $PjtName]"
 	}
 	
 }
 
 proc RePopulate { PjtDir PjtName } {
-	global updatetree
+	global treePath
 	global nodeIdList
 	global mnCount
 	global cnCount	
@@ -649,8 +632,8 @@ proc RePopulate { PjtDir PjtName } {
 	set mnCount 1
 	set cnCount 1
 
-	catch {$updatetree delete PjtName}
-	$updatetree insert end root PjtName -text $PjtName -open 1 -image [Bitmap::get network]
+	catch {$treePath delete PjtName}
+	$treePath insert end root PjtName -text $PjtName -open 1 -image [Bitmap::get network]
 	
 	set count [new_intp]
 	set catchErrCode [GetNodeCount 240 $count]
@@ -680,12 +663,12 @@ proc RePopulate { PjtDir PjtName } {
 				#puts "nodeId->$nodeId..nodeName->$nodeName.."
 				if {$nodeId == 240} {
 					set nodeType 0
-					$updatetree insert end PjtName MN-$mnCount -text "openPOWERLINK_MN(240)" -open 1 -image [Bitmap::get mn]
-					$updatetree insert end MN-$mnCount OBD-$mnCount-1 -text "OBD" -open 0 -image [Bitmap::get pdo]	
+					$treePath insert end PjtName MN-$mnCount -text "openPOWERLINK_MN(240)" -open 1 -image [Bitmap::get mn]
+					$treePath insert end MN-$mnCount OBD-$mnCount-1 -text "OBD" -open 0 -image [Bitmap::get pdo]	
 					set node OBD-$mnCount-1	
 				} else {
 					set nodeType 1
-					set child [$updatetree insert end MN-$mnCount CN-$mnCount-$cnCount -text "$nodeName\($nodeId\)" -open 0 -image [Bitmap::get cn]]
+					set child [$treePath insert end MN-$mnCount CN-$mnCount-$cnCount -text "$nodeName\($nodeId\)" -open 0 -image [Bitmap::get cn]]
 					set node CN-$mnCount-$cnCount
 				}
 puts "node->$node"
@@ -704,31 +687,31 @@ puts "node->$node"
 			}
 		}
 
-		if { [$Editor::projMenu index 3] != "3" } {
-			$Editor::projMenu insert 3 command -label "Close Project" -command "_CloseProject"
+		if { [$WindowConfig::projMenu index 3] != "3" } {
+			$WindowConfig::projMenu insert 3 command -label "Close Project" -command "_CloseProject"
 		}
-		if { [$Editor::projMenu index 4] != "4" } {
-			$Editor::projMenu insert 4 command -label "Properties" -command "PropertiesWindow"
+		if { [$WindowConfig::projMenu index 4] != "4" } {
+			$WindowConfig::projMenu insert 4 command -label "Properties" -command "PropertiesWindow"
 		}
 		puts nodeIdList->$nodeIdList
 
 	} else {
-		errorPuts "MN node is not found" error
+		DisplayErrMsg "MN node is not found" error
 	}
 
 	return 1
 }
 
 ################################################################################################
-#proc Editor::create
+#proc WindowConfig::BasicFrames
 #Input       : -
 #Output      : -
 #Description : Creates the GUI for application when launched
 ################################################################################################
-proc Editor::create { } {
+proc WindowConfig::BasicFrames { } {
     	global tcl_platform
-    	global clock_var
-    	global EditorData
+    	#global clock_var
+    	global ConfigData
     	global RootDir
     	global f0
     	global f1
@@ -737,29 +720,29 @@ proc Editor::create { } {
 	
     	variable bb_connect
    	variable mainframe
-    	variable _wfont
+    	#variable _wfont
     	variable notebook
-    	variable list_notebook
-    	variable con_notebook
-    	variable pw2
-    	variable pw1
-    	variable procWindow
+    	variable tree_notebook
+    	variable infotabs_notebook
+    	variable pannedwindow2
+    	variable pannedwindow1
+    	#variable procWindow
     	variable treeWindow
-    	variable markWindow
+    	#variable markWindow
     	variable mainframe
-    	variable font
-    	variable prgtext
-    	variable prgindic
-    	variable status
-    	variable current
-    	variable clock_label
-    	variable defaultFile
-    	variable defaultProjectFile
-    	variable Font_var
-    	variable FontSize_var
+    	#variable font
+    	variable progressmsg
+    	variable prgressindicator
+    	#variable status
+    	#variable current
+    	#variable clock_label
+    	#variable defaultFile
+    	#variable defaultProjectFile
+    	#variable Font_var
+    	#variable FontSize_var
     	variable options
    
-    	variable toolbarButtons
+    	variable Button
     	variable cnMenu
     	variable mnMenu
     	variable IndexaddMenu
@@ -771,12 +754,12 @@ proc Editor::create { } {
     
 	set LastTableFocus ""
     
-	set result [catch {source [file join $RootDir plk_configtool.cfg]} info]
-	variable configError $result
+	#set result [catch {source [file join $RootDir plk_configtool.cfg]} info]
+	#variable configError $result
    
-	set prgtext "Please wait while loading ..."
-	set prgindic -1
-	_create_intro
+	set progressmsg "Please wait while loading ..."
+	set prgressindicator -1
+	_tool_intro
 	update
 	
 	# Menu description
@@ -788,7 +771,7 @@ proc Editor::create { } {
 	        	{command "Save Project as" {noFile}  "Save Project as" {} -command SaveProjectAsWindow }
 			{command "Close Project" {}  "Close Project" {} -command _CloseProject }
 	    		{separator}
-            		{command "E&xit" {}  "Exit openCONFIGURATOR" {Alt x} -command Editor::exit_app}
+            		{command "E&xit" {}  "Exit openCONFIGURATOR" {Alt x} -command WindowConfig::exit_app}
         	}
         	"&Project" {} {} 0 {
             		{command "Build Project    F7" {noFile} "Generate CDC and XML" {} -command BuildProject }
@@ -804,16 +787,16 @@ proc Editor::create { } {
         	}
         	"&View" all options 0 {
             		{checkbutton "Show Output Console" {all option} "Show Console Window" {}
-                		-variable Editor::options(showConsole)
-                		-command  {set EditorData(options,showConsole) $Editor::options(showConsole)
-                    			Editor::showConsole $EditorData(options,showConsole)
+                		-variable WindowConfig::options(DisplayConsole)
+                		-command  {set ConfigData(options,DisplayConsole) $WindowConfig::options(DisplayConsole)
+                    			WindowConfig::DisplayConsole $ConfigData(options,DisplayConsole)
                     			update idletasks
                 		}
            		}
             		{checkbutton "Show Test Tree Browser" {all option} "Show Code Browser" {}
-                		-variable Editor::options(showTree)
-                		-command  {set EditorData(options,showTree) $Editor::options(showTree)
-                    			Editor::showTreeWin $EditorData(options,showTree)
+                		-variable WindowConfig::options(showTree)
+                		-command  {set ConfigData(options,showTree) $WindowConfig::options(showTree)
+                    			WindowConfig::DisplayTreeWin $ConfigData(options,showTree)
                     			update idletasks
                 		}
             		}
@@ -821,13 +804,13 @@ proc Editor::create { } {
         	"&Help" {} {} 0 {
 	    		{command "How to" {noFile} "How to Manual" {} -command YetToImplement }
 	    		{separator}
-            		{command "About" {} "About" {F1} -command Editor::aboutBox }
+            		{command "About" {} "About" {F1} -command WindowConfig::about }
         	}
     	}
 
 	# to select the required check button in View menu
-    	set Editor::options(showTree) 1
-    	set Editor::options(showConsole) 1
+    	set WindowConfig::options(showTree) 1
+    	set WindowConfig::options(DisplayConsole) 1
 	#shortcut keys for project
 	bind . <Key-F7> "BuildProject"
 	bind . <Control-Key-F7> "" ; #to prevent BuildProject called
@@ -841,104 +824,104 @@ proc Editor::create { } {
 	# Menu for the Controlled Nodes
 	#############################################################################
 
-	set Editor::cnMenu [menu  .cnMenu -tearoff 0]
-	set Editor::IndexaddMenu .cnMenu.indexaddMenu
-	#$Editor::cnMenu add command -label "Rename" \
+	set WindowConfig::cnMenu [menu  .cnMenu -tearoff 0]
+	set WindowConfig::IndexaddMenu .cnMenu.indexaddMenu
+	#$WindowConfig::cnMenu add command -label "Rename" \
 	#	 -command {set cursor [. cget -cursor]
 	#		YetToImplement
 	#	 }
 	
-	#$Editor::cnMenu add cascade -label "Add" -menu $Editor::IndexaddMenu
-	#menu $Editor::IndexaddMenu -tearoff 0
-	#$Editor::IndexaddMenu add command -label "Add Index" -command "AddIndexWindow"
-	#$Editor::IndexaddMenu add command -label "Inter CN Communication" -command {InterCNWindow}
-	$Editor::cnMenu add command -label "Add Index" -command "AddIndexWindow"
-	$Editor::cnMenu add command -label "Import XDC/XDD" -command {ReImport}
-	$Editor::cnMenu add separator
-	$Editor::cnMenu add command -label "Delete" -command {DeleteTreeNode}
-	$Editor::cnMenu add command -label "Properties" -command {PropertiesWindow} ; #commented for this delivery 
+	#$WindowConfig::cnMenu add cascade -label "Add" -menu $WindowConfig::IndexaddMenu
+	#menu $WindowConfig::IndexaddMenu -tearoff 0
+	#$WindowConfig::IndexaddMenu add command -label "Add Index" -command "AddIndexWindow"
+	#$WindowConfig::IndexaddMenu add command -label "Inter CN Communication" -command {InterCNWindow}
+	$WindowConfig::cnMenu add command -label "Add Index" -command "AddIndexWindow"
+	$WindowConfig::cnMenu add command -label "Import XDC/XDD" -command {ReImport}
+	$WindowConfig::cnMenu add separator
+	$WindowConfig::cnMenu add command -label "Delete" -command {DeleteTreeNode}
+	$WindowConfig::cnMenu add command -label "Properties" -command {PropertiesWindow} ; #commented for this delivery 
 
 	#############################################################################
 	# Menu for the Managing Nodes
 	#############################################################################
-	set Editor::mnMenu [menu  .mnMenu -tearoff 0]
-	$Editor::mnMenu add command -label "Add CN" -command "AddCNWindow" 
-	$Editor::mnMenu add command -label "Import XDC/XDD" -command "ReImport"
-	$Editor::mnMenu add separator
-	$Editor::mnMenu add command -label "Auto Generate" -command {AutoGenerateMNOBD} 
-	#$Editor::mnMenu add separator
-	$Editor::mnMenu add command -label "Delete OBD" -command {DeleteTreeNode}
-	$Editor::mnMenu add separator
-	$Editor::mnMenu add command -label "Properties" -command {PropertiesWindow}; #commented for this delivery
+	set WindowConfig::mnMenu [menu  .mnMenu -tearoff 0]
+	$WindowConfig::mnMenu add command -label "Add CN" -command "AddCNWindow" 
+	$WindowConfig::mnMenu add command -label "Import XDC/XDD" -command "ReImport"
+	$WindowConfig::mnMenu add separator
+	$WindowConfig::mnMenu add command -label "Auto Generate" -command {AutoGenerateMNOBD} 
+	#$WindowConfig::mnMenu add separator
+	$WindowConfig::mnMenu add command -label "Delete OBD" -command {DeleteTreeNode}
+	$WindowConfig::mnMenu add separator
+	$WindowConfig::mnMenu add command -label "Properties" -command {PropertiesWindow}; #commented for this delivery
 
 	#############################################################################
 	# Menu for the Project
 	#############################################################################
 
-	set Editor::projMenu [menu  .projMenu -tearoff 0]
-	#$Editor::projMenu add command -label "Sample Project" -command "YetToImplement" 
-	#$Editor::projMenu add command -label "New Project" -command { _NewProject}
-	#$Editor::projMenu add command -label "Open Project" -command {openproject}
-	$Editor::projMenu insert 0 command -label "Sample Project" -command {
+	set WindowConfig::projMenu [menu  .projMenu -tearoff 0]
+	#$WindowConfig::projMenu add command -label "Sample Project" -command "YetToImplement" 
+	#$WindowConfig::projMenu add command -label "New Project" -command { _NewProject}
+	#$WindowConfig::projMenu add command -label "Open Project" -command {openproject}
+	$WindowConfig::projMenu insert 0 command -label "Sample Project" -command {
 		global RootDir
 		set samplePjt [file join $RootDir Sample Sample.oct]
 		if {[file exists $samplePjt]} {
 			_openproject $samplePjt
 		} else {
-			errorPuts "Sample project is not present" error	
+			DisplayErrMsg "Sample project is not present" error	
 		}
 	} 
-	$Editor::projMenu insert 1 command -label "New Project" -command { _NewProject}
-	$Editor::projMenu insert 2 command -label "Open Project" -command {openproject} 
+	$WindowConfig::projMenu insert 1 command -label "New Project" -command { _NewProject}
+	$WindowConfig::projMenu insert 2 command -label "Open Project" -command {openproject} 
 	#############################################################################
 	# Menu for the object dictionary
 	#############################################################################
-	set Editor::obdMenu [menu .obdMenu -tearoff 0]
-	$Editor::obdMenu add separator 
-	$Editor::obdMenu add command -label "Add Index" -command "AddIndexWindow"   
-	$Editor::obdMenu add separator  
+	set WindowConfig::obdMenu [menu .obdMenu -tearoff 0]
+	$WindowConfig::obdMenu add separator 
+	$WindowConfig::obdMenu add command -label "Add Index" -command "AddIndexWindow"   
+	$WindowConfig::obdMenu add separator  
 
 	#############################################################################
 	# Menu for the PDO
 	#############################################################################
-	set Editor::pdoMenu [menu .pdoMenu -tearoff 0]
-	$Editor::pdoMenu add separator 
-	$Editor::pdoMenu add command -label "Add PDO" -command "AddPDOWindow"   
-	$Editor::pdoMenu add separator  
+	set WindowConfig::pdoMenu [menu .pdoMenu -tearoff 0]
+	$WindowConfig::pdoMenu add separator 
+	$WindowConfig::pdoMenu add command -label "Add PDO" -command "AddPDOWindow"   
+	$WindowConfig::pdoMenu add separator  
 
 
 	#############################################################################
 	# Menu for the index
 	#############################################################################
-	set Editor::idxMenu [menu .idxMenu -tearoff 0]
-	$Editor::idxMenu add command -label "Add SubIndex" -command "AddSubIndexWindow"   
-	$Editor::idxMenu add separator
-	$Editor::idxMenu add command -label "Delete Index" -command {DeleteTreeNode}
+	set WindowConfig::idxMenu [menu .idxMenu -tearoff 0]
+	$WindowConfig::idxMenu add command -label "Add SubIndex" -command "AddSubIndexWindow"   
+	$WindowConfig::idxMenu add separator
+	$WindowConfig::idxMenu add command -label "Delete Index" -command {DeleteTreeNode}
 
 	#############################################################################
 	# Menu for the subindex
 	#############################################################################
-	set Editor::sidxMenu [menu .sidxMenu -tearoff 0]
-	$Editor::sidxMenu add separator
-	$Editor::sidxMenu add command -label "Delete SubIndex" -command {DeleteTreeNode}
-	$Editor::sidxMenu add separator
+	set WindowConfig::sidxMenu [menu .sidxMenu -tearoff 0]
+	$WindowConfig::sidxMenu add separator
+	$WindowConfig::sidxMenu add command -label "Delete SubIndex" -command {DeleteTreeNode}
+	$WindowConfig::sidxMenu add separator
 
-	set Editor::prgindic -1
-	set Editor::status ""
+	set WindowConfig::prgressindicator -1
+	#set WindowConfig::status ""
 	set mainframe [MainFrame::create .mainframe \
 	        -menu $descmenu  ]
 
-    	# toolbar 1 creation
-	set tb1  [MainFrame::addtoolbar $mainframe]
-	pack $tb1 -expand yes -fill x
-	set bbox [ButtonBox::create $tb1.bbox1 -spacing 0 -padx 1 -pady 1]
-	set toolbarButtons(new) [ButtonBox::add $bbox -image [Bitmap::get page_white] \
+    	# toolbar  creation
+	set toolbar  [MainFrame::addtoolbar $mainframe]
+	pack $toolbar -expand yes -fill x
+	set bbox [ButtonBox::create $toolbar.bbox1 -spacing 0 -padx 1 -pady 1]
+	set Buttons(new) [ButtonBox::add $bbox -image [Bitmap::get page_white] \
 	        -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
 	        -helptext "Create new project" -command { _NewProject }]
-	set toolbarButtons(save) [ButtonBox::add $bbox -image [Bitmap::get disk] \
+	set Buttons(save) [ButtonBox::add $bbox -image [Bitmap::get disk] \
 	        -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
 	        -helptext "Save Project" -command Saveproject]
-	set toolbarButtons(saveAll) [ButtonBox::add $bbox -image [Bitmap::get disk_multiple] \
+	set Buttons(saveAll) [ButtonBox::add $bbox -image [Bitmap::get disk_multiple] \
             	-highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
             	-helptext "Save Project as" -command SaveProjectAsWindow]    
     	set toolbarButtons(openproject) [ButtonBox::add $bbox -image [Bitmap::get openfolder] \
@@ -946,8 +929,8 @@ proc Editor::create { } {
             	-helptext "Open Project" -command openproject]
         
     	pack $bbox -side left -anchor w
-	set prgindic 0
-	set sep0 [Separator::create $tb1.sep0 -orient vertical]
+	set prgressindicator 0
+	set sep0 [Separator::create $toolbar.sep0 -orient vertical]
 	pack $sep0 -side left -fill y -padx 4 -anchor w
 	
 
@@ -955,7 +938,7 @@ proc Editor::create { } {
 
 
 
-	set bbox [ButtonBox::create $tb1.bbox5 -spacing 1 -padx 1 -pady 1]
+	set bbox [ButtonBox::create $toolbar.bbox5 -spacing 1 -padx 1 -pady 1]
 	pack $bbox -side left -anchor w
 	set bb_build [ButtonBox::add $bbox -image [Bitmap::get build]\
 	        -height 21\
@@ -984,10 +967,10 @@ proc Editor::create { } {
 
 
 
-	set sep2 [Separator::create $tb1.sep2 -orient vertical]
+	set sep2 [Separator::create $toolbar.sep2 -orient vertical]
 	pack $sep2 -side left -fill y -padx 4 -anchor w
 
-	set bbox [ButtonBox::create $tb1.bbox4 -spacing 1 -padx 1 -pady 1]
+	set bbox [ButtonBox::create $toolbar.bbox4 -spacing 1 -padx 1 -pady 1]
 	pack $bbox -side left -anchor w
 	set bb_cdc [ButtonBox::add $bbox -image [Bitmap::get transfercdc]\
             	-height 21\
@@ -1007,10 +990,10 @@ proc Editor::create { } {
 #	pack $bb_xml -side left -padx 4
 	
 
-	set sep4 [Separator::create $tb1.sep4 -orient vertical]
+	set sep4 [Separator::create $toolbar.sep4 -orient vertical]
 	pack $sep4 -side left -fill y -padx 4 -anchor w 
 
-		set bbox [ButtonBox::create $tb1.bbox2 -spacing 0 -padx 4 -pady 1]
+		set bbox [ButtonBox::create $toolbar.bbox2 -spacing 0 -padx 4 -pady 1]
 	set bb_start [ButtonBox::add $bbox -image [Bitmap::get start] \
             	-height 21\
             	-width 21\
@@ -1019,7 +1002,7 @@ proc Editor::create { } {
 	pack $bb_start -side left -padx 4
 	pack $bbox -side left -anchor w -padx 2
 	
-	set bbox [ButtonBox::create $tb1.bbox3 -spacing 1 -padx 1 -pady 1]
+	set bbox [ButtonBox::create $toolbar.bbox3 -spacing 1 -padx 1 -pady 1]
 	
 	set bb_stop [ButtonBox::add $bbox -image [Bitmap::get stop]\
             	-height 21\
@@ -1041,13 +1024,13 @@ proc Editor::create { } {
 	pack $bbox -side left -anchor w
 
 	
-	set sep1 [Separator::create $tb1.sep1 -orient vertical]
+	set sep1 [Separator::create $toolbar.sep1 -orient vertical]
 	pack $sep1 -side left -fill y -padx 4 -anchor w
 	
 
 
 
-	set bbox [ButtonBox::create $tb1.bbox7 -spacing 1 -padx 1 -pady 1]
+	set bbox [ButtonBox::create $toolbar.bbox7 -spacing 1 -padx 1 -pady 1]
 	pack $bbox -side right
 	set bb_kaly [ButtonBox::add $bbox -image [Bitmap::get kalycito_icon]\
 	        -height 21\
@@ -1055,44 +1038,44 @@ proc Editor::create { } {
 	        -helptype balloon\
 	        -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
 	        -helptext "kalycito" \
-	        -command Editor::aboutBox ]
+	        -command WindowConfig::about ]
 	pack $bb_kaly -side right  -padx 4
 
 
    
-	$Editor::mainframe showtoolbar 0 $Editor::toolbar1
-	set temp [MainFrame::addindicator $mainframe -textvariable Editor::connect_status ]
+	$WindowConfig::mainframe showtoolbar 0 $WindowConfig::showtoolbar
+	set temp [MainFrame::addindicator $mainframe -textvariable WindowConfig::connect_status ]
 	$temp configure -relief flat 
 	# NoteBook creation
-	set frame [$mainframe getframe]
+	set framePath [$mainframe getframe]
 	
-	set pw1 [PanedWindow::create $frame.pw1 -side left]
-	set pane [PanedWindow::add $pw1 ]
-	set pw2 [PanedWindow::create $pane.pw2 -side top]
+	set pannedwindow1 [PanedWindow::create $framePath.pannedwindow1 -side left]
+	set pane [PanedWindow::add $pannedwindow1 ]
+	set pannedwindow2 [PanedWindow::create $pane.pannedwindow2 -side top]
 	#set pw3 [PanedWindow::create $pane.pw3 -side right]	 ; #newly added
 	#pack $pw3 -expand yes -fill both ; #newly added
 
-	set pane1 [PanedWindow::add $pw2 -minsize 250]
-	set pane2 [PanedWindow::add $pw2 -minsize 100]
+	set pane1 [PanedWindow::add $pannedwindow2 -minsize 250]
+	set pane2 [PanedWindow::add $pannedwindow2 -minsize 100]
 	#set pane2 [PanedWindow::add $pw3 -minsize 100] ; #newly added
-	set pane3 [PanedWindow::add $pw1 -minsize 100]
+	set pane3 [PanedWindow::add $pannedwindow1 -minsize 100]
 
 #set testframe [frame $pane2.testframe -bg blue] ; #added for test
 #pack $testframe -expand yes -fill both ; #added for test
 
-	set list_notebook [NoteBook::create $pane1.nb]
+	set tree_notebook [NoteBook::create $pane1.nb]
 	set notebook [NoteBook::create $pane2.nb]	
-	set con_notebook [NoteBook::create $pane3.nb]
+	set infotabs_notebook [NoteBook::create $pane3.nb]
 	
-	set pf1 [EditManager::create_treeWindow $list_notebook]
-	set treeWindow $pf1.sw.objTree
+	set pf1 [NoteBookManager::create_treeBrowserWindow $tree_notebook]
+	set treeWindow [lindex $pf1 1]
 	# Binding on tree widget   
-	$treeWindow bindText <ButtonPress-1> Editor::SingleClickNode
-	$treeWindow bindText <Double-1> Editor::DoubleClickNode
-	$treeWindow bindText <ButtonPress-3> {Editor::tselectright %X %Y}
+	$treeWindow bindText <ButtonPress-1> WindowConfig::SingleClickNode
+	$treeWindow bindText <Double-1> WindowConfig::DoubleClickNode
+	$treeWindow bindText <ButtonPress-3> {WindowConfig::tselectright %X %Y}
 	if {"$tcl_platform(platform)" == "unix"} {
-		bind $treeWindow <Button-4> {global updatetree ; $updatetree yview scroll -5 units}
-		bind $treeWindow <Button-5> {global updatetree ; $updatetree yview scroll 5 units}
+		bind $treeWindow <Button-4> {global treePath ; $treePath yview scroll -5 units}
+		bind $treeWindow <Button-5> {global treePath ; $treePath yview scroll 5 units}
 	}
 
 
@@ -1102,32 +1085,32 @@ proc Editor::create { } {
 	#bind . <Configure> {puts "\nCurrent window path ->%W\nFocus window [focus]"}
 
           
-	global EditorData
+	global ConfigData
 	global PjtDir
-	set PjtDir $EditorData(options,History)
+	#set PjtDir $ConfigData(options,History)
 
 
 
-	set cf0 [EditManager::create_conWindow $con_notebook "Console" 1]
-	set cf1 [EditManager::create_conWindow $con_notebook "Error" 2]
-	set cf2 [EditManager::create_conWindow $con_notebook "Warning" 3]
+	set cf0 [NoteBookManager::create_infoWindow $infotabs_notebook "Console" 1]
+	set cf1 [NoteBookManager::create_infoWindow $infotabs_notebook "Error" 2]
+	set cf2 [NoteBookManager::create_infoWindow $infotabs_notebook "Warning" 3]
 
-	NoteBook::compute_size $con_notebook
-	pack $con_notebook -side bottom -fill both -expand yes -padx 4 -pady 4
+	NoteBook::compute_size $infotabs_notebook
+	pack $infotabs_notebook -side bottom -fill both -expand yes -padx 4 -pady 4
 
-	pack $pw1 -fill both -expand yes
-	NoteBook::compute_size $list_notebook
-	$list_notebook configure -width 250
-	pack $list_notebook -side left -fill both -expand yes -padx 2 -pady 4
+	pack $pannedwindow1 -fill both -expand yes
+	NoteBook::compute_size $tree_notebook
+	$tree_notebook configure -width 250
+	pack $tree_notebook -side left -fill both -expand yes -padx 2 -pady 4
 	catch {font create TkFixedFont -family Courier -size -12 -weight bold}
 
 	set alignFrame [frame $pane2.alignframe -width 750]
 	pack $alignFrame -expand yes -fill both
 
-	set f0 [EditManager::create_tab $alignFrame "Index" ind ]
-	set f1 [EditManager::create_tab $alignFrame "Sub index" sub ]
-	#set f2 [EditManager::create_table $notebook "PDO mapping" "pdo"]
-	set f2 [EditManager::create_table $alignFrame "PDO mapping" "pdo"]
+	set f0 [NoteBookManager::create_tab $alignFrame "Index" ind ]
+	set f1 [NoteBookManager::create_tab $alignFrame "Sub index" sub ]
+	#set f2 [NoteBookManager::create_table $notebook "PDO mapping" "pdo"]
+	set f2 [NoteBookManager::create_table $alignFrame "PDO mapping" "pdo"]
 	[lindex $f2 1] columnconfigure 0 -background #e0e8f0 -width 6 -sortmode integer
 	[lindex $f2 1] columnconfigure 1 -background #e0e8f0 -width 14 
 	[lindex $f2 1] columnconfigure 2 -background #e0e8f0 -width 11
@@ -1175,29 +1158,29 @@ proc Editor::create { } {
 	#pack $notebook -side left -fill both -expand yes -padx 4 -pady 4
 
 
-	pack $pw2 -fill both -expand yes
+	pack $pannedwindow2 -fill both -expand yes
 
-	$list_notebook raise objtree
-	$con_notebook raise Console1
+	$tree_notebook raise objectTree
+	$infotabs_notebook raise Console1
 	#$notebook raise [lindex $f0 1]
 
 	pack $mainframe -fill both -expand yes
-	set prgindic 0
+	set prgressindicator 0
 	destroy .intro
-	wm protocol . WM_DELETE_WINDOW Editor::exit_app
+	wm protocol . WM_DELETE_WINDOW WindowConfig::exit_app
 
-	if {!$configError} {catch Editor::restoreWindowPositions}
+	#if {!$configError} {catch WindowConfig::restoreWindowPositions}
 	update idletasks
 	return 1
 }
 
 ################################################################################################
-#proc Editor::create_intro
+#proc WindowConfig::tool_intro
 #Input       : -
 #Output      : -
 #Description : Displays image during launching of application
 ################################################################################################
-proc Editor::_create_intro { } {
+proc WindowConfig::_tool_intro { } {
 	global tcl_platform
 	global RootDir
 	
@@ -1208,34 +1191,34 @@ proc Editor::_create_intro { } {
 	
 	set image [image create photo -file [file join $RootDir Kalycito.gif]]
 	set splashscreen  [label $top.x -image $image]
-	set frame [frame $splashscreen.f -background white]
-	set lab1  [label $frame.lab1 -text "Loading openCONFIGURATOR" -background white -font {times 8}]
-	set lab2  [label $frame.lab2 -textvariable Editor::prgtext -background red -font {times 8} -width 35]
-	set prg   [ProgressBar $frame.prg -width 50 -height 10 -background  black \
-		-variable Editor::prgindic -maximum 10]
+	set framePath [frame $splashscreen.f -background white]
+	set lab1  [label $framePath.lab1 -text "Loading openCONFIGURATOR" -background white -font {times 8}]
+	set lab2  [label $framePath.lab2 -textvariable WindowConfig::progressmsg -background red -font {times 8} -width 35]
+	set prg   [ProgressBar $framePath.prg -width 50 -height 10 -background  black \
+		-variable WindowConfig::prgressindicator -maximum 10]
 	pack $lab1 $lab2 $prg
-	place $frame -x 0 -y 0 -anchor nw
+	place $framePath -x 0 -y 0 -anchor nw
 	pack $splashscreen
 	BWidget::place $top 0 0 center
 	wm deiconify $top
 }
 
 proc BindTree {} {
-	global updatetree
+	global treePath
 	global tcl_platform
 	global f2
 
 	#[lindex $f2 1] configure -takefocus 0
 
-#focus $updatetree ; #temporary fix but not correct
+#focus $treePath ; #temporary fix but not correct
 
-	#set node [$updatetree selection get]
+	#set node [$treePath selection get]
 	#puts "BindTree node->$node"
 	#if { $node == "" || $node == "root" } {
 
 	#} else {
-	#	$updatetree see $node
-	#	FindSpace::OpenParent $updatetree $node
+	#	$treePath see $node
+	#	FindSpace::OpenParent $treePath $node
 	#}
 	bind . <Delete> DeleteTreeNode 
 	bind . <Up> ArrowUp 
@@ -1243,16 +1226,16 @@ proc BindTree {} {
 	bind . <Left> ArrowLeft
 	bind . <Right> ArrowRight
 	if {"$tcl_platform(platform)" == "windows"} {
-		bind . <MouseWheel> {global updatetree; $updatetree yview scroll [expr -%D/24] units }
+		bind . <MouseWheel> {global treePath; $treePath yview scroll [expr -%D/24] units }
 	}
 
-	#$updatetree configure -selectbackground #678db2 -relief sunken 
-	$updatetree configure -selectbackground #678db2
+	#$treePath configure -selectbackground #678db2 -relief sunken 
+	$treePath configure -selectbackground #678db2
 }
 
 proc UnbindTree {} {
 	global tcl_platform
-	global updatetree
+	global treePath
 
 	bind . <Delete> "" 
 	bind . <Up> ""
@@ -1263,17 +1246,17 @@ proc UnbindTree {} {
 		bind . <MouseWheel> ""
 	}
 
-	#$updatetree configure -selectbackground gray -relief ridge 
-	$updatetree configure -selectbackground gray
+	#$treePath configure -selectbackground gray -relief ridge 
+	$treePath configure -selectbackground gray
 }
 ################################################################################################
-#proc Editor::SingleClickNode
+#proc WindowConfig::SingleClickNode
 #Input       : node
 #Output      : -
 #Description : Displays required tabs when corresponding nodes are clicked
 ################################################################################################
-proc Editor::SingleClickNode {node} {
-	global updatetree
+proc WindowConfig::SingleClickNode {node} {
+	global treePath
 	global nodeIdList
 	global f0
 	global f1
@@ -1294,11 +1277,11 @@ proc Editor::SingleClickNode {node} {
 	global subindexSaveBtn
 	global tableSaveBtn
 
-#conPuts "$node"
+#DisplayInfo "$node"
 #puts "ra_proj->$ra_proj"
 	
 	
-	if { $nodeSelect == "" || ![$updatetree exists $nodeSelect] || [string match "root" $nodeSelect] || [string match "PjtName" $nodeSelect] || [string match "MN-*" $nodeSelect] || [string match "OBD-*" $nodeSelect] || [string match "CN-*" $nodeSelect] || [string match "PDO-*" $nodeSelect] } {
+	if { $nodeSelect == "" || ![$treePath exists $nodeSelect] || [string match "root" $nodeSelect] || [string match "PjtName" $nodeSelect] || [string match "MN-*" $nodeSelect] || [string match "OBD-*" $nodeSelect] || [string match "CN-*" $nodeSelect] || [string match "PDO-*" $nodeSelect] } {
 		#should not check for project settings option
 	} else {
 		if { $ra_proj == "0"} {
@@ -1340,7 +1323,7 @@ proc Editor::SingleClickNode {node} {
 		}
 	}
 
-	$updatetree selection set $node
+	$treePath selection set $node
 	set nodeSelect $node
 	#puts "node====>$node"
 
@@ -1409,9 +1392,9 @@ proc Editor::SingleClickNode {node} {
 			set commParamList ""
 			set mappParamList ""
 		[lindex $f2 1] configure -state normal
-		set idx [$updatetree nodes $node]
+		set idx [$treePath nodes $node]
 		foreach tempIdx $idx {
-			set indexId [string range [$updatetree itemcget $tempIdx -text] end-4 end-1 ]
+			set indexId [string range [$treePath itemcget $tempIdx -text] end-4 end-1 ]
 			if {[string match "$commParam*" $indexId]} {
 				lappend commParamList [list $indexId $tempIdx]
 			} elseif {[string match "$mappParam*" $indexId]} {
@@ -1448,12 +1431,12 @@ proc Editor::SingleClickNode {node} {
 			puts "tempIdx->$tempIdx"
 			#set commParamValue ""
 			if { $tempIdx != "" } {
-				set indexId [string range [$updatetree itemcget $tempIdx -text] end-4 end-1 ]
-				set sidx [$updatetree nodes $tempIdx]
+				set indexId [string range [$treePath itemcget $tempIdx -text] end-4 end-1 ]
+				set sidx [$treePath nodes $tempIdx]
 				set commParamValue ""
 				lappend commParamValue [] []
 				foreach tempSidx $sidx {
-					set subIndexId [string range [$updatetree itemcget $tempSidx -text] end-2 end-1 ]
+					set subIndexId [string range [$treePath itemcget $tempSidx -text] end-2 end-1 ]
 					#puts "commParamValue->$commParamValue subIndexId->$subIndexId"
 					if {[string match "01" $subIndexId] == 1 || [string match "02" $subIndexId] == 1} {
 						set indexPos [new_intp] ; #newly added
@@ -1506,10 +1489,10 @@ proc Editor::SingleClickNode {node} {
 			#puts "commParamValue->$commParamValue"
 			set tempIdx [lindex $finalMappList $count+1]
 			#puts "tempIdx->$tempIdx"
-			set indexId [string range [$updatetree itemcget $tempIdx -text] end-4 end-1 ]
-			set sidx [$updatetree nodes $tempIdx]
+			set indexId [string range [$treePath itemcget $tempIdx -text] end-4 end-1 ]
+			set sidx [$treePath nodes $tempIdx]
 			foreach tempSidx $sidx { 
-				set subIndexId [string range [$updatetree itemcget $tempSidx -text] end-2 end-1 ]
+				set subIndexId [string range [$treePath itemcget $tempSidx -text] end-2 end-1 ]
 				if {[string match "00" $subIndexId] == 0 } {
 					set indexPos [new_intp] ; #newly added
 					set subIndexPos [new_intp] ; #newly added
@@ -1602,9 +1585,9 @@ proc Editor::SingleClickNode {node} {
 		# ocfmRetCode GetSubIndexAttributes(int NodeID, ENodeType NodeType, char* IndexID, char* SubIndexID, EAttributeType AttributeType, char* AttributeValue) ; # dont pass arguments for Attribute value
 
 
-		set subIndexId [string range [$updatetree itemcget $node -text] end-2 end-1]
-		set parent [$updatetree parent $node]
-		set indexId [string range [$updatetree itemcget $parent -text] end-4 end-1]
+		set subIndexId [string range [$treePath itemcget $node -text] end-2 end-1]
+		set parent [$treePath parent $node]
+		set indexId [string range [$treePath itemcget $parent -text] end-4 end-1]
 
 		if { [expr 0x$indexId > 0x1fff] } {
 			set entryState normal
@@ -1656,7 +1639,7 @@ proc Editor::SingleClickNode {node} {
 		set tmpInnerf1 [lindex $f0 3]
 
 		#DllExport ocfmRetCode GetIndexAttributes(int NodeID, ENodeType NodeType, char* IndexID, EAttributeType AttributeType,char* AttributeValue) ; # dont pass arguments for Attribute value
-		set indexId [string range [$updatetree itemcget $node -text] end-4 end-1]
+		set indexId [string range [$treePath itemcget $node -text] end-4 end-1]
 		
 		if { [expr 0x$indexId > 0x1fff] } {
 			set entryState normal
@@ -2083,21 +2066,21 @@ proc Editor::SingleClickNode {node} {
 #Output      : -
 #Description : Displays required tabs when corresponding nodes are clicked
 ################################################################################################
-proc Editor::DoubleClickNode {node} {
-	global updatetree
+proc WindowConfig::DoubleClickNode {node} {
+	global treePath
 
-	if {[$updatetree nodes $node] != "" } {
-		if {[$updatetree itemcget $node -open]} {
+	if {[$treePath nodes $node] != "" } {
+		if {[$treePath itemcget $node -open]} {
 			#it is already expanded so collapse it
-			$updatetree itemconfigure $node -open 0
+			$treePath itemconfigure $node -open 0
 		} else {
 			#it is collapsed so expand it
-			$updatetree itemconfigure $node -open 1
+			$treePath itemconfigure $node -open 1
 		}
 	} else {
 		# it has no child no need to expand
 	}
-	Editor::SingleClickNode $node
+	WindowConfig::SingleClickNode $node
 } 
 
 ################################################################################################
@@ -2137,7 +2120,7 @@ proc Saveproject {} {
 	#project is saved so change status to zero
 	set status_save 0
 	
-	conPuts "Project [file join $PjtDir $PjtName] is saved"
+	DisplayInfo "Project [file join $PjtDir $PjtName] is saved"
 }
 
 proc _NewProject {} {
@@ -2158,10 +2141,10 @@ proc _CloseProject {} {
 		switch -- $result {
 			yes {			 
 				Saveproject
-				conPuts "Project $PjtName is saved" info
+				DisplayInfo "Project $PjtName is saved" info
 			}
 			no {
-				conPuts "Project $PjtName not saved" info
+				DisplayInfo "Project $PjtName not saved" info
 			}
 			cancel {
 				return
@@ -2184,20 +2167,20 @@ proc _CloseProject {} {
 #Description : -
 ################################################################################################
 proc CloseProject {} {
-	global updatetree
+	global treePath
 
 	DeleteAllNode
 	
 	ResetGlobalData
 	
-	catch {$updatetree delete PjtName}
+	catch {$treePath delete PjtName}
 	
 	#delete in reverse order to get coorect output
-	if { [$Editor::projMenu index 4] == "4" } {
-		catch {$Editor::projMenu delete 4}
+	if { [$WindowConfig::projMenu index 4] == "4" } {
+		catch {$WindowConfig::projMenu delete 4}
 	}
-	if { [$Editor::projMenu index 3] == "3" } {
-		catch {$Editor::projMenu delete 3}
+	if { [$WindowConfig::projMenu index 3] == "3" } {
+		catch {$WindowConfig::projMenu delete 3}
 	}
 
 	
@@ -2222,7 +2205,7 @@ proc ResetGlobalData {} {
 	global populatedPDOList
 	global userPrefList
 	global nodeSelect	
-	global updatetree
+	global treePath
 	global mnCount
 	global cnCount
 	global status_save
@@ -2299,7 +2282,7 @@ proc DeleteAllNode {} {
 #Description : Add CN to MN and import xdc/xdd file if required
 ################################################################################################
 proc AddCN {cnName tmpImpDir nodeId} {
-	global updatetree
+	global treePath
 	global cnCount
 	global mnCount
 	global nodeIdList
@@ -2325,7 +2308,7 @@ proc AddCN {cnName tmpImpDir nodeId} {
 	#New CN is created need to save
 	set status_save 1
 
-	set node [$updatetree selection get]
+	set node [$treePath selection get]
 	#puts "node->$node"
 	set parentId [split $node -]
 	set parentId [lrange $parentId 1 end]
@@ -2348,7 +2331,7 @@ proc AddCN {cnName tmpImpDir nodeId} {
 			}
 			return 
 		} else {
-			conPuts "Imported $tmpImpDir for Node ID: $nodeId"
+			DisplayInfo "Imported $tmpImpDir for Node ID: $nodeId"
 		}
 		
 		#lappend nodeIdList CN-1-$cnCount
@@ -2356,7 +2339,7 @@ proc AddCN {cnName tmpImpDir nodeId} {
 	
 	puts "nodeIdList->$nodeIdList"
 		#creating the GUI for CN
-		set child [$updatetree insert end $node CN-$parentId-$cnCount -text "$cnName\($nodeId\)" -open 0 -image [Bitmap::get cn]]
+		set child [$treePath insert end $node CN-$parentId-$cnCount -text "$cnName\($nodeId\)" -open 0 -image [Bitmap::get cn]]
 		
                 thread::send -async [tsv::set application importProgress] "StartProgress"
 		#creating the GUI for imported objects
@@ -2369,7 +2352,7 @@ proc AddCN {cnName tmpImpDir nodeId} {
 		lappend nodeIdList $nodeId 
 
 		#should not import should create GUI default are not it will come here
-		set child [$updatetree insert end $node CN-$parentId-$cnCount -text "$cnName\($nodeId\)" -open 0 -image [Bitmap::get cn]]
+		set child [$treePath insert end $node CN-$parentId-$cnCount -text "$cnName\($nodeId\)" -open 0 -image [Bitmap::get cn]]
 	}
 	return 
 }
@@ -2391,12 +2374,12 @@ proc YetToImplement {} {
 #Description : Creates tree during startup 
 ################################################################################################
 proc InsertTree { } {
-	global updatetree
+	global treePath
 	global cnCount
 	global mnCount
 	incr cnCount
 	incr mnCount
-	$updatetree insert end root PjtName -text "POWERLINK Network" -open 1 -image [Bitmap::get network]
+	$treePath insert end root PjtName -text "POWERLINK Network" -open 1 -image [Bitmap::get network]
 }
 
 ################################################################################################
@@ -2446,7 +2429,7 @@ proc EscapeTree {} {
 #Description : Finds nodes containing search string
 ################################################################################################
 proc FindSpace::Find { searchStr {node ""} {mode 0} } {
-	global updatetree
+	global treePath
 
 #puts "mode->$mode"
 	set FindSpace::searchString $searchStr
@@ -2455,10 +2438,10 @@ proc FindSpace::Find { searchStr {node ""} {mode 0} } {
 	set prev ""
 	set next ""
 	if {$searchStr== ""} {
-		$updatetree selection clear
+		$treePath selection clear
 		return 1
 	}
-	set mnNode [$updatetree nodes PjtName]
+	set mnNode [$treePath nodes PjtName]
 	foreach tempMn $mnNode {
 		if {$tempMn == $node && $mode != 0} {
 			if {$mode == "prev"} {
@@ -2467,7 +2450,7 @@ proc FindSpace::Find { searchStr {node ""} {mode 0} } {
 				set flag 1
 			}
 		}
-		set childMn [$updatetree nodes $tempMn]
+		set childMn [$treePath nodes $tempMn]
 		foreach tempChildMn $childMn {
 			if {$tempChildMn == $node && $mode != 0} {
 				if {$mode == "prev"} {
@@ -2476,7 +2459,7 @@ proc FindSpace::Find { searchStr {node ""} {mode 0} } {
 					set flag 1
 				}
 			}
-			set idx [$updatetree nodes $tempChildMn]
+			set idx [$treePath nodes $tempChildMn]
 			foreach tempIdx $idx {
 				if {$tempIdx == $node && $mode != 0} {
 					if {$mode == "prev"} {
@@ -2496,7 +2479,7 @@ proc FindSpace::Find { searchStr {node ""} {mode 0} } {
 				#} else {
 				#	return $result
 				#}
-					set childPdo [$updatetree nodes $tempIdx]
+					set childPdo [$treePath nodes $tempIdx]
 					foreach tempPdo $childPdo {
 						if {$tempPdo == $node && $mode != 0} {
 							if {$mode == "prev"} {
@@ -2505,7 +2488,7 @@ proc FindSpace::Find { searchStr {node ""} {mode 0} } {
 								set flag 1
 							}
 						}
-						set pdoIdx [$updatetree nodes $tempPdo]
+						set pdoIdx [$treePath nodes $tempPdo]
 						foreach tempPdoIdx $pdoIdx { 
 							if {$tempPdoIdx == $node && $mode != 0} {
 								if {$mode == "prev"} {
@@ -2517,11 +2500,11 @@ proc FindSpace::Find { searchStr {node ""} {mode 0} } {
 						
 #puts "flag 1 in pdo idx ->$tempPdoIdx"	
 							}
-							if {[string match -nocase "*$searchStr*" [$updatetree itemcget $tempPdoIdx -text]] && $chk == 0} {
+							if {[string match -nocase "*$searchStr*" [$treePath itemcget $tempPdoIdx -text]] && $chk == 0} {
 								#lappend FindSpace::findList $tempIdx
 								#puts -nonewline "......MATCH idx......"
 								if { $mode == 0 } {
-									FindSpace::OpenParent $updatetree $tempPdoIdx
+									FindSpace::OpenParent $treePath $tempPdoIdx
 									return 1
 								} elseif {$mode == "prev" } {
 									set prev $tempPdoIdx
@@ -2538,7 +2521,7 @@ proc FindSpace::Find { searchStr {node ""} {mode 0} } {
 							} elseif {$chk == 1} {
 								set chk 0
 							}
-							set pdoSidx [$updatetree nodes $tempPdoIdx]
+							set pdoSidx [$treePath nodes $tempPdoIdx]
 							foreach tempPdoSidx $pdoSidx { 
 								if {$tempPdoSidx == $node && $mode != 0} {
 									if {$mode == "prev"} {
@@ -2550,11 +2533,11 @@ proc FindSpace::Find { searchStr {node ""} {mode 0} } {
 						
 #puts "flag 1 in idx ->$tempIdx"	
 								}
-								if {[string match -nocase "*$searchStr*" [$updatetree itemcget $tempPdoSidx -text]] && $chk == 0} {
+								if {[string match -nocase "*$searchStr*" [$treePath itemcget $tempPdoSidx -text]] && $chk == 0} {
 									#lappend FindSpace::findList $tempSidx
 									#puts -nonewline "......MATCH sidx......"
 									if { $mode == 0 } {
-										FindSpace::OpenParent $updatetree $tempPdoSidx
+										FindSpace::OpenParent $treePath $tempPdoSidx
 										return 1
 									} elseif {$mode == "prev" } {
 										set prev $tempPdoSidx
@@ -2576,11 +2559,11 @@ proc FindSpace::Find { searchStr {node ""} {mode 0} } {
 						}	
 					}
 				}
-				if {[string match -nocase "*$searchStr*" [$updatetree itemcget $tempIdx -text]] && $chk == 0} {
+				if {[string match -nocase "*$searchStr*" [$treePath itemcget $tempIdx -text]] && $chk == 0} {
 #puts "idx matched -> $tempIdx"
 					#lappend FindSpace::findList $tempIdx
 					if { $mode == 0 } { 
-						FindSpace::OpenParent $updatetree $tempIdx
+						FindSpace::OpenParent $treePath $tempIdx
 						return 1
 					} elseif {$mode == "prev" } {
 						set prev $tempIdx
@@ -2598,7 +2581,7 @@ proc FindSpace::Find { searchStr {node ""} {mode 0} } {
 					set chk 0
 				}
 					
-				set sidx [$updatetree nodes $tempIdx]
+				set sidx [$treePath nodes $tempIdx]
 				foreach tempSidx $sidx { 
 					if {$tempSidx == $node && $mode != 0} {
 						if {$mode == "prev"} {
@@ -2609,12 +2592,12 @@ proc FindSpace::Find { searchStr {node ""} {mode 0} } {
 						}
 #puts "flag 1 in sidx ->$tempSidx"
 					}
-					if {[string match -nocase "*$searchStr*" [$updatetree itemcget $tempSidx -text]] && $chk == 0} {
+					if {[string match -nocase "*$searchStr*" [$treePath itemcget $tempSidx -text]] && $chk == 0} {
 #puts "sidx matched -> $tempSidx"
 						#lappend FindSpace::findList $tempSidx
 
 						if { $mode == 0 } { 
-							FindSpace::OpenParent $updatetree $tempSidx
+							FindSpace::OpenParent $treePath $tempSidx
 							return 1
 						} elseif {$mode == "prev" } {
 							set prev $tempSidx
@@ -2637,19 +2620,19 @@ proc FindSpace::Find { searchStr {node ""} {mode 0} } {
 		}
 			}
 	}
-	#$updatetree selection clear
+	#$treePath selection clear
 	##puts FindSpace::findList->$FindSpace::findList
 	#if {[llength $FindSpace::findList]!=0} {
-	#	catch { set parent [$updatetree parent [lindex $FindSpace::findList 0] ]
-	#		$updatetree itemconfigure [$updatetree parent [lindex $FindSpace::findList 0] ] -open 1
-	#		$updatetree selection set [lindex $FindSpace::findList 0] 
-	#		$updatetree see [lindex $FindSpace::findList 0]}
+	#	catch { set parent [$treePath parent [lindex $FindSpace::findList 0] ]
+	#		$treePath itemconfigure [$treePath parent [lindex $FindSpace::findList 0] ] -open 1
+	#		$treePath selection set [lindex $FindSpace::findList 0] 
+	#		$treePath see [lindex $FindSpace::findList 0]}
 	#}
 	if {$mode == 0} {
-		$updatetree selection clear
+		$treePath selection clear
 		return 1
 	} else {
-		$updatetree selection clear
+		$treePath selection clear
 		return ""
 	} 
 }
@@ -2660,16 +2643,16 @@ proc FindSpace::Find { searchStr {node ""} {mode 0} } {
 #Output      : nodes containing search string
 #Description : Finds nodes containing search string in PDO
 ################################################################################################
-proc FindSpace::OpenParent { updatetree node } {
-	$updatetree selection clear
+proc FindSpace::OpenParent { treePath node } {
+	$treePath selection clear
 	set tempNode $node
-	while {[$updatetree parent $tempNode] != "PjtName"} {
+	while {[$treePath parent $tempNode] != "PjtName"} {
 		#puts "open parent tempNode->$tempNode"
-		set tempNode [$updatetree parent $tempNode]
-		$updatetree itemconfigure $tempNode -open 1
+		set tempNode [$treePath parent $tempNode]
+		$treePath itemconfigure $tempNode -open 1
 	}
-	$updatetree selection set $node 
-	$updatetree see $node
+	$treePath selection set $node 
+	$treePath see $node
 
 }
 
@@ -2680,8 +2663,8 @@ proc FindSpace::OpenParent { updatetree node } {
 #Description : Displays previous node containing search string
 ################################################################################################
 proc FindSpace::Prev {} {
-	global updatetree
-	set node [$updatetree selection get]
+	global treePath
+	set node [$treePath selection get]
 	if {![info exists FindSpace::searchString]} {
 		return
 	} 
@@ -2696,9 +2679,9 @@ proc FindSpace::Prev {} {
 		if { $prev == "" } {
 			#puts "prev no match"
 		} else {
-			FindSpace::OpenParent $updatetree $prev
-			#$updatetree selection set $prev 
-			#$updatetree see $prev
+			FindSpace::OpenParent $treePath $prev
+			#$treePath selection set $prev 
+			#$treePath see $prev
 		}
 		return
 	}
@@ -2711,8 +2694,8 @@ proc FindSpace::Prev {} {
 #Description : Displays next node containing search string
 ################################################################################################
 proc FindSpace::Next {} {
-	global updatetree
-	set node [$updatetree selection get]
+	global treePath
+	set node [$treePath selection get]
 	if {![info exists FindSpace::searchString]} {
 		return
 	} 
@@ -2725,7 +2708,7 @@ proc FindSpace::Next {} {
 		if { $next == "" } {
 			#puts "next no match"
 		} else {
-			FindSpace::OpenParent $updatetree $next
+			FindSpace::OpenParent $treePath $next
 		}
 		return
 	}
@@ -2754,7 +2737,7 @@ proc TransferCDCXAP {choice} {
 ##	global PjtName 
 ##
 ##	if {$PjtDir == "" || $PjtName == "" } {
-##		errorPuts "No project to generate CDC"
+##		DisplayErrMsg "No project to generate CDC"
 ##		return	
 ##	}
 ##
@@ -2799,17 +2782,17 @@ proc TransferCDCXAP {choice} {
 ##	puts "fileLocation_to_CDC->$fileLocation_to_CDC   fileLocation_from_CDC->$fileLocation_from_CDC"
 ##	#catch { file copy -force [file join [pwd] config_data.cdc] $fileLocation_CDC }
 ##	file copy -force $fileLocation_from_CDC $fileLocation_to_CDC
-##	conPuts "CDC transfer complete"
+##	DisplayInfo "CDC transfer complete"
 ##	#puts fileLocation_CDC:$fileLocation_CDC
 ##	#set catchErrCode [GenerateCDC $fileLocation_CDC]
 ##	#set ErrCode [ocfmRetCode_code_get $catchErrCode]
 ##	##puts "ErrCode:$ErrCode"
 ##	#if { $ErrCode != 0 } {
-##	#	errorPuts "[ocfmRetCode_errorString_get $catchErrCode]"
+##	#	DisplayErrMsg "[ocfmRetCode_errorString_get $catchErrCode]"
 ##	#	tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
 ##	#	#tk_messageBox -message "ErrCode:$ErrCode" -title Warning -icon warning
 ##	#} else {
-##	#	conPuts "CDC generated" info
+##	#	DisplayInfo "CDC generated" info
 ##	#}
 ##	#return $ErrCode
 ##}
@@ -2825,7 +2808,7 @@ proc TransferCDCXAP {choice} {
 #	global PjtName 
 #
 #	if {$PjtDir == "" || $PjtName == "" } {
-#		errorPuts "No project to generate XAP"
+#		DisplayErrMsg "No project to generate XAP"
 #		return	
 #	}
 #	#if {$choice} {
@@ -2868,14 +2851,14 @@ proc TransferCDCXAP {choice} {
 #	puts "fileLocation_from_XAP->$fileLocation_from_XAP  fileLocation_to_XAP->$fileLocation_to_XAP"
 #	
 #	if { ![file isfile $fileLocation_from_XAP.h] } {
-#		conPuts "XAP.h not found. XAP not transferred"
+#		DisplayInfo "XAP.h not found. XAP not transferred"
 #		return
 #	}
 #	
 #	file copy -force $fileLocation_from_XAP $fileLocation_to_XAP
 #	file copy -force $fileLocation_from_XAP.h $fileLocation_to_XAP.h
-#	conPuts "XAP transfer complete"
-#	conPuts "XAP.h also transferred"
+#	DisplayInfo "XAP transfer complete"
+#	DisplayInfo "XAP.h also transferred"
 #
 #}
 
@@ -2894,7 +2877,7 @@ proc BuildProject {} {
 	global populatedPDOList
 	global userPrefList
 	global nodeSelect	
-	global updatetree
+	global treePath
 	global mnCount
 	global cnCount
 	global f0
@@ -2903,7 +2886,7 @@ proc BuildProject {} {
 
 
 	if {$PjtDir == "" || $PjtName == "" } {
-		errorPuts "No project to Build"
+		DisplayErrMsg "No project to Build"
 		return	
 	}
 
@@ -2938,7 +2921,7 @@ proc BuildProject {} {
 
 	if { $ErrCode != 0 } {
 		#error in generating CDC dont generate XAP
-		errorPuts "Error in generating CDC. XAP not generated" error
+		DisplayErrMsg "Error in generating CDC. XAP not generated" error
 		thread::send [tsv::get application importProgress] "StopProgress"
 		return
 	} else {
@@ -2949,8 +2932,8 @@ proc BuildProject {} {
 		set PjtDir $tempPjtDir
 		set PjtName $tempPjtName
 		set ra_proj $tempRa_proj
-		#catch {$updatetree delete PjtName}
-		#$updatetree insert end root PjtName -text [string range $PjtName 0 end-[string length [file extension $PjtName] ] ] -open 1 -image [Bitmap::get network]
+		#catch {$treePath delete PjtName}
+		#$treePath insert end root PjtName -text [string range $PjtName 0 end-[string length [file extension $PjtName] ] ] -open 1 -image [Bitmap::get network]
 
 		RePopulate  $PjtDir [string range $PjtName 0 end-[string length [file extension $PjtName] ] ]
 		set fileLocation_XAP [generateAutoName [file join $PjtDir CDC_XAP] XAP .xap ]
@@ -2963,11 +2946,11 @@ proc BuildProject {} {
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
 		##puts "ErrCode:$ErrCode"
 		if { $ErrCode != 0 } {
-			errorPuts "XAP is not generated"
+			DisplayErrMsg "XAP is not generated"
 			thread::send -async [tsv::set application importProgress] "StopProgress"			
 			return
 		} else {
-			conPuts "CDC and XAP are successfully generated"
+			DisplayInfo "CDC and XAP are successfully generated"
 			#catch { file copy -force [file join [file join $PjtDir $PjtName] $PjtName.xap]  [file join [pwd] $PjtName.xap]}
 			#catch { file rename -force [file join [pwd] $PjtName.xap] [file join [pwd] XAP.xap] }
 			#catch { file copy -force [file join [file join $PjtDir $PjtName] $PjtName.xap.h]  [file join [pwd] $PjtName.xap.h]}
@@ -2997,7 +2980,7 @@ proc CleanProject {} {
 #Description : Imports XDC/XDD file for MN or CN called when right clicked 
 ################################################################################################
 proc ReImport {} {
-	global updatetree
+	global treePath
 	global nodeIdList
 	global status_save
 	global status_run
@@ -3006,9 +2989,9 @@ proc ReImport {} {
 #puts " \n\nReimport" 
 #puts "nodeIdList->$nodeIdList"
 
-	set node [$updatetree selection get]
+	set node [$treePath selection get]
 	if {[string match "MN*" $node]} {
-		set child [$updatetree nodes $node]
+		set child [$treePath nodes $node]
 		set tmpNode [string range $node 2 end]
 		# since a MN has only one so -1 is appended
 		set node OBD$tmpNode-1
@@ -3054,10 +3037,10 @@ proc ReImport {} {
 		set result [tk_messageBox -message "Do you want to Import $tmpImpDir ?" -type yesno -icon question -title "Question" -parent .]
    		 switch -- $result {
    		     yes {
-			   conPuts "Importing file $tmpImpDir for Node ID : $nodeId"
+			   DisplayInfo "Importing file $tmpImpDir for Node ID : $nodeId"
 			 }			 
    		     no  {
-			   conPuts "Importing $tmpImpDir is cancelled for Node ID : $nodeId"
+			   DisplayInfo "Importing $tmpImpDir is cancelled for Node ID : $nodeId"
 			   return
 			 }
    		}
@@ -3075,7 +3058,7 @@ proc ReImport {} {
 			}
 			return
 		} else {
-			#conPuts "ReImported $tmpImpDir for Node ID:$nodeId"
+			#DisplayInfo "ReImported $tmpImpDir for Node ID:$nodeId"
 		}
 
 		#xdc/xdd is reimported need to save
@@ -3084,14 +3067,14 @@ proc ReImport {} {
 		catch {
 			if { $res == -1} {
 				#there can be one OBD in MN so -1 is hardcoded
-				$updatetree insert 0 MN$tmpNode OBD$tmpNode-1 -text "OBD" -open 0 -image [Bitmap::get pdo]
+				$treePath insert 0 MN$tmpNode OBD$tmpNode-1 -text "OBD" -open 0 -image [Bitmap::get pdo]
 			}
 		}
 		#catch {FreeNodeMemory $node} ; # no need to free memory
 		CleanList $node 0
 		CleanList $node 1
-		catch {$updatetree delete [$updatetree nodes $node]}
-		$updatetree itemconfigure $node -open 0
+		catch {$treePath delete [$treePath nodes $node]}
+		$treePath itemconfigure $node -open 0
 		
 		thread::send -async [tsv::set application importProgress] "StartProgress"
 		#Import parentNode nodeType nodeID 
@@ -3111,7 +3094,7 @@ proc ReImport {} {
 ################################################################################################
 proc DeleteTreeNode {} {
 	
-	global updatetree
+	global treePath
 	global nodeIdList
 	global nodeObj	
 	global savedValueList
@@ -3120,7 +3103,7 @@ proc DeleteTreeNode {} {
 	#puts nodeIdList->$nodeIdList
 
 
-	set node [$updatetree selection get]
+	set node [$treePath selection get]
 	
 	if { [string match "PjtName" $node] || [string match "PDO*" $node]|| [string match "?PDO*" $node] } {
 		#should not delete when pjt, mn, pdo, tpdo or rpdo is selected 
@@ -3135,7 +3118,7 @@ proc DeleteTreeNode {} {
 		set node OBD-$nodePos-1
 		#puts "DeleteTreeNode:::::node->$node"
 
-		set exist [$updatetree exists $node]	
+		set exist [$treePath exists $node]	
 		if {$exist} { 
 			#has OBD node continue processing
 		} else {
@@ -3205,10 +3188,10 @@ proc DeleteTreeNode {} {
 	} else {
 	
 		set res []
-		set idxNode [$updatetree selection get]
+		set idxNode [$treePath selection get]
 		if {[string match "*SubIndexValue*" $node]} {
 			#gets SubIndexId of selected node
-			set sidx [string range [$updatetree itemcget $node -text] end-2 end-1 ]
+			set sidx [string range [$treePath itemcget $node -text] end-2 end-1 ]
 			#puts sidx->$sidx
 			if { $sidx == "00" } {
 				#should not allow to delete 00 subindex
@@ -3217,14 +3200,14 @@ proc DeleteTreeNode {} {
 			}
 
 			#gets the IndexId of selected SubIndex
-			set idxNode [$updatetree parent $node]
-			set idx [string range [$updatetree itemcget $idxNode -text] end-4 end-1 ]
+			set idxNode [$treePath parent $node]
+			set idx [string range [$treePath itemcget $idxNode -text] end-4 end-1 ]
 
 			#puts "\n    DeleteSubIndex $nodeId $nodeType $idx $sidx\n"
 			set catchErrCode [DeleteSubIndex $nodeId $nodeType $idx $sidx]
 		} elseif {[string match "*IndexValue*" $node]} {
 			#gets the IndexId of selected Index			
-			set idx [string range [$updatetree itemcget $idxNode -text] end-4 end-1 ]
+			set idx [string range [$treePath itemcget $idxNode -text] end-4 end-1 ]
 			#puts "\n      DeleteIndex $nodeId $nodeType $idx\n"
 			set catchErrCode [DeleteIndex $nodeId $nodeType $idx]
 		} else {
@@ -3257,17 +3240,17 @@ proc DeleteTreeNode {} {
 	#index or subindex is deleted need to save
 	set status_save 1
 
-	set parent [$updatetree parent $node]
-	set nxtSelList [$updatetree nodes $parent]
+	set parent [$treePath parent $node]
+	set nxtSelList [$treePath nodes $parent]
 
 	# to highlight the next logical node after the deleted node
 	if {[llength $nxtSelList] == 1} {
 		#it is the only node so select parent
-		$updatetree selection set $parent
+		$treePath selection set $parent
 		#if TPDO or RPDO is selected Gui should be deleted before calling procedure Editor::SingleClickNode
-		catch {$updatetree delete $node}
+		catch {$treePath delete $node}
 		ResetPromptFlag
-		Editor::SingleClickNode $parent
+		WindowConfig::SingleClickNode $parent
 		return
 	} else {
 		set nxtSelCnt [expr [lsearch $nxtSelList $node]+1]
@@ -3280,14 +3263,14 @@ proc DeleteTreeNode {} {
 			#puts "DeleteTreeNode->Invalid cond 2"
 		}
 			catch {set nxtSel [lindex $nxtSelList $nxtSelCnt] }
-			catch {$updatetree selection set $nxtSel}
-			catch {$updatetree delete $node}
+			catch {$treePath selection set $nxtSel}
+			catch {$treePath delete $node}
 			#should display logical next node after deleting currently highlighted node
 			ResetPromptFlag
-			Editor::SingleClickNode $nxtSel
+			WindowConfig::SingleClickNode $nxtSel
 			return
 	}
-	catch {$updatetree delete $node}
+	catch {$treePath delete $node}
 	#puts "*************$xdcId"
 }
 
@@ -3428,13 +3411,13 @@ proc NodeCreate {NodeID NodeType NodeName} {
 #Description : creates an object for node
 ################################################################################################
 proc GetNodeList {} {
-	global updatetree
+	global treePath
 
-	foreach mnNode [$updatetree nodes PjtName] {
+	foreach mnNode [$treePath nodes PjtName] {
 		
 		#puts "mnNode->$mnNode"
 		set chk 1
-		foreach cnNode [$updatetree nodes $mnNode] {
+		foreach cnNode [$treePath nodes $mnNode] {
 			if {$chk == 1} {
 				if {[string match "OBD*" $cnNode]} {
 					lappend nodeList $cnNode
@@ -3458,32 +3441,32 @@ proc GetNodeList {} {
 #Description : 
 ################################################################################################
 proc GetNodeIdType {node} {
-	global updatetree
+	global treePath
 	global nodeIdList
 
 	puts node->$node
 	if {[string match "*SubIndex*" $node]} {
-		set parent [$updatetree parent [$updatetree parent $node]]
+		set parent [$treePath parent [$treePath parent $node]]
 		if {[string match "?Pdo*" $node]} {
 			#it must be subindex in TPDO orRPDO
-			set parent [$updatetree parent [$updatetree parent $parent]]
+			set parent [$treePath parent [$treePath parent $parent]]
 		} else {
 			#must be subindex which is not a TPDO or RPDO
 		}
 	} elseif {[string match "*Index*" $node]} {
-		set parent [$updatetree parent $node]
+		set parent [$treePath parent $node]
 		if {[string match "?Pdo*" $node]} {
 			#it must be index in TPDO or RPDO
-			set parent [$updatetree parent [$updatetree parent $parent]]
+			set parent [$treePath parent [$treePath parent $parent]]
 		} else {
 			#must be index which is not a TPDO or RPDO
 		}
 	} elseif {[string match "TPDO-*" $node] || [string match "RPDO-*" $node]} {
 		#it must be either TPDO or RPDO
-		set parent [$updatetree parent $node]
-		set parent [$updatetree parent $parent]
+		set parent [$treePath parent $node]
+		set parent [$treePath parent $parent]
 	} elseif {[string match "PDO-*" $node]} {
-		set parent [$updatetree parent $node]	
+		set parent [$treePath parent $node]	
 	} elseif {[string match "OBD-*" $node] || [string match "CN-*" $node]} {
 		set parent $node
 	} else {
@@ -3519,37 +3502,37 @@ proc GetNodeIdType {node} {
 ################################################################################################
 
 proc ArrowUp {} {
-	global updatetree
-	set node [$updatetree selection get]
+	global treePath
+	set node [$treePath selection get]
 	#puts "AU node->$node"
 	if { $node == "" || $node == "root" || $node == "PjtName" } {
-		$updatetree selection set "PjtName"
-		$updatetree see "PjtName"
+		$treePath selection set "PjtName"
+		$treePath see "PjtName"
 		return
 	}
-	set parent [$updatetree parent $node]
-	set siblingList [$updatetree nodes $parent]
+	set parent [$treePath parent $node]
+	set siblingList [$treePath nodes $parent]
 	set cnt [lsearch -exact $siblingList $node]
 #puts "AU parent->$parent \t siblingList_>$siblingList \t cnt->$cnt"
 	if { $cnt == 0} {
 		#there is no node before it so select parent
-		$updatetree selection set $parent
-		$updatetree see $parent
+		$treePath selection set $parent
+		$treePath see $parent
 	} else {
 		set sibling  [lindex $siblingList [expr $cnt-1] ]
-#puts "AU sibling->$sibling \t open->[$updatetree itemcget $sibling -open]"
-		if {[$updatetree itemcget $sibling -open] == 0 || ( [$updatetree itemcget $sibling -open] == 1 && [$updatetree nodes $sibling] == "" )} {
-			$updatetree selection set $sibling
-			$updatetree see $sibling
+#puts "AU sibling->$sibling \t open->[$treePath itemcget $sibling -open]"
+		if {[$treePath itemcget $sibling -open] == 0 || ( [$treePath itemcget $sibling -open] == 1 && [$treePath nodes $sibling] == "" )} {
+			$treePath selection set $sibling
+			$treePath see $sibling
 			return
 		} else {
 #puts "AU siblingList->$siblingList"
-			set siblingList [$updatetree nodes $sibling]
-			if {[$updatetree itemcget [lindex $siblingList end] -open] == 1 && [$updatetree nodes [lindex $siblingList end] ] != "" } {
+			set siblingList [$treePath nodes $sibling]
+			if {[$treePath itemcget [lindex $siblingList end] -open] == 1 && [$treePath nodes [lindex $siblingList end] ] != "" } {
 				_ArrowUp [lindex $siblingList end]
 			} else {			
-				$updatetree selection set [lindex $siblingList end]
-				$updatetree see [lindex $siblingList end]
+				$treePath selection set [lindex $siblingList end]
+				$treePath see [lindex $siblingList end]
 				return
 			}	
 		}
@@ -3557,22 +3540,22 @@ proc ArrowUp {} {
 }
 
 proc _ArrowUp {node} {
-	global updatetree
+	global treePath
 
-#puts "-AU node->$node \t open->$[$updatetree itemcget $node -open]"
-	if {[$updatetree itemcget $node -open] == 0 || ( [$updatetree itemcget $node -open] == 1 && [$updatetree nodes $node] == "" )} {
-		$updatetree selection set $node
-		$updatetree see $node
+#puts "-AU node->$node \t open->$[$treePath itemcget $node -open]"
+	if {[$treePath itemcget $node -open] == 0 || ( [$treePath itemcget $node -open] == 1 && [$treePath nodes $node] == "" )} {
+		$treePath selection set $node
+		$treePath see $node
 		return
 	} else {
 		
-		set siblingList [$updatetree nodes $node]
-#puts "-AU siblingList->$siblingList open->[$updatetree itemcget [lindex $siblingList end] -open]"
-		if {[$updatetree itemcget [lindex $siblingList end] -open] == 1 && [$updatetree nodes [lindex $siblingList end] ] != "" } {
+		set siblingList [$treePath nodes $node]
+#puts "-AU siblingList->$siblingList open->[$treePath itemcget [lindex $siblingList end] -open]"
+		if {[$treePath itemcget [lindex $siblingList end] -open] == 1 && [$treePath nodes [lindex $siblingList end] ] != "" } {
 			_ArrowUp [lindex $siblingList end]
 		} else {			
-			$updatetree selection set [lindex $siblingList end]
-			$updatetree see [lindex $siblingList end]
+			$treePath selection set [lindex $siblingList end]
+			$treePath see [lindex $siblingList end]
 			return
 		}	
 	}
@@ -3585,8 +3568,8 @@ proc _ArrowUp {node} {
 ################################################################################################
 
 proc ArrowDown {} {
-	global updatetree
-	set node [$updatetree selection get]
+	global treePath
+	set node [$treePath selection get]
 	#puts "AD node->$node"
 	if { $node == "" || $node == "root" } {
 		return
@@ -3594,24 +3577,24 @@ proc ArrowDown {} {
 	#if {$node == "root" } {
 	#	return
 	#}
-#puts "AD open->[$updatetree itemcget $node -open]"
-	if {[$updatetree itemcget $node -open] == 0 || ( [$updatetree itemcget $node -open] == 1 && [$updatetree nodes $node] == "" )} {
-		set parent [$updatetree parent $node]
-		set siblingList [$updatetree nodes $parent]
+#puts "AD open->[$treePath itemcget $node -open]"
+	if {[$treePath itemcget $node -open] == 0 || ( [$treePath itemcget $node -open] == 1 && [$treePath nodes $node] == "" )} {
+		set parent [$treePath parent $node]
+		set siblingList [$treePath nodes $parent]
 		set cnt [lsearch -exact $siblingList $node]
 #puts "AD parent->$parent \t siblingList->$siblingList \t cnt->$cnt"
 		if { $cnt == [expr [llength $siblingList]-1 ]} {
 			_ArrowDown $parent $node
 		} else {
-			$updatetree selection set [lindex $siblingList [expr $cnt+1] ]
-			$updatetree see [lindex $siblingList [expr $cnt+1] ]
+			$treePath selection set [lindex $siblingList [expr $cnt+1] ]
+			$treePath see [lindex $siblingList [expr $cnt+1] ]
 			return
 		}
 	} else {
-		set siblingList [$updatetree nodes $node]
+		set siblingList [$treePath nodes $node]
 #puts "AD siblingList->$siblingList"
-		$updatetree selection set [lindex $siblingList 0]
-		$updatetree see [lindex $siblingList 0]
+		$treePath selection set [lindex $siblingList 0]
+		$treePath see [lindex $siblingList 0]
 		return
 	}
 
@@ -3621,23 +3604,23 @@ proc ArrowDown {} {
 
 
 proc _ArrowDown {node origNode} {
-	global updatetree
+	global treePath
 	#puts "-arrowDown node->$node origNode->$origNode"
 	if { $node == "root" } {
-		$updatetree selection set $origNode
-		$updatetree see $origNode
+		$treePath selection set $origNode
+		$treePath see $origNode
 		return
 	}
-	set parent [$updatetree parent $node]
+	set parent [$treePath parent $node]
 
-	set siblingList [$updatetree nodes $parent]
+	set siblingList [$treePath nodes $parent]
 	set cnt [lsearch -exact $siblingList $node]
 #puts "-AD parent->$parent \t siblingList->$siblingList \t cnt->$cnt \t length of siblingList->[llength $siblingList]"
 	if { $cnt == [expr [llength $siblingList]-1 ]} {
 		_ArrowDown $parent $origNode
 	} else {
-		$updatetree selection set [lindex $siblingList [expr $cnt+1] ]
-		$updatetree see [lindex $siblingList [expr $cnt+1] ]
+		$treePath selection set [lindex $siblingList [expr $cnt+1] ]
+		$treePath see [lindex $siblingList [expr $cnt+1] ]
 		return
 	}
 
@@ -3650,10 +3633,10 @@ proc _ArrowDown {node origNode} {
 #Description : Traversal for tree window
 ################################################################################################
 proc ArrowLeft {} {
-	global updatetree
-	set node [$updatetree selection get]
-	if {[$updatetree nodes $node] != "" } {
-		$updatetree itemconfigure $node -open 0		
+	global treePath
+	set node [$treePath selection get]
+	if {[$treePath nodes $node] != "" } {
+		$treePath itemconfigure $node -open 0		
 	} else {
 		# it has no child no need to collapse
 	}
@@ -3666,10 +3649,10 @@ proc ArrowLeft {} {
 #Description : Traversal for tree window
 ################################################################################################
 proc ArrowRight {} {
-	global updatetree
-	set node [$updatetree selection get]
-	if {[$updatetree nodes $node] != "" } {	
-		$updatetree itemconfigure $node -open 1		
+	global treePath
+	set node [$treePath selection get]
+	if {[$treePath nodes $node] != "" } {	
+		$treePath itemconfigure $node -open 1		
 	} else {
 		# it has no child no need to expand
 	}
@@ -3684,13 +3667,13 @@ proc ArrowRight {} {
 ################################################################################################
 
 proc AutoGenerateMNOBD {} {
-	global updatetree
+	global treePath
 	global nodeIdList
 	global status_save
 
-	set node [$updatetree selection get]
+	set node [$treePath selection get]
 	if {[string match "MN*" $node]} {
-		set child [$updatetree nodes $node]
+		set child [$treePath nodes $node]
 		set tmpNode [string range $node 2 end]
 		# since a MN has only one OBD so -1 is appended
 		set node OBD$tmpNode-1
@@ -3704,7 +3687,7 @@ proc AutoGenerateMNOBD {} {
 		set nodeId 240
 		set nodeType 0
 		#if { $res == -1} {
-		#	$updatetree insert 0 MN$tmpNode OBD$tmpNode -text "OBD" -open 0 -image [Bitmap::get pdo]
+		#	$treePath insert 0 MN$tmpNode OBD$tmpNode -text "OBD" -open 0 -image [Bitmap::get pdo]
 		#}
 	} else {
 		set result [GetNodeIdType $node]
@@ -3723,10 +3706,10 @@ proc AutoGenerateMNOBD {} {
 		set result [tk_messageBox -message "Do you want to Auto Generate object dictionary for MN ?" -type yesno -icon question -title "Question" -parent .]
    		 switch -- $result {
    		     yes {
-			   conPuts "Auto Generating object dictionary for MN"
+			   DisplayInfo "Auto Generating object dictionary for MN"
 			 }			 
    		     no  {
-			   conPuts "Auto Generate is cancelled for MN"
+			   DisplayInfo "Auto Generate is cancelled for MN"
 			   return
 			 }
    		}
@@ -3745,7 +3728,7 @@ proc AutoGenerateMNOBD {} {
 			}
 			return
 		} else {
-			#conPuts "ReImported $tmpImpDir for Node ID:$nodeId"
+			#DisplayInfo "ReImported $tmpImpDir for Node ID:$nodeId"
 		}
 
 		#OBD for MN is auto generated need to save
@@ -3754,12 +3737,12 @@ proc AutoGenerateMNOBD {} {
 		catch {
 			if { $res == -1} {
 				#there can be one OBD in MN so -1 is hardcoded
-				$updatetree insert 0 MN$tmpNode OBD$tmpNode-1 -text "OBD" -open 0 -image [Bitmap::get pdo]
+				$treePath insert 0 MN$tmpNode OBD$tmpNode-1 -text "OBD" -open 0 -image [Bitmap::get pdo]
 			}
 		}
 		#catch {FreeNodeMemory $node} ; # no need to free memory
-		catch {$updatetree delete [$updatetree nodes $node]}
-		$updatetree itemconfigure $node -open 0
+		catch {$treePath delete [$treePath nodes $node]}
+		$treePath itemconfigure $node -open 0
 		
 		thread::send -async [tsv::set application importProgress] "StartProgress"
 		#Import parentNode nodeType nodeID 

@@ -94,8 +94,8 @@ if { [ catch { package require Thread } ] } {
 global RootDir
 global home
 global defaultPjtDir
-global EditorData
-global conWindow
+global ConfigData
+global infoWindow
 global warWindow
 global errWindow
 
@@ -127,8 +127,8 @@ namespace eval Bitmap {
 proc initOPN_CFGRATOR {argc argv} {
 	global tcl_platform
 	global auto_path
-	global EditorData
-	global updatetree
+	global ConfigData
+	global treePath
 	global PjtDir
 	global PjtName
 	global RootDir
@@ -173,23 +173,23 @@ puts "$tcl_platform(platform)==$::env(HOME)"
 
 	wm withdraw .
 	wm title . "openCONFIGURATOR"
-	set chk [Editor::create]
+	set chk [WindowConfig::BasicFrames]
 	BWidget::place . 0 0 center
 	update idletasks
-	if {[info exists EditorData(options,mainWinSize)]} {
-		wm geom . $EditorData(options,mainWinSize)
+	if {[info exists ConfigData(options,mainWinSize)]} {
+		wm geom . $ConfigData(options,mainWinSize)
 		update
 	}
 	after idle {
 		wm deiconify .
 		raise .
 		focus .
-		set Editor::initDone 1
+		set WindowConfig::initialized 1
 	}
 	StartUp 
 
 
-	$updatetree delete end root PjtName
+	$treePath delete end root PjtName
 	
 	set PjtDir ""
 	set PjtName ""

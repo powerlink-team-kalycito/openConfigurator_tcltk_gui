@@ -64,28 +64,28 @@
 # $Log:      $
 ###############################################################################################
 
-# Variables in EditManager
-namespace eval EditManager {
-    variable _newPageCounter 0
-    variable _newConsoleCounter 0
+# Variables in NoteBookManager
+namespace eval NoteBookManager {
+    variable _pageCounter 0
+    variable _consoleCounter 0
 }
 
 ###############################################################################################
-#proc EditManager::create_tab
+#proc NoteBookManager::create_tab
 #Input       : notebook path, title, choice
 #Output      : frame, pagename, InnerFrame0, InnerFrame1 
 #Description : Creates the GUI for Index and subindex
 ###############################################################################################
-proc EditManager::create_tab {nb filename choice} {
-    	global EditorData
+proc NoteBookManager::create_tab {nbpath tabname choice} {
+    	#global ConfigData
 
-	variable _newPageCounter
+	variable _pageCounter
     
-    	incr _newPageCounter
-    	global tmpNam$_newPageCounter
-    	global tmpValue$_newPageCounter
+    	incr _pageCounter
+    	global tmpNam$_pageCounter
+    	global tmpValue$_pageCounter
 	global tmpEntryValue
-    	#global hexDec$_newPageCounter
+    	#global hexDec$_pageCounter
 	global ra_dataType
 	#global ra_gen
 	global ch_generate
@@ -93,18 +93,18 @@ proc EditManager::create_tab {nb filename choice} {
 	global indexSaveBtn
 	global subindexSaveBtn
 	
-    	set pageName "page$_newPageCounter"
-    	#set frame [$nb insert end $pageName -text $filename ]
+    	set nbname "page$_pageCounter"
+    	#set frame [$nbpath insert end $nbname -text $tabname ]
 
-	set outerFrame [frame $nb.$pageName -relief raised -borderwidth 1 ] ; #newly added
+	set outerFrame [frame $nbpath.$nbname -relief raised -borderwidth 1 ] ; #newly added
 	set frame [frame $outerFrame.frame -relief flat -borderwidth 10  ] ; #newly added
 	pack $frame -expand yes -fill both ; #newly added
 
-    	set sw [ScrolledWindow $frame.sw]
-    	pack $sw -fill both -expand true
+    	set scrollWin [ScrolledWindow $frame.scrollWin]
+    	pack $scrollWin -fill both -expand true
 
-    	set sf [ScrollableFrame $sw.sf]
-    	$sw setwidget $sf
+    	set sf [ScrollableFrame $scrollWin.sf]
+    	$scrollWin setwidget $sf
 
     	set uf [$sf getframe]
   	$uf configure -height 20 
@@ -135,7 +135,7 @@ proc EditManager::create_tab {nb filename choice} {
 	label $tabInnerf1.l_pdo   -text "PDO Mapping" 
 
 	entry $tabInnerf0.en_idx1 -state disabled 
-	entry $tabInnerf0.en_nam1 -textvariable tmpNam$_newPageCounter -relief ridge -justify center -bg white -width 30 -validate key -vcmd "IsValidStr %P"
+	entry $tabInnerf0.en_nam1 -textvariable tmpNam$_pageCounter -relief ridge -justify center -bg white -width 30 -validate key -vcmd "IsValidStr %P"
 	#entry $tabInnerf0.en_nam1 -textvariable textEntryName -relief ridge -justify center -bg white -width 30 -validate key -vcmd "IsValidStr %P"
 	entry $tabInnerf1.en_obj1 -state disabled   
 	entry $tabInnerf1.en_data1 -state disabled
@@ -146,7 +146,7 @@ proc EditManager::create_tab {nb filename choice} {
 	entry $tabInnerf1.en_default1 -state disabled
 	
 	#not maintaining for project setting save
-	entry $tabInnerf1.en_value1 -textvariable tmpValue$_newPageCounter  -relief ridge -justify center -bg white -validate key -vcmd "IsDec %P $tabInnerf1 %d %i"
+	entry $tabInnerf1.en_value1 -textvariable tmpValue$_pageCounter  -relief ridge -justify center -bg white -validate key -vcmd "IsDec %P $tabInnerf1 %d %i"
 	
 	set objCoList [list DEFTYPE DEFSTRUCT VAR ARRAY RECORD]
 	ComboBox $tabInnerf1.co_obj1 -values $objCoList -modifycmd "" -editable no
@@ -163,8 +163,8 @@ proc EditManager::create_tab {nb filename choice} {
 	#entry $tabInnerf1.en_value1 -textvariable tmptextName  -relief ridge -justify center -bg white -validate key -vcmd "IsDec %P $tabInnerf1 %d %i"
 
         set frame1 [frame $tabInnerf1.frame1]
-        #set ra_dec [radiobutton $frame1.ra_dec -text "Dec" -variable hexDec$_newPageCounter -value on -command "ConvertDec $tabInnerf1.en_value1"]
-        #set ra_hex [radiobutton $frame1.ra_hex -text "Hex" -variable hexDec$_newPageCounter -value off -command "ConvertHex $tabInnerf1.en_value1"]
+        #set ra_dec [radiobutton $frame1.ra_dec -text "Dec" -variable hexDec$_pageCounter -value on -command "ConvertDec $tabInnerf1.en_value1"]
+        #set ra_hex [radiobutton $frame1.ra_hex -text "Hex" -variable hexDec$_pageCounter -value off -command "ConvertHex $tabInnerf1.en_value1"]
         set ra_dec [radiobutton $frame1.ra_dec -text "Dec" -variable ra_dataType -value dec -command "ConvertDec $tabInnerf1"]
         set ra_hex [radiobutton $frame1.ra_hex -text "Hex" -variable ra_dataType -value hex -command "ConvertHex $tabInnerf1"]
 	set ra_ip  [radiobutton $frame1.ra_ip -text "IP address" -variable ra_dataType -value ip -command "ConvertIP $tabInnerf1"]
@@ -279,33 +279,33 @@ proc EditManager::create_tab {nb filename choice} {
    	grid config $fram.b_dis -row 1 -column 2 -sticky s
    	pack $fram -side bottom
 
-    	#$nb itemconfigure $pageName -state disabled
+    	#$nbpath itemconfigure $nbname -state disabled
     	return [list $uf $outerFrame $tabInnerf0 $tabInnerf1 ]
 }
 
 ###############################################################################################
-#proc EditManager::create_table
+#proc NoteBookManager::create_table
 #Input       : notebook path, title, choice
 #Output      : tablelist
 #Description : Creates the GUI for TPDO and RPDO
 ###############################################################################################
-proc EditManager::create_table {nb filename choice} {
-    	global EditorData
+proc NoteBookManager::create_table {nbpath tablename choice} {
+    	#global ConfigData
 	global tableSaveBtn
 
-    	variable _newPageCounter
+    	variable _pageCounter
     
-    	incr _newPageCounter
-    	set pageName "page$_newPageCounter"
-    	#set frame [$nb insert end $pageName -text $filename ]
+    	incr _pageCounter
+    	set nbname "page$_pageCounter"
+    	#set frmPath [$nbpath insert end $nbname -text $tablename ]
 
-	set outerFrame [frame $nb.$pageName -relief raised -borderwidth 1 ] ; #newly added
-	set frame [frame $outerFrame.frame -relief flat -borderwidth 10  ] ; #newly added
-	pack $frame -expand yes -fill both ; #newly added
+	set outerFrame [frame $nbpath.$nbname -relief raised -borderwidth 1 ] ; #newly added
+	set frmPath [frame $outerFrame.frmPath -relief flat -borderwidth 10  ] ; #newly added
+	pack $frmPath -expand yes -fill both ; #newly added
 
-    	set sw [ScrolledWindow $frame.sw ]
-    	pack $sw -fill both -expand true
-    	set st $frame.st
+    	set scrollWin [ScrolledWindow $frmPath.scrollWin ]
+    	pack $scrollWin -fill both -expand true
+    	set st $frmPath.st
 
     	catch "font delete custom1"
     	font create custom1 -size 9 -family TkDefaultFont
@@ -342,12 +342,12 @@ proc EditManager::create_table {nb filename choice} {
 
 	
 
-    	$sw setwidget $st
+    	$scrollWin setwidget $st
     	pack $st -fill both -expand true
-    	#$nb itemconfigure $pageName -state disabled
+    	#$nbpath itemconfigure $nbname -state disabled
     	$st configure -height 4 -width 40 -stretch all	
 
-   	set fram [ frame $frame.f1 ]  
+   	set fram [ frame $frmPath.f1 ]  
    	label $fram.l_empty -text "  " -height 1 
    	set tableSaveBtn [ button $fram.b_sav -text " Save " -width 8 -command "SaveTable $st" ]
    	label $fram.l_empty1 -text "  "
@@ -358,77 +358,77 @@ proc EditManager::create_table {nb filename choice} {
    	grid config $fram.b_dis -row 1 -column 2 -sticky s
    	pack $fram -side top
 
-    	#$nb itemconfigure $pageName -state disabled
+    	#$nbpath itemconfigure $nbname -state disabled
 
     	return  [list $outerFrame $st]
 }
 
 ###############################################################################################
-#proc EditManager::create_conWindow
+#proc NoteBookManager::create_infoWindow
 #Input       : notebook path, title, choice
 #Output      : frame
 #Description : Creates the console for displaying messages
 ###############################################################################################
-proc EditManager::create_conWindow {nb text choice} {
-    	global conWindow
+proc NoteBookManager::create_infoWindow {nbpath tabname choice} {
+    	global infoWindow
     	global warWindow
     	global errWindow
-    	variable _newConsoleCounter
+    	variable _consoleCounter
     
-    	incr _newConsoleCounter
+    	incr _consoleCounter
 
-    	set pagename Console$_newConsoleCounter
-    	set frame [$nb insert end $pagename -text $text]
+    	set nbname Console$_consoleCounter
+    	set frmPath [$nbpath insert end $nbname -text $tabname]
     
-    	set sw [ScrolledWindow::create $frame.sw -auto both]
+    	set scrollWin [ScrolledWindow::create $frmPath.scrollWin -auto both]
     	if {$choice == 1} {
-		set conWindow [consoleInit $sw]
-		set window $conWindow
-		lappend conWindow $nb $pagename
-		$nb itemconfigure $pagename -image [Bitmap::get file]
+		set infoWindow [infoInit $scrollWin]
+		set window $infoWindow
+		lappend infoWindow $nbpath $nbname
+		$nbpath itemconfigure $nbname -image [Bitmap::get file]
     	} elseif {$choice == 2} {    
-		set errWindow [errorInit $sw]
+		set errWindow [errorInit $scrollWin]
 		set window $errWindow
-		lappend errWindow $nb $pagename
-		$nb itemconfigure $pagename -image [Bitmap::get error_small]
+		lappend errWindow $nbpath $nbname
+		$nbpath itemconfigure $nbname -image [Bitmap::get error_small]
     	} elseif {$choice == 3} {    
-		set warWindow [warnInit $sw]
+		set warWindow [warnInit $scrollWin]
 		set window $warWindow
-		lappend warWindow $nb $pagename
-		$nb itemconfigure $pagename -image [Bitmap::get warning_small]
+		lappend warWindow $nbpath $nbname
+		$nbpath itemconfigure $nbname -image [Bitmap::get warning_small]
     	} else {
 		#invalid selection
 		return
     	}
     	$window configure -wrap word
-    	ScrolledWindow::setwidget $sw $window
-    	pack $sw -fill both -expand yes
+    	ScrolledWindow::setwidget $scrollWin $window
+    	pack $scrollWin -fill both -expand yes
 
     	#raised the window after creating it 
-    	$nb raise $pagename
-    	return $frame
+    	$nbpath raise $nbname
+    	return $frmPath
 }
 
 ###############################################################################################
-#proc EditManager::create_treeWindow
+#proc NoteBookManager::create_treeBrowserWindow
 #Input       : notebook path
 #Output      : frame
 #Description : Creates tree window for the object tree
 ###############################################################################################
-proc EditManager::create_treeWindow {nb } {
+proc NoteBookManager::create_treeBrowserWindow {nbpath } {
     	global RootDir
 	global treeFrame
-	global updatetree
+	global treePath
 
-	set pagename objtree
-    	set frame [$nb insert end $pagename -text "Tree Browser"]
+	set nbname objectTree
+    	set frmPath [$nbpath insert end $nbname -text "Tree Browser"]
    
-   	set sw [ScrolledWindow::create $frame.sw -auto both]
-    	#set sf [ScrollableFrame $sw.sf]      ;#newly added
-    	#$sw setwidget $sf		     ;#newly added
+   	set scrollWin [ScrolledWindow::create $frmPath.scrollWin -auto both]
+    	#set sf [ScrollableFrame $scrollWin.sf]      ;#newly added
+    	#$scrollWin setwidget $sf		     ;#newly added
     	#set uf [$sf getframe]		     ;#newly added
 	#$uf configure -bg white
-   	#set objTree [Tree $uf.objTree \
+   	#set treeBrowser [Tree $uf.treeBrowser \
         #    	-width 15\
         #    	-highlightthickness 0\
         #    	-bg white  \
@@ -437,8 +437,8 @@ proc EditManager::create_treeWindow {nb } {
 	#    	-dropenabled 0 -dragenabled 0 \
 	#	-relief flat
     	#]
-	#$sw setwidget $objTree
-   	set objTree [Tree $frame.sw.objTree \
+	#$scrollWin setwidget $treeBrowser
+   	set treeBrowser [Tree $frmPath.scrollWin.treeBrowser \
             	-width 15\
             	-highlightthickness 0\
             	-bg white  \
@@ -446,19 +446,19 @@ proc EditManager::create_treeWindow {nb } {
 	   	-padx 15 \
 	    	-dropenabled 0 -dragenabled 0 -relief ridge 
     	]
-	$sw setwidget $objTree
-	set updatetree $objTree
+	$scrollWin setwidget $treeBrowser
+	set treePath $treeBrowser
 	
-    	pack $sw -side top -fill both -expand yes -pady 1
-	#pack $updatetree -fill both -expand yes	;#newly added
-    	set treeFrame [frame $frame.f1]  
+    	pack $scrollWin -side top -fill both -expand yes -pady 1
+	#pack $treePath -fill both -expand yes	;#newly added
+    	set treeFrame [frame $frmPath.f1]  
     	entry $treeFrame.en_find -textvariable FindSpace::txtFindDym -width 10 -background white -validate key -vcmd "FindSpace::Find %P"
     	button $treeFrame.b_next -text " Next " -command "FindSpace::Next" -image [Bitmap::get right] -relief flat
     	button $treeFrame.b_prev -text " Prev " -command "FindSpace::Prev" -image [Bitmap::get left] -relief flat
    	grid config $treeFrame.en_find -row 0 -column 0 -sticky ew
     	grid config $treeFrame.b_prev -row 0 -column 1 -sticky s -padx 5
     	grid config $treeFrame.b_next -row 0 -column 2 -sticky s
-    	return $frame
+    	return [list $frmPath $treeBrowser]
 }
 
 ###############################################################################################
@@ -695,7 +695,7 @@ proc SaveValue {frame0 frame1} {
     
 	global nodeSelect
 	global nodeIdList
-	global updatetree
+	global treePath
 	global savedValueList ; #this list contains Nodes whose value are changed using save option
 	global userPrefList
 	global lastConv
@@ -704,12 +704,12 @@ proc SaveValue {frame0 frame1} {
 
 	#puts "\n\n   SaveValue \n"
 
-	set oldName [$updatetree itemcget $nodeSelect -text]
+	set oldName [$treePath itemcget $nodeSelect -text]
 	if {[string match "*SubIndexValue*" $nodeSelect]} {
 		set subIndexId [string range $oldName end-2 end-1]
 		set subIndexId [string toupper $subIndexId]
-		set parent [$updatetree parent $nodeSelect]
-		set indexId [string range [$updatetree itemcget $parent -text ] end-4 end-1]
+		set parent [$treePath parent $nodeSelect]
+		set indexId [string range [$treePath itemcget $parent -text ] end-4 end-1]
 		set indexId [string toupper $indexId]
 		set oldName [string range $oldName end-5 end ]
 	} else {
@@ -881,7 +881,7 @@ proc SaveValue {frame0 frame1} {
 	
 	set newName [append newName $oldName]
 	#puts "newName->$newName"
-	$updatetree itemconfigure $nodeSelect -text $newName
+	$treePath itemconfigure $nodeSelect -text $newName
 	
 	if { [expr 0x$indexId > 0x1fff] } {
 	    
@@ -935,7 +935,7 @@ proc DiscardValue {frame0 frame1} {
 	global nodeSelect
 	#global nodeObj
 	global nodeIdList
-	global updatetree
+	global treePath
 	global userPrefList
 	
 	global lastConv
@@ -945,18 +945,17 @@ proc DiscardValue {frame0 frame1} {
 	#set tmpSplit [split $nodeSelect -]
 	#set tmpNodeSelect [lrange $tmpSplit 1 end]
 	#set tmpNodeSelect [join $tmpNodeSelect -]
-	set oldName [$updatetree itemcget $nodeSelect -text]
+	set oldName [$treePath itemcget $nodeSelect -text]
 	if {[string match "*SubIndexValue*" $nodeSelect]} {
 		#set sIdxValue [CBaseIndex_getIndexValue $nodeObj($tmpNodeSelect)]
 		set subIndexId [string range $oldName end-2 end-1]
-		set parent [$updatetree parent $nodeSelect]
-		set indexId [string range [$updatetree itemcget $parent -text] end-4 end-1]
-		set parent [$updatetree parent $parent]
-		if {}
+		set parent [$treePath parent $nodeSelect]
+		set indexId [string range [$treePath itemcget $parent -text] end-4 end-1]
+		set parent [$treePath parent $parent]
 
 	} else {
 		set indexId [string range $oldName end-4 end-1 ]
-		set parent [$updatetree parent $nodeSelect]
+		set parent [$treePath parent $nodeSelect]
 	}
 
 	if { [expr 0x$indexId > 0x1fff] } {
@@ -1019,7 +1018,7 @@ proc DiscardValue {frame0 frame1} {
 		#set tempIndexProp [GetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId 2]
 		set dataType [lindex $tempIndexProp 1]		
 		
-		set tempIndexProp [GetIndexAttributesbyPositions $nodePos $indexPos 4 ]
+		set tempIndexProp [GetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId 4 ]
 		set DefaultValue [lindex $tempIndexProp 1]
 		
 		set tempIndexProp [GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos 5 ]
@@ -1286,7 +1285,7 @@ proc EndEdit {tbl row col text} {
 
 proc SaveTable {tableWid} {
 	global nodeSelect
-	global updatetree
+	global treePath
 	global status_save
 	#global chkPrompt
 	global populatedPDOList
@@ -1305,15 +1304,15 @@ proc SaveTable {tableWid} {
 	set nodeId [lindex $result 0]
 	set nodeType [lindex $result 1]
 	set rowCount 0
-	#foreach childIndex [$updatetree nodes $nodeSelect]
+	#foreach childIndex [$treePath nodes $nodeSelect]
 	set flag 0
 	foreach childIndex $populatedPDOList {
-	 	set indexId [string range [$updatetree itemcget $childIndex -text] end-4 end-1]
-		foreach childSubIndex [$updatetree nodes $childIndex] {
-			set subIndexId [string range [$updatetree itemcget $childSubIndex -text] end-2 end-1]
+	 	set indexId [string range [$treePath itemcget $childIndex -text] end-4 end-1]
+		foreach childSubIndex [$treePath nodes $childIndex] {
+			set subIndexId [string range [$treePath itemcget $childSubIndex -text] end-2 end-1]
 			if {[string match "00" $subIndexId]} {
 			} else {
-				set name [string range [$updatetree itemcget $childSubIndex -text] 0 end-6] 
+				set name [string range [$treePath itemcget $childSubIndex -text] 0 end-6] 
 				#set offset [AppendZero [string range [$tableWid cellcget $rowCount,2 -text] 2 end] 4]
 				#set length [AppendZero [string range [$tableWid cellcget $rowCount,3 -text] 2 end] 4]
 				#set reserved 00
@@ -1348,7 +1347,7 @@ proc SaveTable {tableWid} {
 	}
 	
 	if { $flag == 1} {
-	    conPuts "\nValues which are not completely filled are not saved\n "
+	    DisplayInfo "\nValues which are not completely filled are not saved\n "
 	}
 
 	#PDO entries value is changed need to save 
@@ -1370,7 +1369,7 @@ proc DiscardTable {tableWid} {
 
 	ResetPromptFlag
 
-	Editor::SingleClickNode $nodeSelect
+	WindowConfig::SingleClickNode $nodeSelect
 	#$tableWid finishediting
 }
 

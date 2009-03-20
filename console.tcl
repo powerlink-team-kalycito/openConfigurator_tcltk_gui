@@ -66,69 +66,69 @@
 
 #Console
 global Console
-global conWindow
+global infoWindow
 global warWindow
 global errWindow
 
 ###############################################################################################
-#proc onKeyLeft
+#proc LeftKeyPressEvent
 #Input       : window
 #Output      : -
 #Description : Procedure for binding, moves cursor left
 ###############################################################################################
-proc onKeyLeft {win} {
-	if {[$win compare insert >= prompt]} {
-		set curPos [lindex [split [$win index insert] "."] 1]
-		set promptPos [lindex [split [$win index prompt] "."] 1]
-		if {$curPos <= $promptPos} {
-			return {}
-		} else  {
-			$win mark set insert insert-1c
-		}
-	} else  {
-		$win mark set insert "insert -1c"
-	}
-}
+#proc LeftKeyPressEvent {window} {
+#	if {[$window compare insert >= prompt]} {
+#		set currentPos [lindex [split [$window index insert] "."] 1]
+#		set toPos [lindex [split [$window index prompt] "."] 1]
+#		if {$currentPos <= $toPos} {
+#			return {}
+#		} else  {
+#			$window mark set insert insert-1c
+#		}
+#	} else  {
+#		$window mark set insert "insert -1c"
+#	}
+#}
 
 ###############################################################################################
-#proc onKeyRight
+#proc RightKeyPressEvent
 #Input       : window
 #Output      : -
 #Description : Procedure for binding, moves cursor right
 ###############################################################################################
-proc onKeyRight {win} {
-	$win mark set insert "insert +1c"
-}
+#proc RightKeyPressEvent {window} {
+#	$window mark set insert "insert +1c"
+#}
 
 ###############################################################################################
-#proc onKeyBackSpace
+#proc BackSpaceKeyPressEvent
 #Input       : window
 #Output      : -
 #Description : Procedure for binding, deletes a character
 ###############################################################################################
-proc onKeyBackSpace {win} {
+#proc BackSpaceKeyPressEvent {window} {
 	
-	if {[$win compare insert <= prompt]} {
-		return {}
-	}  else  {
-		$win delete insert-1c
-	}
-}
+#	if {[$window compare insert <= prompt]} {
+#		return {}
+#	}  else  {
+#		$window delete insert-1c
+#	}
+#}
 
 ###############################################################################################
-#proc consoleInit
+#proc infoInit
 #Input       : window, width, height
 #Output      : text widget
 #Description : Create the console window and bind required procedures
 ###############################################################################################
-proc consoleInit {win {width 60} {height 5}} {
+proc infoInit {win {width 60} {height 5}} {
 	global Console
-	global prompt
+	global promptChar
 	global window
-	global EditorData
+	global ConfigData
 	
 	set window $win
-	set prompt $
+	set promptChar $
 	
 	if {$window == "."} {
 		set window ""
@@ -138,48 +138,48 @@ proc consoleInit {win {width 60} {height 5}} {
 	$Console alias setValues SetValues
    
 	text $window.t -width $width -height $height -bg white 
-	catch {$window.t configure -font $EditorData(options,fonts,editorFont)}
+	catch {$window.t configure -font $ConfigData(options,fonts,editorFont)}
 	
 	$window.t tag configure output -foreground blue
-	$window.t tag configure prompt -foreground grey40
+	$window.t tag configure promptChar -foreground grey40
 	$window.t tag configure error -foreground red
-	$window.t insert end "$prompt " prompt
-	$window.t mark set prompt insert
-	$window.t mark gravity prompt left
+	$window.t insert end "$promptChar " promptChar
+	$window.t mark set promptChar insert
+	$window.t mark gravity promptChar left
 	$window.t configure -state disabled
-	bind $window.t <Key-Left> {onKeyLeft %W ; break}
-	bind $window.t <Key-Right> {onKeyRight %W ; break}
-	bind $window.t <Key-BackSpace> {onKeyBackSpace %W;break}
+	#bind $window.t <Key-Left> {LeftKeyPressEvent %W ; break}
+	#bind $window.t <Key-Right> {RightKeyPressEvent %W ; break}
+	#bind $window.t <Key-BackSpace> {BackSpaceKeyPressEvent %W;break}
 	pack $window.t -fill both -expand yes
 	return $window.t
 }
 	
 ###############################################################################################
-#proc conPuts
+#proc DisplayInfo
 #Input       : text to be inserted, window, text widget, flash, see
 #Output      : -
 #Description : Displays the text in text widget for console window
 ###############################################################################################
-proc conPuts {var {tag output} {win {}} {flash 0} {see 1}} {
-	global prompt
-	global conWindow
+proc DisplayInfo {var {tag output} {win {}} {flash 0} {see 1}} {
+	global promptChar
+	global infoWindow
 	
 	if {$win == {}} {
-		set win [lindex $conWindow 0]
+		set win [lindex $infoWindow 0]
 	}
 	$win configure -state normal
-	$win mark gravity prompt right
+	$win mark gravity promptChar right
 	$win insert end $var $tag
 	if {[string index $var [expr [string length $var]-1]] != "\n"} {
 		$win insert end "\n"
 	}
-	set prompt $
-	$win insert end "$prompt " prompt
-	$win mark gravity prompt left
+	set promptChar $
+	$win insert end "$promptChar " promptChar
+	$win mark gravity promptChar left
 	if $see {$win see insert}
 	update
 	$win configure -state disabled
-	[lindex $conWindow 1] raise [lindex $conWindow 2]
+	[lindex $infoWindow 1] raise [lindex $infoWindow 2]
 	return
 }
 
@@ -192,12 +192,12 @@ proc conPuts {var {tag output} {win {}} {flash 0} {see 1}} {
 ###############################################################################################
 proc errorInit {win {width 60} {height 5}} {
 	global Console
-	global prompt
+	global promptChar
 	global window
-	global EditorData
+	global ConfigData
 	
 	set window $win
-	set prompt $
+	set promptChar $
 	
 	if {$window == "."} {
 		set window ""
@@ -206,44 +206,44 @@ proc errorInit {win {width 60} {height 5}} {
 		
 	$Console alias setValues SetValues
 	text $window.t -width $width -height $height -bg white
-	catch {$window.t configure -font $EditorData(options,fonts,editorFont)}
+	catch {$window.t configure -font $ConfigData(options,fonts,editorFont)}
 	
 	$window.t tag configure output -foreground blue 
-	$window.t tag configure prompt -foreground grey40
+	$window.t tag configure promptChar -foreground grey40
 	$window.t tag configure error -foreground red
-	$window.t insert end "$prompt " prompt
-	$window.t mark set prompt insert
-	$window.t mark gravity prompt left
+	$window.t insert end "$promptChar " promptChar
+	$window.t mark set promptChar insert
+	$window.t mark gravity promptChar left
 	$window.t configure -state disabled
-	bind $window.t <Key-Left> {onKeyLeft %W ; break}
-	bind $window.t <Key-Right> {onKeyRight %W ; break}
-	bind $window.t <Key-BackSpace> {onKeyBackSpace %W;break}
+	#bind $window.t <Key-Left> {LeftKeyPressEvent %W ; break}
+	#bind $window.t <Key-Right> {RightKeyPressEvent %W ; break}
+	#bind $window.t <Key-BackSpace> {BackSpaceKeyPressEvent %W;break}
 	pack $window.t -fill both -expand yes
 	return $window.t
 }
 
 ###############################################################################################
-#proc errorPuts
+#proc DisplayErrMsg
 #Input       : text to be inserted, window, text widget, flash, see
 #Output      : -
 #Description : Displays the text in text widget for error window
 ###############################################################################################
-proc errorPuts {var {tag output} {win {}} {flash 0} {see 1}} {
-	global prompt
+proc DisplayErrMsg {var {tag output} {win {}} {flash 0} {see 1}} {
+	global promptChar
 	global errWindow
 	
 	if {$win == {}} {
 		set win [lindex $errWindow 0]
 	}
 	$win configure -state normal
-	$win mark gravity prompt right
+	$win mark gravity promptChar right
 	$win insert end $var $tag
 	if {[string index $var [expr [string length $var]-1]] != "\n"} {
 		$win insert end "\n"
 	}
-	set prompt $
-	$win insert end "$prompt " prompt
-	$win mark gravity prompt left
+	set promptChar $
+	$win insert end "$promptChar " promptChar
+	$win mark gravity promptChar left
 	if $see {$win see insert}
 	update
 	$win configure -state disabled
@@ -259,12 +259,12 @@ proc errorPuts {var {tag output} {win {}} {flash 0} {see 1}} {
 ###############################################################################################
 proc warnInit {win {width 60} {height 5}} {
 	global Console
-	global prompt
+	global promptChar
 	global window
-	global EditorData
+	global ConfigData
 	
 	set window $win
-	set prompt $
+	set promptChar $
 	
 	if {$window == "."} {
 		set window ""
@@ -272,46 +272,46 @@ proc warnInit {win {width 60} {height 5}} {
 	set Console [interp create]
 		
 	$Console alias setValues SetValues
-	$Console alias puts warnPuts
+	$Console alias puts DisplayWarning
 	text $window.t -width $width -height $height -bg white
-	catch {$window.t configure -font $EditorData(options,fonts,editorFont)}
+	catch {$window.t configure -font $ConfigData(options,fonts,editorFont)}
 	
 	$window.t tag configure output -foreground blue
-	$window.t tag configure prompt -foreground grey40
+	$window.t tag configure promptChar -foreground grey40
 	$window.t tag configure error -foreground red
-	$window.t insert end "$prompt " prompt
-	$window.t mark set prompt insert
-	$window.t mark gravity prompt left
+	$window.t insert end "$promptChar " promptChar
+	$window.t mark set promptChar insert
+	$window.t mark gravity promptChar left
 	$window.t configure -state disabled
-	bind $window.t <Key-Left> {onKeyLeft %W ; break}
-	bind $window.t <Key-Right> {onKeyRight %W ; break}
-	bind $window.t <Key-BackSpace> {onKeyBackSpace %W;break}
+	#bind $window.t <Key-Left> {LeftKeyPressEvent %W ; break}
+	#bind $window.t <Key-Right> {RightKeyPressEvent %W ; break}
+	#bind $window.t <Key-BackSpace> {BackSpaceKeyPressEvent %W;break}
 	pack $window.t -fill both -expand yes
 	return $window.t
 }
 
 ###############################################################################################
-#proc warnPuts
+#proc DisplayWarning
 #Input       : text to be inserted, window, text widget, flash, see
 #Output      : -
 #Description : Displays the text in text widget for warning window
 ###############################################################################################
-proc warnPuts {var {tag output} {win {}} {flash 0} {see 1}} {
-	global prompt
+proc DisplayWarning {var {tag output} {win {}} {flash 0} {see 1}} {
+	global promptChar
 	global warWindow
 	
 	if {$win == {}} {
 		set win [lindex $warWindow 0]
 	}
 	$win configure -state normal
-	$win mark gravity prompt right
+	$win mark gravity promptChar right
 	$win insert end $var $tag
 	if {[string index $var [expr [string length $var]-1]] != "\n"} {
 		$win insert end "\n"
 	}
-	set prompt $
-	$win insert end "$prompt " prompt
-	$win mark gravity prompt left
+	set promptChar $
+	$win insert end "$promptChar " promptChar
+	$win mark gravity promptChar left
 	if $see {$win see insert}
 	update
 	$win configure -state disabled
@@ -320,11 +320,11 @@ proc warnPuts {var {tag output} {win {}} {flash 0} {see 1}} {
 }
 
 proc ClearMsgs {} {
-	global conWindow
+	global infoWindow
 	global warWindow
 	global errWindow
 	
-	foreach window [list [lindex $conWindow 0] [lindex $warWindow 0]  [lindex $errWindow 0] ] {
+	foreach window [list [lindex $infoWindow 0] [lindex $warWindow 0]  [lindex $errWindow 0] ] {
 		$window configure -state normal
 		$window delete 1.0 end
 		$window configure -state disabled
@@ -333,5 +333,5 @@ proc ClearMsgs {} {
 
 # this won't be executed if console.tcl is sourced by another app
 if {[string compare [info script] $argv0] == 0} {
-	consoleInit .
+	infoInit .
 }

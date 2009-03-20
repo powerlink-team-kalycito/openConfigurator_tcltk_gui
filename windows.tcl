@@ -109,7 +109,7 @@ proc StartUp {} {
 				destroy .startUp
 				_openproject $samplePjt
 			} else {
-				errorPuts "Sample project is not present" error	
+				DisplayErrMsg "Sample project is not present" error	
 				focus .startUp
 				return
 			}
@@ -127,7 +127,7 @@ proc StartUp {} {
 		unset startVar
 		unset frame2
 		destroy .startUp
-		Editor::exit_app
+		WindowConfig::exit_app
 	}
 
 	grid config $frame1 -row 0 -column 0 -padx 35 -pady 10
@@ -356,18 +356,18 @@ proc ProjectSettingWindow {} {
 #Description : Creates the GUI for adding PDO to CN
 ###############################################################################################
 #proc InterCNWindow {} {
-#	global updatetree
+#	global treePath
 #	global frame2	
 #
-#	set node [$updatetree selection get]
+#	set node [$treePath selection get]
 #	set siblingList ""
 #	set dispList ""
-#	foreach sibling [$updatetree nodes [$updatetree parent $node]] {
+#	foreach sibling [$treePath nodes [$treePath parent $node]] {
 #		if {[string match "OBD*" $sibling] || [string match $node $sibling]} {
 #			# should not add it to the list
 #		} else {
 #			lappend siblingList $sibling
-#			lappend dispList [$updatetree itemcget $sibling -text]
+#			lappend dispList [$treePath itemcget $sibling -text]
 #		}
 #
 #	}
@@ -637,7 +637,7 @@ proc AddCNWindow {} {
 
 proc GenCNname {} {
 	global nodeIdList
-	global updatetree
+	global treePath
 	#puts "in GenCNname nodeIdList->$nodeIdList"
 	for {set inc 1} {$inc < 240} {incr inc} {
 		puts "lsearch -exact $nodeIdList $inc->[lsearch -exact $nodeIdList $inc]"
@@ -664,7 +664,7 @@ proc SaveProjectAsWindow {} {
 	global PjtDir
 
 	if {$PjtDir == "" || $PjtName == "" } {
-		conPuts "No Project Selected" info
+		DisplayInfo "No Project Selected" info
 		return
 	} else {
 		puts "Save Project As->[file join $PjtDir $PjtName]"
@@ -685,10 +685,10 @@ proc SaveProjectAsWindow {} {
 				tk_messageBox -message "Unknown Error" -title Warning -icon warning -parent .
 			        puts "Unknown Error in SaveProjectAsWindow ->[ocfmRetCode_errorString_get $catchErrCode]\n"
 			}
-			errorPuts "Error in saving project $saveProjectAs"
+			DisplayErrMsg "Error in saving project $saveProjectAs"
 			return
 		}
-		conPuts "project $saveProjectAs is saved"
+		DisplayInfo "project $saveProjectAs is saved"
 	}
 }
 
@@ -716,7 +716,7 @@ proc NewProjectWindow {} {
 	global titleInnerFrame2_2
 	#global titleInnerFrame2_3
 
-	global updatetree
+	global treePath
 	global nodeIdList
 	global PjtName
 	global PjtDir
@@ -1123,7 +1123,7 @@ proc NewProjectWindow {} {
 proc NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf tempRa_proj tempRa_auto} {
 	
 	global ra_proj
-	global updatetree
+	global treePath
 	global mnCount
 	global PjtName
 	global PjtDir
@@ -1137,7 +1137,7 @@ proc NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf tempRa_proj tempRa_au
 	set PjtDir [file join $tmpPjtDir  $pjtName]
 	puts "PjtDir->$PjtDir PjtName->$PjtName"
 
-	$updatetree itemconfigure PjtName -text $tmpPjtName
+	$treePath itemconfigure PjtName -text $tmpPjtName
 
 	set catchErrCode [NodeCreate 240 0 openPOWERLINK_MN]
 	set ErrCode [ocfmRetCode_code_get $catchErrCode]
@@ -1157,7 +1157,7 @@ proc NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf tempRa_proj tempRa_au
 	#New project is created need to save
 	set status_save 1
 
-	$updatetree insert end PjtName MN-$mnCount -text "openPOWERLINK_MN(240)" -open 1 -image [Bitmap::get mn]
+	$treePath insert end PjtName MN-$mnCount -text "openPOWERLINK_MN(240)" -open 1 -image [Bitmap::get mn]
 	lappend nodeIdList 240 ; #removed obj and obj node
 	puts "nodeIdList->$nodeIdList"
 
@@ -1179,7 +1179,7 @@ proc NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf tempRa_proj tempRa_au
 			}
 			return
 		}
-		$updatetree insert end MN-$mnCount OBD-$mnCount-1 -text "OBD" -open 0 -image [Bitmap::get pdo]
+		$treePath insert end MN-$mnCount OBD-$mnCount-1 -text "OBD" -open 0 -image [Bitmap::get pdo]
 		#Import parentNode nodeType nodeID 
 		Import OBD-$mnCount-1 0 240
 		thread::send -async [tsv::set application importProgress] "StopProgress"
@@ -1188,11 +1188,11 @@ proc NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf tempRa_proj tempRa_au
 		file mkdir [file join $PjtDir CDC_XAP]
 		file mkdir [file join $PjtDir XDC]
 		
-		if { [$Editor::projMenu index 3] != "3" } {
-			$Editor::projMenu insert 3 command -label "Close Project" -command "_CloseProject"
+		if { [$WindowConfig::projMenu index 3] != "3" } {
+			$WindowConfig::projMenu insert 3 command -label "Close Project" -command "_CloseProject"
 		}
-		if { [$Editor::projMenu index 4] != "4" } {
-			$Editor::projMenu insert 4 command -label "Properties" -command "PropertiesWindow"
+		if { [$WindowConfig::projMenu index 4] != "4" } {
+			$WindowConfig::projMenu insert 4 command -label "Properties" -command "PropertiesWindow"
 		}
 		
 	} else {
@@ -1228,11 +1228,11 @@ proc NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf tempRa_proj tempRa_au
 proc SaveProjectWindow {} {
 	global PjtDir
 	global PjtName
-	global updatetree
+	global treePath
 	global status_save	
 
 	if {$PjtDir == "" || $PjtName == "" } {
-		conPuts "No Project Selected" info
+		DisplayInfo "No Project Selected" info
 		return
 	} else {	
 		#check whether project has changed from last saved
@@ -1241,11 +1241,11 @@ proc SaveProjectWindow {} {
 			switch -- $result {
 				yes {			 
 					Saveproject
-					conPuts "Project $PjtName is saved" info
+					DisplayInfo "Project $PjtName is saved" info
 					return yes
 				}
 				no {
-					conPuts "Project $PjtName not saved" info
+					DisplayInfo "Project $PjtName not saved" info
 					return no
 				}
 			}
@@ -1262,11 +1262,11 @@ proc SaveProjectWindow {} {
 proc CloseProjectWindow {} {
 	global PjtDir
 	global PjtName
-	global updatetree
+	global treePath
 	global status_save	
 
 	if {$PjtDir == "" || $PjtName == "" } {
-		conPuts "No Project Selected" info
+		DisplayInfo "No Project Selected" info
 		CloseProject
 		return
 	} else {	
@@ -1366,7 +1366,7 @@ proc ImportProgress {stat} {
 #Description : -
 ################################################################################################
 proc AddIndexWindow {} {
-	global updatetree
+	global treePath
 	global indexVar
 	global frame2
 	global status_save
@@ -1401,7 +1401,7 @@ proc AddIndexWindow {} {
 			return
 		}
 		set indexVar [string toupper $indexVar]
-		set node [$updatetree selection get]
+		set node [$treePath selection get]
 		#puts node----->$node
 
 		#gets the nodeId and Type of selected node
@@ -1422,12 +1422,12 @@ proc AddIndexWindow {} {
 
 		if {[string match "18*" $indexVar] || [string match "1A*" $indexVar]} {
 			#it must a TPDO object
-			set child [$updatetree nodes TPDO-$nodePosition]
+			set child [$treePath nodes TPDO-$nodePosition]
 		} elseif {[string match "14*" $indexVar] || [string match "16*" $indexVar]} {
 			#it must a RPDO object	
-			set child [$updatetree nodes RPDO-$nodePosition]
+			set child [$treePath nodes RPDO-$nodePosition]
 		} else {
-			set child [$updatetree nodes $node]
+			set child [$treePath nodes $node]
 		}	
 
 
@@ -1443,7 +1443,7 @@ proc AddIndexWindow {} {
 				lappend sortChild $tail
 				#find the position where the added index is to be inserted in sorted order in TreeView 
 				#0x is appended so that the input will be considered as hexadecimal number and numerical operation proceeds
-				if {[ expr 0x$indexVar > 0x[string range [$updatetree itemcget $tempChild -text] end-4 end-1] ]} {
+				if {[ expr 0x$indexVar > 0x[string range [$treePath itemcget $tempChild -text] end-4 end-1] ]} {
 					#since the tree is populated after sorting 
 					incr indexPosition
 				} else {
@@ -1545,9 +1545,9 @@ proc AddIndexWindow {} {
 			set subIndexNode SubIndexValue-$nodePosition-$count
 		}
 
-#puts "child for parentNode===>[$updatetree nodes $parentNode] "
+#puts "child for parentNode===>[$treePath nodes $parentNode] "
 
-		$updatetree insert $indexPosition $parentNode $indexNode -text [lindex $indexName 1]\(0x$indexVar\) -open 0 -image [Bitmap::get index]
+		$treePath insert $indexPosition $parentNode $indexNode -text [lindex $indexName 1]\(0x$indexVar\) -open 0 -image [Bitmap::get index]
 
 
 		#SortNode {nodeType nodeID nodePos choice {indexPos ""} {indexId ""}}
@@ -1558,14 +1558,14 @@ proc AddIndexWindow {} {
 			set subIndexName [GetSubIndexAttributesbyPositions $nodePos $indexPos $sortedSubIndexPos  0 ]
 			set subIndexId [GetSubIndexIDbyPositions $nodePos $indexPos $sortedSubIndexPos ]
 			set subIndexId [lindex $subIndexId 1]
-			$updatetree insert $tempSidxCount $indexNode $subIndexNode-$tempSidxCount -text [lindex $subIndexName 1]\(0x$subIndexId\) -open 0 -image [Bitmap::get subindex]
+			$treePath insert $tempSidxCount $indexNode $subIndexNode-$tempSidxCount -text [lindex $subIndexName 1]\(0x$subIndexId\) -open 0 -image [Bitmap::get subindex]
 
-#puts "$updatetree insert $tempSidxCount $indexNode $subIndexNode-$tempSidxCount -text [lindex $subIndexName 1]\($subIndexId\) -open 0 -image [Bitmap::get subindex]"
+#puts "$treePath insert $tempSidxCount $indexNode $subIndexNode-$tempSidxCount -text [lindex $subIndexName 1]\($subIndexId\) -open 0 -image [Bitmap::get subindex]"
 
-$updatetree itemconfigure $subIndexNode-$tempSidxCount -open 0
+$treePath itemconfigure $subIndexNode-$tempSidxCount -open 0
 		}
 
-		#puts "child for parentNode after adding index ->[$updatetree nodes $parentNode]"
+		#puts "child for parentNode after adding index ->[$treePath nodes $parentNode]"
 
 		$frame2.bt_cancel invoke
 	}
@@ -1605,7 +1605,7 @@ $updatetree itemconfigure $subIndexNode-$tempSidxCount -open 0
 #Description : -
 ################################################################################################
 proc AddSubIndexWindow {} {
-	global updatetree
+	global treePath
 	global subIndexVar
 	global frame2
 	global status_save
@@ -1642,9 +1642,9 @@ proc AddSubIndexWindow {} {
 			return
 		}		
 		set subIndexVar [string toupper $subIndexVar]
-		set node [$updatetree selection get]
+		set node [$treePath selection get]
 		#puts node----->$node
-		set indexVar [string range [$updatetree itemcget $node -text] end-4 end-1 ]
+		set indexVar [string range [$treePath itemcget $node -text] end-4 end-1 ]
 		set indexVar [string toupper $indexVar]
 
 
@@ -1659,7 +1659,7 @@ proc AddSubIndexWindow {} {
 			return
 		}
 	
-		set child [$updatetree nodes $node]
+		set child [$treePath nodes $node]
 		#puts child->$child
 		set subIndexPos 0
 		set sortChild ""
@@ -1669,7 +1669,7 @@ proc AddSubIndexWindow {} {
 			lappend sortChild $tail
 			#find the position where the added index is to be inserted in sorted order in TreeView 
 			#0x is appended so that the input will be considered as hexadecimal number and numerical operation proceeds
-			if {[ expr 0x$subIndexVar > 0x[string range [$updatetree itemcget $tempChild -text] end-2 end-1] ]} {
+			if {[ expr 0x$subIndexVar > 0x[string range [$treePath itemcget $tempChild -text] end-2 end-1] ]} {
 				#since the tree is populated after sorting get the count where it is just greater such that it can be inserted properly
 				incr subIndexPos
 			} else {
@@ -1715,11 +1715,11 @@ proc AddSubIndexWindow {} {
 		#puts "subIndexName->$subIndexName"
 
 		if {[string match "TPdo*" $node]} {
-			$updatetree insert $subIndexPos $node TPdoSubIndexValue-$nodePos-$count -text [lindex $subIndexName 1]\(0x$subIndexVar\) -open 0 -image [Bitmap::get subindex]
+			$treePath insert $subIndexPos $node TPdoSubIndexValue-$nodePos-$count -text [lindex $subIndexName 1]\(0x$subIndexVar\) -open 0 -image [Bitmap::get subindex]
 		} elseif {[string match "RPdo*" $node]} {
-			$updatetree insert $subIndexPos $node RPdoSubIndexValue-$nodePos-$count -text [lindex $subIndexName 1]\(0x$subIndexVar\) -open 0 -image [Bitmap::get subindex]
+			$treePath insert $subIndexPos $node RPdoSubIndexValue-$nodePos-$count -text [lindex $subIndexName 1]\(0x$subIndexVar\) -open 0 -image [Bitmap::get subindex]
 		} else {
-			$updatetree insert $subIndexPos $node SubIndexValue-$nodePos-$count -text [lindex $subIndexName 1]\(0x$subIndexVar\) -open 0 -image [Bitmap::get subindex]
+			$treePath insert $subIndexPos $node SubIndexValue-$nodePos-$count -text [lindex $subIndexName 1]\(0x$subIndexVar\) -open 0 -image [Bitmap::get subindex]
 		}
 
 		$frame2.bt_cancel invoke
@@ -1761,7 +1761,7 @@ proc AddSubIndexWindow {} {
 #Description : -
 ################################################################################################
 proc AddPDOWindow {} {
-	global updatetree
+	global treePath
 	global pdoVar
 	global frame2
 	global status_save
@@ -1815,7 +1815,7 @@ proc AddPDOWindow {} {
  		}
 
 
-		set node [$updatetree selection get]
+		set node [$treePath selection get]
 		#puts node----->$node
 
 		#gets the nodeId and Type of selected node
@@ -1836,10 +1836,10 @@ proc AddPDOWindow {} {
 
 		if {[string match "18*" $pdoVar] || [string match "1A*" $pdoVar]} {
 			#it must a TPDO object
-			set child [$updatetree nodes TPDO-$nodePosition]
+			set child [$treePath nodes TPDO-$nodePosition]
 		} elseif {[string match "14*" $pdoVar] || [string match "16*" $pdoVar]} {
 			#it must a RPDO object	
-			set child [$updatetree nodes RPDO-$nodePosition]
+			set child [$treePath nodes RPDO-$nodePosition]
 		} else {
 			#should not occur
 		}	
@@ -1857,7 +1857,7 @@ proc AddPDOWindow {} {
 				lappend sortChild $tail
 				#find the position where the added index is to be inserted in sorted order in TreeView 
 				#0x is appended so that the input will be considered as hexadecimal number and numerical operation proceeds
-				if {[ expr 0x$pdoVar > 0x[string range [$updatetree itemcget $tempChild -text] end-4 end-1] ]} {
+				if {[ expr 0x$pdoVar > 0x[string range [$treePath itemcget $tempChild -text] end-4 end-1] ]} {
 					#since the tree is populated after sorting 
 					incr indexPosition
 				} else {
@@ -1936,9 +1936,9 @@ proc AddPDOWindow {} {
 			#should not occur
 		}
 
-		#puts "child for parentNode===>[$updatetree nodes $parentNode] "
+		#puts "child for parentNode===>[$treePath nodes $parentNode] "
 
-		$updatetree insert $indexPosition $parentNode $indexNode -text [lindex $indexName 1]\(0x$pdoVar\) -open 0 -image [Bitmap::get index]
+		$treePath insert $indexPosition $parentNode $indexNode -text [lindex $indexName 1]\(0x$pdoVar\) -open 0 -image [Bitmap::get index]
 
 
 		#SortNode {nodeType nodeID nodePos choice {indexPos ""} {indexId ""}}
@@ -1949,8 +1949,8 @@ proc AddPDOWindow {} {
 			set subIndexName [GetSubIndexAttributesbyPositions $nodePos $indexPos $sortedSubIndexPos  0 ]
 			set subIndexId [GetSubIndexIDbyPositions $nodePos $indexPos $sortedSubIndexPos ]
 			set subIndexId [lindex $subIndexId 1]
-			$updatetree insert $tempSidxCount $indexNode $subIndexNode-$tempSidxCount -text [lindex $subIndexName 1]\(0x$subIndexId\) -open 0 -image [Bitmap::get subindex]
-			$updatetree itemconfigure $subIndexNode-$tempSidxCount -open 0
+			$treePath insert $tempSidxCount $indexNode $subIndexNode-$tempSidxCount -text [lindex $subIndexName 1]\(0x$subIndexId\) -open 0 -image [Bitmap::get subindex]
+			$treePath itemconfigure $subIndexNode-$tempSidxCount -open 0
 		}
 		$frame2.bt_cancel invoke
 		
@@ -1992,10 +1992,10 @@ proc AddPDOWindow {} {
 #Description : -
 ################################################################################################
 proc PropertiesWindow {} {
-	global updatetree
+	global treePath
 	global PjtDir
 
-	set node [$updatetree selection get]
+	set node [$treePath selection get]
 
 	set winProp .prop
 	catch "destroy $winProp"
@@ -2015,7 +2015,7 @@ proc PropertiesWindow {} {
 		set title "Project Properties"
 		#set title1 "Name     : "
 		set title1 "Name"
-		set display1 [$updatetree itemcget $node -text]
+		set display1 [$treePath itemcget $node -text]
 		#set title2 "Location : "	
 		set title2 "Location"	
 		set display2 $PjtDir
@@ -2057,7 +2057,7 @@ proc PropertiesWindow {} {
 			}
 			#set title1 "Name                       : "
 			set title1 "Name"
-			set display1 [string range [$updatetree itemcget $node -text] 0 end-[expr [string length $nodeId]+2]]
+			set display1 [string range [$treePath itemcget $node -text] 0 end-[expr [string length $nodeId]+2]]
 		
 		}
 		set title2 "NodeId"	

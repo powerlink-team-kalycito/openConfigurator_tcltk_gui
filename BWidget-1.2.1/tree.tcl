@@ -314,18 +314,6 @@ proc Tree::bindImage { path event script } {
     }
 }
 
-# ------------------------------------------------------------------------------
-#  Command Tree::bindWindow_userdef
-# ------------------------------------------------------------------------------
-proc Tree::bindWindow_userdef { path event script } {
-    if { $script != "" } {
-	    $path:cmd bind "win" $event \
-            "$script \[string range \[lindex \[$path:cmd gettags current\] 1\] 2 end\]"
-    } else {
-	set win [Bitmap::get right]
-        $path:cmd bind "win" $event {}
-    }
-}
 
 # ------------------------------------------------------------------------------
 #  Command Tree::delete

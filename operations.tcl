@@ -797,8 +797,7 @@ proc Editor::create { } {
             		{command "Project Settings" {}  "Project Settings" {} -command ProjectSettingWindow }
         	}
         	"&Actions" all options 0 {
-            		{command "Transfer CDC   Ctrl+F5" {noFile} "Transfer CDC" {} -command "TransferCDC 1" }
-            		{command "Transfer XAP   Ctrl+F6" {noFile} "Transfer XAP" {} -command "TransferXAP 1" }
+            		{command "Transfer CDC and XAP  Ctrl+F5" {noFile} "Transfer CDC and XAP" {} -command "TransferCDCXAP 1" }
 	    		{separator}
             		{command "Start MN" {noFile} "Start the Managing Node" {} -command StartStack }
             		{command "Stop MN" {noFile} "Stop the Managing Node" {} -command StopStack }
@@ -832,8 +831,8 @@ proc Editor::create { } {
 	#shortcut keys for project
 	bind . <Key-F7> "BuildProject"
 	bind . <Control-Key-F7> "" ; #to prevent BuildProject called
-	bind . <Control-Key-F5> "TransferCDC 1"
-	bind . <Control-Key-F6> "TransferXAP 1"
+	bind . <Control-Key-F5> "TransferCDCXAP 1"
+	#bind . <Control-Key-F6> "TransferXAP 1"
 	bind . <Control-Key-f> "FindDynWindow"
 	bind . <Control-Key-F> "FindDynWindow"
 	bind . <KeyPress-Escape> "EscapeTree"
@@ -995,17 +994,17 @@ proc Editor::create { } {
             	-width 21\
             	-helptype balloon\
             	-highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
-            	-helptext "Transfer CDC"\
-    	    	-command "TransferCDC 1"]
+            	-helptext "Transfer CDC and XAP"\
+    	    	-command "TransferCDCXAP 1"]
 	pack $bb_cdc -side left -padx 4
-	set bb_xml [ButtonBox::add $bbox -image [Bitmap::get transferxml]\
-            	-height 21\
-            	-width 21\
-            	-helptype balloon\
-            	-highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
-            	-helptext "Transfer XAP"\
-    	    	-command "TransferXAP 1"]
-	pack $bb_xml -side left -padx 4
+#	set bb_xml [ButtonBox::add $bbox -image [Bitmap::get transferxml]\
+#            	-height 21\
+#            	-width 21\
+#            	-helptype balloon\
+#            	-highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
+#            	-helptext "Transfer XAP"\
+#    	    	-command "TransferXAP 1"]
+#	pack $bb_xml -side left -padx 4
 	
 
 	set sep4 [Separator::create $tb1.sep4 -orient vertical]
@@ -2740,141 +2739,145 @@ proc StopStack {} {
 	
 }
 
-################################################################################################
-#proc TransferCDC
-#Input       : -
-#Output      : -
-#Description : Gets location where CDC is to be stored
-################################################################################################
-proc TransferCDC {choice} {
-	global PjtDir
-	global PjtName 
-
-	if {$PjtDir == "" || $PjtName == "" } {
-		errorPuts "No project to generate CDC"
-		return	
-	}
-
-	#if {$choice} {
-	#	set result [tk_messageBox -message "Do you want to Generate CDC ?" -type yesno -icon question -title "Question"]
-	#	switch -- $result {
-	#		yes {
-	#			#continue
-	#		}
-	#		no { 
-	#			return
-	#		}
-	#	}
-	#}
-
-	#if {![file isfile [file join [pwd] config_data.cdc]]} {}
-	#if {![file isfile [file join $PjtDir config_data.cdc]]} {
-	#	tk_messageBox -message "CDC does not exist\nBuild the Project to Generate CDC" -icon info -title "Information"
-	#	return
-	#}
-
-	set types {
-        {"CDC files"     {*.cdc } }
-	}
-	set fileLocation_from_CDC [tk_getOpenFile -initialdir [file join $PjtDir CDC_XAP] -filetypes $types -parent . -title "Select CDC file to transfer"]
-        if {$fileLocation_from_CDC == ""} {
-                return
-        }
-	########### Before Closing Write the Data to the file ##########
-
-	#set file [tk_getSaveFile -filetypes $filePatternList -initialdir $EditorData(opti	ons,workingDir) \
-        #     -initialfile $filename -defaultextension $defaultExt -title "Save File"]
-
-
-	# Validate filename
-	set fileLocation_to_CDC [tk_getSaveFile -filetypes $types -initialdir [file join $PjtDir CDC_XAP] -initialfile [generateAutoName [file join $PjtDir CDC_XAP] CDC .cdc ] -title "Transfer CDC at"]
-        if {$fileLocation_to_CDC == ""} {
-                return
-        }
-
-	#set fileLocation_CDC [file join .. .. openPOWERLINK_CFM_V1.3.0-3 config_dat.cdc]
-	puts "fileLocation_to_CDC->$fileLocation_to_CDC   fileLocation_from_CDC->$fileLocation_from_CDC"
-	#catch { file copy -force [file join [pwd] config_data.cdc] $fileLocation_CDC }
-	file copy -force $fileLocation_from_CDC $fileLocation_to_CDC
-	conPuts "CDC transfer complete"
-	#puts fileLocation_CDC:$fileLocation_CDC
-	#set catchErrCode [GenerateCDC $fileLocation_CDC]
-	#set ErrCode [ocfmRetCode_code_get $catchErrCode]
-	##puts "ErrCode:$ErrCode"
-	#if { $ErrCode != 0 } {
-	#	errorPuts "[ocfmRetCode_errorString_get $catchErrCode]"
-	#	tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
-	#	#tk_messageBox -message "ErrCode:$ErrCode" -title Warning -icon warning
-	#} else {
-	#	conPuts "CDC generated" info
-	#}
-	#return $ErrCode
+proc TransferCDCXAP {choice} {
+	
 }
 
-################################################################################################
-#proc TransferXAP
-#Input       : -
-#Output      : -
-#Description : Gets location where XAP is to be stored
-################################################################################################
-proc TransferXAP {choice} {
-	global PjtDir
-	global PjtName 
+##################################################################################################
+###proc TransferCDC
+###Input       : -
+###Output      : -
+###Description : Gets location where CDC is to be stored
+##################################################################################################
+##proc TransferCDC {choice} {
+##	global PjtDir
+##	global PjtName 
+##
+##	if {$PjtDir == "" || $PjtName == "" } {
+##		errorPuts "No project to generate CDC"
+##		return	
+##	}
+##
+##	#if {$choice} {
+##	#	set result [tk_messageBox -message "Do you want to Generate CDC ?" -type yesno -icon question -title "Question"]
+##	#	switch -- $result {
+##	#		yes {
+##	#			#continue
+##	#		}
+##	#		no { 
+##	#			return
+##	#		}
+##	#	}
+##	#}
+##
+##	#if {![file isfile [file join [pwd] config_data.cdc]]} {}
+##	#if {![file isfile [file join $PjtDir config_data.cdc]]} {
+##	#	tk_messageBox -message "CDC does not exist\nBuild the Project to Generate CDC" -icon info -title "Information"
+##	#	return
+##	#}
+##
+##	set types {
+##        {"CDC files"     {*.cdc } }
+##	}
+##	set fileLocation_from_CDC [tk_getOpenFile -initialdir [file join $PjtDir CDC_XAP] -filetypes $types -parent . -title "Select CDC file to transfer"]
+##        if {$fileLocation_from_CDC == ""} {
+##                return
+##        }
+##	########### Before Closing Write the Data to the file ##########
+##
+##	#set file [tk_getSaveFile -filetypes $filePatternList -initialdir $EditorData(opti	ons,workingDir) \
+##        #     -initialfile $filename -defaultextension $defaultExt -title "Save File"]
+##
+##
+##	# Validate filename
+##	set fileLocation_to_CDC [tk_getSaveFile -filetypes $types -initialdir [file join $PjtDir CDC_XAP] -initialfile [generateAutoName [file join $PjtDir CDC_XAP] CDC .cdc ] -title "Transfer CDC at"]
+##        if {$fileLocation_to_CDC == ""} {
+##                return
+##        }
+##
+##	#set fileLocation_CDC [file join .. .. openPOWERLINK_CFM_V1.3.0-3 config_dat.cdc]
+##	puts "fileLocation_to_CDC->$fileLocation_to_CDC   fileLocation_from_CDC->$fileLocation_from_CDC"
+##	#catch { file copy -force [file join [pwd] config_data.cdc] $fileLocation_CDC }
+##	file copy -force $fileLocation_from_CDC $fileLocation_to_CDC
+##	conPuts "CDC transfer complete"
+##	#puts fileLocation_CDC:$fileLocation_CDC
+##	#set catchErrCode [GenerateCDC $fileLocation_CDC]
+##	#set ErrCode [ocfmRetCode_code_get $catchErrCode]
+##	##puts "ErrCode:$ErrCode"
+##	#if { $ErrCode != 0 } {
+##	#	errorPuts "[ocfmRetCode_errorString_get $catchErrCode]"
+##	#	tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+##	#	#tk_messageBox -message "ErrCode:$ErrCode" -title Warning -icon warning
+##	#} else {
+##	#	conPuts "CDC generated" info
+##	#}
+##	#return $ErrCode
+##}
 
-	if {$PjtDir == "" || $PjtName == "" } {
-		errorPuts "No project to generate XAP"
-		return	
-	}
-	#if {$choice} {
-	#	set result [tk_messageBox -message "Do you want to Generate XAP ?" -type yesno -icon question -title "Question"]
-	#	switch -- $result {
-	#		yes {
-	#			#continue
-	#		}
-	#		no { 
-	#			return
-	#		}
-	#	}
-	#}
-
-	#if {![file isfile [file join [pwd] XAP.xap]]} {}
-	#if {![file isfile [file join [pwd] XAP.xap]]} {
-	#	tk_messageBox -message "XAP does not exist\nBuild the Project to Generate XAP" -icon info -title "Information"
-	#	return
-	#}
-
-	set types {
-        {"XAP Files"     {*.xap } }
-	}
-	set fileLocation_from_XAP [tk_getOpenFile -initialdir [file join $PjtDir CDC_XAP] -filetypes $types -parent . -title "Select XAP file to transfer"]
-        if {$fileLocation_from_XAP == ""} {
-                return
-        }
-	########### Before Closing Write the Data to the file ##########
-
-	#set file [tk_getSaveFile -filetypes $filePatternList -initialdir $EditorData(options,workingDir) \
-        #     -initialfile $filename -defaultextension $defaultExt -title "Save File"]
-
-
-	# Validate filename
-	set fileLocation_to_XAP [tk_getSaveFile -filetypes $types -initialdir [file join $PjtDir CDC_XAP] -initialfile [generateAutoName [file join $PjtDir CDC_XAP] XAP .xap ] -title "Transfer XAP file at"]
-        if {$fileLocation_to_XAP == ""} {
-                return
-        }
-	
-	puts "fileLocation_from_XAP->$fileLocation_from_XAP  fileLocation_to_XAP->$fileLocation_to_XAP"
-	
-	if { ![file isfile $fileLocation_from_XAP.h] } {
-		conPuts "XAP.h not found. XAP not transferred"
-		return
-	}
-	
-	file copy -force $fileLocation_from_XAP $fileLocation_to_XAP
-	file copy -force $fileLocation_from_XAP.h $fileLocation_to_XAP.h
-	conPuts "XAP transfer complete"
-	conPuts "XAP.h also transferred"
-
-}
+#################################################################################################
+##proc TransferXAP
+##Input       : -
+##Output      : -
+##Description : Gets location where XAP is to be stored
+#################################################################################################
+#proc TransferXAP {choice} {
+#	global PjtDir
+#	global PjtName 
+#
+#	if {$PjtDir == "" || $PjtName == "" } {
+#		errorPuts "No project to generate XAP"
+#		return	
+#	}
+#	#if {$choice} {
+#	#	set result [tk_messageBox -message "Do you want to Generate XAP ?" -type yesno -icon question -title "Question"]
+#	#	switch -- $result {
+#	#		yes {
+#	#			#continue
+#	#		}
+#	#		no { 
+#	#			return
+#	#		}
+#	#	}
+#	#}
+#
+#	#if {![file isfile [file join [pwd] XAP.xap]]} {}
+#	#if {![file isfile [file join [pwd] XAP.xap]]} {
+#	#	tk_messageBox -message "XAP does not exist\nBuild the Project to Generate XAP" -icon info -title "Information"
+#	#	return
+#	#}
+#
+#	set types {
+#        {"XAP Files"     {*.xap } }
+#	}
+#	set fileLocation_from_XAP [tk_getOpenFile -initialdir [file join $PjtDir CDC_XAP] -filetypes $types -parent . -title "Select XAP file to transfer"]
+#        if {$fileLocation_from_XAP == ""} {
+#                return
+#        }
+#	########### Before Closing Write the Data to the file ##########
+#
+#	#set file [tk_getSaveFile -filetypes $filePatternList -initialdir $EditorData(options,workingDir) \
+#        #     -initialfile $filename -defaultextension $defaultExt -title "Save File"]
+#
+#
+#	# Validate filename
+#	set fileLocation_to_XAP [tk_getSaveFile -filetypes $types -initialdir [file join $PjtDir CDC_XAP] -initialfile [generateAutoName [file join $PjtDir CDC_XAP] XAP .xap ] -title "Transfer XAP file at"]
+#        if {$fileLocation_to_XAP == ""} {
+#                return
+#        }
+#	
+#	puts "fileLocation_from_XAP->$fileLocation_from_XAP  fileLocation_to_XAP->$fileLocation_to_XAP"
+#	
+#	if { ![file isfile $fileLocation_from_XAP.h] } {
+#		conPuts "XAP.h not found. XAP not transferred"
+#		return
+#	}
+#	
+#	file copy -force $fileLocation_from_XAP $fileLocation_to_XAP
+#	file copy -force $fileLocation_from_XAP.h $fileLocation_to_XAP.h
+#	conPuts "XAP transfer complete"
+#	conPuts "XAP.h also transferred"
+#
+#}
 
 ################################################################################################
 #proc BuildProject

@@ -222,8 +222,6 @@ proc Int {input} {
 	#puts "*********\n\n"
 	#tk_messageBox -message "Issue"
 	
-	SetPromptFlag
-	
 	return 1
 }
 
@@ -406,8 +404,10 @@ proc _ConvertHex {tmpVal} {
 	puts "\n\n_ConvertHex invoked tmpVal->$tmpVal"
 	
 	if { $tmpVal == 0 } {
-		#puts "tmpVal equal to zero\n"
-		#do not trim any zero pass as it is
+		#if value is zero return as it is
+		return 0x$tmpVal
+	} elseif { $tmpVal == "" || [Int $tmpVal] == 0 } {
+		#if value empty or not an int return back same value
 		return $tmpVal
 	}
 	
@@ -441,19 +441,20 @@ proc _ConvertHex {tmpVal} {
 		set tmpVal $finalVal
 		puts " AppendZero $tmpVal [expr $cnt+[string length $tmpVal] ] -> [ AppendZero $tmpVal [expr $cnt+[string length $tmpVal] ] ]"
 		set tmpVal [ AppendZero $tmpVal [expr $cnt+[string length $tmpVal] ] ] ; #appending trimmed leading zero if any
+		set tmpVal 0x$tmpVal
 		
 	} else {
 		#set cnt [CntLeadZero $tmpVal] ; #counting the leading zero if they are present
 		#puts "cnt->$cnt"
 		#set tempVal [string trimleft $tmpVal 0] ; #zero is trimmed otherwise considered as octal
 		if { [catch {set tmpVal [format %X $tmpVal]}] } {
-			puts "raised an error return the sent value itself tempVal->$tempVal"
+			puts "raised an error in _ConvertHex return the sent value itself tempVal->$tempVal"
 			#set tmpVal [format %X $tmpVal] ; # TODO just to check what the error is REMOVE LATER
 		} else {
 			#set tmpVal $tempVal
 			puts " AppendZero $tmpVal [expr $cnt+[string length $tmpVal] ] -> [ AppendZero $tmpVal [expr $cnt+[string length $tmpVal] ] ]"
 			set tmpVal [ AppendZero $tmpVal [expr $cnt+[string length $tmpVal] ] ] ; #appending trimmed leading zero if any
-			
+			set tmpVal 0x$tmpVal
 		}
 	}
 	puts "**************\n\n"

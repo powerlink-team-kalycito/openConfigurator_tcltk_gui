@@ -68,6 +68,17 @@
 #\
 exec wish "$0" ${1+"$@"}
 
+set version 1.0.0
+
+puts "argc->$argc argv->$argv"
+if { $argc == 1 && ( $argv == "--version" || $argv == "-V" ) } {
+	puts "\nDeveloped by Kalycito Powerlink Team\nopenCONFIGURATOR version $version\n"
+	exit
+} elseif { $argc != 0 } {
+	puts "\noption $argv not supported\n"
+	exit
+}
+
 set pwd [pwd]
 #puts [package require Tk]
 if { [ catch { package require Tk 8.5 } ] } {

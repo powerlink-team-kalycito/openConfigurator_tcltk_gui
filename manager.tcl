@@ -632,19 +632,21 @@ proc InsertHex {tmpValue} {
 			#$tmpValue.$tmp_entry configure -validate none
 			puts "tmpVal->$tmpVal"
 			if {$tmpVal != ""} {
-			        if { [ catch { set tmpVal [_ConvertHex $tmpVal] } ] } {
-			        	#raised an error dont convert
-					puts "error raised in InsertHex tmpVal->$tmpVal"
-					#set tmpVal [_ConvertHex $tmpVal]
-				} else {
+			        #if { [ catch { set tmpVal [_ConvertHex $tmpVal] } ] } {
+			        #	#raised an error dont convert
+				#	puts "error raised in InsertHex tmpVal->$tmpVal"
+				#	#set tmpVal [_ConvertHex $tmpVal]
+				#} else {
 					puts "tmpVal->$tmpVal"
 				        #$tmpValue.$tmp_entry delete 0 end
 					$tmpValue delete 0 end
-				        set tmpVal 0x$tmpVal
+				#        set tmpVal 0x$tmpVal
+					set tmpVal [_ConvertHex $tmpVal]
+					puts "InsertHex after conversion tmpVal->$tmpVal "
 					#$tmpValue.$tmp_entry insert 0 $tmpVal
 					$tmpValue insert 0 $tmpVal
 				    #puts  "final ConvertHex->$tmpVal\n"
-				}
+				#}
 			} else {
 			    #value is empty insert 0x
 			    #$tmpValue.$tmp_entry delete 0 end
@@ -807,11 +809,15 @@ proc SaveValue {frame0 frame1} {
 				#set value [string trimleft $value 0] ; trimming zero leads to error
 				#puts "value after trim for dec :$value"
 				set value [_ConvertHex $value]
-				#0x is appended to represent it as hex
-				set value $value
-				#puts "value after conv for dec :$value"
-				set value [string toupper $value]
-				set value 0x$value
+				if { $value == "" } {
+					set value []
+				} else {
+				        #0x is appended to represent it as hex
+				        set value [string range $value 2 end]
+				        #puts "value after conv for dec :$value"
+				        set value [string toupper $value]
+				        set value 0x$value
+				}
 			} else {
 				#puts "\n\n\nSaveValue->Should Never Happen 1!!!\n\n\n"
 			}

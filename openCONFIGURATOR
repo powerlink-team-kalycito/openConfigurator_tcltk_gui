@@ -195,6 +195,7 @@ proc InitOpenConfigurator {argc argv} {
 	# Draw the Main window
 	wm withdraw .
 	wm title . "openCONFIGURATOR"
+	wm attributes . -zoomed 1
 	Operations::BasicFrames
 	BWidget::place . 0 0 center
 	update idletasks

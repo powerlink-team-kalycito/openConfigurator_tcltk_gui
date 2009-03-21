@@ -491,16 +491,16 @@ proc Operations::OpenProjectWindow { } {
 	}
 
 
-	#if { ![file isdirectory $lastOpenPjt] && [file exists $lastOpenPjt] } {
-	#	set lastOpenFile [file tail $lastOpenPjt]
-	#	set lastOpenDir [file dirname $lastOpenPjt]
-	#	set projectfilename [tk_getOpenFile -title "Open Project" -initialdir $lastOpenDir -initialfile $lastOpenFile -filetypes $types -parent .]
-	#} else {
-	#	set projectfilename [tk_getOpenFile -title "Open Project" -initialdir $defaultProjectDir -filetypes $types -parent .]
-	#}
+	if { ![file isdirectory $lastOpenPjt] && [file exists $lastOpenPjt] } {
+		set lastOpenFile [file tail $lastOpenPjt]
+		set lastOpenDir [file dirname $lastOpenPjt]
+		set projectfilename [tk_getOpenFile -title "Open Project" -initialdir $lastOpenDir -initialfile $lastOpenFile -filetypes $types -parent .]
+	} else {
+		set projectfilename [tk_getOpenFile -title "Open Project" -initialdir $defaultProjectDir -filetypes $types -parent .]
+	}
 	
 	# Validate filename
-	set projectfilename [tk_getOpenFile -filetypes $types -parent .]
+	#set projectfilename [tk_getOpenFile -filetypes $types -parent .]
         if {$projectfilename == ""} {
                 return
         }
@@ -1097,6 +1097,7 @@ proc Operations::BasicFrames { } {
 	set cf2 [NoteBookManager::create_infoWindow $infotabs_notebook "Warning" 3]
 
 	NoteBook::compute_size $infotabs_notebook
+	$infotabs_notebook configure -height 1
 	pack $infotabs_notebook -side bottom -fill both -expand yes -padx 4 -pady 4
 
 	pack $pannedwindow1 -fill both -expand yes
@@ -1333,6 +1334,8 @@ proc Operations::SingleClickNode {node} {
 			return
 		}
 	}
+	
+	$indexSaveBtn configure -state normal
 
 	$treePath selection set $node
 	set nodeSelect $node
@@ -1625,8 +1628,9 @@ proc Operations::SingleClickNode {node} {
 			} else {
 				lappend IndexProp []
 			}
-
+		
 	}
+puts "IndexProp->$IndexProp"
 
 		$tmpInnerf0.en_idx1 configure -state normal
 		$tmpInnerf0.en_idx1 delete 0 end
@@ -1679,7 +1683,7 @@ proc Operations::SingleClickNode {node} {
 			}
 
 		}
-
+puts "IndexProp->$IndexProp"
 		$tmpInnerf0.en_idx1 configure -state normal
 		$tmpInnerf0.en_idx1 delete 0 end
 		$tmpInnerf0.en_idx1 insert 0 0x$indexId
@@ -1693,10 +1697,14 @@ proc Operations::SingleClickNode {node} {
 		[lindex $f2 1] configure -state disabled
 		
 		puts "***include index ? [lindex $IndexProp 9]***"
-		if { [lindex $IndexProp 9] == "1" } {
-			$tmpInnerf0.frame1.ch_gen select
+		if { [string match -nocase "A???" $indexId] } {
+			$tmpInnerf0.frame1.ch_gen configure -state disabled
 		} else {
-			$tmpInnerf0.frame1.ch_gen deselect
+			if { [lindex $IndexProp 9] == "1" } {
+				$tmpInnerf0.frame1.ch_gen select
+			} else {
+				$tmpInnerf0.frame1.ch_gen deselect
+			}
 		}
 
 	}
@@ -1725,19 +1733,19 @@ proc Operations::SingleClickNode {node} {
 	$tmpInnerf1.en_value1 delete 0 end
 	$tmpInnerf1.en_value1 insert 0 [lindex $IndexProp 5]
 
-	$tmpInnerf1.en_lower1 configure -state normal
+	$tmpInnerf1.en_lower1 configure -state normal -validate none
 	$tmpInnerf1.en_lower1 delete 0 end
 	$tmpInnerf1.en_lower1 insert 0 [lindex $IndexProp 7]
 	#$tmpInnerf1.en_lower1 configure -state disabled
-	$tmpInnerf1.en_lower1 configure -state $entryState -bg white
+	$tmpInnerf1.en_lower1 configure -state $entryState -bg white -validate key
 
-	$tmpInnerf1.en_upper1 configure -state normal
+	$tmpInnerf1.en_upper1 configure -state normal -validate none
 	$tmpInnerf1.en_upper1 delete 0 end
 	$tmpInnerf1.en_upper1 insert 0 [lindex $IndexProp 8]
 	#$tmpInnerf1.en_upper1 configure -state disabled
-	$tmpInnerf1.en_upper1 configure -state $entryState -bg white
+	$tmpInnerf1.en_upper1 configure -state $entryState -bg white -validate key
 
-	if { $entryState == "disabled" } {
+	if { [expr 0x$indexId < 0x1fff] } {
 		grid remove $tmpInnerf1.co_obj1
 		grid $tmpInnerf1.en_obj1
 		$tmpInnerf1.en_obj1 configure -state normal
@@ -1786,6 +1794,11 @@ proc Operations::SingleClickNode {node} {
 			grid remove $tmpInnerf1.frame1.ra_dec
 			grid remove $tmpInnerf1.frame1.ra_hex
 			$tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::IsMAC %P %V" -bg $savedBg
+		} elseif { [lindex $IndexProp 2] == "Visible_String" } {
+			set lastConv ""
+			grid remove $tmpInnerf1.frame1.ra_dec
+			grid remove $tmpInnerf1.frame1.ra_hex
+			$tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::IsValidStr %P" -bg $savedBg
 		} else {
 
 			#grid remove $tmpInnerf1.frame1.ra_ip
@@ -1801,7 +1814,7 @@ proc Operations::SingleClickNode {node} {
 					if {[string match -nocase "0x*" [lindex $IndexProp 5]]} {
 						$tmpInnerf1.en_value1 configure -validate none
 						NoteBookManager::InsertDecimal $tmpInnerf1.en_value1
-						$tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::IsDec %P $tmpInnerf1 %d %i" -bg $savedBg	
+						$tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::IsDec %P $tmpInnerf1.en_value1 %d %i" -bg $savedBg	
 					} else {
 						puts "# ACTUALVALUE already in decimal no need to do anything"
 					}
@@ -1822,7 +1835,7 @@ proc Operations::SingleClickNode {node} {
 					} else {
 						$tmpInnerf1.en_value1 configure -validate none
 						NoteBookManager::InsertHex $tmpInnerf1.en_value1
-						$tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::IsHex %P %s $tmpInnerf1 %d %i" -bg $savedBg
+						$tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::IsHex %P %s $tmpInnerf1.en_value1 %d %i" -bg $savedBg
 					}
 				
 					if {[string match -nocase "0x*" [lindex $IndexProp 4]]} {
@@ -1866,7 +1879,7 @@ proc Operations::SingleClickNode {node} {
 						$tmpInnerf1.en_default1 configure -state $state
 					}
 					$tmpInnerf1.frame1.ra_hex select
-					$tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::IsHex %P %s $tmpInnerf1 %d %i" -bg $savedBg
+					$tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::IsHex %P %s $tmpInnerf1.en_value1 %d %i" -bg $savedBg
 				} else {
 					set lastConv dec
 					#puts "singleclicknode inside decimal default [lindex $IndexProp 4]"
@@ -1895,7 +1908,7 @@ proc Operations::SingleClickNode {node} {
 						puts "#default value is already in decimal no need to convert"
 					}
 					$tmpInnerf1.frame1.ra_dec select
-					$tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::IsDec %P $tmpInnerf1 %d %i" -bg $savedBg
+					$tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::IsDec %P $tmpInnerf1.en_value1 %d %i" -bg $savedBg
 				}
 			}
 		}
@@ -1914,17 +1927,38 @@ proc Operations::SingleClickNode {node} {
 		grid remove $tmpInnerf1.frame1.ra_dec
 		grid remove $tmpInnerf1.frame1.ra_hex
 		
-		grid $tmpInnerf1.co_obj1
 		grid remove $tmpInnerf1.en_obj1
+		NoteBookManager::SetComboValue $tmpInnerf1.co_obj1 [lindex $IndexProp 1]
+		grid $tmpInnerf1.co_obj1
 		
 		#grid $tmpInnerf1.co_data1
 		#grid remove $tmpInnerf1.en_data1	
 		
-		grid $tmpInnerf1.co_access1
 		grid remove $tmpInnerf1.en_access1
+		NoteBookManager::SetComboValue $tmpInnerf1.co_access1 [lindex $IndexProp 3]
+		grid $tmpInnerf1.co_access1
 		
-		grid $tmpInnerf1.co_pdo1
 		grid remove $tmpInnerf1.en_pdo1
+		NoteBookManager::SetComboValue $tmpInnerf1.co_pdo1 [lindex $IndexProp 6]
+		grid $tmpInnerf1.co_pdo1
+		
+		$tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::IsValidStr %P"
+		
+		if { [string match -nocase "A???" $indexId] == 1 } {
+			puts "\t#make the save button disabled\t"
+			$indexSaveBtn configure -state disabled
+			
+			$tmpInnerf0.en_nam1 configure -state disabled
+			$tmpInnerf1.en_data1 configure -state disabled
+			$tmpInnerf1.en_default1 configure -state disabled
+			$tmpInnerf1.en_value1 configure -state disabled
+			$tmpInnerf1.en_lower1 configure -state disabled
+			$tmpInnerf1.en_upper1 configure -state disabled
+			$tmpInnerf1.co_obj1 configure -state disabled
+			$tmpInnerf1.co_access1 configure -state disabled
+			$tmpInnerf1.co_pdo1 configure -state disabled
+		}
+		
 	}
 	
 	
@@ -1954,7 +1988,7 @@ proc Operations::SingleClickNode {node} {
 	#			if {[string match -nocase "0x*" [lindex $IndexProp 5]]} {
 	#				$tmpInnerf1.en_value1 configure -validate none
 	#				NoteBookManager::InsertDecimal $tmpInnerf1.en_value1
-	#				$tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::IsDec %P $tmpInnerf1 %d %i" -bg $savedBg	
+	#				$tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::IsDec %P $tmpInnerf1.en_value1 %d %i" -bg $savedBg	
 	#			} else {
 	#				puts "# ACTUALVALUE already in decimal no need to do anything"
 	#			}
@@ -1975,7 +2009,7 @@ proc Operations::SingleClickNode {node} {
 	#			} else {
 	#				$tmpInnerf1.en_value1 configure -validate none
 	#				NoteBookManager::InsertHex $tmpInnerf1.en_value1
-	#				$tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::IsHex %P %s $tmpInnerf1 %d %i" -bg $savedBg
+	#				$tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::IsHex %P %s $tmpInnerf1.en_value1 %d %i" -bg $savedBg
 	#			}
 	#			
 	#			if {[string match -nocase "0x*" [lindex $IndexProp 4]]} {
@@ -2019,7 +2053,7 @@ proc Operations::SingleClickNode {node} {
 	#				$tmpInnerf1.en_default1 configure -state $state
 	#			}
 	#			$tmpInnerf1.frame1.ra_hex select
-	#			$tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::IsHex %P %s $tmpInnerf1 %d %i" -bg $savedBg
+	#			$tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::IsHex %P %s $tmpInnerf1.en_value1 %d %i" -bg $savedBg
 	#		} else {
 	#			set lastConv dec
 	#			#puts "singleclicknode inside decimal default [lindex $IndexProp 4]"
@@ -2048,7 +2082,7 @@ proc Operations::SingleClickNode {node} {
 	#				puts "#default value is already in decimal no need to convert"
 	#			}
 	#			$tmpInnerf1.frame1.ra_dec select
-	#			$tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::IsDec %P $tmpInnerf1 %d %i" -bg $savedBg
+	#			$tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::IsDec %P $tmpInnerf1.en_value1 %d %i" -bg $savedBg
 	#		}
 	#	}
 	#}
@@ -2113,7 +2147,9 @@ proc Operations::Saveproject {} {
 		set savePjtName [string range $projectName 0 end-[ string length [file extension $projectName] ]]
 		set savePjtDir [string range $projectDir 0 end-[string length $savePjtName] ]
 		puts "\n\nSaveProject $savePjtDir $savePjtName\n\n"
+                thread::send -async [tsv::set application importProgress] "StartProgress"
 		set catchErrCode [SaveProject $savePjtDir $savePjtName]
+		thread::send -async [tsv::set application importProgress] "StopProgress"
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
 		if { $ErrCode != 0 } {
 			#tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
@@ -2325,6 +2361,11 @@ proc Operations::AddCN {cnName tmpImpDir nodeId} {
 	set parentId [lrange $parentId 1 end]
 	set parentId [join $parentId -]
 
+	lappend nodeIdList $nodeId 
+	puts "nodeIdList->$nodeIdList"
+	#creating the GUI for CN
+	set child [$treePath insert end $node CN-$parentId-$cnCount -text "$cnName\($nodeId\)" -open 0 -image [Bitmap::get cn]]
+
 	if {$tmpImpDir != ""} {
 		#API
 		#DllExport ocfmRetCode ImportXML(char* fileName, int NodeID, ENodeType NodeType);
@@ -2346,11 +2387,7 @@ proc Operations::AddCN {cnName tmpImpDir nodeId} {
 		}
 		
 		#lappend nodeIdList CN-1-$cnCount
-		lappend nodeIdList $nodeId 
-	
-	puts "nodeIdList->$nodeIdList"
-		#creating the GUI for CN
-		set child [$treePath insert end $node CN-$parentId-$cnCount -text "$cnName\($nodeId\)" -open 0 -image [Bitmap::get cn]]
+
 		
                 thread::send -async [tsv::set application importProgress] "StartProgress"
 		#creating the GUI for imported objects
@@ -2359,11 +2396,11 @@ proc Operations::AddCN {cnName tmpImpDir nodeId} {
 		thread::send -async [tsv::set application importProgress] "StopProgress"
 		
 	} else {
-		#lappend nodeIdList CN-1-$cnCount
-		lappend nodeIdList $nodeId 
+		##lappend nodeIdList CN-1-$cnCount
+		#lappend nodeIdList $nodeId 
 
-		#should not import should create GUI default are not it will come here
-		set child [$treePath insert end $node CN-$parentId-$cnCount -text "$cnName\($nodeId\)" -open 0 -image [Bitmap::get cn]]
+		##should not import should create GUI default are not it will come here
+		#set child [$treePath insert end $node CN-$parentId-$cnCount -text "$cnName\($nodeId\)" -open 0 -image [Bitmap::get cn]]
 	}
 	return 
 }
@@ -2774,7 +2811,7 @@ proc Operations::TransferCDCXAP {choice} {
 ##	set types {
 ##        {"CDC files"     {*.cdc } }
 ##	}
-##	set fileLocation_from_CDC [tk_getOpenFile -initialdir [file join $projectDir CDC_XAP] -filetypes $types -parent . -title "Select CDC file to transfer"]
+##	set fileLocation_from_CDC [tk_getOpenFile -initialdir [file join $projectDir cdc_xap] -filetypes $types -parent . -title "Select CDC file to transfer"]
 ##        if {$fileLocation_from_CDC == ""} {
 ##                return
 ##        }
@@ -2783,7 +2820,7 @@ proc Operations::TransferCDCXAP {choice} {
 ##
 ##
 ##	# Validate filename
-##	set fileLocation_to_CDC [tk_getSaveFile -filetypes $types -initialdir [file join $projectDir CDC_XAP] -initialfile [Operations::GenerateAutoName [file join $projectDir CDC_XAP] CDC .cdc ] -title "Transfer CDC at"]
+##	set fileLocation_to_CDC [tk_getSaveFile -filetypes $types -initialdir [file join $projectDir cdc_xap] -initialfile [Operations::GenerateAutoName [file join $projectDir cdc_xap] CDC .cdc ] -title "Transfer CDC at"]
 ##        if {$fileLocation_to_CDC == ""} {
 ##                return
 ##        }
@@ -2833,7 +2870,7 @@ proc Operations::TransferCDCXAP {choice} {
 #	#	}
 #	#}
 #
-#	#if {![file isfile [file join [pwd] XAP.xap]]} {}
+#	#if {![file isfile [file join [pwd] xap]]} {}
 #	#if {![file isfile [file join [pwd] XAP.xap]]} {
 #	#	tk_messageBox -message "XAP does not exist\nBuild the Project to Generate XAP" -icon info -title "Information"
 #	#	return
@@ -2842,7 +2879,7 @@ proc Operations::TransferCDCXAP {choice} {
 #	set types {
 #        {"XAP Files"     {*.xap } }
 #	}
-#	set fileLocation_from_XAP [tk_getOpenFile -initialdir [file join $projectDir CDC_XAP] -filetypes $types -parent . -title "Select XAP file to transfer"]
+#	set fileLocation_from_XAP [tk_getOpenFile -initialdir [file join $projectDir cdc_xap] -filetypes $types -parent . -title "Select XAP file to transfer"]
 #        if {$fileLocation_from_XAP == ""} {
 #                return
 #        }
@@ -2853,7 +2890,7 @@ proc Operations::TransferCDCXAP {choice} {
 #
 #
 #	# Validate filename
-#	set fileLocation_to_XAP [tk_getSaveFile -filetypes $types -initialdir [file join $projectDir CDC_XAP] -initialfile [Operations::GenerateAutoName [file join $projectDir CDC_XAP] XAP .xap ] -title "Transfer XAP file at"]
+#	set fileLocation_to_XAP [tk_getSaveFile -filetypes $types -initialdir [file join $projectDir cdc_xap] -initialfile [Operations::GenerateAutoName [file join $projectDir cdc_xap] XAP .xap ] -title "Transfer XAP file at"]
 #        if {$fileLocation_to_XAP == ""} {
 #                return
 #        }
@@ -2901,13 +2938,15 @@ proc Operations::BuildProject {} {
 		return	
 	}
 
-	set result [tk_messageBox -message "Do you want to Build Project ?" -type yesno -icon question -title "Question" -parent .]
-	switch -- $result {
-		yes {
-			#continue
-		}
-		no { 
-			return
+	if { $ra_auto == 1 } {
+		set result [tk_messageBox -message "MN saved values will be lost\nDo you want to Build Project ?" -type yesno -icon question -title "Question" -parent .]
+		switch -- $result {
+			yes {
+				#continue
+			}
+			no { 
+				return
+			}
 		}
 	}
 	
@@ -2919,12 +2958,12 @@ proc Operations::BuildProject {} {
         #if {$fileLocation_CDC == ""} {
         #        return
         #}
-	set fileLocation_CDC [Operations::GenerateAutoName [file join $projectDir CDC_XAP] CDC .cdc ]
+	set fileLocation_CDC [Operations::GenerateAutoName [file join $projectDir cdc_xap] CDC .cdc ]
 
 	thread::send [tsv::get application importProgress] "StartProgress"	
-	puts "GenerateCDC [file join $projectDir CDC_XAP ] fileLocation_CDC->$fileLocation_CDC"
-	#set catchErrCode [GenerateCDC [file join $projectDir CDC_XAP $fileLocation_CDC.cdc] ]
-	set catchErrCode [GenerateCDC [file join $projectDir CDC_XAP] ]
+	puts "GenerateCDC [file join $projectDir cdc_xap ] fileLocation_CDC->$fileLocation_CDC"
+	#set catchErrCode [GenerateCDC [file join $projectDir cdc_xap $fileLocation_CDC.cdc] ]
+	set catchErrCode [GenerateCDC [file join $projectDir cdc_xap] ]
 	#puts "catchErrCode->$catchErrCode"
 	set ErrCode [ocfmRetCode_code_get $catchErrCode]
 	#puts "ErrCode:$ErrCode"
@@ -2932,7 +2971,7 @@ proc Operations::BuildProject {} {
 
 	if { $ErrCode != 0 } {
 		#error in generating CDC dont generate XAP
-		DisplayErrMsg "Error in generating CDC. XAP not generated" error
+		DisplayErrMsg "Error in generating cdc. xap not generated" error
 		thread::send [tsv::get application importProgress] "StopProgress"
 		return
 	} else {
@@ -2949,13 +2988,13 @@ proc Operations::BuildProject {} {
 		#$treePath insert end root ProjectNode -text [string range $projectName 0 end-[string length [file extension $projectName] ] ] -open 1 -image [Bitmap::get network]
 
 		Operations::RePopulate  $projectDir [string range $projectName 0 end-[string length [file extension $projectName] ] ]
-		set fileLocation_XAP [Operations::GenerateAutoName [file join $projectDir CDC_XAP] XAP .xap ]
+		set fileLocation_XAP [Operations::GenerateAutoName [file join $projectDir cdc_xap] xap "" ]
 
-		puts "GenerateXAP [file join $projectDir CDC_XAP $fileLocation_XAP.xap] fileLocation_XAP->$fileLocation_XAP"
-		#set catchErrCode [GenerateCDC [file join $projectDir CDC_XAP $fileLocation_CDC] ]
+		puts "GenerateXAP [file join $projectDir cdc_xap $fileLocation_XAP] fileLocation_XAP->$fileLocation_XAP"
+		#set catchErrCode [GenerateCDC [file join $projectDir cdc_xap $fileLocation_CDC] ]
 		#set catchErrCode [GenerateXAP XAP]
-		#set catchErrCode [GenerateXAP [file join $projectDir CDC_XAP $fileLocation_XAP.xap] ]
-		set catchErrCode [GenerateXAP [file join $projectDir CDC_XAP XAP] ]
+		#set catchErrCode [GenerateXAP [file join $projectDir cdc_xap $fileLocation_XAP.xap] ]
+		set catchErrCode [GenerateXAP [file join $projectDir cdc_xap xap] ]
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
 		##puts "ErrCode:$ErrCode"
 		if { $ErrCode != 0 } {
@@ -2964,6 +3003,10 @@ proc Operations::BuildProject {} {
 			return
 		} else {
 			DisplayInfo "CDC and XAP are successfully generated"
+			DisplayInfo ""
+			DisplayInfo ""
+			DisplayInfo ""
+			DisplayInfo ""
 			#catch { file copy -force [file join [file join $projectDir $projectName] $projectName.xap]  [file join [pwd] $projectName.xap]}
 			#catch { file rename -force [file join [pwd] $projectName.xap] [file join [pwd] XAP.xap] }
 			#catch { file copy -force [file join [file join $projectDir $projectName] $projectName.xap.h]  [file join [pwd] $projectName.xap.h]}
@@ -2980,11 +3023,12 @@ proc Operations::CleanProject {} {
 	global projectName 
 	
 	#TODO finalise the files to be cleaned
-	foreach tempFile [list mnobd.txt mnobd.cdc XAP XAP.h] {
-		set CleanFile [file join $projectDir CDC_XAP $tempFile]
+	foreach tempFile [list mnobd.txt mnobd.cdc xap xap.h] {
+		set CleanFile [file join $projectDir cdc_xap $tempFile]
 		puts "CleanFile->$CleanFile"
 		catch {file delete -force $CleanFile}
 	}
+	DisplayInfo "cdc and xap related files are deleted"
 }
 
 ################################################################################################
@@ -3209,7 +3253,7 @@ proc Operations::DeleteTreeNode {} {
 			#puts sidx->$sidx
 			if { $sidx == "00" } {
 				#should not allow to delete 00 subindex
-				tk_messageBox -message "Do not delete SubIndex 00" -parent .
+				tk_messageBox -message "SubIndex 00 cannot be deleted" -parent .
 				return
 			}
 
@@ -3220,8 +3264,19 @@ proc Operations::DeleteTreeNode {} {
 			#puts "\n    DeleteSubIndex $nodeId $nodeType $idx $sidx\n"
 			set catchErrCode [DeleteSubIndex $nodeId $nodeType $idx $sidx]
 		} elseif {[string match "*IndexValue*" $node]} {
-			#gets the IndexId of selected Index			
 			set idx [string range [$treePath itemcget $idxNode -text] end-4 end-1 ]
+			set compareIdx [ string toupper $idx]
+			set safeObjectList [list 1006 1020 1300 1C02 1C09 1F26 1F27 1F84 1F89 1F8A 1F8B 1F8D 1F92]
+			
+			if { [lsearch -exact $safeObjectList $compareIdx] != -1 } {
+				set result [tk_messageBox -type yesno -message "$idx is a special Index\nDeleting them lead to unexpected cdc generation\nDo you want to delete?" ]
+				switch -- $result {
+					yes {#continue with process}
+					no {return}
+				}
+			}
+			
+			#gets the IndexId of selected Index			
 			#puts "\n      DeleteIndex $nodeId $nodeType $idx\n"
 			set catchErrCode [DeleteIndex $nodeId $nodeType $idx]
 		} else {

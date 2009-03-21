@@ -95,11 +95,11 @@ proc ChildWindows::StartUp {} {
 	
 	text $frame1.t_desc -height 5 -width 40 -state disabled -background white
 
-	radiobutton $frame1.ra_default  -text "Open Sample Project"   -variable startVar -value 1 -font custom2 -command "ChildWindows::SampleProjectText $frame1.t_desc" 
-	radiobutton $frame1.ra_newProj  -text "Create New Project"    -variable startVar -value 2 -font custom2 -command "ChildWindows::NewProjectText $frame1.t_desc" 
-	radiobutton $frame1.ra_openProj -text "Open Existing Project" -variable startVar -value 3 -font custom2 -command "ChildWindows::OpenProjectText $frame1.t_desc" 
+	radiobutton $frame1.ra_default  -text "Open Sample Project"   -variable startVar -value 1 -font custom2 -command "ChildWindows::StartUpText $frame1.t_desc 1" 
+	radiobutton $frame1.ra_newProj  -text "Create New Project"    -variable startVar -value 2 -font custom2 -command "ChildWindows::StartUpText $frame1.t_desc 2" 
+	radiobutton $frame1.ra_openProj -text "Open Existing Project" -variable startVar -value 3 -font custom2 -command "ChildWindows::StartUpText $frame1.t_desc 3" 
 	$frame1.ra_default select
-	SampleProjectText $frame1.t_desc
+	ChildWindows::StartUpText $frame1.t_desc 1
 	 
 	button $frame2.bt_ok -width 8 -text "  Ok  " -command { 
 		if {$startVar == 1} {
@@ -158,38 +158,32 @@ proc ChildWindows::StartUp {} {
 #Output      : -
 #Description : Displays text when Sample project is selected in start up
 ###############################################################################################
-proc ChildWindows::SampleProjectText {t_desc} {
+proc ChildWindows::StartUpText {t_desc choice} {
 	$t_desc configure -state normal
 	$t_desc delete 1.0 end
-	$t_desc insert end "Open the sample Project"
+	if { $choice == 1 } {
+		$t_desc insert end "Open the sample Project"
+	} elseif { $choice == 2 } {
+		$t_desc insert end "Create a new Project"
+	} else {
+		$t_desc insert end "Open Existing Project"
+	}
 	$t_desc configure -state disabled
 }
 
-###############################################################################################
-#proc ChildWindows::NewProjectText
-#Input       : text widget path
-#Output      : -
-#Description : Displays text when New project is selected in start up
-###############################################################################################
-proc ChildWindows::NewProjectText {t_desc} {
-	$t_desc configure -state normal
-	$t_desc delete 1.0 end
-	$t_desc insert end "Create a new Project"
-	$t_desc configure -state disabled
-}
 
-###############################################################################################
-#proc ChildWindows::OpenProjectText
-#Input       : text widget path
-#Output      : -
-#Description : Displays text when Open project is selected in start up
-###############################################################################################
-proc ChildWindows::OpenProjectText {t_desc} {
-	$t_desc configure -state normal
-	$t_desc delete 1.0 end
-	$t_desc insert end "Open Existing Project"
-	$t_desc configure -state disabled
-}
+################################################################################################
+##proc ChildWindows::OpenProjectText
+##Input       : text widget path
+##Output      : -
+##Description : Displays text when Open project is selected in start up
+################################################################################################
+#proc ChildWindows::OpenProjectText {t_desc} {
+#	$t_desc configure -state normal
+#	$t_desc delete 1.0 end
+#	$t_desc insert end "Open Existing Project"
+#	$t_desc configure -state disabled
+#}
 
 ################################################################################################
 ##proc ConnectionSettingWindow
@@ -723,7 +717,10 @@ proc ChildWindows::SaveProjectAsWindow {} {
 		set tempProjectDir [file dirname $saveProjectAs]
 		set tempProjectName [file tail $saveProjectAs]
 
+                thread::send -async [tsv::set application importProgress] "StartProgress"
 		set catchErrCode [SaveProject $tempProjectDir [string range $tempProjectName 0 end-[string length [file extension $tempProjectName]]]]
+		thread::send -async [tsv::set application importProgress] "StopProgress"
+
 		puts "In save project as SaveProject $tempProjectDir [string range $tempProjectName 0 end-[string length [file extension $tempProjectName]]]"
 
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
@@ -889,12 +886,14 @@ proc ChildWindows::NewProjectWindow {} {
 	text $titleInnerFrame2_2.t_desc -height 2 -width $text_width -state disabled -background white
 	
 	radiobutton $titleInnerFrame2_2.ra_def -text "Default" -variable conf -value on -command {
+		ChildWindows::NewProjectMNText $titleInnerFrame2_2.t_desc 
 		$titleInnerFrame2_2.en_imppath config -state disabled 
 		$titleInnerFrame2_2.bt_imppath config -state disabled 
 		#grid remove $titleInnerFrame2_2.en_imppath
 		#grid remove $titleInnerFrame2_2.bt_imppath
 	}
 	radiobutton $titleInnerFrame2_2.ra_imp -text "Import XDC/XDD" -variable conf -value off -command {
+		ChildWindows::NewProjectMNText $titleInnerFrame2_2.t_desc 
 		$titleInnerFrame2_2.en_imppath config -state normal 
 		$titleInnerFrame2_2.bt_imppath config -state normal 
 		#grid  $titleInnerFrame2_2.en_imppath 
@@ -902,12 +901,12 @@ proc ChildWindows::NewProjectWindow {} {
 
 	} 
 	$titleInnerFrame2_2.ra_def select
+	ChildWindows::NewProjectMNText $titleInnerFrame2_2.t_desc 
 	
-	radiobutton $frame4_2.ra_yes -text "Yes" -variable ra_auto -value 1 -command {
-	}
-	radiobutton $frame4_2.ra_no -text "No" -variable ra_auto -value 0 -command {
-	}
+	radiobutton $frame4_2.ra_yes -text "Yes" -variable ra_auto -value 1 -command "ChildWindows::NewProjectMNText $titleInnerFrame2_2.t_desc"
+	radiobutton $frame4_2.ra_no -text "No" -variable ra_auto -value 0 -command "ChildWindows::NewProjectMNText $titleInnerFrame2_2.t_desc"
 	$frame4_2.ra_no select
+	#ChildWindows::NewProjectText $titleInnerFrame2_2.t_desc 5
 
 	button $titleInnerFrame2_2.bt_imppath -state disabled -width 8 -text Browse -command {
 		set types {
@@ -971,8 +970,6 @@ proc ChildWindows::NewProjectWindow {} {
 		#unset frame2_3
 		unset titleInnerFrame1
 		unset titleInnerFrame2
-		#unset ra_proj
-		#unset ra_auto
 		#unset tmpIPaddr
 		unset newProjectFrame2
 		unset titleInnerFrame1_2
@@ -1054,15 +1051,15 @@ proc ChildWindows::NewProjectWindow {} {
 	entry $titleInnerFrame1.en_pjpath -textvariable tmpPjtDir -background white -relief ridge -width 35 
 	set tmpPjtDir $defaultProjectDir
 	
-	radiobutton $titleInnerFrame2_1.ra_save -text "Auto Save" -variable ra_proj -value 0 -command {
-	}
-	radiobutton $titleInnerFrame2_1.ra_prompt -text "Prompt" -variable ra_proj -value 1 -command {
-	}
-	radiobutton $titleInnerFrame2_1.ra_discard -text "Discard" -variable ra_proj -value 2 -command {
-	}
-	$titleInnerFrame2_1.ra_discard select
-	
 	text $titleInnerFrame2.t_desc -height 2 -width 30 -state disabled -background white
+	
+	radiobutton $titleInnerFrame2_1.ra_save -text "Auto Save" -variable ra_proj -value 0 -command "ChildWindows::NewProjectText $titleInnerFrame2.t_desc 0"
+	radiobutton $titleInnerFrame2_1.ra_prompt -text "Prompt" -variable ra_proj -value 1 -command "ChildWindows::NewProjectText $titleInnerFrame2.t_desc 1"
+	radiobutton $titleInnerFrame2_1.ra_discard -text "Discard" -variable ra_proj -value 2 -command "ChildWindows::NewProjectText $titleInnerFrame2.t_desc 2"
+	$titleInnerFrame2_1.ra_prompt select
+	ChildWindows::NewProjectText $titleInnerFrame2.t_desc 1
+	
+
 	
 
 	button $titleInnerFrame1.bt_pjpath -width 8 -text Browse -command {
@@ -1169,6 +1166,60 @@ proc ChildWindows::NewProjectWindow {} {
 	
 }
 
+###############################################################################################
+#proc ChildWindows::NewProjectText
+#Input       : text widget path
+#Output      : -
+#Description : Displays text when New project is selected in start up
+###############################################################################################
+proc ChildWindows::NewProjectText {t_desc choice} {
+	$t_desc configure -state normal
+	
+	switch -- $choice {
+		0 {
+			$t_desc delete 1.0 end
+			$t_desc insert end "Edited data are saved automatically"
+		}
+		1 {
+			$t_desc delete 1.0 end
+			$t_desc insert end "Prompts a message for saving edited data"
+		}
+		2 {
+			$t_desc delete 1.0 end
+			$t_desc insert end "Edited data is discarded unless user saves it"
+		}
+	}
+	$t_desc configure -state disabled
+}
+###############################################################################################
+#proc ChildWindows::NewProjectMNText
+#Input       : text widget path
+#Output      : -
+#Description : Displays text when New project is selected in start up
+###############################################################################################
+proc ChildWindows::NewProjectMNText {t_desc} {
+	global conf
+	global ra_auto
+	
+	if { $conf == "on" } {
+		set msg1 "Import xdd file designed by Kalycito for openPOWERLINK MN"
+	} else {
+		set msg1 "Import user selected xdd or xdc file for MN"
+	}
+	
+	if { $ra_auto == 1 } {
+		set msg2 "Autogenerates MN object dictionary during build"
+	} else {
+		set msg2 "User imported xdd or xdc file will be build"
+	}
+	
+	$t_desc configure -state normal
+	$t_desc delete 1.0 end
+	$t_desc insert 1.0 "$msg1\n$msg2"
+	$t_desc configure -state disabled
+}
+
+
 proc ChildWindows::NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf tempRa_proj tempRa_auto} {
 	
 	global ra_proj
@@ -1234,10 +1285,13 @@ proc ChildWindows::NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf tempRa_
 		#Import parentNode nodeType nodeID 
 		WrapperInteractions::Import OBD-$mnCount-1 0 240
 		thread::send -async [tsv::set application importProgress] "StopProgress"
-
+		
+		DisplayInfo "Imported file $tmpImpDir for MN"
+	
 		file mkdir [file join $projectDir ]
-		file mkdir [file join $projectDir CDC_XAP]
-		file mkdir [file join $projectDir XDC]
+		file mkdir [file join $projectDir cdc_xap]
+		file mkdir [file join $projectDir octx]
+		file mkdir [file join $projectDir scripts]
 		
 		if { [$Operations::projMenu index 3] != "3" } {
 			$Operations::projMenu insert 3 command -label "Close Project" -command "Operations::InitiateCloseProject"
@@ -1248,8 +1302,9 @@ proc ChildWindows::NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf tempRa_
 		
 	} else {
 		#file mkdir [file join $projectDir ]
-		#file mkdir [file join $projectDir CDC_XAP]
-		#file mkdir [file join $projectDir XDC]
+		#file mkdir [file join $projectDir cdc_xap]
+		#file mkdir [file join $projectDir octx]
+		#file mkdir [file join $projectDir scripts]
 	}
 	
 	#ocfmRetCode SetProjectSettings(EAutoGenerate autoGen, EAutoSave autoSave)
@@ -1337,7 +1392,7 @@ proc ImportProgress {stat} {
 		#catch "destroy $winImpoProg"
 		set winImpoProg .
 		#toplevel $winImpoProg
-		wm title     $winImpoProg	"Project Wizard"
+		wm title     $winImpoProg	"Progress"
 		wm resizable $winImpoProg 0 0
 		#wm transient $winImpoProg .
 		wm deiconify $winImpoProg

@@ -98,6 +98,9 @@ proc NoteBookManager::create_tab { nbpath choice } {
 		global ch_generate
 		global indexSaveBtn
 		global subindexSaveBtn
+		global co_access
+		global co_obj
+		global co_pdo
 
     set nbname "page$_pageCounter"
 
@@ -105,7 +108,7 @@ proc NoteBookManager::create_tab { nbpath choice } {
 		set frame [frame $outerFrame.frame -relief flat -borderwidth 10  ] 
 		pack $frame -expand yes -fill both
 
-    set scrollWin [ScrolledWindow $frame.scrollWin]
+       set scrollWin [ScrolledWindow $frame.scrollWin]
     pack $scrollWin -fill both -expand true
 
     set sf [ScrollableFrame $scrollWin.sf]
@@ -142,20 +145,20 @@ proc NoteBookManager::create_tab { nbpath choice } {
 		entry $tabInnerf1.en_obj1 -state disabled   
 		entry $tabInnerf1.en_data1 -state disabled
 		entry $tabInnerf1.en_access1 -state disabled
-		entry $tabInnerf1.en_upper1 -state disabled
-		entry $tabInnerf1.en_lower1 -state disabled
+		entry $tabInnerf1.en_upper1 -state disabled -validate key -vcmd "Validation::IsHex %P %s $tabInnerf1.en_upper1 %d %i"
+		entry $tabInnerf1.en_lower1 -state disabled -validate key -vcmd "Validation::IsHex %P %s $tabInnerf1.en_lower1 %d %i"
 		entry $tabInnerf1.en_pdo1 -state disabled
 		entry $tabInnerf1.en_default1 -state disabled
-		entry $tabInnerf1.en_value1 -textvariable tmpValue$_pageCounter  -relief ridge -justify center -bg white -validate key -vcmd "Validation::IsDec %P $tabInnerf1 %d %i"
+		entry $tabInnerf1.en_value1 -textvariable tmpValue$_pageCounter  -relief ridge -justify center -bg white -validate key -vcmd "Validation::IsDec %P $tabInnerf1.en_value1 %d %i"
 	
 		set objCoList [list DEFTYPE DEFSTRUCT VAR ARRAY RECORD]
-		ComboBox $tabInnerf1.co_obj1 -values $objCoList -modifycmd "" -editable no
+		ttk::combobox $tabInnerf1.co_obj1 -values $objCoList -state readonly -textvariable co_obj
 		#set dataCoList ""
 		#ComboBox $tabInnerf1.co_data1 -values $dataCoList -modifycmd "" -editable no
 		set accessCoList [list const ro wr rw readWriteInput readWriteOutput noAccess]
-		ComboBox $tabInnerf1.co_access1 -values $accessCoList -modifycmd "" -editable no
+		ttk::combobox $tabInnerf1.co_access1 -values $accessCoList -state readonly -textvariable co_access
 		set pdoColist [list NO DEFAULT OPTIONAL RPDO TPDO]
-		ComboBox $tabInnerf1.co_pdo1 -values $pdoColist -modifycmd "" -editable no
+		ttk::combobox $tabInnerf1.co_pdo1 -values $pdoColist -state readonly -textvariable co_pdo
 	
 		set frame1 [frame $tabInnerf1.frame1]
  	  set ra_dec [radiobutton $frame1.ra_dec -text "Dec" -variable ra_dataType -value dec -command "NoteBookManager::ConvertDec $tabInnerf1"]
@@ -163,7 +166,7 @@ proc NoteBookManager::create_tab { nbpath choice } {
 		set ra_ip  [radiobutton $frame1.ra_ip -text "IP address" -variable ra_dataType -value ip -command "ConvertIP $tabInnerf1"]
 		set ra_mac  [radiobutton $frame1.ra_mac -text "MAC address" -variable ra_dataType -value mac -command "ConvertMAC $tabInnerf1"]
     
-		set ch_gen [checkbutton $tabInnerf0_1.ch_gen -onvalue 1 -offvalue 0 -command {} -variable ch_generate]
+		set ch_gen [checkbutton $tabInnerf0_1.ch_gen -onvalue 1 -offvalue 0 -command { Validation::SetPromptFlag } -variable ch_generate]
 	
 		grid config $tabTitlef0 -row 0 -column 0 -sticky ew
 		label $uf.la_empty -text ""
@@ -478,7 +481,7 @@ proc NoteBookManager::ConvertDec {tmpValue} {
 		  set state [$tmpValue.en_value1 cget -state]
 		  $tmpValue.en_value1 configure -validate none -state normal
 		  NoteBookManager::InsertDecimal $tmpValue.en_value1
-		  $tmpValue.en_value1 configure -validate key -vcmd "Validation::IsDec %P $tmpValue %d %i" -state $state
+		  $tmpValue.en_value1 configure -validate key -vcmd "Validation::IsDec %P $tmpValue.en_value1 %d %i" -state $state
 		
 		  set state [$tmpValue.en_default1 cget -state]
 		  $tmpValue.en_default1 configure -state normal
@@ -553,7 +556,7 @@ proc NoteBookManager::ConvertHex {tmpValue} {
 			#puts "NoteBookManager::ConvertHex state->$state"
 		  $tmpValue.en_value1 configure -validate none -state normal
 			NoteBookManager::InsertHex $tmpValue.en_value1
-			$tmpValue.en_value1 configure -validate key -vcmd "Validation::IsHex %P %s $tmpValue %d %i" -state $state
+			$tmpValue.en_value1 configure -validate key -vcmd "Validation::IsHex %P %s $tmpValue.en_value1 %d %i" -state $state
 		
 			set state [$tmpValue.en_default1 cget -state]
 			$tmpValue.en_default1 configure -state normal
@@ -693,16 +696,16 @@ proc NoteBookManager::SaveValue {frame0 frame1} {
 	
 	if { [expr 0x$indexId > 0x1fff] } {
 	  #puts "\nSAVE NOT IMPLEMENTED FOR INDEX ABOVE 1FFF AND ITS SUBINDEX  \n"
-		tk_messageBox -message "Save not implemented for index above 1FFF and its subindex" -parent .
-		#puts "0x$indexId is greater than 0x1fff save not yet implemented"
-		return
+		#tk_messageBox -message "Save not implemented for index above 1FFF and its subindex" -parent .
+		##puts "0x$indexId is greater than 0x1fff save not yet implemented"
+		#return
 		
 		set dataType [$frame1.en_data1 get]
 		#puts "frame1.co_access1 get ->[$frame1.co_access1 cget -values]"
-		set accessType [NoteBookManager::GetComboValue $frame1.co_access1]
+		set accessType [$frame1.co_access1 get]
 		#set objectType [$frame1.co_obj1 getvalue]
-		set objectType [NoteBookManager::GetComboValue $frame1.co_obj1]
-		set pdoType [NoteBookManager::GetComboValue $frame1.co_pdo1]
+		set objectType [$frame1.co_obj1 get]
+		set pdoType [$frame1.co_pdo1 get]
 		set upperLimit [$frame1.en_upper1 get]
 		set lowerLimit [$frame1.en_lower1 get]
 		set default [$frame1.en_default1 get]
@@ -737,8 +740,10 @@ proc NoteBookManager::SaveValue {frame0 frame1} {
 				if {$result == 0} {
 					tk_messageBox -message "MAC address not complete\n values not saved" -title Warning -icon warning -parent .	
 					return
-				}	
-			} elseif { $radioSel == "hex" && !($dataType == "MAC_ADDRESS" || $dataType == "IP_ADDRESS") } {
+				}
+			} elseif { $dataType ==  "Visible_String" } {
+				#continue
+			} elseif { $radioSel == "hex" } {
 				puts "#it is hex value trim leading 0x"
 				set value [string range $value 2 end]
 				set value [string toupper $value]
@@ -747,7 +752,7 @@ proc NoteBookManager::SaveValue {frame0 frame1} {
 				} else {
 					set value 0x$value
 				}
-			} elseif { $radioSel == "dec" && !($dataType == "MAC_ADDRESS" || $dataType == "IP_ADDRESS") } {  
+			} elseif { $radioSel == "dec" } {  
 				puts "#is is dec value convert to hex"
 				#set value [string trimleft $value 0] ; trimming zero leads to error
 				#puts "value after trim for dec :$value"
@@ -776,9 +781,11 @@ proc NoteBookManager::SaveValue {frame0 frame1} {
 			#char* IndexID, char* SubIndexID, char* ActualValue,
 			#char* IndexName, char* Access, char* dataTypeName,
 			#char* pdoMappingVal, char* defaultValue, char* highLimit,
-			#char* lowLimit, char* objType, EFlag flagIfIncludedInCdc);	
-			puts "SetALLSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName $accessType $dataType $pdoType $default $upperLimit $lowerLimit $objectType flag"
-			return
+			#char* lowLimit, char* objType);
+			#TODO 0 is hardcoded
+			puts "SetALLSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName $accessType $dataType $pdoType $default $upperLimit $lowerLimit $objectType 0"
+			set catchErrCode [SetALLSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName $accessType $dataType $pdoType $default $upperLimit $lowerLimit $objectType 0]
+			#return
 		} else {
 	        	#DllExport ocfmRetCode SetSubIndexAttributes(int NodeID, ENodeType NodeType, char* IndexID, char* SubIndexID, char* IndexValue, char* IndexName);
 			puts "SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName"
@@ -794,7 +801,8 @@ proc NoteBookManager::SaveValue {frame0 frame1} {
 			#char* pdoMappingVal, char* defaultValue, char* highLimit,char* lowLimit,
 			#char* objType, EFlag flagIfIncludedInCdc);
 			puts "SetALLIndexAttributes $nodeId $nodeType $indexId $value $newName $accessType $dataType $pdoType $default $upperLimit $lowerLimit $objectType [subst $[subst $chkGen]]"
-			return
+			set catchErrCode [SetALLIndexAttributes $nodeId $nodeType $indexId $value $newName $accessType $dataType $pdoType $default $upperLimit $lowerLimit $objectType [subst $[subst $chkGen]] ]
+			#return
 		} else {
 			#DllExport ocfmRetCode SetIndexAttributes(int NodeID, ENodeType NodeType, char* IndexID, char* IndexValue, char* IndexName);
 			puts "SetIndexAttributes $nodeId $nodeType $indexId $value $newName $chkGen->[subst $[subst $chkGen]]"
@@ -826,13 +834,9 @@ proc NoteBookManager::SaveValue {frame0 frame1} {
 	#puts "newName->$newName"
 	$treePath itemconfigure $nodeSelect -text $newName
 	
-	if { [expr 0x$indexId > 0x1fff] } {
-	    
-	} else {
-	        lappend savedValueList $nodeSelect
-	        $frame0.en_nam1 configure -bg #fdfdd4
-	        $frame1.en_value1 configure -bg #fdfdd4
-	}
+        lappend savedValueList $nodeSelect
+        $frame0.en_nam1 configure -bg #fdfdd4
+        $frame1.en_value1 configure -bg #fdfdd4
 	
 	
 	$frame1.en_value1 configure -state $state
@@ -878,13 +882,13 @@ proc NoteBookManager::DiscardValue {frame0 frame1} {
 		set parent [$treePath parent $nodeSelect]
 	}
 
-	if { [expr 0x$indexId > 0x1fff] } {
-		Validation::ResetPromptFlag
-		Operations::SingleClickNode $nodeSelect
-		return
-	} else {
-	    
-	}
+	#if { [expr 0x$indexId > 0x1fff] } {
+	#	Validation::ResetPromptFlag
+	#	Operations::SingleClickNode $nodeSelect
+	#	return
+	#} else {
+	#    
+	#}
 
 	
 	#gets the nodeId and Type of selected node
@@ -1005,6 +1009,8 @@ proc NoteBookManager::DiscardValue {frame0 frame1} {
 		$frame1.en_value1 configure -validate key -vcmd "Validation::IsIP %P %V" 
 	} elseif { $dataType == "MAC_ADDRESS" } {
 		$frame1.en_value1 configure -validate key -vcmd "Validation::IsMAC %P %V"
+	} elseif { $dataType == "Visible_String" } {
+		$frame1.en_value1 configure -validate key -vcmd "Validation::IsValidStr %P" 
 	} else {
 	
 		#if userPrefList is not changed it cumulates into other problems
@@ -1030,7 +1036,7 @@ proc NoteBookManager::DiscardValue {frame0 frame1} {
 				$frame1.en_default1 configure -state $defaultState
 			}
 			$frame1.frame1.ra_hex select
-			$frame1.en_value1 configure -validate key -vcmd "Validation::IsHex %P %s $frame1 %d %i" 
+			$frame1.en_value1 configure -validate key -vcmd "Validation::IsHex %P %s $frame1.en_value1 %d %i" 
 		} else {
 			set lastConv dec
 			
@@ -1053,7 +1059,7 @@ proc NoteBookManager::DiscardValue {frame0 frame1} {
 				#default value is already in decimal no need to convert
 			}
 			$frame1.frame1.ra_dec select
-			$frame1.en_value1 configure -validate key -vcmd "Validation::IsDec %P $frame1 %d %i" 
+			$frame1.en_value1 configure -validate key -vcmd "Validation::IsDec %P $frame1.en_value1 %d %i" 
 		}
 	}
 	
@@ -1275,12 +1281,35 @@ proc NoteBookManager::DiscardTable {tableWid} {
 #  Description : gets the selected index and returns the corresponding value
 #---------------------------------------------------------------------------------------------------
 proc NoteBookManager::GetComboValue {comboPath} {
-    set value [$comboPath getvalue]
+    set value [$comboPath get]
     if { $value == -1 } {
 		#nothing was selected
 		return []
     }
     set valueList [$comboPath cget -values]
     return [lindex $valueList $value]
+    
+}
+
+#---------------------------------------------------------------------------------------------------
+#  NoteBookManager::SetComboValue
+# 
+#  Arguments : comboPath  - path of the Combobox widget
+#	   
+#  Results : selected value
+#
+#  Description : gets the selected index and returns the corresponding value
+#---------------------------------------------------------------------------------------------------
+proc NoteBookManager::SetComboValue {comboPath value} {
+    set valueList [$comboPath cget -values]
+    set selectedValue [lsearch -exact $valueList $value]
+    if { $selectedValue == -1} {
+	    set comboVar [$comboPath cget -textvariable]
+	    global $comboVar
+	    set $comboVar ""
+	    $comboPath configure -state readonly
+    } else {
+	    $comboPath set [lindex $valueList $selectedValue]
+    }
     
 }

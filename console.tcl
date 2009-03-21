@@ -323,9 +323,12 @@ proc ClearMsgs {} {
 	global warWindow
 	global errWindow
 	
+	set promptChar $
 	foreach windowPath [list [lindex $infoWindow 0] [lindex $warWindow 0]  [lindex $errWindow 0] ] {
 		$windowPath configure -state normal
 		$windowPath delete 1.0 end
+		$windowPath insert end "$promptChar " promptChar
 		$windowPath configure -state disabled
 	}
+	
 }

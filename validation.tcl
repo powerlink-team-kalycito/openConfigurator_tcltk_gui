@@ -223,7 +223,7 @@ proc Validation::IsValidName { input } {
 #
 #  Description : Validates whether an entry is an integer and does not exceed specified range.
 #---------------------------------------------------------------------------------------------------
-proc Validation::IsDec {input framePath mode idx} {
+proc Validation::IsDec {input entryPath mode idx} {
 	
 	set tempInput $input
 	#puts "IsDec test input->$input tempInput->$tempInput isint->[string is int $tempInput]"
@@ -231,7 +231,7 @@ proc Validation::IsDec {input framePath mode idx} {
 	if { [string length $tempInput] > 78 || $tempInput > 115792089237316195423570985008687907853269984665640564039457584007913129639935 || [Validation::CheckNumber $tempInput] == 0  } {
 		return 0
 	} else {
-		after 1 Validation::SetValue $framePath.en_value1 $mode $idx $input
+		after 1 Validation::SetValue $entryPath $mode $idx $input
 		Validation::SetPromptFlag
 		return 1
 	}
@@ -263,7 +263,7 @@ proc Validation::CheckNumber {input} {
 #  IsHex
 # 
 #  Arguments : input     - string (project name)
-# 	       framePath - Frame contains the value of entry widget
+# 	       entryPath - Frame contains the value of entry widget
 #              mode      - Mode of the entry (insert - 1 / delete - 0) 
 #              idx       - Index where the character was inserted or deleted  
 #
@@ -271,7 +271,7 @@ proc Validation::CheckNumber {input} {
 #
 #  Description : Validates whether an entry is an integer and does not exceed specified range.
 #---------------------------------------------------------------------------------------------------
-proc Validation::IsHex {input preinput framePath mode idx} {
+proc Validation::IsHex {input preinput entryPath mode idx} {
 	if {[string match -nocase "0x*" $input]} {
 		set tempInput [string range $input 2 end]
 	} elseif {[string match -nocase "x*" $input]} {
@@ -290,7 +290,7 @@ proc Validation::IsHex {input preinput framePath mode idx} {
 		return 0
 	} else {
 		set tempInput 0x$tempInput
-		after 1 Validation::SetValue $framePath.en_value1 $mode $idx $tempInput
+		after 1 Validation::SetValue $entryPath $mode $idx $tempInput
 		
 		Validation::SetPromptFlag
 		

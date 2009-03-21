@@ -1,169 +1,132 @@
-###############################################################################################
+####################################################################################################
 #
 #
-# NAME:	 console.tcl
+#  NAME:     console.tcl
 #
-# PURPOSE:  purpose description
+#  PURPOSE:  Contains the procedures for Information, Warning and Error window
 #
-# AUTHOR:   Kalycito Infotech Pvt Ltd
+#  AUTHOR:   Kalycito Infotech Pvt Ltd
 #
-# COPYRIGHT NOTICE:
+#  Copyright :(c) Kalycito Infotech Private Limited
 #
-#********************************************************************************
-# (c) Kalycito Infotech Private Limited
+#***************************************************************************************************
+#  COPYRIGHT NOTICE: 
 #
-#  Project:	  openCONFIGURATOR 
-#
-#  Description:  Contains the procedures for Console window
-#
+#  Project:      openCONFIGURATOR 
 #
 #  License:
 #
-#	Redistribution and use in source and binary forms, with or without
-#	modification, are permitted provided that the following conditions
-#	are met:
+#    Redistribution and use in source and binary forms, with or without
+#    modification, are permitted provided that the following conditions
+#    are met:
 #
-#	1. Redistributions of source code must retain the above copyright
-#	   notice, this list of conditions and the following disclaimer.
+#    1. Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
 #
-#	2. Redistributions in binary form must reproduce the above copyright
-#	   notice, this list of conditions and the following disclaimer in the
-#	   documentation and/or other materials provided with the distribution.
+#    2. Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
 #
-#	3. Neither the name of Kalycito Infotech Private Limited nor the names of 
-#	   its contributors may be used to endorse or promote products derived
-#	   from this software without prior written permission. For written
-#	   permission, please contact info@kalycito.com.
+#    3. Neither the name of Kalycito Infotech Private Limited nor the names of 
+#       its contributors may be used to endorse or promote products derived
+#       from this software without prior written permission. For written
+#       permission, please contact info@kalycito.com.
 #
-#	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-#	"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-#	LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-#	FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-#	COPYRIGHT HOLDERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-#	INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-#	BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-#	LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-#	CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-#	LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-#	ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-#	POSSIBILITY OF SUCH DAMAGE.
+#    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+#    "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+#    LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+#    FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+#    COPYRIGHT HOLDERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+#    INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+#    BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+#    LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+#    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+#    LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+#    ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#    POSSIBILITY OF SUCH DAMAGE.
 #
-#	Severability Clause:
+#    Severability Clause:
 #
-#		If a provision of this License is or becomes illegal, invalid or
-#		unenforceable in any jurisdiction, that shall not affect:
-#		1. the validity or enforceability in that jurisdiction of any other
-#		   provision of this License; or
-#		2. the validity or enforceability in other jurisdictions of that or
-#		   any other provision of this License.
+#        If a provision of this License is or becomes illegal, invalid or
+#        unenforceable in any jurisdiction, that shall not affect:
+#        1. the validity or enforceability in that jurisdiction of any other
+#           provision of this License; or
+#        2. the validity or enforceability in other jurisdictions of that or
+#           any other provision of this License.
 #
-#********************************************************************************
+#***************************************************************************************************
 #
 #  REVISION HISTORY:
-# $Log:	  $
-###############################################################################################
+#  
+####################################################################################################
 
-
-#Console
-global Console
+#-------------------------
+#	Global variables
+#-------------------------
 global infoWindow
 global warWindow
 global errWindow
 
-###############################################################################################
-#proc LeftKeyPressEvent
-#Input       : window
-#Output      : -
-#Description : Procedure for binding, moves cursor left
-###############################################################################################
-#proc LeftKeyPressEvent {window} {
-#	if {[$window compare insert >= prompt]} {
-#		set currentPos [lindex [split [$window index insert] "."] 1]
-#		set toPos [lindex [split [$window index prompt] "."] 1]
-#		if {$currentPos <= $toPos} {
-#			return {}
-#		} else  {
-#			$window mark set insert insert-1c
-#		}
-#	} else  {
-#		$window mark set insert "insert -1c"
-#	}
-#}
-
-###############################################################################################
-#proc RightKeyPressEvent
-#Input       : window
-#Output      : -
-#Description : Procedure for binding, moves cursor right
-###############################################################################################
-#proc RightKeyPressEvent {window} {
-#	$window mark set insert "insert +1c"
-#}
-
-###############################################################################################
-#proc BackSpaceKeyPressEvent
-#Input       : window
-#Output      : -
-#Description : Procedure for binding, deletes a character
-###############################################################################################
-#proc BackSpaceKeyPressEvent {window} {
+#---------------------------------------------------------------------------------------------------
+#  InitInfoWindow
+# 
+#  Arguments : window - path of the window where the text widget is created
+# 	           width  - width of the text widget
+#              height - height of the text widget
+#
+#  Results : textwidget - path of the text widget
+#
+#  Description : Creates the Information window and returns the path of the text widget
+#---------------------------------------------------------------------------------------------------
+proc InitInfoWindow {win {width 60} {height 5}} {
 	
-#	if {[$window compare insert <= prompt]} {
-#		return {}
-#	}  else  {
-#		$window delete insert-1c
-#	}
-#}
-
-###############################################################################################
-#proc infoInit
-#Input       : window, width, height
-#Output      : text widget
-#Description : Create the console window and bind required procedures
-###############################################################################################
-proc infoInit {win {width 60} {height 5}} {
-	global Console
-	global promptChar
-	global window
-	global ConfigData
+	#-------------------------
+	#	Global variables
+	#-------------------------
+        global ConfigData
 	
-	set window $win
+	set windowPath $win
 	set promptChar $
 	
-	if {$window == "."} {
-		set window ""
+	if {$windowPath == "."} {
+		set windowPath ""
 	}
-	set Console [interp create]
-		
-	$Console alias setValues SetValues
    
-	text $window.t -width $width -height $height -bg white 
-	catch {$window.t configure -font $ConfigData(options,fonts,editorFont)}
+	text $windowPath.t -width $width -height $height -bg white 
+	catch {$windowPath.t configure -font $ConfigData(options,fonts,editorFont)}
 	
-	$window.t tag configure output -foreground blue
-	$window.t tag configure promptChar -foreground grey40
-	$window.t tag configure error -foreground red
-	$window.t insert end "$promptChar " promptChar
-	$window.t mark set promptChar insert
-	$window.t mark gravity promptChar left
-	$window.t configure -state disabled
-	#bind $window.t <Key-Left> {LeftKeyPressEvent %W ; break}
-	#bind $window.t <Key-Right> {RightKeyPressEvent %W ; break}
-	#bind $window.t <Key-BackSpace> {BackSpaceKeyPressEvent %W;break}
-	pack $window.t -fill both -expand yes
-	return $window.t
+	$windowPath.t tag configure output -foreground blue
+	$windowPath.t tag configure promptChar -foreground grey40
+	$windowPath.t tag configure error -foreground red
+	$windowPath.t insert end "$promptChar " promptChar
+	$windowPath.t mark set promptChar insert
+	$windowPath.t mark gravity promptChar left
+	$windowPath.t configure -state disabled
+	pack $windowPath.t -fill both -expand yes
+	return $windowPath.t
 }
+
+#---------------------------------------------------------------------------------------------------
+#  DisplayInfo
+# 
+#  Arguments : var - string to be displayed
+# 	       	   tag - tag binded with text widget
+#              win - path of text widget
+#              see - to view the inserted text 
+#
+#  Results : -
+#
+#  Description : Display the information message
+#---------------------------------------------------------------------------------------------------	
+proc DisplayInfo {var {tag output} {win {}} {see 1}} {
 	
-###############################################################################################
-#proc DisplayInfo
-#Input       : text to be inserted, window, text widget, flash, see
-#Output      : -
-#Description : Displays the text in text widget for console window
-###############################################################################################
-proc DisplayInfo {var {tag output} {win {}} {flash 0} {see 1}} {
-	global promptChar
-	global infoWindow
-	
+	#-------------------------
+	#	Global variables
+	#-------------------------
+        global infoWindow
+        
+	set promptChar $
+        
 	if {$win == {}} {
 		set win [lindex $infoWindow 0]
 	}
@@ -173,7 +136,7 @@ proc DisplayInfo {var {tag output} {win {}} {flash 0} {see 1}} {
 	if {[string index $var [expr [string length $var]-1]] != "\n"} {
 		$win insert end "\n"
 	}
-	set promptChar $
+	
 	$win insert end "$promptChar " promptChar
 	$win mark gravity promptChar left
 	if $see {$win see insert}
@@ -183,55 +146,67 @@ proc DisplayInfo {var {tag output} {win {}} {flash 0} {see 1}} {
 	return
 }
 
-
-###############################################################################################
-#proc errorInit
-#Input       : window, width, height
-#Output      : text widget
-#Description : Create the error window and bind required procedures
-###############################################################################################
-proc errorInit {win {width 60} {height 5}} {
-	global Console
-	global promptChar
-	global window
-	global ConfigData
+#---------------------------------------------------------------------------------------------------
+#  InitErrorWindow
+# 
+#  Arguments : window - path of the window where the text widget is created
+# 	       	   width - width of the text widget
+#              height - height of the text widget
+#
+#  Results : textwidget - path of the text widget
+#
+#  Description : Creates the Error window and returns the path of the text widget
+#---------------------------------------------------------------------------------------------------
+proc InitErrorWindow {win {width 60} {height 5}} {
 	
-	set window $win
+	#-------------------------
+	#	Global variables
+	#-------------------------
+        global ConfigData
+	
+	set windowPath $win
 	set promptChar $
 	
-	if {$window == "."} {
-		set window ""
+	if {$windowPath == "."} {
+		set windowPath ""
 	}
-	set Console [interp create]
-		
-	$Console alias setValues SetValues
-	text $window.t -width $width -height $height -bg white
-	catch {$window.t configure -font $ConfigData(options,fonts,editorFont)}
+
+	text $windowPath.t -width $width -height $height -bg white
+	catch {$windowPath.t configure -font $ConfigData(options,fonts,editorFont)}
 	
-	$window.t tag configure output -foreground blue 
-	$window.t tag configure promptChar -foreground grey40
-	$window.t tag configure error -foreground red
-	$window.t insert end "$promptChar " promptChar
-	$window.t mark set promptChar insert
-	$window.t mark gravity promptChar left
-	$window.t configure -state disabled
-	#bind $window.t <Key-Left> {LeftKeyPressEvent %W ; break}
-	#bind $window.t <Key-Right> {RightKeyPressEvent %W ; break}
-	#bind $window.t <Key-BackSpace> {BackSpaceKeyPressEvent %W;break}
-	pack $window.t -fill both -expand yes
-	return $window.t
+	$windowPath.t tag configure output -foreground blue 
+	$windowPath.t tag configure promptChar -foreground grey40
+	$windowPath.t tag configure error -foreground red
+	$windowPath.t insert end "$promptChar " promptChar
+	$windowPath.t mark set promptChar insert
+	$windowPath.t mark gravity promptChar left
+	$windowPath.t configure -state disabled
+	
+	pack $windowPath.t -fill both -expand yes
+	return $windowPath.t
 }
 
-###############################################################################################
-#proc DisplayErrMsg
-#Input       : text to be inserted, window, text widget, flash, see
-#Output      : -
-#Description : Displays the text in text widget for error window
-###############################################################################################
-proc DisplayErrMsg {var {tag output} {win {}} {flash 0} {see 1}} {
-	global promptChar
+#---------------------------------------------------------------------------------------------------
+#  DisplayErrMsg
+# 
+#  Arguments : var - string to be displayed
+# 	     	   tag - tag binded with text widget
+#              win - path of text widget
+#              see - to view the inserted text 
+#
+#  Results : -
+#
+#  Description :  Display the error message
+#---------------------------------------------------------------------------------------------------
+proc DisplayErrMsg {var {tag output} {win {}} {see 1}} {
+	
+	#-------------------------
+	#	Global variables
+	#-------------------------
 	global errWindow
 	
+        set promptChar $
+        
 	if {$win == {}} {
 		set win [lindex $errWindow 0]
 	}
@@ -241,7 +216,7 @@ proc DisplayErrMsg {var {tag output} {win {}} {flash 0} {see 1}} {
 	if {[string index $var [expr [string length $var]-1]] != "\n"} {
 		$win insert end "\n"
 	}
-	set promptChar $
+	
 	$win insert end "$promptChar " promptChar
 	$win mark gravity promptChar left
 	if $see {$win see insert}
@@ -251,55 +226,66 @@ proc DisplayErrMsg {var {tag output} {win {}} {flash 0} {see 1}} {
 	return
 }
 
-###############################################################################################
-#proc warnInit
-#Input       : window, width, height
-#Output      : text widget
-#Description : Create the warning window and bind required procedures
-###############################################################################################
-proc warnInit {win {width 60} {height 5}} {
-	global Console
-	global promptChar
-	global window
+#---------------------------------------------------------------------------------------------------
+#  InitWarnWindow
+# 
+#  Arguments : window - path of the window where the text widget is created
+# 	       	   width  - width of the text widget
+#              height - height of the text widget
+#
+#  Results : textwidget - path of the text widget
+#
+#  Description : Creates the warning window and returns the path of the text widget
+#---------------------------------------------------------------------------------------------------
+proc InitWarnWindow {win {width 60} {height 5}} {
+
+	#-------------------------
+	#	Global variables
+	#-------------------------
 	global ConfigData
 	
-	set window $win
+	set windowPath $win
 	set promptChar $
 	
-	if {$window == "."} {
-		set window ""
+	if {$windowPath == "."} {
+		set windowPath ""
 	}
-	set Console [interp create]
-		
-	$Console alias setValues SetValues
-	$Console alias puts DisplayWarning
-	text $window.t -width $width -height $height -bg white
-	catch {$window.t configure -font $ConfigData(options,fonts,editorFont)}
+
+	text $windowPath.t -width $width -height $height -bg white
+	catch {$windowPath.t configure -font $ConfigData(options,fonts,editorFont)}
 	
-	$window.t tag configure output -foreground blue
-	$window.t tag configure promptChar -foreground grey40
-	$window.t tag configure error -foreground red
-	$window.t insert end "$promptChar " promptChar
-	$window.t mark set promptChar insert
-	$window.t mark gravity promptChar left
-	$window.t configure -state disabled
-	#bind $window.t <Key-Left> {LeftKeyPressEvent %W ; break}
-	#bind $window.t <Key-Right> {RightKeyPressEvent %W ; break}
-	#bind $window.t <Key-BackSpace> {BackSpaceKeyPressEvent %W;break}
-	pack $window.t -fill both -expand yes
-	return $window.t
+	$windowPath.t tag configure output -foreground blue
+	$windowPath.t tag configure promptChar -foreground grey40
+	$windowPath.t tag configure error -foreground red
+	$windowPath.t insert end "$promptChar " promptChar
+	$windowPath.t mark set promptChar insert
+	$windowPath.t mark gravity promptChar left
+	$windowPath.t configure -state disabled
+	
+	pack $windowPath.t -fill both -expand yes
+	return $windowPath.t
 }
 
-###############################################################################################
-#proc DisplayWarning
-#Input       : text to be inserted, window, text widget, flash, see
-#Output      : -
-#Description : Displays the text in text widget for warning window
-###############################################################################################
-proc DisplayWarning {var {tag output} {win {}} {flash 0} {see 1}} {
-	global promptChar
+#---------------------------------------------------------------------------------------------------
+#  DisplayWarning
+# 
+#  Arguments : var - string to be displayed
+# 	       	   tag - tag binded with text widget
+#              win - path of text widget
+#              see - to view the inserted text 
+#
+#  Results : -
+#
+#  Description :  Display the warning message
+#---------------------------------------------------------------------------------------------------
+proc DisplayWarning {var {tag output} {win {}} {see 1}} {
+
+	#-------------------------
+	#	Global variables
+	#-------------------------
 	global warWindow
 	
+        set promptChar $
 	if {$win == {}} {
 		set win [lindex $warWindow 0]
 	}
@@ -309,7 +295,7 @@ proc DisplayWarning {var {tag output} {win {}} {flash 0} {see 1}} {
 	if {[string index $var [expr [string length $var]-1]] != "\n"} {
 		$win insert end "\n"
 	}
-	set promptChar $
+	
 	$win insert end "$promptChar " promptChar
 	$win mark gravity promptChar left
 	if $see {$win see insert}
@@ -319,19 +305,27 @@ proc DisplayWarning {var {tag output} {win {}} {flash 0} {see 1}} {
 	return
 }
 
+#---------------------------------------------------------------------------------------------------
+#  ClearMsgs
+# 
+#  Arguments : -
+#
+#  Results : -
+#
+#  Description :  Clear displayinfo, error and warning message
+#---------------------------------------------------------------------------------------------------
 proc ClearMsgs {} {
+
+	#-------------------------
+	#	Global variables
+	#-------------------------
 	global infoWindow
 	global warWindow
 	global errWindow
 	
-	foreach window [list [lindex $infoWindow 0] [lindex $warWindow 0]  [lindex $errWindow 0] ] {
-		$window configure -state normal
-		$window delete 1.0 end
-		$window configure -state disabled
+	foreach windowPath [list [lindex $infoWindow 0] [lindex $warWindow 0]  [lindex $errWindow 0] ] {
+		$windowPath configure -state normal
+		$windowPath delete 1.0 end
+		$windowPath configure -state disabled
 	}
-}
-
-# this won't be executed if console.tcl is sourced by another app
-if {[string compare [info script] $argv0] == 0} {
-	infoInit .
 }

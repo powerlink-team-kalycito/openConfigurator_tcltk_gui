@@ -1,4 +1,4 @@
-###############################################################################################
+####################################################################################################
 #
 #
 # NAME:     validation.tcl
@@ -9,12 +9,12 @@
 #
 # COPYRIGHT NOTICE:
 #
-#********************************************************************************
+#***************************************************************************************************
 # (c) Kalycito Infotech Private Limited
 #
 #  Project:      openCONFIGURATOR 
 #
-#  Description:  Contains the validations used in appliaction
+#  Description:  Contains the validations used in application
 #
 #
 #  License:
@@ -57,21 +57,26 @@
 #        2. the validity or enforceability in other jurisdictions of that or
 #           any other provision of this License.
 #
-#********************************************************************************
+#***************************************************************************************************
 #
 #  REVISION HISTORY:
 # $Log:      $
-###############################################################################################
+####################################################################################################
 
-###############################################################################################
-#proc IsIp
-#Input       : input, type
-#Output      : 0 or 1
-#Description : Validates whether an entry is IP address
-###############################################################################################
-proc IsIP {str type} {
-	puts "IsIP type->$type"
-	#set
+namespace eval Validation {
+	
+}
+#---------------------------------------------------------------------------------------------------
+#  Validation::IsIp
+# 
+#  Arguments : str  - string to be validate 
+# 	       type - Type for validation 
+#
+#  Results : 0  or 1
+#
+#  Description : Validates whether an entry is IP address
+#---------------------------------------------------------------------------------------------------
+proc Validation::IsIP {str type} {
 	# modify these if you want to check specific ranges for
 	# each portion - now it look for 0 - 255 in each
 	set ipnum1 {\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]}
@@ -84,14 +89,14 @@ proc IsIP {str type} {
 	set partialExp [subst -nocommands -nobackslashes $partialExp]
 	if {[string equal $type focusout] || [string equal $type dstry] || [string equal $type forced]} {
 		if [regexp -- $fullExp $str] {
-			SetPromptFlag
+			Validation::SetPromptFlag
 			return 1
 		} else {
 			return 0
 		}
 	} else {
 		if [regexp -- $partialExp $str] {
-			SetPromptFlag
+			Validation::SetPromptFlag
 			return 1
 		} else {
 			return 0
@@ -101,18 +106,26 @@ proc IsIP {str type} {
 	}
 } 
 
-proc IsMAC {str type} {
-	#puts "str->$str type->$type"
+#---------------------------------------------------------------------------------------------------
+#  Validation::IsMAC
+# 
+#  Arguments : str  - string to be validate 
+# 	       type - Type for validation 
+#
+#  Results : 0  or 1
+#
+#  Description : Validates whether an entry is MAC address
+#---------------------------------------------------------------------------------------------------
+proc Validation::IsMAC {str type} {
 	set macnum {[0-9a-fA-F]}
 	set len [string length $str]
-	#puts "len->$len"
 
 	if { $type == "forced" } {
 		set len 17
 	}
 
 	if { $len == 0 } {
-		SetPromptFlag
+		Validation::SetPromptFlag
 		return 1
 	} else {
 		if {$len > 17} {
@@ -131,14 +144,12 @@ proc IsMAC {str type} {
  					set valExp $valExp\:
 					set flag 1
 				} else {
-					puts "\nthis condition never reach in IsMAC flag->$flag\n"
+					puts "\nThis condition never reach in IsMAC flag->$flag\n"
 				}
 			}
-			#puts "valExp->$valExp\n"
 			set valExp [subst -nocommands -nobackslashes $valExp]
-			#puts "valExp->$valExp\n"
 			if [regexp -- $valExp $str] {
-				SetPromptFlag
+				Validation::SetPromptFlag
 				return 1
 			} else {
 				return 0
@@ -146,13 +157,18 @@ proc IsMAC {str type} {
 		}
 	}
 }
-###############################################################################################
-#proc IsInt
-#Input       : input, type
-#Output      : 0 or 1
-#Description : Validates whether an entry is an Integer
-###############################################################################################
-proc IsInt {input type} {
+
+#---------------------------------------------------------------------------------------------------
+#  IsInt
+# 
+#  Arguments : input  - string to be validate 
+# 	       type   - Type for validation 
+#
+#  Results : 0  or 1
+#
+#  Description : Validates whether an entry is integer and length is 4
+#---------------------------------------------------------------------------------------------------
+proc Validation::IsInt {input type} {
 	if {[expr {[string len $input] <= 3} && {[string is int $input]}]} {
 		return 1 
 	} else {
@@ -160,81 +176,102 @@ proc IsInt {input type} {
 	} 
 }
 
-###############################################################################################
-#proc IsValidStr
-#Input       : input, type
-#Output      : 0 or 1
-#Description : Validates whether an entry is a valid string
-###############################################################################################
-proc IsValidStr {input} {
+#---------------------------------------------------------------------------------------------------
+#  IsValidStr
+# 
+#  Arguments : input  - string to be validate 
+# 	
+#  Results : 0  or 1
+#
+#  Description : Validates whether an entry is only the alphanumeric with underscore
+#---------------------------------------------------------------------------------------------------
+proc Validation::IsValidStr {input} {
 	if { [string is wordchar $input] == 0 || [string length $input] > 32 } {
 		return 0
 	} else {
-		SetPromptFlag
+		Validation::SetPromptFlag
 		return 1
 	}
 }
 
-proc IsValidProjectName { input } {
+#---------------------------------------------------------------------------------------------------
+#  IsValidName
+# 
+#  Arguments : input  - string (project name)
+# 	
+#  Results : 0  or 1
+#
+#  Description : Validates whether the string is valid project name.
+#---------------------------------------------------------------------------------------------------
+proc Validation::IsValidName { input } {
 	if { [string is wordchar $input] == 0 || [string length $input] > 32 } {
 		return 0
 	} else {
 		return 1
 	}
 }
-###############################################################################################
-#proc IsDec
-#Input       : input
-#Output      : 0 or 1
-#Description : Validates whether an entry is a integer and does not exceed specified range
-###############################################################################################
-proc IsDec {input tmpValue mode idx} {
 
-	#set tempInput [string trimleft $input 0] ; #trimming zero leads to error	
+#---------------------------------------------------------------------------------------------------
+#  IsDec
+# 
+#  Arguments : input     - string (project name)
+# 	       framePath - Frame contains the value of entry widget
+#              mode      - Mode of the entry (insert - 1 / delete - 0) 
+#              idx       - Index where the character was inserted or deleted  
+#
+#  Results : 0  or 1
+#
+#  Description : Validates whether an entry is an integer and does not exceed specified range.
+#---------------------------------------------------------------------------------------------------
+proc Validation::IsDec {input framePath mode idx} {
+	
 	set tempInput $input
 	#puts "IsDec test input->$input tempInput->$tempInput isint->[string is int $tempInput]"
-	#340282366920938463463374607431768211455 is the corresponding value of 32 F's
 	#115792089237316195423570985008687907853269984665640564039457584007913129639935 is corresponding value of 64 F's
-	if { [string length $tempInput] > 78 || $tempInput > 115792089237316195423570985008687907853269984665640564039457584007913129639935 || [Int $tempInput] == 0  } {
+	if { [string length $tempInput] > 78 || $tempInput > 115792089237316195423570985008687907853269984665640564039457584007913129639935 || [Validation::CheckNumber $tempInput] == 0  } {
 		return 0
 	} else {
-		after 1 SetValue $tmpValue.en_value1 $mode $idx $input
-		
-		SetPromptFlag
-		
+		after 1 Validation::SetValue $framePath.en_value1 $mode $idx $input
+		Validation::SetPromptFlag
 		return 1
 	}
 }
 
-proc Int {input} {
+#---------------------------------------------------------------------------------------------------
+#  Validation::CheckNumber
+# 
+#  Arguments : input  - string to be validated
+#
+#  Results : 0  or 1
+#
+#  Description : Validates string is containing only numbers 0 to 9
+#---------------------------------------------------------------------------------------------------
+proc Validation::CheckNumber {input} {
 	set exp {[0-9]}
-	#puts "\n\n********"
-	for {set cnt 0} {$cnt < [string length $input]} {incr cnt} {
-		#puts "string index $input $cnt ->[string index $input $cnt]"
-		set res [regexp -- $exp [string index $input $cnt] ]
+	for {set checkCount 0} {$checkCount < [string length $input]} {incr checkCount} {
+		set res [regexp -- $exp [string index $input $checkCount] ]
 		if {$res == 1} {
 			#continue with process
 		} else {
-			#res is zero 
 			return 0
 		}
 	}
-	#puts "*********\n\n"
-	#tk_messageBox -message "Issue"
-	
 	return 1
 }
 
-###############################################################################################
-#proc IsHex
-#Input       : input
-#Output      : 0 or 1
-#Description : Validates whether an entry is a hexa decimal and does not exceed specified range
-###############################################################################################
-proc IsHex {input preinput tmpValue mode idx} {
-	#puts "IsHex test"
-	#puts "IsHex preinput->$preinput 0x[string range $input 1 end]"
-	#set tmpVar [$tmpValue cget -textvariable]
+#---------------------------------------------------------------------------------------------------
+#  IsHex
+# 
+#  Arguments : input     - string (project name)
+# 	       framePath - Frame contains the value of entry widget
+#              mode      - Mode of the entry (insert - 1 / delete - 0) 
+#              idx       - Index where the character was inserted or deleted  
+#
+#  Results : 0  or 1
+#
+#  Description : Validates whether an entry is an integer and does not exceed specified range.
+#---------------------------------------------------------------------------------------------------
+proc Validation::IsHex {input preinput framePath mode idx} {
 	if {[string match -nocase "0x*" $input]} {
 		set tempInput [string range $input 2 end]
 	} elseif {[string match -nocase "x*" $input]} {
@@ -249,73 +286,87 @@ proc IsHex {input preinput tmpValue mode idx} {
 			set tempInput $input
 		}
 	}
-#puts "string length $tempInput ->[string length $tempInput]"
-
 	if { [string length $tempInput] > 64 || [string is xdigit $tempInput ] == 0 } {
 		return 0
 	} else {
 		set tempInput 0x$tempInput
-		after 1 SetValue $tmpValue.en_value1 $mode $idx $tempInput
-		#puts "SetValue called"
+		after 1 Validation::SetValue $framePath.en_value1 $mode $idx $tempInput
 		
-		SetPromptFlag
+		Validation::SetPromptFlag
 		
 		return 1
 	}
 }
 
-###############################################################################################
-#proc SetValue
-#Input       : input
-#Output      : 0 or 1
-#Description : #used to insert data into entry widget mainly for entry displaying actualValue
-###############################################################################################
-proc SetValue {tmpValue mode idx {str no_input}  } {
-	puts "SetValue invoked mode->$mode idx->$idx str->$str"
-	set tmpVar [$tmpValue cget -textvariable]
-	set state [$tmpValue cget -state]
-	$tmpValue configure -state normal -validate none
-	#puts SetValue->[$tmpValue cget -vcmd]
-	$tmpValue delete 0 end
+#---------------------------------------------------------------------------------------------------
+#  Validation::SetValue
+# 
+#  Arguments : entryPath - entry widget path in which value is inserted
+#	       mode	 - indicaties deletion or insertion of character
+#	       idx       - index where cursor is set
+#	       str       - string to be inserted
+#
+#  Results : -
+#
+#  Description : Inserts the string in entry widget and placing the cursor in required place
+#---------------------------------------------------------------------------------------------------
+proc Validation::SetValue {entryPath mode idx {str no_input}  } {
+	puts "Validation::SetValue invoked mode->$mode idx->$idx str->$str"
+	set tmpVar [$entryPath cget -textvariable]
+	set state [$entryPath cget -state]
+	$entryPath configure -state normal -validate none
+	$entryPath delete 0 end
 	if {$str != "no_input"} {
-		$tmpValue insert 0 $str
+		$entryPath insert 0 $str
 		if {$mode == 0} {
 			#value has been deleted
-			$tmpValue icursor $idx
+			$entryPath icursor $idx
 		} else {
 			#value has been inserted
-			$tmpValue icursor [expr $idx+1] 
+			$entryPath icursor [expr $idx+1] 
 		}
 	} else {
 		#entry box made empty no need to insert value	
 	}
-	$tmpValue configure -state $state -validate key
+	$entryPath configure -state $state -validate key
 }
 
-###############################################################################################
-#proc IsValidIdx
-#Input       : input
-#Output      : 0 or 1
-#Description : Validates whether an entry is a index and does not exceed specified range
-###############################################################################################
-proc IsValidIdx {input len} {
-	if {[string is xdigit $input] == 0 || [string length $input] > $len } {
+#---------------------------------------------------------------------------------------------------
+#  Validation::IsValidIdx
+# 
+#  Arguments : input       - input to be validated
+#	       indexLength - required length
+#
+#  Results : -
+#
+#  Description : Validates whether an entry is a index and does not exceed specified range
+#---------------------------------------------------------------------------------------------------
+proc Validation::IsValidIdx {input indexLength} {
+	if {[string is xdigit $input] == 0 || [string length $input] > $indexLength } {
 		return 0
 	} else {
-		SetPromptFlag
 		return 1
 	}
 }
 
-###############################################################################################
-#proc IsTableHex
-#Input       : input
-#Output      : 0 or 1
-#Description : Validates whether an entry is a index and does not exceed specified range
-###############################################################################################
-proc IsTableHex {input preinput mode idx len tbl row col win} {
-	#puts "tbl->$tbl==row->$row===col->$col"
-	
+#---------------------------------------------------------------------------------------------------
+#  Validation::IsTableHex
+# 
+#  Arguments : input       - input to be validated
+#	       preinput    - previous validated input
+#	       mode        - indicaties deletion or insertion of character
+#              idx         - index where cursor is set
+#	       reqLen      - required length
+#	       tablePath   - tablelist widget path
+#	       rowIndex    - row of the edited cell
+#	       columnIndex - column of the edited cell
+#	       entryPath   - embedded entry in tablelist
+#
+#  Results : -
+#
+#  Description : Validates whether an entry is a hexadecimal value and does not exceed specified range
+#---------------------------------------------------------------------------------------------------
+proc Validation::IsTableHex {input preinput mode idx reqLen tablePath rowIndex columnIndex entryPath} {
 	if {[string match -nocase "0x*" $input]} {
 		set input [string range $input 2 end]
 	} elseif {[string match -nocase "x*" $input]} {
@@ -332,92 +383,71 @@ proc IsTableHex {input preinput mode idx len tbl row col win} {
 		}
 	}
 
-	if {[string is xdigit $input] == 0 || [string length $input] > $len } {
+	if {[string is xdigit $input] == 0 || [string length $input] > $reqLen } {
 		return 0
 	} else {
-		#puts "IsTableHex input->$input"
-#		set no [string range [$tbl cellcget $row,0 -text] 2 end]
-#		set mappEntr [string range [$tbl cellcget $row,3 -text] 2 end]
-#		set index [string range [$tbl cellcget $row,4 -text] 2 end]
-#		set subIndex [string range [$tbl cellcget $row,5 -text] 2 end]
-#		set reserved [string range [$tbl cellcget $row,6 -text] 2 end]
-#		set offset [string range [$tbl cellcget $row,7 -text] 2 end]
-#		set length [string range [$tbl cellcget $row,8 -text] 2 end]
-#  		switch -- $col {
-#			3 {
-#				set length [string range $input 0 3]
-#				set offset [string range $input 4 7]
-#				set reserved [string range $input 8 9]
-#				set subIndex [string range $input 10 11]
-#				set index [string range $input 12 15]
-#				$tbl cellconfigure $row,4 -text 0x$index
-#				$tbl cellconfigure $row,5 -text 0x$subIndex
-#				$tbl cellconfigure $row,6 -text 0x$reserved
-#				$tbl cellconfigure $row,7 -text 0x$offset
-#				$tbl cellconfigure $row,8 -text 0x$length
-#				after 1 SetTableValue $win $mode $idx 0x$input
-#            			return 1
-#        		}
-#
-#        		4 {
-#				set mappEntr $length$offset$reserved$subIndex$input
-#        		}
-#
-#	        	5 {
-#				set mappEntr $length$offset$reserved$input$index	
-#        		}
-#        		6 {
-#				set mappEntr $length$offset$input$subIndex$index	
-#        		}
-#        		7 {
-#				set mappEntr $length$input$reserved$subIndex$index
-#        		}
-#       	 		8 {
-#				set mappEntr $input$offset$reserved$subIndex$index
-# 			}
-#    		}
-#		$tbl cellconfigure $row,3 -text 0x$mappEntr
-		after 1 SetTableValue $win $mode $idx 0x$input
+		after 1 Validation::SetTableValue $entryPath $mode $idx 0x$input
 		
-		SetPromptFlag
+		Validation::SetPromptFlag
 		
 		return 1
 	}
 }
 
-proc SetTableValue { win mode idx input } {
-	$win configure -validate none
-	$win delete 0 end
-	$win insert 0 $input
+#---------------------------------------------------------------------------------------------------
+#  Validation::SetTableValue
+# 
+#  Arguments : entryPath - embedded entry in tablelist
+#	       input     - input to be validated
+#	       mode      - indicaties deletion or insertion of character
+#	       idx       - index where cursor is set
+#
+#  Results : -
+#
+#  Description : Validates whether an entry is a hexadecimal value and does not exceed specified range
+#---------------------------------------------------------------------------------------------------
+proc Validation::SetTableValue { entryPath mode idx input } {
+	$entryPath configure -validate none
+	$entryPath delete 0 end
+	$entryPath insert 0 $input
 	if {$mode == 0} {
 		#value has been deleted
-		$win icursor $idx
+		$entryPath icursor $idx
 	} else {
 		#value has been inserted
-		$win icursor [expr $idx+1] 
+		$entryPath icursor [expr $idx+1] 
 	}
-	$win configure -validate key
+	$entryPath configure -validate key
 }
 
-proc _ConvertHex {tmpVal} {
+#---------------------------------------------------------------------------------------------------
+# Validation::InputToHex
+# 
+#  Arguments : input - input to be validated
+#	      
+#  Results : -
+#
+#  Description : converts the input decinmal value into hexadecimal value
+#---------------------------------------------------------------------------------------------------
+proc Validation::InputToHex {input} {
 	
-	puts "\n\n_ConvertHex invoked tmpVal->$tmpVal"
+	puts "\n\nValidation::InputToHex invoked input->$input"
 	
-	if { $tmpVal == 0 } {
+	if { $input == 0 } {
 		#if value is zero return as it is
-		return 0x$tmpVal
-	} elseif { $tmpVal == "" || [Int $tmpVal] == 0 } {
+		return 0x$input
+	} elseif { $input == "" || [Validation::CheckNumber $input] == 0 } {
 		#if value empty or not an int return back same value
-		return $tmpVal
+		return $input
 	}
 	
-	set cnt [CntLeadZero $tmpVal] ; #counting the leading zero if they are present
-	puts "after counting zero tmpVal->$tmpVal"
-	set tmpVal [string trimleft $tmpVal 0]
-	puts "tmpVal->$tmpVal cnt->$cnt"
+	set zeroCount [NoteBookManager::CountLeadZero $input] ; #counting the leading zero if they are present
+	puts "after counting zero input->$input"
+	set input [string trimleft $input 0]
+	puts "input->$input zeroCount->$zeroCount"
 	
-	if { $tmpVal > 4294967295 } {
-		set calcVal $tmpVal
+	if { $input > 4294967295 } {
+		set calcVal $input
 		set finalVal ""
 		while { $calcVal > 4294967295 } {
 			set quo [expr $calcVal / 4294967296 ]
@@ -425,12 +455,12 @@ proc _ConvertHex {tmpVal} {
 			set rem [expr $calcVal - ( $quo * 4294967296) ]
 			puts "rem->$rem"
 			if { $quo  > 4294967295 } {
-				#set rem [AppendZero [format %X $rem] 8]	
-				set finalVal [AppendZero [format %X $rem] 8]$finalVal		
+				#set rem [NoteBookManager::AppendZero [format %X $rem] 8]	
+				set finalVal [NoteBookManager::AppendZero [format %X $rem] 8]$finalVal		
 				puts "rem->$rem...finalVal->$finalVal"
 			} else {
-				#set quo [AppendZero [format %X $quo] 8]
-				set finalVal [AppendZero [format %X $rem] 8]$finalVal	
+				#set quo [NoteBookManager::AppendZero [format %X $quo] 8]
+				set finalVal [NoteBookManager::AppendZero [format %X $rem] 8]$finalVal	
 				puts "final val after appending	$finalVal"
 				set finalVal [format %X $quo]$finalVal
 				puts "quo->$quo...finalVal->$finalVal"
@@ -438,37 +468,52 @@ proc _ConvertHex {tmpVal} {
 			set calcVal $quo
 			puts "calcVal->$calcVal"
 		}
-		set tmpVal $finalVal
-		puts " AppendZero $tmpVal [expr $cnt+[string length $tmpVal] ] -> [ AppendZero $tmpVal [expr $cnt+[string length $tmpVal] ] ]"
-		set tmpVal [ AppendZero $tmpVal [expr $cnt+[string length $tmpVal] ] ] ; #appending trimmed leading zero if any
-		set tmpVal 0x$tmpVal
+		set input $finalVal
+		puts " NoteBookManager::AppendZero $input [expr $zeroCount+[string length $input] ] -> [ NoteBookManager::AppendZero $input [expr $zeroCount+[string length $input] ] ]"
+		set input [ NoteBookManager::AppendZero $input [expr $zeroCount+[string length $input] ] ] ; #appending trimmed leading zero if any
+		set input 0x$input
 		
 	} else {
-		#set cnt [CntLeadZero $tmpVal] ; #counting the leading zero if they are present
-		#puts "cnt->$cnt"
 		#set tempVal [string trimleft $tmpVal 0] ; #zero is trimmed otherwise considered as octal
-		if { [catch {set tmpVal [format %X $tmpVal]}] } {
-			puts "raised an error in _ConvertHex return the sent value itself tempVal->$tempVal"
-			#set tmpVal [format %X $tmpVal] ; # TODO just to check what the error is REMOVE LATER
+		if { [catch {set input [format %X $input]}] } {
+			puts "raised an error in Validation::InputToHex return the sent value itself input->$input"
 		} else {
 			#set tmpVal $tempVal
-			puts " AppendZero $tmpVal [expr $cnt+[string length $tmpVal] ] -> [ AppendZero $tmpVal [expr $cnt+[string length $tmpVal] ] ]"
-			set tmpVal [ AppendZero $tmpVal [expr $cnt+[string length $tmpVal] ] ] ; #appending trimmed leading zero if any
-			set tmpVal 0x$tmpVal
+			puts " NoteBookManager::AppendZero $input [expr $zeroCount+[string length $input] ] -> [ NoteBookManager::AppendZero $input [expr $zeroCount+[string length $input] ] ]"
+			set input [ NoteBookManager::AppendZero $input [expr $zeroCount+[string length $input] ] ] ; #appending trimmed leading zero if any
+			set input 0x$input
 		}
 	}
 	puts "**************\n\n"
-	return $tmpVal
+	return $input
 }
 
-proc SetPromptFlag {} {
+#---------------------------------------------------------------------------------------------------
+# Validation::SetPromptFlag
+# 
+#  Arguments :-
+#	      
+#  Results : -
+#
+#  Description : set the flag checked during prompt 
+#---------------------------------------------------------------------------------------------------
+proc Validation::SetPromptFlag {} {
 	global chkPrompt
 	set chkPrompt 1
 	puts "\tchkprompt SET\t"
 	#set
 }
 
-proc ResetPromptFlag {} {
+#---------------------------------------------------------------------------------------------------
+# Validation::ResetPromptFlag
+# 
+#  Arguments :-
+#	      
+#  Results : -
+#
+#  Description : reset the flag checked during prompt 
+#---------------------------------------------------------------------------------------------------
+proc Validation::ResetPromptFlag {} {
 	global chkPrompt
 	set chkPrompt 0
 	puts "\tchkprompt RESET\t"

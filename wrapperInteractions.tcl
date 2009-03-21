@@ -62,9 +62,13 @@
 #  REVISION HISTORY:
 # $Log:      $
 ###############################################################################################
+namespace eval WrapperInteractions {
+	
+}
+
 
 ##########################FOR TEST########################################################
-proc SortNode {nodeType nodeID nodePos choice {indexPos ""} {indexId ""}} {
+proc WrapperInteractions::SortNode {nodeType nodeID nodePos choice {indexPos ""} {indexId ""}} {
 	global treePath
 	global nodeObj
 
@@ -198,7 +202,7 @@ proc SortNode {nodeType nodeID nodePos choice {indexPos ""} {indexId ""}} {
 #Output      : -
 #Description : Reads an XDC/XDD file and populates tree
 ###############################################################################################
-proc Import {parentNode nodeType nodeID } {
+proc WrapperInteractions::Import {parentNode nodeType nodeID } {
 	global treePath
 	global cnCount
 
@@ -250,7 +254,7 @@ proc Import {parentNode nodeType nodeID } {
 	set parentId [lrange $parentId 1 end]
 	set parentId [join $parentId -]
 	#puts "parentId---->$parentId"
-	set returnList [SortNode $nodeType $nodeID $nodePos ind]
+	set returnList [WrapperInteractions::SortNode $nodeType $nodeID $nodePos ind]
 	set corrList [lindex $returnList 0]
 	#puts "corrList->$corrList"
 	set count [llength $corrList]
@@ -265,7 +269,7 @@ proc Import {parentNode nodeType nodeID } {
 		set catchErr [GetIndexAttributesbyPositions $nodePos $sortedIndexPos 0 ]
 		set IndexName [lindex $catchErr 1]
 		$treePath insert $inc $parentNode IndexValue-$parentId-$inc -text $IndexName\(0x$IndexValue\) -open 0 -image [Bitmap::get index]
-		set sidxCorrList [SortNode $nodeType $nodeID $nodePos sub $sortedIndexPos $IndexValue]
+		set sidxCorrList [WrapperInteractions::SortNode $nodeType $nodeID $nodePos sub $sortedIndexPos $IndexValue]
 		#puts "IndexValue->$IndexValue\nsidxCorrList-->$sidxCorrList\n"
 
 		set SIdxCount [new_intp]
@@ -310,8 +314,8 @@ proc Import {parentNode nodeType nodeID } {
 		#set IndexName [GetIndexAttributes $nodeID $nodeType $IndexValue 0]
 		#set IndexName [lindex $IndexName 1]
 		$treePath insert $inc TPDO-$parentId TPdoIndexValue-$parentId-$inc -text $IndexName\(0x$IndexValue\) -open 0 -image [Bitmap::get index]
-		#set sidxCorrList [SortNode $nodeType $nodeID $nodePos $obj $objNode sub "" $sortedIndexPos $IndexValue]
-		set sidxCorrList [SortNode $nodeType $nodeID $nodePos sub $sortedIndexPos $IndexValue]
+		#set sidxCorrList [WrapperInteractions::SortNode $nodeType $nodeID $nodePos $obj $objNode sub "" $sortedIndexPos $IndexValue]
+		set sidxCorrList [WrapperInteractions::SortNode $nodeType $nodeID $nodePos sub $sortedIndexPos $IndexValue]
 		set SIdxCount [new_intp]
 		set catchErrCode [GetSubIndexCount $nodeID $nodeType $IndexValue $SIdxCount]
 		set SIdxCount [intp_value $SIdxCount]
@@ -348,8 +352,8 @@ proc Import {parentNode nodeType nodeID } {
 		#set IndexName [GetIndexAttributes $nodeID $nodeType $IndexValue 0]
 		#set IndexName [lindex $IndexName 1]
 		$treePath insert $inc RPDO-$parentId RPdoIndexValue-$parentId-$inc -text $IndexName\(0x$IndexValue\) -open 0 -image [Bitmap::get index]
-		#set sidxCorrList [SortNode $nodeType $nodeID $nodePos $obj $objNode sub "" $sortedIndexPos $IndexValue]
-		set sidxCorrList [SortNode $nodeType $nodeID $nodePos sub $sortedIndexPos $IndexValue]
+		#set sidxCorrList [WrapperInteractions::SortNode $nodeType $nodeID $nodePos $obj $objNode sub "" $sortedIndexPos $IndexValue]
+		set sidxCorrList [WrapperInteractions::SortNode $nodeType $nodeID $nodePos sub $sortedIndexPos $IndexValue]
 		set SIdxCount [new_intp]
 		set catchErrCode [GetSubIndexCount $nodeID $nodeType $IndexValue $SIdxCount]
 		set SIdxCount [intp_value $SIdxCount]

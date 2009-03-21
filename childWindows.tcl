@@ -62,14 +62,16 @@
 #  REVISION HISTORY:
 # $Log:      $
 ###############################################################################################
-
+namespace eval ChildWindows {
+	
+}
 ###############################################################################################
 #proc StartUp
 #Input       : -
 #Output      : -
 #Description : Creates the GUI during startup
 ###############################################################################################
-proc StartUp {} {
+proc ChildWindows::StartUp {} {
 	global startVar
 	global frame2
 	set winStartUp .startUp
@@ -86,28 +88,28 @@ proc StartUp {} {
 	set frame1 [frame $winStartUp.fram1]
 	set frame2 [frame $frame1.fram2]
 
-	label $frame1.l_empty1 -text ""
-	label $frame1.l_empty2 -text ""
-	label $frame1.l_empty3 -text ""
-	label $frame1.l_desc -text "Description"
+	label $frame1.la_empty1 -text ""
+	label $frame1.la_empty2 -text ""
+	label $frame1.la_empty3 -text ""
+	label $frame1.la_desc -text "Description"
 	
 	text $frame1.t_desc -height 5 -width 40 -state disabled -background white
 
-	radiobutton $frame1.ra_default  -text "Open Sample Project"   -variable startVar -value 1 -font custom2 -command "SampleProjectText $frame1.t_desc" 
-	radiobutton $frame1.ra_newProj  -text "Create New Project"    -variable startVar -value 2 -font custom2 -command "NewProjectText $frame1.t_desc" 
-	radiobutton $frame1.ra_openProj -text "Open Existing Project" -variable startVar -value 3 -font custom2 -command "OpenProjectText $frame1.t_desc" 
+	radiobutton $frame1.ra_default  -text "Open Sample Project"   -variable startVar -value 1 -font custom2 -command "ChildWindows::SampleProjectText $frame1.t_desc" 
+	radiobutton $frame1.ra_newProj  -text "Create New Project"    -variable startVar -value 2 -font custom2 -command "ChildWindows::NewProjectText $frame1.t_desc" 
+	radiobutton $frame1.ra_openProj -text "Open Existing Project" -variable startVar -value 3 -font custom2 -command "ChildWindows::OpenProjectText $frame1.t_desc" 
 	$frame1.ra_default select
 	SampleProjectText $frame1.t_desc
 	 
-	button $frame2.b_ok -width 8 -text "  Ok  " -command { 
+	button $frame2.bt_ok -width 8 -text "  Ok  " -command { 
 		if {$startVar == 1} {
-			global RootDir
-			set samplePjt [file join $RootDir Sample Sample.oct]
+			global rootDir
+			set samplePjt [file join $rootDir Sample Sample.oct]
 			#puts "open sample->$samplePjt"
 
 			if {[file exists $samplePjt]} {
 				destroy .startUp
-				_openproject $samplePjt
+				Operations::openProject $samplePjt
 			} else {
 				DisplayErrMsg "Sample project is not present" error	
 				focus .startUp
@@ -115,19 +117,19 @@ proc StartUp {} {
 			}
 		} elseif {$startVar == 2} {
 			destroy .startUp
-			NewProjectWindow
+			ChildWindows::NewProjectWindow
 		} elseif {$startVar == 3} {
 			destroy .startUp
-			openproject
+			Operations::OpenProjectWindow
 		}
 		unset startVar
 		unset frame2
 	}
-	button $frame2.b_cancel -width 8 -text "Cancel" -command {
+	button $frame2.bt_cancel -width 8 -text "Cancel" -command {
 		unset startVar
 		unset frame2
 		destroy .startUp
-		WindowConfig::exit_app
+		Operations::exit_app
 	}
 
 	grid config $frame1 -row 0 -column 0 -padx 35 -pady 10
@@ -135,28 +137,28 @@ proc StartUp {} {
 	grid config $frame1.ra_default -row 0 -column 0 -sticky w -padx 5 -pady 5
 	grid config $frame1.ra_newProj -row 1 -column 0 -sticky w  -padx 5 -pady 5
 	grid config $frame1.ra_openProj -row 2 -column 0 -sticky w -padx 5 -pady 5
-	grid config $frame1.l_desc -row 3 -column 0 -sticky w -padx 5 -pady 5
+	grid config $frame1.la_desc -row 3 -column 0 -sticky w -padx 5 -pady 5
 	grid config $frame1.t_desc -row 4 -column 0 -sticky w -padx 5 -pady 5
 	grid config $frame2 -row 5 -column 0  -padx 5 -pady 5
-	grid config $frame2.b_ok -row 0 -column 0
-	grid config $frame2.b_cancel -row 0 -column 1
+	grid config $frame2.bt_ok -row 0 -column 0
+	grid config $frame2.bt_cancel -row 0 -column 1
 
-	wm protocol .startUp WM_DELETE_WINDOW "$frame2.b_cancel invoke"
-	bind $winStartUp <KeyPress-Return> "$frame2.b_ok invoke"
-	bind $winStartUp <KeyPress-Escape> "$frame2.b_cancel invoke"
+	wm protocol .startUp WM_DELETE_WINDOW "$frame2.bt_cancel invoke"
+	bind $winStartUp <KeyPress-Return> "$frame2.bt_ok invoke"
+	bind $winStartUp <KeyPress-Escape> "$frame2.bt_cancel invoke"
 
 	focus $winStartUp
 	$winStartUp configure -takefocus 1
-	centerW $winStartUp
+	Operations::centerW $winStartUp
 }
 
 ###############################################################################################
-#proc SampleProjectText
+#proc ChildWindows::SampleProjectText
 #Input       : text widget path
 #Output      : -
 #Description : Displays text when Sample project is selected in start up
 ###############################################################################################
-proc SampleProjectText {t_desc} {
+proc ChildWindows::SampleProjectText {t_desc} {
 	$t_desc configure -state normal
 	$t_desc delete 1.0 end
 	$t_desc insert end "Open the sample Project"
@@ -164,12 +166,12 @@ proc SampleProjectText {t_desc} {
 }
 
 ###############################################################################################
-#proc NewProjectText
+#proc ChildWindows::NewProjectText
 #Input       : text widget path
 #Output      : -
 #Description : Displays text when New project is selected in start up
 ###############################################################################################
-proc NewProjectText {t_desc} {
+proc ChildWindows::NewProjectText {t_desc} {
 	$t_desc configure -state normal
 	$t_desc delete 1.0 end
 	$t_desc insert end "Create a new Project"
@@ -177,81 +179,88 @@ proc NewProjectText {t_desc} {
 }
 
 ###############################################################################################
-#proc OpenProjectText
+#proc ChildWindows::OpenProjectText
 #Input       : text widget path
 #Output      : -
 #Description : Displays text when Open project is selected in start up
 ###############################################################################################
-proc OpenProjectText {t_desc} {
+proc ChildWindows::OpenProjectText {t_desc} {
 	$t_desc configure -state normal
 	$t_desc delete 1.0 end
 	$t_desc insert end "Open Existing Project"
 	$t_desc configure -state disabled
 }
 
-###############################################################################################
-#proc ConnectionSettingWindow
-#Input       : -
-#Output      : -
-#Description : Creates the GUI for connection Settings
-###############################################################################################
-proc ConnectionSettingWindow {} {
-	global connectionIpAddr
-	global frame2
+################################################################################################
+##proc ConnectionSettingWindow
+##Input       : -
+##Output      : -
+##Description : Creates the GUI for connection Settings
+################################################################################################
+#proc ConnectionSettingWindow {} {
+#	global connectionIpAddr
+#	global frame2
+#
+#	set winConnSett .connSett
+#	catch "destroy $winConnSett"
+#	toplevel     $winConnSett
+#	wm title     $winConnSett "Connection Settings"
+#	wm resizable $winConnSett 0 0
+#	wm transient $winConnSett .
+#	wm deiconify $winConnSett
+#	grab $winConnSett
+#
+#	set frame1 [frame $winConnSett.fram1]
+#	set frame2 [frame $winConnSett.fram2]
+#
+#	label $winConnSett.la_empty1 -text ""
+#	label $frame1.la_ip -text "IP Address"
+#	label $winConnSett.la_empty2 -text ""
+#	label $winConnSett.la_empty3 -text ""
+#
+#	set connectionIpAddr ""
+#	entry $frame1.en_ip -textvariable connectionIpAddr -background white -relief ridge -validate all -vcmd "Validation::IsIP %P %V"
+#
+#	button $frame2.bt_ok -width 8 -text "  Ok  " -command { 
+#		YetToImplement
+#		$frame2.bt_cancel invoke
+#	}
+#	button $frame2.bt_cancel -width 8 -text "Cancel" -command {
+#		unset connectionIpAddr
+#		unset frame2
+#		destroy .connSett
+#	}
+#
+#	grid config $winConnSett.la_empty1 -row 0 -column 0
+#	grid config $frame1 -row 1 -column 0 -padx 10
+#	grid config $winConnSett.la_empty2 -row 2 -column 0
+#	grid config $frame2 -row 3 -column 0
+#	grid config $winConnSett.la_empty3 -row 4 -column 0
+#
+#	grid config $frame1.la_ip -row 0 -column 0
+#	grid config $frame1.en_ip -row 0 -column 1
+#
+#	grid config $frame2.bt_ok -row 0 -column 0
+#	grid config $frame2.bt_cancel -row 0 -column 1
+#
+#	wm protocol .connSett WM_DELETE_WINDOW "$frame2.bt_cancel invoke"
+#	bind $winConnSett <KeyPress-Return> "$frame2.bt_ok invoke"
+#	bind $winConnSett <KeyPress-Escape> "$frame2.bt_cancel invoke"
+#
+#	Operations::centerW $winConnSett
+#}
 
-	set winConnSett .connSett
-	catch "destroy $winConnSett"
-	toplevel     $winConnSett
-	wm title     $winConnSett "Connection Settings"
-	wm resizable $winConnSett 0 0
-	wm transient $winConnSett .
-	wm deiconify $winConnSett
-	grab $winConnSett
-
-	set frame1 [frame $winConnSett.fram1]
-	set frame2 [frame $winConnSett.fram2]
-
-	label $winConnSett.l_empty1 -text ""
-	label $frame1.l_ip -text "IP Address"
-	label $winConnSett.l_empty2 -text ""
-	label $winConnSett.l_empty3 -text ""
-
-	set connectionIpAddr ""
-	entry $frame1.en_ip -textvariable connectionIpAddr -background white -relief ridge -validate all -vcmd "IsIP %P %V"
-
-	button $frame2.b_ok -width 8 -text "  Ok  " -command { 
-		YetToImplement
-		$frame2.b_cancel invoke
-	}
-	button $frame2.b_cancel -width 8 -text "Cancel" -command {
-		unset connectionIpAddr
-		unset frame2
-		destroy .connSett
-	}
-
-	grid config $winConnSett.l_empty1 -row 0 -column 0
-	grid config $frame1 -row 1 -column 0 -padx 10
-	grid config $winConnSett.l_empty2 -row 2 -column 0
-	grid config $frame2 -row 3 -column 0
-	grid config $winConnSett.l_empty3 -row 4 -column 0
-
-	grid config $frame1.l_ip -row 0 -column 0
-	grid config $frame1.en_ip -row 0 -column 1
-
-	grid config $frame2.b_ok -row 0 -column 0
-	grid config $frame2.b_cancel -row 0 -column 1
-
-	wm protocol .connSett WM_DELETE_WINDOW "$frame2.b_cancel invoke"
-	bind $winConnSett <KeyPress-Return> "$frame2.b_ok invoke"
-	bind $winConnSett <KeyPress-Escape> "$frame2.b_cancel invoke"
-
-	centerW $winConnSett
-}
-
-proc ProjectSettingWindow {} {
+proc ChildWindows::ProjectSettingWindow {} {
+	global projectName
+	global projectDir
 	global ra_proj
 	global ra_auto
 	#set ra_auto 0
+
+	if {$projectDir == "" || $projectName == "" } {
+		DisplayInfo "No Project is opened or created" info
+		return
+	}
 	
 	#ocfmRetCode GetProjectSettings(EAutoGenerate autoGen, EAutoSave autoSave)
 	set ra_autop [new_EAutoGeneratep]
@@ -289,10 +298,10 @@ proc ProjectSettingWindow {} {
 	set frame2 [frame $winProjSett.frame2]
 	set frame3 [frame $winProjSett.frame3]
 
-	label $winProjSett.l_save -text "Project Settings"
-	label $winProjSett.l_auto -text "Auto Generate"
-	label $winProjSett.l_empty1 -text ""
-	label $winProjSett.l_empty2 -text ""
+	label $winProjSett.la_save -text "Project Settings"
+	label $winProjSett.la_auto -text "Auto Generate"
+	label $winProjSett.la_empty1 -text ""
+	label $winProjSett.la_empty2 -text ""
 	
 	radiobutton $frame1.ra_autoSave -variable ra_proj -value 0 -text "Auto Save"
 	radiobutton $frame1.ra_prompt -variable ra_proj -value 1 -text "Prompt"
@@ -322,18 +331,18 @@ proc ProjectSettingWindow {} {
 		destroy .projSett
 	}
 	
-	grid config $winProjSett.l_empty1 -row 0 -column 0
+	grid config $winProjSett.la_empty1 -row 0 -column 0
 	
-	grid config $winProjSett.l_save -row 1 -column 0 -sticky w
+	grid config $winProjSett.la_save -row 1 -column 0 -sticky w
 	
 	grid config $frame1 -row 2 -column 0 -padx 10 -sticky w
 	grid config $frame1.ra_autoSave -row 0 -column 0
 	grid config $frame1.ra_prompt -row 0 -column 1 -padx 5
 	grid config $frame1.ra_discard -row 0 -column 2
 	
-	grid config $winProjSett.l_empty2 -row 3 -column 0
+	grid config $winProjSett.la_empty2 -row 3 -column 0
 	
-	grid config $winProjSett.l_auto -row 4 -column 0 -sticky w
+	grid config $winProjSett.la_auto -row 4 -column 0 -sticky w
 	
 	grid config $frame2 -row 5 -column 0 -padx 10 -sticky w
 	grid config $frame2.ra_genYes -row 0 -column 0 -padx 2
@@ -392,11 +401,11 @@ proc ProjectSettingWindow {} {
 #	set frame2 [frame $titleInnerFrame1.fram2]
 #	set frame3 [frame $titleInnerFrame1.fram3]
 #
-#	label $winInterCN.l_empty1 -text ""	
-#	label $winInterCN.l_empty2 -text ""
-#	label $frame1.l_cn -text "CN 's :  "
-#	label $frame1.l_noRpdo -text "Number of RPDO :  "
-#	label $frame1.l_dispRpdo -text ""
+#	label $winInterCN.la_empty1 -text ""	
+#	label $winInterCN.la_empty2 -text ""
+#	label $frame1.la_cn -text "CN 's :  "
+#	label $frame1.la_noRpdo -text "Number of RPDO :  "
+#	label $frame1.la_dispRpdo -text ""
 #	
 #	ComboBox $frame1.co_cn -values $dispList -modifycmd "dispRpdo $frame1 [list $siblingList] [list $dispList]" -editable no
 # 	
@@ -410,17 +419,17 @@ proc ProjectSettingWindow {} {
 #		destroy .interCN
 #	}
 #
-#	grid config $winInterCN.l_empty1 -row 0 -column 0 -sticky "news"
+#	grid config $winInterCN.la_empty1 -row 0 -column 0 -sticky "news"
 #	grid config $titleFrame1 -row 1 -column 0 -padx 5 -sticky "news"
-#	grid config $winInterCN.l_empty2 -row 2 -column 0 -sticky "news"
+#	grid config $winInterCN.la_empty2 -row 2 -column 0 -sticky "news"
 #
 #	#grid config $titleInnerFrame1 -row 0 -column 0 
 #
 #	grid config $frame1 -row 0 -column 0 
-#	grid config $frame1.l_cn  -row 0 -column 0 -sticky e 
+#	grid config $frame1.la_cn  -row 0 -column 0 -sticky e 
 #	grid config $frame1.co_cn -row 0 -column 1 -sticky w
-#	grid config $frame1.l_noRpdo  -row 1 -column 0 -sticky e
-#	grid config $frame1.l_dispRpdo -row 1 -column 1 -sticky w
+#	grid config $frame1.la_noRpdo  -row 1 -column 0 -sticky e
+#	grid config $frame1.la_dispRpdo -row 1 -column 1 -sticky w
 #
 #	grid config $frame2 -row 1 -column 0 
 #	grid config $frame2.bt_ok  -row 0 -column 0 
@@ -430,7 +439,7 @@ proc ProjectSettingWindow {} {
 #	bind $winInterCN <KeyPress-Return> "$frame2.bt_ok invoke"
 #	bind $winInterCN <KeyPress-Escape> "$frame2.bt_cancel invoke"
 #
-#	centerW $winInterCN
+#	Operations::centerW $winInterCN
 #
 #}
 #
@@ -441,12 +450,12 @@ proc ProjectSettingWindow {} {
 #}
 
 ###############################################################################################
-#proc AddCNWindow
+#proc ChildWindows::AddCNWindow
 #Input       : -
 #Output      : -
 #Description : Creates the GUI for adding CN to MN
 ###############################################################################################
-proc AddCNWindow {} {
+proc ChildWindows::AddCNWindow {} {
 	global cnName
 	global nodeId
 	global tmpImpCnDir
@@ -462,7 +471,7 @@ proc AddCNWindow {} {
 	wm deiconify $winAddCN
 	grab $winAddCN
 
-	label $winAddCN.l_empty -text ""	
+	label $winAddCN.la_empty -text ""	
 
 	set titleFrame1 [TitleFrame $winAddCN.titleFrame1 -text "Add CN" ]
 	set titleInnerFrame1 [$titleFrame1 getframe]
@@ -473,13 +482,13 @@ proc AddCNWindow {} {
 	set titleFrame3 [TitleFrame $titleInnerFrame1.titleFrame3 -text "CN Configuration" ]
 	set titleInnerFrame3 [$titleFrame3 getframe]
 
-	label $titleInnerFrame1.l_empty1 -text "               "
-	label $titleInnerFrame1.l_empty2 -text "               "
-	label $frame2.l_name -text "Name :   " -justify left
-	label $frame2.l_node -text "Node ID :" -justify left
-	label $titleInnerFrame1.l_empty3 -text "               "
-	label $titleInnerFrame1.l_empty4 -text "              "
-	label $winAddCN.l_empty5 -text " "
+	label $titleInnerFrame1.la_empty1 -text "               "
+	label $titleInnerFrame1.la_empty2 -text "               "
+	label $frame2.la_name -text "Name :   " -justify left
+	label $frame2.la_node -text "Node ID :" -justify left
+	label $titleInnerFrame1.la_empty3 -text "               "
+	label $titleInnerFrame1.la_empty4 -text "              "
+	label $winAddCN.la_empty5 -text " "
 
 	radiobutton $titleInnerFrame2.ra_mn -text "Managing Node" -variable mncn -value on  
 	radiobutton $titleInnerFrame2.ra_cn -text "Controlled Node" -variable mncn -value off 
@@ -496,14 +505,14 @@ proc AddCNWindow {} {
 	}
 	$titleInnerFrame3.ra_def select
 
-	set autoGen [GenCNname]
+	set autoGen [ChildWindows::GenerateCNname]
 
-	entry $frame2.en_name -textvariable cnName -background white -relief ridge -validate key -vcmd "IsValidStr %P"
+	entry $frame2.en_name -textvariable cnName -background white -relief ridge -validate key -vcmd "Validation::IsValidName %P"
 	set cnName [lindex $autoGen 0]	
 	$frame2.en_name selection range 0 end
 	$frame2.en_name icursor end
 
-	entry $frame2.en_node -textvariable nodeId -background white -relief ridge -validate key -vcmd "IsInt %P %V"
+	entry $frame2.en_node -textvariable nodeId -background white -relief ridge -validate key -vcmd "Validation::IsInt %P %V"
 	set nodeId [lindex $autoGen 1]
 	entry $titleInnerFrame3.en_imppath -textvariable tmpImpCnDir -background white -relief ridge -width 35
 	if {![file isdirectory $lastXD] && [file exists $lastXD] } {	
@@ -569,20 +578,20 @@ proc AddCNWindow {} {
 
 		if {$confCn == "off"} {
 			#import the user selected xdc/xdd file for cn
-			set chk [AddCN $cnName $tmpImpCnDir $nodeId]
+			set chk [Operations::AddCN $cnName $tmpImpCnDir $nodeId]
 		} else {
 			#import the default cn xdd file
-			global RootDir
-			set tmpImpCnDir [file join $RootDir openPOWERLINK_CN.xdd]
+			global rootDir
+			set tmpImpCnDir [file join $rootDir openPOWERLINK_CN.xdd]
 			if {[file exists $tmpImpCnDir]} {
-				set chk [AddCN $cnName $tmpImpCnDir $nodeId]
+				set chk [Operations::AddCN $cnName $tmpImpCnDir $nodeId]
 			} else {
 			#	#there is no default cn.xdd file in required path
 				tk_messageBox -message "Default cn.xdd is not found" -icon error -parent .addCN
 				focus .addCN
 				return
 			}
-			#set chk [AddCN $cnName "" $nodeId]			
+			#set chk [Operations::AddCN $cnName "" $nodeId]			
 		}
 		$frame1.bt_cancel invoke
 	}
@@ -599,19 +608,19 @@ proc AddCNWindow {} {
 
 
 
-	grid config $winAddCN.l_empty -row 0 -column 0  
+	grid config $winAddCN.la_empty -row 0 -column 0  
 	
 	grid config $titleFrame1 -row 1 -column 0 -sticky "news" 
 
-	grid config $titleInnerFrame1.l_empty1 -row 0 -column 0  
+	grid config $titleInnerFrame1.la_empty1 -row 0 -column 0  
 
 	grid config $frame2 -row 2 -column 0 
-	grid config $frame2.l_name -row 0 -column 0 
+	grid config $frame2.la_name -row 0 -column 0 
 	grid config $frame2.en_name -row 0 -column 1 
-	grid config $frame2.l_node -row 1 -column 0 
+	grid config $frame2.la_node -row 1 -column 0 
 	grid config $frame2.en_node -row 1 -column 1 
 
-	grid config $titleInnerFrame1.l_empty3 -row 3 -column 0  
+	grid config $titleInnerFrame1.la_empty3 -row 3 -column 0  
 
 	grid config $titleFrame3 -row 4 -column 0 -sticky "news"
 	grid config $titleInnerFrame3.ra_def -row 0 -column 0 -sticky "w"
@@ -619,23 +628,23 @@ proc AddCNWindow {} {
 	grid config $titleInnerFrame3.en_imppath -row 1 -column 1
 	grid config $titleInnerFrame3.bt_imppath -row 1 -column 2
  
-	grid config $titleInnerFrame1.l_empty4 -row 5 -column 0  
+	grid config $titleInnerFrame1.la_empty4 -row 5 -column 0  
 	
 	grid config $frame1 -row 6 -column 0 
 	grid config $frame1.bt_ok -row 0 -column 0  
 	grid config $frame1.bt_cancel -row 0 -column 1
 	
-	grid config $winAddCN.l_empty5 -row 7 -column 0  
+	grid config $winAddCN.la_empty5 -row 7 -column 0  
 
 	wm protocol .addCN WM_DELETE_WINDOW "$frame1.bt_cancel invoke"
 	bind $winAddCN <KeyPress-Return> "$frame1.bt_ok invoke"
 	bind $winAddCN <KeyPress-Escape> "$frame1.bt_cancel invoke"
 
 	focus $frame2.en_name
-	centerW $winAddCN
+	Operations::centerW $winAddCN
 }
 
-proc GenCNname {} {
+proc ChildWindows::GenerateCNname {} {
 	global nodeIdList
 	global treePath
 	#puts "in GenCNname nodeIdList->$nodeIdList"
@@ -653,28 +662,69 @@ proc GenCNname {} {
 		return [list CN_$inc $inc]
 	}
 }
+
 ###############################################################################################
-#proc SaveProjectAsWindow
+#proc ChildWindows::SaveProjectWindow
+#Input       : -
+#Output      : -
+#Description : Creates the GUI when existing Project is to be closed
+###############################################################################################
+proc ChildWindows::SaveProjectWindow {} {
+	global projectDir
+	global projectName
+	global treePath
+	global status_save	
+
+	if {$projectDir == "" || $projectName == "" } {
+		DisplayInfo "No Project Selected" info
+		return
+	} else {	
+		#check whether project has changed from last saved
+		if {$status_save} {
+			set result [tk_messageBox -message "Save Project $projectName ?" -type yesnocancel -icon question -title "Question" -parent .]
+			switch -- $result {
+				yes {			 
+					Operations::Saveproject
+					DisplayInfo "Project $projectName is saved" info
+					return yes
+				}
+				no {
+					DisplayInfo "Project $projectName not saved" info
+					return no
+				}
+				cancel {
+					return cancel
+				}
+			}
+		}		
+	}
+}
+
+###############################################################################################
+#proc ChildWindows::SaveProjectAsWindow
 #Input       : -
 #Output      : -
 #Description : Creates the GUI when Project is to be saved at different location and name
 ###############################################################################################
-proc SaveProjectAsWindow {} {
-	global PjtName
-	global PjtDir
+proc ChildWindows::SaveProjectAsWindow {} {
+	global projectName
+	global projectDir
 
-	if {$PjtDir == "" || $PjtName == "" } {
+	if {$projectDir == "" || $projectName == "" } {
 		DisplayInfo "No Project Selected" info
 		return
 	} else {
-		puts "Save Project As->[file join $PjtDir $PjtName]"
-		set saveProjectAs [tk_getSaveFile -parent . -title "Save Project As" -initialdir $PjtDir -initialfile $PjtName] 
-		#set fileLocation_CDC [tk_getSaveFile -filetypes $types -initialdir $PjtDir -initialfile [generateAutoName $PjtDir CDC .cdc ] -title "Transfer CDC"]
-		set projectDir [file dirname $saveProjectAs]
-		set projectName [file tail $saveProjectAs]
+		puts "Save Project As->[file join $projectDir $projectName]"
+		set saveProjectAs [tk_getSaveFile -parent . -title "Save Project As" -initialdir $projectDir -initialfile $projectName] 
+		#set fileLocation_CDC [tk_getSaveFile -filetypes $types -initialdir $projectDir -initialfile [Operations::GenerateAutoName $projectDir CDC .cdc ] -title "Transfer CDC"]
+		if { $saveProjectAs == "" } {
+			return
+		}
+		set tempProjectDir [file dirname $saveProjectAs]
+		set tempProjectName [file tail $saveProjectAs]
 
-		set catchErrCode [SaveProject $projectDir [string range $projectName 0 end-[string length [file extension $projectName]]]]
-		puts "In save project as SaveProject $projectDir [string range $projectName 0 end-[string length [file extension $projectName]]]"
+		set catchErrCode [SaveProject $tempProjectDir [string range $tempProjectName 0 end-[string length [file extension $tempProjectName]]]]
+		puts "In save project as SaveProject $tempProjectDir [string range $tempProjectName 0 end-[string length [file extension $tempProjectName]]]"
 
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
 		if { $ErrCode != 0 } {
@@ -693,12 +743,12 @@ proc SaveProjectAsWindow {} {
 }
 
 ###############################################################################################
-#proc NewProjectWindow
+#proc ChildWindows::NewProjectWindow
 #Input       : -
 #Output      : -
 #Description : Creates the GUI when New Project is to be created
 ###############################################################################################
-proc NewProjectWindow {} {
+proc ChildWindows::NewProjectWindow {} {
 	global tmpPjtName
 	global tmpPjtDir
 	global tmpImpDir
@@ -718,15 +768,15 @@ proc NewProjectWindow {} {
 
 	global treePath
 	global nodeIdList
-	global PjtName
-	global PjtDir
-	global defaultPjtDir
+	global projectName
+	global projectDir
+	global defaultProjectDir
 	global status_save
 	global lastXD
 	global tcl_platform
 	#global PjtSett
 	
-	#puts "defaultPjtDir->$defaultPjtDir"
+	#puts "defaultProjectDir->$defaultProjectDir"
 
 	set winNewProj .newprj
 	catch "destroy $winNewProj"
@@ -749,11 +799,11 @@ proc NewProjectWindow {} {
 	#set titleInnerFrame2_3 [$titleFrame2_3 getframe]
 	#set frame1_3 [frame $titleInnerFrame2_3.frame1]
 	#
-	#label $titleInnerFrame1_3.l_empty -text "" -height 8
-	#label $titleInnerFrame2_3.l_ip -text "IP Address : " -justify left
-	#label $titleInnerFrame2_3.l_empty1 -text "" -width 32 ; # used for aligning
+	#label $titleInnerFrame1_3.la_empty -text "" -height 8
+	#label $titleInnerFrame2_3.la_ip -text "IP Address : " -justify left
+	#label $titleInnerFrame2_3.la_empty1 -text "" -width 32 ; # used for aligning
 	#
-	#entry $titleInnerFrame2_3.en_IPaddr -textvariable tmpIPaddr -background white -relief ridge -validate key -vcmd "IsIP %P %V"
+	#entry $titleInnerFrame2_3.en_IPaddr -textvariable tmpIPaddr -background white -relief ridge -validate key -vcmd "Validation::IsIP %P %V"
 	#set tmpIPaddr 0.0.0.0
 	#
 	#button $frame2_3.bt_back -width 8 -text " Back " -command {
@@ -770,7 +820,7 @@ proc NewProjectWindow {} {
 	#		focus .newprj
 	#		return
 	#	}
-	#	NewProjectCreate $tmpPjtDir $tmpPjtName $tmpImpDir $conf
+	#	ChildWindows::NewProjectCreate $tmpPjtDir $tmpPjtName $tmpImpDir $conf
 	#	$frame1.bt_cancel invoke
 	#	
 	#}
@@ -780,11 +830,11 @@ proc NewProjectWindow {} {
 	#grid configure $titleFrame1_3 -row 0 -column 0 -sticky news -padx 10 -pady 10
 	#
 	#grid configure $titleFrame2_3 -row 0 -column 0 -sticky news
-	#grid configure $titleInnerFrame2_3.l_ip -row 0 -column 0 -sticky news
+	#grid configure $titleInnerFrame2_3.la_ip -row 0 -column 0 -sticky news
 	#grid configure $titleInnerFrame2_3.en_IPaddr -row 0 -column 1 -sticky news -pady 5
-	#grid configure $titleInnerFrame2_3.l_empty1 -row 0 -column 2 -sticky news
+	#grid configure $titleInnerFrame2_3.la_empty1 -row 0 -column 2 -sticky news
 	#
-	#grid configure $titleInnerFrame1_3.l_empty -row 1 -column 0 -pady 4
+	#grid configure $titleInnerFrame1_3.la_empty -row 1 -column 0 -pady 4
 	#
 	#grid configure $frame2_3 -row 2 -column 0 -columnspan 2 
 	#grid configure $frame2_3.bt_back -row 0 -column 0 
@@ -806,20 +856,20 @@ proc NewProjectWindow {} {
 	set titleInnerFrame2_2 [$titleFrame2_2 getframe]
 	set frame4_2 [frame $titleInnerFrame2_2.frame4 ]
 
-	label $titleInnerFrame1_2.l_empty1 -text "" -width 62 
-	#label $titleInnerFrame1_2.l_project -text "Project Settings"
-	#1#label $titleInnerFrame1_2.l_empty2 -text "" -width 62
-	label $titleInnerFrame2_2.l_empty2 -text "" -width 60
-	#label $frame1_2.l_ip -text "IP Address"
-	label $titleInnerFrame1_2.l_empty3 -text ""
-	#1#label $frame2_2.l_generate -text "Auto Generate"
-	label $titleInnerFrame2_2.l_generate -text "Auto Generate"
-	label $titleInnerFrame1_2.l_empty4 -text ""
-	label $titleInnerFrame1_2.l_empty5 -text ""
-	label $titleInnerFrame2_2.l_empty6 -text "" -width 45 ; # to align the title frame
-	label $titleInnerFrame2_2.l_empty7 -text "" -width 35
-	label $frame1_2.l_empty8 -text "" -width 7
-	label $frame2_2.l_empty9 -text "" -width 4
+	label $titleInnerFrame1_2.la_empty1 -text "" -width 62 
+	#label $titleInnerFrame1_2.la_project -text "Project Settings"
+	#1#label $titleInnerFrame1_2.la_empty2 -text "" -width 62
+	label $titleInnerFrame2_2.la_empty2 -text "" -width 60
+	#label $frame1_2.la_ip -text "IP Address"
+	label $titleInnerFrame1_2.la_empty3 -text ""
+	#1#label $frame2_2.la_generate -text "Auto Generate"
+	label $titleInnerFrame2_2.la_generate -text "Auto Generate"
+	label $titleInnerFrame1_2.la_empty4 -text ""
+	label $titleInnerFrame1_2.la_empty5 -text ""
+	label $titleInnerFrame2_2.la_empty6 -text "" -width 45 ; # to align the title frame
+	label $titleInnerFrame2_2.la_empty7 -text "" -width 35
+	label $frame1_2.la_empty8 -text "" -width 7
+	label $frame2_2.la_empty9 -text "" -width 4
 
 	entry $titleInnerFrame2_2.en_imppath -textvariable tmpImpDir -background white -relief ridge -width 35 -state disabled
 	if {![file isdirectory $lastXD] && [file exists $lastXD] } {	
@@ -901,8 +951,8 @@ proc NewProjectWindow {} {
 			}
 			set lastXD $tmpImpDir
 		} else {
-			global RootDir
-			set tmpImpDir [file join $RootDir openPOWERLINK_MN.xdd]
+			global rootDir
+			set tmpImpDir [file join $rootDir openPOWERLINK_MN.xdd]
 			if {![file isfile $tmpImpDir]} {
 				##TODO: discuss what to do
 				tk_messageBox -message "Default mn.xdd is not found" -icon warning -parent .newprj
@@ -912,7 +962,7 @@ proc NewProjectWindow {} {
 		}
 
 		catch { destroy .newprj }
-		NewProjectCreate $tmpPjtDir $tmpPjtName $tmpImpDir $conf $ra_proj $ra_auto
+		ChildWindows::NewProjectCreate $tmpPjtDir $tmpPjtName $tmpImpDir $conf $ra_proj $ra_auto
 		unset tmpPjtName
 		unset tmpPjtDir
 		unset tmpImpDir
@@ -947,12 +997,12 @@ proc NewProjectWindow {} {
 
 	grid configure $titleFrame2_2 -row 0 -column 0 -sticky w 
 	grid configure $titleInnerFrame2_2.ra_def -row 0 -column 0 -sticky w
-	grid config $titleInnerFrame2_2.l_empty6 -row 0 -column 1 -columnspan 2 -sticky "news"
+	grid config $titleInnerFrame2_2.la_empty6 -row 0 -column 1 -columnspan 2 -sticky "news"
 	grid config $titleInnerFrame2_2.ra_imp -row 1 -column 0 -sticky w
 	grid config $titleInnerFrame2_2.en_imppath -row 1 -column 1
 	grid config $titleInnerFrame2_2.bt_imppath -row 1 -column 2
 
-	grid configure $titleInnerFrame2_2.l_generate -row 3 -column 0 -sticky w -pady 11
+	grid configure $titleInnerFrame2_2.la_generate -row 3 -column 0 -sticky w -pady 11
 	grid configure $frame4_2 -row 3 -column 1 -sticky w
 
 	grid configure $frame4_2.ra_yes -row 0 -column 0 -sticky w
@@ -960,7 +1010,7 @@ proc NewProjectWindow {} {
 	grid configure $titleInnerFrame2_2.t_desc -row 4 -column 0 -sticky w -columnspan 3 -pady 6 -padx $text_padx
 
 
-	grid configure $titleInnerFrame1_2.l_empty3 -row 3 -column 0 -pady 3
+	grid configure $titleInnerFrame1_2.la_empty3 -row 3 -column 0 -pady 3
 	grid configure $frame3_2 -row 4 -column 0 -columnspan 2
 
 	grid configure $frame3_2.bt_back -row 0 -column 0 -sticky w
@@ -986,23 +1036,23 @@ proc NewProjectWindow {} {
 	
 
 
-	label $winNewProj.l_empty -text "               "	
-	label $winNewProj.l_empty1 -text "               "
-	label $titleInnerFrame1.l_empty2 -text "" -width 17 ; # used for aligning
-	label $titleInnerFrame1.l_pjname -text "Project Name :" -justify left
-	label $titleInnerFrame1.l_pjpath -text "Project Path   :" -justify left
-	label $titleInnerFrame1.l_empty3 -text "               "
-	label $titleInnerFrame1.l_empty4 -text "               " -width 62
-	label $titleInnerFrame2_1.l_empty5 -text "" -width 5
+	label $winNewProj.la_empty -text "               "	
+	label $winNewProj.la_empty1 -text "               "
+	label $titleInnerFrame1.la_empty2 -text "" -width 17 ; # used for aligning
+	label $titleInnerFrame1.la_pjname -text "Project Name :" -justify left
+	label $titleInnerFrame1.la_pjpath -text "Project Path   :" -justify left
+	label $titleInnerFrame1.la_empty3 -text "               "
+	label $titleInnerFrame1.la_empty4 -text "               " -width 62
+	label $titleInnerFrame2_1.la_empty5 -text "" -width 5
 
-	entry $titleInnerFrame1.en_pjname -textvariable tmpPjtName -background white -relief ridge -validate key -vcmd "IsValidProjectName %P" -width 35
-	set tmpPjtName  [generateAutoName $defaultPjtDir Project ""]
+	entry $titleInnerFrame1.en_pjname -textvariable tmpPjtName -background white -relief ridge -validate key -vcmd "Validation::IsValidName %P" -width 35
+	set tmpPjtName  [Operations::GenerateAutoName $defaultProjectDir Project ""]
 
 	$titleInnerFrame1.en_pjname selection range 0 end
 	$titleInnerFrame1.en_pjname icursor end
 
 	entry $titleInnerFrame1.en_pjpath -textvariable tmpPjtDir -background white -relief ridge -width 35 
-	set tmpPjtDir $defaultPjtDir
+	set tmpPjtDir $defaultProjectDir
 	
 	radiobutton $titleInnerFrame2_1.ra_save -text "Auto Save" -variable ra_proj -value 0 -command {
 	}
@@ -1016,7 +1066,7 @@ proc NewProjectWindow {} {
 	
 
 	button $titleInnerFrame1.bt_pjpath -width 8 -text Browse -command {
-		set tmpPjtDir [tk_chooseDirectory -title "Project Location" -initialdir $defaultPjtDir -parent .newprj]
+		set tmpPjtDir [tk_chooseDirectory -title "Project Location" -initialdir $defaultProjectDir -parent .newprj]
 		if {$tmpPjtDir == ""} {
 			focus .newprj
 			return
@@ -1071,7 +1121,6 @@ proc NewProjectWindow {} {
 		#unset frame2_3
 		unset titleInnerFrame1
 		unset titleInnerFrame2
-		unset ra_proj
 		#unset tmpIPaddr
 		unset newProjectFrame2
 		unset titleInnerFrame1_2
@@ -1085,14 +1134,14 @@ proc NewProjectWindow {} {
 	
 	grid config $titleFrame1 -row 1 -column 0 -padx 10 -pady 10
 
-	grid config $titleInnerFrame1.l_pjname -row 1 -column 0 -sticky w
+	grid config $titleInnerFrame1.la_pjname -row 1 -column 0 -sticky w
 	grid config $titleInnerFrame1.en_pjname -row 1 -column 1 -sticky w
-	grid config $titleInnerFrame1.l_empty2 -row 1 -column 2 -sticky w
-	grid config $titleInnerFrame1.l_pjpath -row 2 -column 0 -sticky w
+	grid config $titleInnerFrame1.la_empty2 -row 1 -column 2 -sticky w
+	grid config $titleInnerFrame1.la_pjpath -row 2 -column 0 -sticky w
 	grid config $titleInnerFrame1.en_pjpath -row 2 -column 1 -sticky w
 	grid config $titleInnerFrame1.bt_pjpath -row 2 -column 2 -sticky w
 
-	grid config $titleInnerFrame1.l_empty3 -row 4 -column 0 
+	grid config $titleInnerFrame1.la_empty3 -row 4 -column 0 
 
 	grid config $titleFrame2 -row 5 -column 0 -columnspan 3 -sticky "news" 
 	grid config $titleInnerFrame2_1 -row 0 -column 0 -padx 103
@@ -1102,7 +1151,7 @@ proc NewProjectWindow {} {
 	grid config $titleInnerFrame2_1.ra_discard -row 0 -column 2 
 	grid config $titleInnerFrame2.t_desc -row 1 -column 0 -pady 10 
 		
-	grid config $titleInnerFrame1.l_empty4 -row 6 -column 0 -columnspan 3
+	grid config $titleInnerFrame1.la_empty4 -row 6 -column 0 -columnspan 3
 	
 	grid config $frame1 -row 7 -column 0 -columnspan 3
 	grid config $frame1.bt_back -row 0 -column 0 
@@ -1114,32 +1163,34 @@ proc NewProjectWindow {} {
 	bind $winNewProj <KeyPress-Escape> "$frame1.bt_cancel invoke"
 
 	focus $titleInnerFrame1.en_pjname
-	centerW $winNewProj
+	Operations::centerW $winNewProj
 	###################################################################################
 
 	
 }
 
-proc NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf tempRa_proj tempRa_auto} {
+proc ChildWindows::NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf tempRa_proj tempRa_auto} {
 	
 	global ra_proj
+	global ra_auto
 	global treePath
 	global mnCount
-	global PjtName
-	global PjtDir
+	global projectName
+	global projectDir
 	global nodeIdList
+	global status_save
 	
 	#CloseProject is called to delete node and insert tree
-	CloseProject
+	Operations::CloseProject
 
-	set PjtName $tmpPjtName
-	set pjtName [string range $PjtName 0 end-[string length [file extension $PjtName]] ] 
-	set PjtDir [file join $tmpPjtDir  $pjtName]
-	puts "PjtDir->$PjtDir PjtName->$PjtName"
+	set projectName $tmpPjtName
+	set pjtName [string range $projectName 0 end-[string length [file extension $projectName]] ] 
+	set projectDir [file join $tmpPjtDir  $pjtName]
+	puts "projectDir->$projectDir projectName->$projectName"
 
-	$treePath itemconfigure PjtName -text $tmpPjtName
+	$treePath itemconfigure ProjectNode -text $tmpPjtName
 
-	set catchErrCode [NodeCreate 240 0 openPOWERLINK_MN]
+	set catchErrCode [Operations::NodeCreate 240 0 openPOWERLINK_MN]
 	set ErrCode [ocfmRetCode_code_get $catchErrCode]
 	#puts "ErrCode:$ErrCode"
 	if { $ErrCode != 0 } {
@@ -1157,7 +1208,7 @@ proc NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf tempRa_proj tempRa_au
 	#New project is created need to save
 	set status_save 1
 
-	$treePath insert end PjtName MN-$mnCount -text "openPOWERLINK_MN(240)" -open 1 -image [Bitmap::get mn]
+	$treePath insert end ProjectNode MN-$mnCount -text "openPOWERLINK_MN(240)" -open 1 -image [Bitmap::get mn]
 	lappend nodeIdList 240 ; #removed obj and obj node
 	puts "nodeIdList->$nodeIdList"
 
@@ -1181,24 +1232,24 @@ proc NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf tempRa_proj tempRa_au
 		}
 		$treePath insert end MN-$mnCount OBD-$mnCount-1 -text "OBD" -open 0 -image [Bitmap::get pdo]
 		#Import parentNode nodeType nodeID 
-		Import OBD-$mnCount-1 0 240
+		WrapperInteractions::Import OBD-$mnCount-1 0 240
 		thread::send -async [tsv::set application importProgress] "StopProgress"
 
-		file mkdir [file join $PjtDir ]
-		file mkdir [file join $PjtDir CDC_XAP]
-		file mkdir [file join $PjtDir XDC]
+		file mkdir [file join $projectDir ]
+		file mkdir [file join $projectDir CDC_XAP]
+		file mkdir [file join $projectDir XDC]
 		
-		if { [$WindowConfig::projMenu index 3] != "3" } {
-			$WindowConfig::projMenu insert 3 command -label "Close Project" -command "_CloseProject"
+		if { [$Operations::projMenu index 3] != "3" } {
+			$Operations::projMenu insert 3 command -label "Close Project" -command "Operations::InitiateCloseProject"
 		}
-		if { [$WindowConfig::projMenu index 4] != "4" } {
-			$WindowConfig::projMenu insert 4 command -label "Properties" -command "PropertiesWindow"
+		if { [$Operations::projMenu index 4] != "4" } {
+			$Operations::projMenu insert 4 command -label "Properties" -command "ChildWindows::PropertiesWindow"
 		}
 		
 	} else {
-		#file mkdir [file join $PjtDir ]
-		#file mkdir [file join $PjtDir CDC_XAP]
-		#file mkdir [file join $PjtDir XDC]
+		#file mkdir [file join $projectDir ]
+		#file mkdir [file join $projectDir CDC_XAP]
+		#file mkdir [file join $projectDir XDC]
 	}
 	
 	#ocfmRetCode SetProjectSettings(EAutoGenerate autoGen, EAutoSave autoSave)
@@ -1215,66 +1266,32 @@ proc NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf tempRa_proj tempRa_au
 		}
 	}
 	set ra_proj $tempRa_proj
-	
+	set ra_auto $tempRa_auto
 	ClearMsgs
 }
 
 ###############################################################################################
-#proc SaveProjectWindow
+#proc ChildWindows::CloseProjectWindow
 #Input       : -
 #Output      : -
 #Description : Creates the GUI when existing Project is to be closed
 ###############################################################################################
-proc SaveProjectWindow {} {
-	global PjtDir
-	global PjtName
+proc ChildWindows::CloseProjectWindow {} {
+	global projectDir
+	global projectName
 	global treePath
 	global status_save	
 
-	if {$PjtDir == "" || $PjtName == "" } {
+	if {$projectDir == "" || $projectName == "" } {
 		DisplayInfo "No Project Selected" info
-		return
-	} else {	
-		#check whether project has changed from last saved
-		if {$status_save} {
-			set result [tk_messageBox -message "Save Project $PjtName ?" -type yesno -icon question -title "Question" -parent .]
-			switch -- $result {
-				yes {			 
-					Saveproject
-					DisplayInfo "Project $PjtName is saved" info
-					return yes
-				}
-				no {
-					DisplayInfo "Project $PjtName not saved" info
-					return no
-				}
-			}
-		}		
-	}
-}
-
-###############################################################################################
-#proc CloseProjectWindow
-#Input       : -
-#Output      : -
-#Description : Creates the GUI when existing Project is to be closed
-###############################################################################################
-proc CloseProjectWindow {} {
-	global PjtDir
-	global PjtName
-	global treePath
-	global status_save	
-
-	if {$PjtDir == "" || $PjtName == "" } {
-		DisplayInfo "No Project Selected" info
-		CloseProject
+		Operations::CloseProject
 		return
 	} else {	
 		#TODO only for testing remove for delivery
-		set result [tk_messageBox -message "Close Project $PjtName ?" -type okcancel -icon question -title "Question" -parent .]
+		set result [tk_messageBox -message "Close Project $projectName ?" -type okcancel -icon question -title "Question" -parent .]
    		 switch -- $result {
 			ok {
-				CloseProject
+				Operations::CloseProject
 				return ok
 			}
 			cancel {
@@ -1301,8 +1318,8 @@ proc ImportProgress {stat} {
 
 	#package require Tk 8.5
 	#puts "In thread tkpath->$tkpath"
-	#set RootDir [pwd]
-	#set path_to_BWidget [file join $RootDir BWidget-1.2.1]
+	#set rootDir [pwd]
+	#set path_to_BWidget [file join $rootDir BWidget-1.2.1]
 	#lappend auto_path $path_to_BWidget
 	#package require -exact BWidget 1.2.1
 
@@ -1360,12 +1377,12 @@ proc ImportProgress {stat} {
 }
 
 ################################################################################################
-#proc AddIndexWindow
+#proc ChildWindows::AddIndexWindow
 #Input       : -
 #Output      : -
 #Description : -
 ################################################################################################
-proc AddIndexWindow {} {
+proc ChildWindows::AddIndexWindow {} {
 	global treePath
 	global indexVar
 	global frame2
@@ -1385,13 +1402,13 @@ proc AddIndexWindow {} {
 	set frame2 [frame $winAddIdx.fram2]
 	set frame3 [frame $frame1.fram3]
 
-	label $winAddIdx.l_empty1 -text "               "	
-	label $frame1.l_index -text "Enter the Index :"
-	label $winAddIdx.l_empty2 -text "               "	
-	label $winAddIdx.l_empty3 -text "               "
-	label $frame3.l_hex -text "0x"
+	label $winAddIdx.la_empty1 -text "               "	
+	label $frame1.la_index -text "Enter the Index :"
+	label $winAddIdx.la_empty2 -text "               "	
+	label $winAddIdx.la_empty3 -text "               "
+	label $frame3.la_hex -text "0x"
 
-	entry $frame3.en_index -textvariable indexVar -background white -relief ridge -validate key -vcmd "IsValidIdx %P 4"
+	entry $frame3.en_index -textvariable indexVar -background white -relief ridge -validate key -vcmd "Validation::IsValidIdx %P 4"
 	set indexVar ""
 
 	button $frame2.bt_ok -width 8 -text "  Ok  " -command {
@@ -1405,7 +1422,7 @@ proc AddIndexWindow {} {
 		#puts node----->$node
 
 		#gets the nodeId and Type of selected node
-		set result [GetNodeIdType $node]
+		set result [Operations::GetNodeIdType $node]
 		if {$result != "" } {
 			set nodeId [lindex $result 0]
 			set nodeType [lindex $result 1]
@@ -1550,8 +1567,8 @@ proc AddIndexWindow {} {
 		$treePath insert $indexPosition $parentNode $indexNode -text [lindex $indexName 1]\(0x$indexVar\) -open 0 -image [Bitmap::get index]
 
 
-		#SortNode {nodeType nodeID nodePos choice {indexPos ""} {indexId ""}}
-		set sidxCorrList [SortNode $nodeType $nodeId $nodePos sub $indexPos $indexVar]
+		#WrapperInteractions::SortNode {nodeType nodeID nodePos choice {indexPos ""} {indexId ""}}
+		set sidxCorrList [WrapperInteractions::SortNode $nodeType $nodeId $nodePos sub $indexPos $indexVar]
 		set sidxCount [llength $sidxCorrList]
 		for {set tempSidxCount 0} { $tempSidxCount < $sidxCount } {incr tempSidxCount} {
 			set sortedSubIndexPos [lindex $sidxCorrList $tempSidxCount]
@@ -1575,15 +1592,15 @@ $treePath itemconfigure $subIndexNode-$tempSidxCount -open 0
 		destroy .addIdx	
 		return
 	}
-	grid config $winAddIdx.l_empty1 -row 0 -column 0 
+	grid config $winAddIdx.la_empty1 -row 0 -column 0 
 	grid config $frame1 -row 1 -column 0 
-	grid config $winAddIdx.l_empty2 -row 2 -column 0 
+	grid config $winAddIdx.la_empty2 -row 2 -column 0 
 	grid config $frame2 -row 3 -column 0  
-	grid config $winAddIdx.l_empty3 -row 4 -column 0 
+	grid config $winAddIdx.la_empty3 -row 4 -column 0 
 
-	grid config $frame1.l_index -row 0 -column 0 -padx 5
+	grid config $frame1.la_index -row 0 -column 0 -padx 5
 	grid config $frame3 -row 0 -column 1 -padx 5
-	grid config $frame3.l_hex -row 0 -column 0
+	grid config $frame3.la_hex -row 0 -column 0
 	grid config $frame3.en_index -row 0 -column 1
 	
 
@@ -1595,16 +1612,16 @@ $treePath itemconfigure $subIndexNode-$tempSidxCount -open 0
 	bind $winAddIdx <KeyPress-Escape> "$frame2.bt_cancel invoke"
 
 	focus $frame3.en_index
-	centerW $winAddIdx
+	Operations::centerW $winAddIdx
 }
 
 ################################################################################################
-#proc AddSubIndexWindow
+#proc ChildWindows::AddSubIndexWindow
 #Input       : -
 #Output      : -
 #Description : -
 ################################################################################################
-proc AddSubIndexWindow {} {
+proc ChildWindows::AddSubIndexWindow {} {
 	global treePath
 	global subIndexVar
 	global frame2
@@ -1624,13 +1641,13 @@ proc AddSubIndexWindow {} {
 	set frame2 [frame $winAddSidx.fram2]
 	set frame3 [frame $frame1.fram3]
 
-	label $winAddSidx.l_empty1 -text "               "	
-	label $frame1.l_subindex -text "Enter the SubIndex :"
-	label $winAddSidx.l_empty2 -text "               "	
-	label $winAddSidx.l_empty3 -text "               "
-	label $frame3.l_hex -text "0x"
+	label $winAddSidx.la_empty1 -text "               "	
+	label $frame1.la_subindex -text "Enter the SubIndex :"
+	label $winAddSidx.la_empty2 -text "               "	
+	label $winAddSidx.la_empty3 -text "               "
+	label $frame3.la_hex -text "0x"
 
-	entry $frame3.en_subindex -textvariable subIndexVar -background white -relief ridge -validate key -vcmd "IsValidIdx %P 2"
+	entry $frame3.en_subindex -textvariable subIndexVar -background white -relief ridge -validate key -vcmd "Validation::IsValidIdx %P 2"
 	set subIndexVar ""
 
 	button $frame2.bt_ok -width 8 -text "  Ok  " -command {
@@ -1649,7 +1666,7 @@ proc AddSubIndexWindow {} {
 
 
 		#gets the nodeId and Type of selected node
-		set result [GetNodeIdType $node]
+		set result [Operations::GetNodeIdType $node]
 		if {$result != "" } {
 			set nodeId [lindex $result 0]
 			set nodeType [lindex $result 1]
@@ -1731,15 +1748,15 @@ proc AddSubIndexWindow {} {
 		destroy .addSidx
 		return
 	}
-	grid config $winAddSidx.l_empty1 -row 0 -column 0 
+	grid config $winAddSidx.la_empty1 -row 0 -column 0 
 	grid config $frame1 -row 1 -column 0
-	grid config $winAddSidx.l_empty2 -row 2 -column 0 
+	grid config $winAddSidx.la_empty2 -row 2 -column 0 
 	grid config $frame2 -row 3 -column 0  
-	grid config $winAddSidx.l_empty3 -row 4 -column 0 
+	grid config $winAddSidx.la_empty3 -row 4 -column 0 
 
-	grid config $frame1.l_subindex -row 0 -column 0 -padx 5
+	grid config $frame1.la_subindex -row 0 -column 0 -padx 5
 	grid config $frame3 -row 0 -column 1 -padx 5
-	grid config $frame3.l_hex -row 0 -column 0
+	grid config $frame3.la_hex -row 0 -column 0
 	grid config $frame3.en_subindex -row 0 -column 1
 	#grid config $frame1.en_subindex -row 0 -column 1 -padx 5
 
@@ -1751,16 +1768,16 @@ proc AddSubIndexWindow {} {
 	bind $winAddSidx <KeyPress-Escape> "$frame2.bt_cancel invoke"
 
 	focus $frame3.en_subindex
-	centerW $winAddSidx
+	Operations::centerW $winAddSidx
 }
 
 ################################################################################################
-#proc AddPDOWindow
+#proc ChildWindows::AddPDOWindow
 #Input       : -
 #Output      : -
 #Description : -
 ################################################################################################
-proc AddPDOWindow {} {
+proc ChildWindows::AddPDOWindow {} {
 	global treePath
 	global pdoVar
 	global frame2
@@ -1780,13 +1797,13 @@ proc AddPDOWindow {} {
 	set frame2 [frame $winAddPdo.fram2]
 	set frame3 [frame $frame1.fram3]
 
-	label $winAddPdo.l_empty1 -text "               "	
-	label $frame1.l_index -text "Enter the PDO Index :"
-	label $winAddPdo.l_empty2 -text "               "	
-	label $winAddPdo.l_empty3 -text "               "
-	label $frame3.l_hex -text "0x"
+	label $winAddPdo.la_empty1 -text "               "	
+	label $frame1.la_index -text "Enter the PDO Index :"
+	label $winAddPdo.la_empty2 -text "               "	
+	label $winAddPdo.la_empty3 -text "               "
+	label $frame3.la_hex -text "0x"
 
-	entry $frame3.en_index -textvariable pdoVar -background white -relief ridge -validate key -vcmd "IsValidIdx %P 4"
+	entry $frame3.en_index -textvariable pdoVar -background white -relief ridge -validate key -vcmd "Validation::IsValidIdx %P 4"
 	set pdoVar ""
 
 	button $frame2.bt_ok -width 8 -text "  Ok  " -command {
@@ -1819,13 +1836,13 @@ proc AddPDOWindow {} {
 		#puts node----->$node
 
 		#gets the nodeId and Type of selected node
-		set result [GetNodeIdType $node]
+		set result [Operations::GetNodeIdType $node]
 		if {$result != "" } {
 			set nodeId [lindex $result 0]
 			set nodeType [lindex $result 1]
 		} else {
 			#must be some other node this condition should never reach
-			#puts "\n\nAddIndexWindow->SHOULD NEVER HAPPEN 1!!\n\n"
+			#puts "\n\nAddPDOWindow->SHOULD NEVER HAPPEN 1!!\n\n"
 			return
 		}
 
@@ -1941,8 +1958,8 @@ proc AddPDOWindow {} {
 		$treePath insert $indexPosition $parentNode $indexNode -text [lindex $indexName 1]\(0x$pdoVar\) -open 0 -image [Bitmap::get index]
 
 
-		#SortNode {nodeType nodeID nodePos choice {indexPos ""} {indexId ""}}
-		set sidxCorrList [SortNode $nodeType $nodeId $nodePos sub $indexPos $pdoVar]
+		#WrapperInteractions::SortNode {nodeType nodeID nodePos choice {indexPos ""} {indexId ""}}
+		set sidxCorrList [WrapperInteractions::SortNode $nodeType $nodeId $nodePos sub $indexPos $pdoVar]
 		set sidxCount [llength $sidxCorrList]
 		for {set tempSidxCount 0} { $tempSidxCount < $sidxCount } {incr tempSidxCount} {
 			set sortedSubIndexPos [lindex $sidxCorrList $tempSidxCount]
@@ -1961,15 +1978,15 @@ proc AddPDOWindow {} {
 		destroy .addPdo	
 		return
 	}
-	grid config $winAddPdo.l_empty1 -row 0 -column 0 
+	grid config $winAddPdo.la_empty1 -row 0 -column 0 
 	grid config $frame1 -row 1 -column 0 
-	grid config $winAddPdo.l_empty2 -row 2 -column 0 
+	grid config $winAddPdo.la_empty2 -row 2 -column 0 
 	grid config $frame2 -row 3 -column 0  
-	grid config $winAddPdo.l_empty3 -row 4 -column 0 
+	grid config $winAddPdo.la_empty3 -row 4 -column 0 
 
-	grid config $frame1.l_index -row 0 -column 0 -padx 5
+	grid config $frame1.la_index -row 0 -column 0 -padx 5
 	grid config $frame3 -row 0 -column 1 -padx 5
-	grid config $frame3.l_hex -row 0 -column 0
+	grid config $frame3.la_hex -row 0 -column 0
 	grid config $frame3.en_index -row 0 -column 1
 	#grid config $frame3.en_index -row 0 -column 1 -padx 5
 
@@ -1981,19 +1998,19 @@ proc AddPDOWindow {} {
 	bind $winAddPdo <KeyPress-Escape> "$frame2.bt_cancel invoke"
 
 	focus $frame3.en_index
-	centerW $winAddPdo
+	Operations::centerW $winAddPdo
 }
 
 
 ################################################################################################
-#proc PropertiesWindow
+#proc ChildWindows::PropertiesWindow
 #Input       : -
 #Output      : -
 #Description : -
 ################################################################################################
-proc PropertiesWindow {} {
+proc ChildWindows::PropertiesWindow {} {
 	global treePath
-	global PjtDir
+	global projectDir
 
 	set node [$treePath selection get]
 
@@ -2010,7 +2027,7 @@ proc PropertiesWindow {} {
 	
 	set frame1 [frame $winProp.frame -padx 5 -pady 5 ]
 
-	if {$node == "PjtName"} {
+	if {$node == "ProjectNode"} {
 		wm title $winProp "Project Properties"
 		set title "Project Properties"
 		#set title1 "Name     : "
@@ -2018,7 +2035,7 @@ proc PropertiesWindow {} {
 		set display1 [$treePath itemcget $node -text]
 		#set title2 "Location : "	
 		set title2 "Location"	
-		set display2 $PjtDir
+		set display2 $projectDir
 		set message "$title1$display1\n$title2$display2"
 	} elseif { [string match "MN-*" $node] || [string match "CN-*" $node] } {
 		if { [string match "MN-*" $node] } {
@@ -2041,13 +2058,13 @@ proc PropertiesWindow {} {
 			} else {
 				set display3 ""
 			}
-			label $frame1.l_title3 -text $title3
-			label $frame1.l_sep3 -text ":"
-			label $frame1.l_display3 -text $display3	
+			label $frame1.la_title3 -text $title3
+			label $frame1.la_sep3 -text ":"
+			label $frame1.la_display3 -text $display3	
 		} else {
 			wm title $winProp "CN Properties"
 			set title "CN Properties"
-			set result [GetNodeIdType $node]
+			set result [Operations::GetNodeIdType $node]
 			if {$result != "" } {
 				set nodeId [lindex $result 0]
 				set nodeType [lindex $result 1]
@@ -2072,23 +2089,23 @@ proc PropertiesWindow {} {
 		} else {
 			set display4 ""
 		}
-		label $frame1.l_title4 -text $title4
-		label $frame1.l_sep4 -text ":"
-		label $frame1.l_display4 -text $display4
+		label $frame1.la_title4 -text $title4
+		label $frame1.la_sep4 -text ":"
+		label $frame1.la_display4 -text $display4
 	} else {
 		#should not occur
 		return
 	}
 
 
-	label $frame1.l_title1 -text $title1 
-	label $frame1.l_sep1 -text ":"
-	label $frame1.l_display1 -text $display1
-	label $frame1.l_title2 -text $title2
-	label $frame1.l_sep2 -text ":"
-	label $frame1.l_display2 -text $display2
-	label $frame1.l_empty1 -text ""
-	label $frame1.l_empty2 -text ""
+	label $frame1.la_title1 -text $title1 
+	label $frame1.la_sep1 -text ":"
+	label $frame1.la_display1 -text $display1
+	label $frame1.la_title2 -text $title2
+	label $frame1.la_sep2 -text ":"
+	label $frame1.la_display2 -text $display2
+	label $frame1.la_empty1 -text ""
+	label $frame1.la_empty2 -text ""
 
 	button $winProp.bt_ok -text "  Ok  " -width 8 -command {
 		destroy .prop
@@ -2097,28 +2114,28 @@ proc PropertiesWindow {} {
 	##grid config $frame1 -row 0 -column 0 
 	pack configure $frame1 
 
-	grid config $frame1.l_empty1 -row 0 -column 0 -columnspan 2
+	grid config $frame1.la_empty1 -row 0 -column 0 -columnspan 2
 
-	grid config $frame1.l_title1 -row 1 -column 0 -sticky w
-	grid config $frame1.l_sep1 -row 1 -column 1
-	grid config $frame1.l_display1 -row 1 -column 2 -sticky w
-	grid config $frame1.l_title2 -row 2 -column 0  -sticky w
-	grid config $frame1.l_sep2 -row 2 -column 1
-	grid config $frame1.l_display2 -row 2 -column 2 -sticky w
-	if { $node == "PjtName" } {
-		grid config $frame1.l_empty2 -row 3 -column 0 -columnspan 1
+	grid config $frame1.la_title1 -row 1 -column 0 -sticky w
+	grid config $frame1.la_sep1 -row 1 -column 1
+	grid config $frame1.la_display1 -row 1 -column 2 -sticky w
+	grid config $frame1.la_title2 -row 2 -column 0  -sticky w
+	grid config $frame1.la_sep2 -row 2 -column 1
+	grid config $frame1.la_display2 -row 2 -column 2 -sticky w
+	if { $node == "ProjectNode" } {
+		grid config $frame1.la_empty2 -row 3 -column 0 -columnspan 1
 
 		##grid config $winProp.bt_ok -row 1 -column 0
 		pack configure $winProp.bt_ok -pady 10
 		#tk_messageBox -message "$title1$display1\n$title2$display2" -title "Project Properties" 
 	} elseif { [string match "MN-*" $node] } {
-		grid config $frame1.l_title3 -row 3 -column 0 -sticky w	
-		grid config $frame1.l_sep3 -row 3 -column 1	
-		grid config $frame1.l_display3 -row 3 -column 2 -sticky w
-		grid config $frame1.l_title4 -row 4 -column 0 -sticky w
-		grid config $frame1.l_sep4 -row 4 -column 1	
-		grid config $frame1.l_display4 -row 4 -column 2 -sticky w
-		grid config $frame1.l_empty2 -row 5 -column 0 -columnspan 1
+		grid config $frame1.la_title3 -row 3 -column 0 -sticky w	
+		grid config $frame1.la_sep3 -row 3 -column 1	
+		grid config $frame1.la_display3 -row 3 -column 2 -sticky w
+		grid config $frame1.la_title4 -row 4 -column 0 -sticky w
+		grid config $frame1.la_sep4 -row 4 -column 1	
+		grid config $frame1.la_display4 -row 4 -column 2 -sticky w
+		grid config $frame1.la_empty2 -row 5 -column 0 -columnspan 1
 
 		##grid config $winProp.bt_ok -row 1 -column 0
 		pack configure $winProp.bt_ok -pady 10
@@ -2126,10 +2143,10 @@ proc PropertiesWindow {} {
 		#tk_messageBox -message "$title1$display1\n$title2$display2\n$title3$display3\n$title4$display4" -title "MN Properties"
 		
 	} elseif { [string match "CN-*" $node] } {
-		grid config $frame1.l_title4 -row 3 -column 0 -sticky w
-		grid config $frame1.l_sep4 -row 3 -column 1
-		grid config $frame1.l_display4 -row 3 -column 2 -sticky w
-		grid config $frame1.l_empty2 -row 4 -column 0 -columnspan 1
+		grid config $frame1.la_title4 -row 3 -column 0 -sticky w
+		grid config $frame1.la_sep4 -row 3 -column 1
+		grid config $frame1.la_display4 -row 3 -column 2 -sticky w
+		grid config $frame1.la_empty2 -row 4 -column 0 -columnspan 1
 
 		##grid config $winProp.bt_ok -row 1 -column 0
 		pack configure $winProp.bt_ok -pady 10
@@ -2143,6 +2160,6 @@ proc PropertiesWindow {} {
 	wm protocol .prop WM_DELETE_WINDOW "$winProp.bt_ok invoke"
 	bind $winProp <KeyPress-Return> "$winProp.bt_ok invoke"
 	bind $winProp <KeyPress-Escape> "$winProp.bt_ok invoke"
-	centerW $winProp
+	Operations::centerW $winProp
 	
 }

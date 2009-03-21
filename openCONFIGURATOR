@@ -1,21 +1,18 @@
-###############################################################################################
+####################################################################################################
 #
 #
-# NAME:     openCONFIGURATOR
+#  NAME:     openCONFIGURATOR
 #
-# PURPOSE:  purpose description
+#  PURPOSE:  Sources all required files and Initializes the openCONFIGURATOR.
 #
-# AUTHOR:   Kalycito Infotech Pvt Ltd
+#  AUTHOR:   Kalycito Infotech Pvt Ltd
 #
-# COPYRIGHT NOTICE:
+#  Copyright :(c) Kalycito Infotech Private Limited
 #
-#********************************************************************************
-# (c) Kalycito Infotech Private Limited
+#***************************************************************************************************
+#  COPYRIGHT NOTICE: 
 #
 #  Project:      openCONFIGURATOR 
-#
-#  Description:  Sources all required files and Initializes the openCONFIGURATOR.
-#
 #
 #  License:
 #
@@ -57,11 +54,11 @@
 #        2. the validity or enforceability in other jurisdictions of that or
 #           any other provision of this License.
 #
-#********************************************************************************
+#***************************************************************************************************
 #
 #  REVISION HISTORY:
-# $Log:      $
-###############################################################################################
+#  
+####################################################################################################
 
 
 #!/bin/sh
@@ -70,7 +67,7 @@ exec wish "$0" ${1+"$@"}
 
 set version 1.0.0
 
-puts "argc->$argc argv->$argv"
+#puts "argc->$argc argv->$argv"
 if { $argc == 1 && ( $argv == "--version" || $argv == "-V" ) } {
 	puts "\nDeveloped by Kalycito Powerlink Team\nopenCONFIGURATOR version $version\n"
 	exit
@@ -79,8 +76,6 @@ if { $argc == 1 && ( $argv == "--version" || $argv == "-V" ) } {
 	exit
 }
 
-set pwd [pwd]
-#puts [package require Tk]
 if { [ catch { package require Tk 8.5 } ] } {
 	tk_messageBox -message "Package TK 8.5 not found \n please install and rerun the tool" -title Info -icon error
 	exit
@@ -91,111 +86,65 @@ if { [ catch { package require Thread } ] } {
 	exit
 }
 
-global RootDir
-global home
-global defaultPjtDir
+
+#-------------------------
+#	Global variables
+#-------------------------
+global rootDir
+global homeVar
+global defaultProjectDir
 global ConfigData
 global infoWindow
 global warWindow
 global errWindow
 
-set RootDir [pwd]
+#-------------------------
+#	Source files 
+#-------------------------
+set rootDir [pwd]
 
-source [file join $RootDir console.tcl]
-source [file join $RootDir manager.tcl]
-source [file join $RootDir wrapper_interactions.tcl]
-source [file join $RootDir windows.tcl]
-source [file join $RootDir validation.tcl]
-source [file join $RootDir operations.tcl]
+source [file join $rootDir console.tcl]
+source [file join $rootDir notebookManager.tcl]
+source [file join $rootDir wrapperInteractions.tcl]
+source [file join $rootDir childWindows.tcl]
+source [file join $rootDir validation.tcl]
+source [file join $rootDir operations.tcl]
 
-set path_to_BWidget [file join $RootDir BWidget-1.2.1]
+set path_to_BWidget [file join $rootDir BWidget-1.2.1]
 lappend auto_path $path_to_BWidget
-	
-package require -exact BWidget 1.2.1
-Bitmap::get cut
-# this used for loading Bitmap namespace into the interpretator
-namespace eval Bitmap {
-	lappend path [file join $RootDir images]
-}
 
-###############################################################################################
-#proc initOPN_CFGRATOR
-#Input       : argc, argv
-#Output      : -
-#Description : Calls the GUI of the application loads the so and dll
-###############################################################################################
-proc initOPN_CFGRATOR {argc argv} {
+### Package Definition
+package require -exact BWidget 1.2.1
+
+#---------------------------------------------------------------------------------------------------
+#  InitOpenConfigurator
+# 
+#  Arguments : argc  - string to be validate 
+# 	           argv - Type for validation 
+#
+#  Results : -
+#
+#  Description : Creates the Main GUI of the application loads the shared objects or 
+#				 dynamic linked libraries based on operating system. 
+#---------------------------------------------------------------------------------------------------
+proc InitOpenConfigurator {argc argv} {
+	
+	#-------------------------
+	#	Global variables
+	#-------------------------
+	
 	global tcl_platform
 	global auto_path
 	global ConfigData
 	global treePath
-	global PjtDir
-	global PjtName
-	global RootDir
-	global defaultPjtDir
+	global projectDir
+	global projectName
+	global rootDir
+	global defaultProjectDir
 
 	lappend auto_path ..
-	 
-	option add *TitleFrame.font {helvetica 11 bold italic}
-puts "$tcl_platform(platform)==$::env(HOME)"
-	if {"$tcl_platform(platform)" != "windows"} {
-		option add *background #d7d5d3 userDefault
-	}
 	
-	set home [file join $::env(HOME) Documents]
-	if {[file exists $home] && ![file isfile $home]} {
-		#folder exists
-	} else {
-		set home [file join $::env(HOME) "My Documents"]
-		if { [file exists $home] && ![file isfile $home] } {
-			#folder exists
-		} else {
-			#both the folder does not exist create new folde with Documents
-			set result [tk_messageBox -message "Folder \"Documents\" and \"My Documents\" are not present. \n Do you want to create one? " -type yesno -title Info -icon error]
-			switch -- $result {
-				yes {
-					set home [file join $::env(HOME) Documents]
-					file mkdir $home
-				}
-				no { exit }
-			}
-		}
-	}
-	
-
-	set defaultPjtDir [file join $home openCONFIGURATOR_Projects]
-	if { [file exists $defaultPjtDir] && ![file isfile $defaultPjtDir] } {
-		#directory already exists
-		puts "openCONFIG_Projects directory already exists"
-	} else {
-		file mkdir $defaultPjtDir
-	}
-
-	wm withdraw .
-	wm title . "openCONFIGURATOR"
-	set chk [WindowConfig::BasicFrames]
-	BWidget::place . 0 0 center
-	update idletasks
-	if {[info exists ConfigData(options,mainWinSize)]} {
-		wm geom . $ConfigData(options,mainWinSize)
-		update
-	}
-	after idle {
-		wm deiconify .
-		raise .
-		focus .
-		set WindowConfig::initialized 1
-	}
-	StartUp 
-
-
-	$treePath delete end root PjtName
-	
-	set PjtDir ""
-	set PjtName ""
-
-
-	# Loading shared library
+	# Loading shared libraries
 	if {"$tcl_platform(platform)" == "windows"} {
 		if {[catch {load openCONFIGURATORwrapper.dll openCONFIGURATORwrapper}]} {
 			tk_messageBox -message "Error loading Shared Library\nCannot proceed\nTry reinstalling the tool" -title Info -icon error
@@ -206,18 +155,69 @@ puts "$tcl_platform(platform)==$::env(HOME)"
 			tk_messageBox -message "Error loading Shared Library\nCannot proceed\nTry reinstalling the tool" -title Info -icon error
 			exit
 		}
-	
+		# Background color based on OS
+		option add *background #d7d5d3 userDefault
 	} else {
 			tk_messageBox -message "Shared Library not created for $tcl_platform(platform) platform\nCannot proceed" -title Info -icon error
 			exit
 	}
+	# Title frame font set for tablelist widget
+	option add *TitleFrame.font {helvetica 11 bold italic}
 	
+	set homeVar [file join $::env(HOME) Documents]
+	if {[file exists $homeVar] && ![file isfile $homeVar]} {
+		#folder exists
+	} else {
+		set homeVar [file join $::env(HOME) "My Documents"]
+		if { [file exists $homeVar] && ![file isfile $homeVar] } {
+			#folder exists
+		} else {
+			#Both the folders does not exist, create new folder "Documents" or "My Documents"
+			set result [tk_messageBox -message "Folder \"Documents\" and \"My Documents\" are not present. \n Do you want to create one? " -type yesno -title Info -icon error]
+			switch -- $result {
+				yes {
+					set homeVar [file join $::env(HOME) Documents]
+					file mkdir $homeVar
+				}
+				no { exit }
+			}
+		}
+	}
 	
+	set defaultProjectDir [file join $homeVar openCONFIGURATOR_Projects]
+	if { [file exists $defaultProjectDir] && ![file isfile $defaultProjectDir] } {
+		#directory already exists
+		#puts "openCONFIG_Projects directory already exists"
+	} else {
+		file mkdir $defaultProjectDir
+	}
 	
+	# Draw the Main window
+	wm withdraw .
+	wm title . "openCONFIGURATOR"
+	Operations::BasicFrames
+	BWidget::place . 0 0 center
+	update idletasks
+	# Get the size of the window
+	if {[info exists ConfigData(options,mainWinSize)]} {
+		wm geom . $ConfigData(options,mainWinSize)
+		update
+	}
+	after idle {
+		wm deiconify .
+		raise .
+		focus .
+		set Operations::initialized 1
+	}
+	 
 
-	puts "Successfully loaded dll"
-
-	InsertTree
-
+	$treePath delete end root ProjectNode
+	set projectDir ""
+	set projectName ""
+	
+	# Draw the Initial tree window  
+	Operations::InsertTree
+	# Childwindow for startup project window
+	ChildWindows::StartUp
 }
-initOPN_CFGRATOR $argc $argv
+InitOpenConfigurator $argc $argv

@@ -3,7 +3,7 @@
 #
 # NAME:     validation.tcl
 #
-# PURPOSE:  purpose description
+# PURPOSE:  Contains the validations used in application
 #
 # AUTHOR:   Kalycito Infotech Pvt Ltd
 #
@@ -13,9 +13,6 @@
 # (c) Kalycito Infotech Private Limited
 #
 #  Project:      openCONFIGURATOR 
-#
-#  Description:  Contains the validations used in application
-#
 #
 #  License:
 #
@@ -63,9 +60,15 @@
 # $Log:      $
 ####################################################################################################
 
+#---------------------------------------------------------------------------------------------------
+#  NameSpace Declaration
+#
+#  namespace : Validation
+#---------------------------------------------------------------------------------------------------
 namespace eval Validation {
 	
 }
+
 #---------------------------------------------------------------------------------------------------
 #  Validation::IsIp
 # 
@@ -87,7 +90,7 @@ proc Validation::IsIP {str type} {
 	set partialExp {^(($ipnum1)(\.(($ipnum2)(\.(($ipnum3)(\.(($ipnum4)?)?)?)?)?)?)?)?$}
 	set fullExp [subst -nocommands -nobackslashes $fullExp]
 	set partialExp [subst -nocommands -nobackslashes $partialExp]
-	if {[string equal $type focusout] || [string equal $type dstry] || [string equal $type forced]} {
+	if { [string equal $type focusout] || [string equal $type forced] } {
 		if [regexp -- $fullExp $str] {
 			Validation::SetPromptFlag
 			return 1
@@ -164,12 +167,12 @@ proc Validation::IsMAC {str type} {
 #  Arguments : input  - string to be validate 
 # 	       type   - Type for validation 
 #
-#  Results : 0  or 1
+#  Results : 0 or 1
 #
-#  Description : Validates whether an entry is integer and length is 4
+#  Description : Validates whether an entry is integer and length is 3 used to validate CN node entry
 #---------------------------------------------------------------------------------------------------
 proc Validation::IsInt {input type} {
-	if {[expr {[string len $input] <= 3} && {[string is int $input]}]} {
+	if {[expr {[string length $input] <= 3} && {[string is int $input]}]} {
 		return 1 
 	} else {
 		return 0
@@ -181,9 +184,9 @@ proc Validation::IsInt {input type} {
 # 
 #  Arguments : input  - string to be validate 
 # 	
-#  Results : 0  or 1
+#  Results : 0 or 1
 #
-#  Description : Validates whether an entry is only the alphanumeric with underscore
+#  Description : Validates whether an entry contains only alphanumeric character and underscore
 #---------------------------------------------------------------------------------------------------
 proc Validation::IsValidStr {input} {
 	if { [string is wordchar $input] == 0 || [string length $input] > 32 } {
@@ -199,7 +202,7 @@ proc Validation::IsValidStr {input} {
 # 
 #  Arguments : input  - string (project name)
 # 	
-#  Results : 0  or 1
+#  Results : 0 or 1
 #
 #  Description : Validates whether the string is valid project name.
 #---------------------------------------------------------------------------------------------------
@@ -215,18 +218,16 @@ proc Validation::IsValidName { input } {
 #  IsDec
 # 
 #  Arguments : input     - string (project name)
-# 	       framePath - Frame contains the value of entry widget
+# 	       entryPath - path of the entry widget
 #              mode      - Mode of the entry (insert - 1 / delete - 0) 
 #              idx       - Index where the character was inserted or deleted  
 #
-#  Results : 0  or 1
+#  Results : 0 or 1
 #
 #  Description : Validates whether an entry is an integer and does not exceed specified range.
 #---------------------------------------------------------------------------------------------------
 proc Validation::IsDec {input entryPath mode idx} {
-	
 	set tempInput $input
-	#puts "IsDec test input->$input tempInput->$tempInput isint->[string is int $tempInput]"
 	#115792089237316195423570985008687907853269984665640564039457584007913129639935 is corresponding value of 64 F's
 	if { [string length $tempInput] > 78 || $tempInput > 115792089237316195423570985008687907853269984665640564039457584007913129639935 || [Validation::CheckNumber $tempInput] == 0  } {
 		return 0
@@ -240,9 +241,9 @@ proc Validation::IsDec {input entryPath mode idx} {
 #---------------------------------------------------------------------------------------------------
 #  Validation::CheckNumber
 # 
-#  Arguments : input  - string to be validated
+#  Arguments : input - string to be validated
 #
-#  Results : 0  or 1
+#  Results : 0 or 1
 #
 #  Description : Validates string is containing only numbers 0 to 9
 #---------------------------------------------------------------------------------------------------
@@ -262,12 +263,12 @@ proc Validation::CheckNumber {input} {
 #---------------------------------------------------------------------------------------------------
 #  IsHex
 # 
-#  Arguments : input     - string (project name)
-# 	       entryPath - Frame contains the value of entry widget
+#  Arguments : input     - string 
+# 	       preinput  - valid previous entry
 #              mode      - Mode of the entry (insert - 1 / delete - 0) 
 #              idx       - Index where the character was inserted or deleted  
 #
-#  Results : 0  or 1
+#  Results : 0 or 1
 #
 #  Description : Validates whether an entry is an integer and does not exceed specified range.
 #---------------------------------------------------------------------------------------------------
@@ -278,6 +279,7 @@ proc Validation::IsHex {input preinput entryPath mode idx} {
 		set tempInput [string range $input 1 end]
 	} else {
 		if {[string match -nocase "*0x*" $input]} {
+			#entry made before 0x
 			return 0
 		} elseif { $preinput == "0x[string range $input 1 end]" } {
 			#x is being deleted 
@@ -306,12 +308,11 @@ proc Validation::IsHex {input preinput entryPath mode idx} {
 #	       idx       - index where cursor is set
 #	       str       - string to be inserted
 #
-#  Results : -
+#  Results : 0 or 1
 #
 #  Description : Inserts the string in entry widget and placing the cursor in required place
 #---------------------------------------------------------------------------------------------------
 proc Validation::SetValue {entryPath mode idx {str no_input}  } {
-	puts "Validation::SetValue invoked mode->$mode idx->$idx str->$str"
 	set tmpVar [$entryPath cget -textvariable]
 	set state [$entryPath cget -state]
 	$entryPath configure -state normal -validate none
@@ -337,7 +338,7 @@ proc Validation::SetValue {entryPath mode idx {str no_input}  } {
 #  Arguments : input       - input to be validated
 #	       indexLength - required length
 #
-#  Results : -
+#  Results : 0 or 1
 #
 #  Description : Validates whether an entry is a index and does not exceed specified range
 #---------------------------------------------------------------------------------------------------
@@ -370,7 +371,6 @@ proc Validation::IsTableHex {input preinput mode idx reqLen tablePath rowIndex c
 	if {[string match -nocase "0x*" $input]} {
 		set input [string range $input 2 end]
 	} elseif {[string match -nocase "x*" $input]} {
-		#puts "starting with hex"
 		set input [string range $input 1 end]
 	} else {
 		if {[string match -nocase "*0x*" $input]} {
@@ -398,9 +398,9 @@ proc Validation::IsTableHex {input preinput mode idx reqLen tablePath rowIndex c
 #  Validation::SetTableValue
 # 
 #  Arguments : entryPath - embedded entry in tablelist
-#	       input     - input to be validated
 #	       mode      - indicaties deletion or insertion of character
 #	       idx       - index where cursor is set
+#	       input     - input to be validated
 #
 #  Results : -
 #
@@ -425,14 +425,11 @@ proc Validation::SetTableValue { entryPath mode idx input } {
 # 
 #  Arguments : input - input to be validated
 #	      
-#  Results : -
+#  Results : converted value
 #
 #  Description : converts the input decinmal value into hexadecimal value
 #---------------------------------------------------------------------------------------------------
 proc Validation::InputToHex {input} {
-	
-	puts "\n\nValidation::InputToHex invoked input->$input"
-	
 	if { $input == 0 } {
 		#if value is zero return as it is
 		return 0x$input
@@ -440,51 +437,36 @@ proc Validation::InputToHex {input} {
 		#if value empty or not an int return back same value
 		return $input
 	}
-	
-	set zeroCount [NoteBookManager::CountLeadZero $input] ; #counting the leading zero if they are present
-	puts "after counting zero input->$input"
+	 #counting the leading zero if they are present
+	set zeroCount [NoteBookManager::CountLeadZero $input] 
 	set input [string trimleft $input 0]
-	puts "input->$input zeroCount->$zeroCount"
-	
 	if { $input > 4294967295 } {
 		set calcVal $input
 		set finalVal ""
 		while { $calcVal > 4294967295 } {
 			set quo [expr $calcVal / 4294967296 ]
-			puts "quo->$quo"
 			set rem [expr $calcVal - ( $quo * 4294967296) ]
-			puts "rem->$rem"
 			if { $quo  > 4294967295 } {
-				#set rem [NoteBookManager::AppendZero [format %X $rem] 8]	
 				set finalVal [NoteBookManager::AppendZero [format %X $rem] 8]$finalVal		
-				puts "rem->$rem...finalVal->$finalVal"
 			} else {
-				#set quo [NoteBookManager::AppendZero [format %X $quo] 8]
 				set finalVal [NoteBookManager::AppendZero [format %X $rem] 8]$finalVal	
-				puts "final val after appending	$finalVal"
 				set finalVal [format %X $quo]$finalVal
-				puts "quo->$quo...finalVal->$finalVal"
 			}
 			set calcVal $quo
-			puts "calcVal->$calcVal"
 		}
 		set input $finalVal
-		puts " NoteBookManager::AppendZero $input [expr $zeroCount+[string length $input] ] -> [ NoteBookManager::AppendZero $input [expr $zeroCount+[string length $input] ] ]"
-		set input [ NoteBookManager::AppendZero $input [expr $zeroCount+[string length $input] ] ] ; #appending trimmed leading zero if any
+		#appending trimmed leading zero if any
+		set input [ NoteBookManager::AppendZero $input [expr $zeroCount+[string length $input] ] ] 
 		set input 0x$input
-		
 	} else {
-		#set tempVal [string trimleft $tmpVal 0] ; #zero is trimmed otherwise considered as octal
 		if { [catch {set input [format %X $input]}] } {
-			puts "raised an error in Validation::InputToHex return the sent value itself input->$input"
+			#raised an error in conversion
 		} else {
-			#set tmpVal $tempVal
-			puts " NoteBookManager::AppendZero $input [expr $zeroCount+[string length $input] ] -> [ NoteBookManager::AppendZero $input [expr $zeroCount+[string length $input] ] ]"
-			set input [ NoteBookManager::AppendZero $input [expr $zeroCount+[string length $input] ] ] ; #appending trimmed leading zero if any
+			#appending trimmed leading zero if any
+			set input [ NoteBookManager::AppendZero $input [expr $zeroCount+[string length $input] ] ] 
 			set input 0x$input
 		}
 	}
-	puts "**************\n\n"
 	return $input
 }
 
@@ -500,8 +482,6 @@ proc Validation::InputToHex {input} {
 proc Validation::SetPromptFlag {} {
 	global chkPrompt
 	set chkPrompt 1
-	puts "\tchkprompt SET\t"
-	#set
 }
 
 #---------------------------------------------------------------------------------------------------
@@ -516,5 +496,4 @@ proc Validation::SetPromptFlag {} {
 proc Validation::ResetPromptFlag {} {
 	global chkPrompt
 	set chkPrompt 0
-	puts "\tchkprompt RESET\t"
 }

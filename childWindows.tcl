@@ -122,13 +122,17 @@ proc ChildWindows::StartUp {} {
 			destroy .startUp
 			Operations::OpenProjectWindow
 		}
-		unset startVar
-		unset frame2
+		catch {
+			unset startVar
+			unset frame2
+		}
 	}
 	button $frame2.bt_cancel -width 8 -text "Cancel" -command {
-		unset startVar
-		unset frame2
-		destroy .startUp
+		catch {
+			unset startVar
+			unset frame2
+		}
+		catch { destroy .startUp }
 		Operations::exit_app
 	}
 
@@ -138,10 +142,12 @@ proc ChildWindows::StartUp {} {
 	grid config $frame1.ra_newProj -row 1 -column 0 -sticky w  -padx 5 -pady 5
 	grid config $frame1.ra_openProj -row 2 -column 0 -sticky w -padx 5 -pady 5
 	grid config $frame1.la_desc -row 3 -column 0 -sticky w -padx 5 -pady 5
-	grid config $frame1.t_desc -row 4 -column 0 -sticky w -padx 5 -pady 5
+	grid config $frame1.t_desc -row 4 -column 0 -sticky w -padx 5 -pady 5 
 	grid config $frame2 -row 5 -column 0  -padx 5 -pady 5
 	grid config $frame2.bt_ok -row 0 -column 0
 	grid config $frame2.bt_cancel -row 0 -column 1
+
+#puts "width->[winfo reqwidth $frame1] heigth->[winfo reqheight $frame1]"
 
 	wm protocol .startUp WM_DELETE_WINDOW "$frame2.bt_cancel invoke"
 	bind $winStartUp <KeyPress-Return> "$frame2.bt_ok invoke"
@@ -172,77 +178,7 @@ proc ChildWindows::StartUpText {t_desc choice} {
 }
 
 
-################################################################################################
-##proc ChildWindows::OpenProjectText
-##Input       : text widget path
-##Output      : -
-##Description : Displays text when Open project is selected in start up
-################################################################################################
-#proc ChildWindows::OpenProjectText {t_desc} {
-#	$t_desc configure -state normal
-#	$t_desc delete 1.0 end
-#	$t_desc insert end "Open Existing Project"
-#	$t_desc configure -state disabled
-#}
 
-################################################################################################
-##proc ConnectionSettingWindow
-##Input       : -
-##Output      : -
-##Description : Creates the GUI for connection Settings
-################################################################################################
-#proc ConnectionSettingWindow {} {
-#	global connectionIpAddr
-#	global frame2
-#
-#	set winConnSett .connSett
-#	catch "destroy $winConnSett"
-#	toplevel     $winConnSett
-#	wm title     $winConnSett "Connection Settings"
-#	wm resizable $winConnSett 0 0
-#	wm transient $winConnSett .
-#	wm deiconify $winConnSett
-#	grab $winConnSett
-#
-#	set frame1 [frame $winConnSett.fram1]
-#	set frame2 [frame $winConnSett.fram2]
-#
-#	label $winConnSett.la_empty1 -text ""
-#	label $frame1.la_ip -text "IP Address"
-#	label $winConnSett.la_empty2 -text ""
-#	label $winConnSett.la_empty3 -text ""
-#
-#	set connectionIpAddr ""
-#	entry $frame1.en_ip -textvariable connectionIpAddr -background white -relief ridge -validate all -vcmd "Validation::IsIP %P %V"
-#
-#	button $frame2.bt_ok -width 8 -text "  Ok  " -command { 
-#		YetToImplement
-#		$frame2.bt_cancel invoke
-#	}
-#	button $frame2.bt_cancel -width 8 -text "Cancel" -command {
-#		unset connectionIpAddr
-#		unset frame2
-#		destroy .connSett
-#	}
-#
-#	grid config $winConnSett.la_empty1 -row 0 -column 0
-#	grid config $frame1 -row 1 -column 0 -padx 10
-#	grid config $winConnSett.la_empty2 -row 2 -column 0
-#	grid config $frame2 -row 3 -column 0
-#	grid config $winConnSett.la_empty3 -row 4 -column 0
-#
-#	grid config $frame1.la_ip -row 0 -column 0
-#	grid config $frame1.en_ip -row 0 -column 1
-#
-#	grid config $frame2.bt_ok -row 0 -column 0
-#	grid config $frame2.bt_cancel -row 0 -column 1
-#
-#	wm protocol .connSett WM_DELETE_WINDOW "$frame2.bt_cancel invoke"
-#	bind $winConnSett <KeyPress-Return> "$frame2.bt_ok invoke"
-#	bind $winConnSett <KeyPress-Escape> "$frame2.bt_cancel invoke"
-#
-#	Operations::centerW $winConnSett
-#}
 
 proc ChildWindows::ProjectSettingWindow {} {
 	global projectName
@@ -349,99 +285,9 @@ proc ChildWindows::ProjectSettingWindow {} {
 	wm protocol .projSett WM_DELETE_WINDOW "$frame3.bt_cancel invoke"
 	bind $winProjSett <KeyPress-Return> "$frame3.bt_ok invoke"
 	bind $winProjSett <KeyPress-Escape> "$frame3.bt_cancel invoke"
-	
+	Operations::centerW $winProjSett
 	
 }
-###############################################################################################
-#proc InterCNWindow
-#Input       : -
-#Output      : -
-#Description : Creates the GUI for adding PDO to CN
-###############################################################################################
-#proc InterCNWindow {} {
-#	global treePath
-#	global frame2	
-#
-#	set node [$treePath selection get]
-#	set siblingList ""
-#	set dispList ""
-#	foreach sibling [$treePath nodes [$treePath parent $node]] {
-#		if {[string match "OBD*" $sibling] || [string match $node $sibling]} {
-#			# should not add it to the list
-#		} else {
-#			lappend siblingList $sibling
-#			lappend dispList [$treePath itemcget $sibling -text]
-#		}
-#
-#	}
-#	if {$siblingList == ""} {
-#		tk_messageBox -message "only one CN present" -icon info
-#		return
-#	}
-#	
-#
-#	set winInterCN .interCN
-#	catch "destroy $winInterCN"
-#	toplevel     $winInterCN
-#	wm title     $winInterCN "Inter CN Communication"
-#	wm resizable $winInterCN 0 0
-#	wm transient $winInterCN .
-#	wm deiconify $winInterCN
-#	grab $winInterCN
-#
-#	set titleFrame1 [TitleFrame $winInterCN.titleFrame1 -text "PDO Configuration" ]
-#	set titleInnerFrame1 [$titleFrame1 getframe]
-#	set frame1 [frame $titleInnerFrame1.fram1 -padx 5 -pady 5]
-#	set frame2 [frame $titleInnerFrame1.fram2]
-#	set frame3 [frame $titleInnerFrame1.fram3]
-#
-#	label $winInterCN.la_empty1 -text ""	
-#	label $winInterCN.la_empty2 -text ""
-#	label $frame1.la_cn -text "CN 's :  "
-#	label $frame1.la_noRpdo -text "Number of RPDO :  "
-#	label $frame1.la_dispRpdo -text ""
-#	
-#	ComboBox $frame1.co_cn -values $dispList -modifycmd "dispRpdo $frame1 [list $siblingList] [list $dispList]" -editable no
-# 	
-#	button $frame2.bt_ok -width 8 -text "  Ok  " -command {
-#		destroy .interCN
-#		YetToImplement
-#	}
-#
-#	button $frame2.bt_cancel -width 8 -text "Cancel" -command {
-#		unset frame2
-#		destroy .interCN
-#	}
-#
-#	grid config $winInterCN.la_empty1 -row 0 -column 0 -sticky "news"
-#	grid config $titleFrame1 -row 1 -column 0 -padx 5 -sticky "news"
-#	grid config $winInterCN.la_empty2 -row 2 -column 0 -sticky "news"
-#
-#	#grid config $titleInnerFrame1 -row 0 -column 0 
-#
-#	grid config $frame1 -row 0 -column 0 
-#	grid config $frame1.la_cn  -row 0 -column 0 -sticky e 
-#	grid config $frame1.co_cn -row 0 -column 1 -sticky w
-#	grid config $frame1.la_noRpdo  -row 1 -column 0 -sticky e
-#	grid config $frame1.la_dispRpdo -row 1 -column 1 -sticky w
-#
-#	grid config $frame2 -row 1 -column 0 
-#	grid config $frame2.bt_ok  -row 0 -column 0 
-#	grid config $frame2.bt_cancel -row 0 -column 1
-#
-#	wm protocol .interCN WM_DELETE_WINDOW "$frame2.bt_cancel invoke"
-#	bind $winInterCN <KeyPress-Return> "$frame2.bt_ok invoke"
-#	bind $winInterCN <KeyPress-Escape> "$frame2.bt_cancel invoke"
-#
-#	Operations::centerW $winInterCN
-#
-#}
-#
-#proc dispRpdo {frame1 siblingList dispList} {
-#	#puts "frame->$frame1==siblingList->$siblingList==dispList->$dispList"
-#	#puts [$frame1.co_cn getvalue]
-#
-#}
 
 ###############################################################################################
 #proc ChildWindows::AddCNWindow
@@ -591,11 +437,13 @@ proc ChildWindows::AddCNWindow {} {
 	}
 
 	button $frame1.bt_cancel -width 8 -text Cancel -command { 
-		unset cnName
-		unset nodeId
-		unset tmpImpCnDir
-		unset frame1
-		destroy .addCN
+		catch {
+			unset cnName
+			unset nodeId
+			unset tmpImpCnDir
+			unset frame1
+		}
+		catch { destroy .addCN }
 	}
 
 
@@ -716,7 +564,10 @@ proc ChildWindows::SaveProjectAsWindow {} {
 		}
 		set tempProjectDir [file dirname $saveProjectAs]
 		set tempProjectName [file tail $saveProjectAs]
-
+		catch {file mkdir $saveProjectAs}
+		catch {file mkdir [file join $saveProjectAs cdc_xap]}
+		catch {file mkdir [file join $saveProjectAs octx]}
+		
                 thread::send -async [tsv::set application importProgress] "StartProgress"
 		set catchErrCode [SaveProject $tempProjectDir [string range $tempProjectName 0 end-[string length [file extension $tempProjectName]]]]
 		thread::send -async [tsv::set application importProgress] "StopProgress"
@@ -749,19 +600,24 @@ proc ChildWindows::NewProjectWindow {} {
 	global tmpPjtName
 	global tmpPjtDir
 	global tmpImpDir
-	global frame1
-	global frame3_2
-	#global frame2_3
-	global titleInnerFrame1
-	global titleInnerFrame2
+	#global frame1
+	#global frame3_2
+	##global frame2_3
+	#global titleInnerFrame1
+	#global titleInnerFrame2
 	global winNewProj
 	global ra_proj
 	global ra_auto
-	#global tmpIPaddr
+	##global tmpIPaddr
 	global newProjectFrame2
-	global titleInnerFrame1_2
-	global titleInnerFrame2_2
-	#global titleInnerFrame2_3
+	#global titleInnerFrame1_2
+	#global titleInnerFrame2_2
+	##global titleInnerFrame2_3
+	global frame1_1
+	global frame1_4
+	global frame2_1
+	global frame2_2
+	global frame2_3
 
 	global treePath
 	global nodeIdList
@@ -785,90 +641,36 @@ proc ChildWindows::NewProjectWindow {} {
 	wm minsize   $winNewProj 50 200
 	grab $winNewProj
 
-#########################################################################################################
-	#set newProjectFrame3 [frame $winNewProj.frame3 -width 650 -height 470 ]
-	#grid configure $newProjectFrame3 -row 0 -column 0 -sticky news
-	#
-	#set titleFrame1_3 [TitleFrame $newProjectFrame3.titleFrame1 -text "Create New Project" ]
-	#set titleInnerFrame1_3 [$titleFrame1_3 getframe]
-	#set frame2_3 [frame $titleInnerFrame1_3.frame2 ]
-	#set titleFrame2_3 [TitleFrame $titleInnerFrame1_3.titleFrame3 -text "Connection Settings" ]
-	#set titleInnerFrame2_3 [$titleFrame2_3 getframe]
-	#set frame1_3 [frame $titleInnerFrame2_3.frame1]
-	#
-	#label $titleInnerFrame1_3.la_empty -text "" -height 8
-	#label $titleInnerFrame2_3.la_ip -text "IP Address : " -justify left
-	#label $titleInnerFrame2_3.la_empty1 -text "" -width 32 ; # used for aligning
-	#
-	#entry $titleInnerFrame2_3.en_IPaddr -textvariable tmpIPaddr -background white -relief ridge -validate key -vcmd "Validation::IsIP %P %V"
-	#set tmpIPaddr 0.0.0.0
-	#
-	#button $frame2_3.bt_back -width 8 -text " Back " -command {
-	#	grid remove $winNewProj.frame1
-	#	grid  $winNewProj.frame2
-	#	grid remove $winNewProj.frame3
-	#	bind $winNewProj <KeyPress-Return> "$frame3_2.bt_next invoke"
-	#	
-	#}
-	#button $frame2_3.bt_ok -width 8 -text "  Ok  " -command {
-	#	set result [$titleInnerFrame2_3.en_IPaddr validate]
-	#	if { $result  == 0 } {
-	#		tk_messageBox -message "Enter a Valid IP Address " -icon warning -parent .newprj
-	#		focus .newprj
-	#		return
-	#	}
-	#	ChildWindows::NewProjectCreate $tmpPjtDir $tmpPjtName $tmpImpDir $conf
-	#	$frame1.bt_cancel invoke
-	#	
-	#}
-	#button $frame2_3.bt_cancel -width 8 -text "Cancel" -command {
-	#	$frame1.bt_cancel invoke
-	#}
-	#grid configure $titleFrame1_3 -row 0 -column 0 -sticky news -padx 10 -pady 10
-	#
-	#grid configure $titleFrame2_3 -row 0 -column 0 -sticky news
-	#grid configure $titleInnerFrame2_3.la_ip -row 0 -column 0 -sticky news
-	#grid configure $titleInnerFrame2_3.en_IPaddr -row 0 -column 1 -sticky news -pady 5
-	#grid configure $titleInnerFrame2_3.la_empty1 -row 0 -column 2 -sticky news
-	#
-	#grid configure $titleInnerFrame1_3.la_empty -row 1 -column 0 -pady 4
-	#
-	#grid configure $frame2_3 -row 2 -column 0 -columnspan 2 
-	#grid configure $frame2_3.bt_back -row 0 -column 0 
-	#grid configure $frame2_3.bt_ok -row 0 -column 1 -padx 5
-	#grid configure $frame2_3.bt_cancel -row 0 -column 2
-#########################################################################################################
-	#grid remove $winNewProj.frame3
-	
+
 	set newProjectFrame2 [frame $winNewProj.frame2 -width 650 -height 470 ]
-	grid configure $newProjectFrame2 -row 0 -column 0 -sticky news
+	grid configure $newProjectFrame2 -row 0 -column 0 -sticky news -sticky news -padx 15 -pady 15
 	#pack  configure $newProjectFrame2 -anchor center
 		
-	set titleFrame1_2 [TitleFrame $newProjectFrame2.titleFrame1 -text "Create New Project" ]
-	set titleInnerFrame1_2 [$titleFrame1_2 getframe]
-	set frame1_2 [frame $titleInnerFrame1_2.frame1 ]
-	set frame2_2 [frame $titleInnerFrame1_2.frame2 ]
-	set frame3_2 [frame $titleInnerFrame1_2.frame3 ]
-	set titleFrame2_2 [TitleFrame $titleInnerFrame1_2.titleFrame2 -text "MN Configuration" ]
-	set titleInnerFrame2_2 [$titleFrame2_2 getframe]
-	set frame4_2 [frame $titleInnerFrame2_2.frame4 ]
 
-	label $titleInnerFrame1_2.la_empty1 -text "" -width 62 
-	#label $titleInnerFrame1_2.la_project -text "Project Settings"
-	#1#label $titleInnerFrame1_2.la_empty2 -text "" -width 62
-	label $titleInnerFrame2_2.la_empty2 -text "" -width 60
-	#label $frame1_2.la_ip -text "IP Address"
-	label $titleInnerFrame1_2.la_empty3 -text ""
-	#1#label $frame2_2.la_generate -text "Auto Generate"
-	label $titleInnerFrame2_2.la_generate -text "Auto Generate"
-	label $titleInnerFrame1_2.la_empty4 -text ""
-	label $titleInnerFrame1_2.la_empty5 -text ""
-	label $titleInnerFrame2_2.la_empty6 -text "" -width 45 ; # to align the title frame
-	label $titleInnerFrame2_2.la_empty7 -text "" -width 35
-	label $frame1_2.la_empty8 -text "" -width 7
-	label $frame2_2.la_empty9 -text "" -width 4
+set frame2_1 [frame $newProjectFrame2.frame2_1]
+set frame2_2 [frame $newProjectFrame2.frame2_2]
+set frame2_3 [frame $frame2_1.frame2_3]
 
-	entry $titleInnerFrame2_2.en_imppath -textvariable tmpImpDir -background white -relief ridge -width 35 -state disabled
+	#label $titleInnerFrame1_2.la_empty1 -text "" -width 62 
+	##label $titleInnerFrame1_2.la_project -text "Project Settings"
+	##1#label $titleInnerFrame1_2.la_empty2 -text "" -width 62
+	#label $titleInnerFrame2_2.la_empty2 -text "" -width 60
+	##label $frame1_2.la_ip -text "IP Address"
+	#label $titleInnerFrame1_2.la_empty3 -text ""
+	##1#label $frame2_2.la_generate -text "Auto Generate"
+	#label $titleInnerFrame2_2.la_generate -text "Auto Generate"
+	#label $titleInnerFrame1_2.la_empty4 -text ""
+	#label $titleInnerFrame1_2.la_empty5 -text ""
+	#label $titleInnerFrame2_2.la_empty6 -text "" -width 45 ; # to align the title frame
+	#label $titleInnerFrame2_2.la_empty7 -text "" -width 35
+	#label $frame1_2.la_empty8 -text "" -width 7
+	#label $frame2_2.la_empty9 -text "" -width 4
+
+label $frame2_1.la_mn -text "MN Configuration"
+label $frame2_1.la_generate -text "Auto Generate"
+label $frame2_1.la_desc -text "Description"
+	#entry $titleInnerFrame2_2.en_imppath -textvariable tmpImpDir -background white -relief ridge -width 35 -state disabled
+entry $frame2_1.en_imppath -textvariable tmpImpDir -background white -relief ridge -width 28 -state disabled	
 	if {![file isdirectory $lastXD] && [file exists $lastXD] } {	
 		set tmpImpDir $lastXD	
 	} else {
@@ -883,32 +685,45 @@ proc ChildWindows::NewProjectWindow {} {
 			set text_padx 27
 	}
 	
-	text $titleInnerFrame2_2.t_desc -height 2 -width $text_width -state disabled -background white
+	#text $titleInnerFrame2_2.t_desc -height 2 -width $text_width -state disabled -background white
+text $frame2_1.t_desc -height 5 -width 40 -state disabled -background white	
 	
-	radiobutton $titleInnerFrame2_2.ra_def -text "Default" -variable conf -value on -command {
-		ChildWindows::NewProjectMNText $titleInnerFrame2_2.t_desc 
-		$titleInnerFrame2_2.en_imppath config -state disabled 
-		$titleInnerFrame2_2.bt_imppath config -state disabled 
+	#radiobutton $titleInnerFrame2_2.ra_def -text "Default" -variable conf -value on -command { }
+	radiobutton $frame2_1.ra_def -text "Default" -variable conf -value on -command {
+		ChildWindows::NewProjectMNText $frame2_1.t_desc 
+		$frame2_1.en_imppath config -state disabled 
+		$frame2_1.bt_imppath config -state disabled 
 		#grid remove $titleInnerFrame2_2.en_imppath
 		#grid remove $titleInnerFrame2_2.bt_imppath
 	}
-	radiobutton $titleInnerFrame2_2.ra_imp -text "Import XDC/XDD" -variable conf -value off -command {
-		ChildWindows::NewProjectMNText $titleInnerFrame2_2.t_desc 
-		$titleInnerFrame2_2.en_imppath config -state normal 
-		$titleInnerFrame2_2.bt_imppath config -state normal 
-		#grid  $titleInnerFrame2_2.en_imppath 
-		#grid  $titleInnerFrame2_2.bt_imppath 
+	#radiobutton $titleInnerFrame2_2.ra_imp -text "Import XDC/XDD" -variable conf -value off -command { }
+	radiobutton $frame2_1.ra_imp -text "Import XDC/XDD" -variable conf -value off -command {
+		ChildWindows::NewProjectMNText $frame2_1.t_desc 
+		$frame2_1.en_imppath config -state normal 
+		$frame2_1.bt_imppath config -state normal 
+		#ChildWindows::NewProjectMNText $titleInnerFrame2_2.t_desc 
+		#$titleInnerFrame2_2.en_imppath config -state normal 
+		#$titleInnerFrame2_2.bt_imppath config -state normal 
+		##grid  $titleInnerFrame2_2.en_imppath 
+		##grid  $titleInnerFrame2_2.bt_imppath 
 
 	} 
-	$titleInnerFrame2_2.ra_def select
-	ChildWindows::NewProjectMNText $titleInnerFrame2_2.t_desc 
+	#$titleInnerFrame2_2.ra_def select
+$frame2_1.ra_def select	
+	#ChildWindows::NewProjectMNText $titleInnerFrame2_2.t_desc
+ChildWindows::NewProjectMNText $frame2_1.t_desc 	
 	
-	radiobutton $frame4_2.ra_yes -text "Yes" -variable ra_auto -value 1 -command "ChildWindows::NewProjectMNText $titleInnerFrame2_2.t_desc"
-	radiobutton $frame4_2.ra_no -text "No" -variable ra_auto -value 0 -command "ChildWindows::NewProjectMNText $titleInnerFrame2_2.t_desc"
-	$frame4_2.ra_no select
-	#ChildWindows::NewProjectText $titleInnerFrame2_2.t_desc 5
+	#radiobutton $frame4_2.ra_yes -text "Yes" -variable ra_auto -value 1 -command "ChildWindows::NewProjectMNText $titleInnerFrame2_2.t_desc"
+	#radiobutton $frame4_2.ra_no -text "No" -variable ra_auto -value 0 -command "ChildWindows::NewProjectMNText $titleInnerFrame2_2.t_desc"
+	#$frame4_2.ra_no select
+	##ChildWindows::NewProjectText $titleInnerFrame2_2.t_desc 5
 
-	button $titleInnerFrame2_2.bt_imppath -state disabled -width 8 -text Browse -command {
+radiobutton $frame2_1.ra_yes -text "Yes" -variable ra_auto -value 1 -command "ChildWindows::NewProjectMNText  $frame2_1.t_desc"
+radiobutton $frame2_1.ra_no -text "No" -variable ra_auto -value 0 -command "ChildWindows::NewProjectMNText  $frame2_1.t_desc"
+$frame2_1.ra_no select
+
+	#button $titleInnerFrame2_2.bt_imppath -state disabled -width 8 -text Browse -command { }
+	button $frame2_1.bt_imppath -state disabled -width 8 -text Browse -command {
 		set types {
 		        {{XDC/XDD Files} {.xd*} }
 		        {{XDD Files}     {.xdd} }
@@ -926,13 +741,15 @@ proc ChildWindows::NewProjectWindow {} {
 		}
        }
 
-	button $frame3_2.bt_back -width 8 -text " Back " -command {
+	#button $frame3_2.bt_back -width 8 -text " Back " -command { }
+	button $frame2_2.bt_back -width 8 -text " Back " -command {
 		grid remove $winNewProj.frame2
 		grid $winNewProj.frame1
-		bind $winNewProj <KeyPress-Return> "$frame1.bt_next invoke"
+		bind $winNewProj <KeyPress-Return> "$frame1_4.bt_next invoke"
 	}
 
-	button $frame3_2.bt_next -width 8 -text "  Ok  " -command {
+	#button $frame3_2.bt_next -width 8 -text "  Ok  " -command { }
+	button $frame2_2.bt_next -width 8 -text "  Ok  " -command {
 		if {$conf=="off" } {
 			if {![file isfile $tmpImpDir]} {
 				tk_messageBox -message "Entered path for Import XDC/XDD not exist " -icon warning -parent .newprj
@@ -962,21 +779,27 @@ proc ChildWindows::NewProjectWindow {} {
 
 		catch { destroy .newprj }
 		ChildWindows::NewProjectCreate $tmpPjtDir $tmpPjtName $tmpImpDir $conf $ra_proj $ra_auto
-		unset tmpPjtName
-		unset tmpPjtDir
-		unset tmpImpDir
-		unset frame1
-		unset frame3_2
-		#unset frame2_3
-		unset titleInnerFrame1
-		unset titleInnerFrame2
-		#unset tmpIPaddr
-		unset newProjectFrame2
-		unset titleInnerFrame1_2
-		unset titleInnerFrame2_2
-		#unset titleInnerFrame2_3
-		unset winNewProj
-		catch { destroy .newprj }
+		catch {
+			unset tmpPjtName
+			unset tmpPjtDir
+			unset tmpImpDir
+			#unset frame1
+			#unset frame3_2
+			##unset frame2_3
+			#unset titleInnerFrame1
+			#unset titleInnerFrame2
+			##unset tmpIPaddr
+			unset newProjectFrame2
+			#unset titleInnerFrame1_2
+			#unset titleInnerFrame2_2
+			##unset titleInnerFrame2_3
+			unset frame1_1
+			unset frame1_4
+			unset frame2_1
+			unset frame2_2
+			unset frame2_3
+			unset winNewProj
+		}
 		#IF CONNECTION SETTINGS NEED TO BE IMPLEMENTED COMMENT THE ABOVE 18 LINES
 		#AND UNCOMMENT FOLLOWING $ LINES
 		#grid remove $winNewProj.frame1
@@ -985,35 +808,56 @@ proc ChildWindows::NewProjectWindow {} {
 		#bind $winNewProj <KeyPress-Return> "$frame2_3.bt_ok invoke"
 	}
 
-	button $frame3_2.bt_cancel -width 8 -text "Cancel" -command {
-		$frame1.bt_cancel invoke
+	#button $frame3_2.bt_cancel -width 8 -text "Cancel" -command { }
+	button 	$frame2_2.bt_cancel -width 8 -text "Cancel" -command {
+		$frame1_4.bt_cancel invoke
 	}
 
 
-	grid configure $titleFrame1_2 -row 0 -column 0 -padx 9 -pady 10
+	#grid configure $titleFrame1_2 -row 0 -column 0 -padx 9 -pady 10
+	#
+	#grid configure $titleFrame2_2 -row 0 -column 0 -sticky w 
+	#grid configure $titleInnerFrame2_2.ra_def -row 0 -column 0 -sticky w
+	#grid config $titleInnerFrame2_2.la_empty6 -row 0 -column 1 -columnspan 2 -sticky "news"
+	#grid config $titleInnerFrame2_2.ra_imp -row 1 -column 0 -sticky w
+	#grid config $titleInnerFrame2_2.en_imppath -row 1 -column 1
+	#grid config $titleInnerFrame2_2.bt_imppath -row 1 -column 2
+	#
+	#grid configure $titleInnerFrame2_2.la_generate -row 3 -column 0 -sticky w -pady 11
+	#grid configure $frame4_2 -row 3 -column 1 -sticky w
+	#
+	#grid configure $frame4_2.ra_yes -row 0 -column 0 -sticky w
+	#grid configure $frame4_2.ra_no -row 0 -column 1  -sticky w -padx 5
+	#grid configure $titleInnerFrame2_2.t_desc -row 4 -column 0 -sticky w -columnspan 3 -pady 6 -padx $text_padx
+	#
+	#
+	#grid configure $titleInnerFrame1_2.la_empty3 -row 3 -column 0 -pady 3
+	#grid configure $frame3_2 -row 4 -column 0 -columnspan 2
+	#
+	#grid configure $frame3_2.bt_back -row 0 -column 0 -sticky w
+	#grid configure $frame3_2.bt_next -row 0 -column 1 -sticky w -padx 5
+	#grid configure $frame3_2.bt_cancel -row 0 -column 2 -sticky w
 
-	grid configure $titleFrame2_2 -row 0 -column 0 -sticky w 
-	grid configure $titleInnerFrame2_2.ra_def -row 0 -column 0 -sticky w
-	grid config $titleInnerFrame2_2.la_empty6 -row 0 -column 1 -columnspan 2 -sticky "news"
-	grid config $titleInnerFrame2_2.ra_imp -row 1 -column 0 -sticky w
-	grid config $titleInnerFrame2_2.en_imppath -row 1 -column 1
-	grid config $titleInnerFrame2_2.bt_imppath -row 1 -column 2
 
-	grid configure $titleInnerFrame2_2.la_generate -row 3 -column 0 -sticky w -pady 11
-	grid configure $frame4_2 -row 3 -column 1 -sticky w
+grid config $frame2_1 -row 0 -column 0 -sticky w 
+grid config $frame2_1.la_mn -row 0 -column 0 -sticky w
+grid config $frame2_1.ra_def -row 1 -column 0 -sticky w 
+grid config $frame2_1.ra_imp -row 2 -column 0 -sticky w
+grid config $frame2_1.en_imppath -row 2 -column 1 -sticky w -padx 5 -pady 10
+grid config $frame2_1.bt_imppath -row 2 -column 2 -sticky w 
+grid config $frame2_1.la_generate -row 4 -column 0 -columnspan 2 -sticky w
+grid config $frame2_1.ra_yes -row 5 -column 0 -sticky w -pady 2 -padx 5
+grid config $frame2_1.ra_no -row 6 -column 0 -sticky w -pady 3 -padx 5
+#grid config $frame2_1.ra_discard -row 7 -column 1 -sticky w -pady 2
+#grid config $frame1_1.la_empty3 -row 8 -column 0
+grid config $frame2_1.la_desc -row 8 -column 0 -sticky w
+grid config $frame2_1.t_desc -row 9 -column 0 -columnspan 3 -pady 10 -sticky news
+#grid config $frame1_1.la_empty3 -row 10 -column 0
 
-	grid configure $frame4_2.ra_yes -row 0 -column 0 -sticky w
-	grid configure $frame4_2.ra_no -row 0 -column 1  -sticky w -padx 5
-	grid configure $titleInnerFrame2_2.t_desc -row 4 -column 0 -sticky w -columnspan 3 -pady 6 -padx $text_padx
-
-
-	grid configure $titleInnerFrame1_2.la_empty3 -row 3 -column 0 -pady 3
-	grid configure $frame3_2 -row 4 -column 0 -columnspan 2
-
-	grid configure $frame3_2.bt_back -row 0 -column 0 -sticky w
-	grid configure $frame3_2.bt_next -row 0 -column 1 -sticky w -padx 5
-	grid configure $frame3_2.bt_cancel -row 0 -column 2 -sticky w
-	
+grid config $frame2_2 -row 11 -column 0
+grid config $frame2_2.bt_back -row 0 -column 0
+grid config $frame2_2.bt_next -row 0 -column 1
+grid config $frame2_2.bt_cancel -row 0 -column 2	
 	
 
 ##############################################################################################################
@@ -1021,48 +865,72 @@ proc ChildWindows::NewProjectWindow {} {
 
 
 	set newProjectFrame1 [frame $winNewProj.frame1 -width 650 -height 470 ]
-	grid configure $newProjectFrame1 -row 0 -column 0 -sticky news
+	grid configure $newProjectFrame1 -row 0 -column 0 -sticky news -padx 15 -pady 15
 	
-	set titleFrame1 [TitleFrame $newProjectFrame1.titleFrame1 -text "Create New Project" ]
-	set titleInnerFrame1 [$titleFrame1 getframe]
-
-	set frame1 [frame $titleInnerFrame1.fram1]
-	set titleFrame2 [TitleFrame $titleInnerFrame1.titleFrame2 -text "Project Settings" ]
-	set titleInnerFrame2 [$titleFrame2 getframe]
-	set titleInnerFrame2_1 [frame $titleInnerFrame2.frame]
+	#set titleFrame1 [TitleFrame $newProjectFrame1.titleFrame1 -text "Create New Project" ]
+	#set titleInnerFrame1 [$titleFrame1 getframe]
+	#
+	#set frame1 [frame $titleInnerFrame1.fram1]
+	#set titleFrame2 [TitleFrame $titleInnerFrame1.titleFrame2 -text "Project Settings" ]
+	#set titleInnerFrame2 [$titleFrame2 getframe]
+	#set titleInnerFrame2_1 [frame $titleInnerFrame2.frame]
 	
+set frame1_1 [frame $newProjectFrame1.frame1_1]
+set frame1_2 [frame $newProjectFrame1.frame1_2]
+set frame1_3 [frame $newProjectFrame1.frame1_3]
+set frame1_4 [frame $newProjectFrame1.frame1_4]
 
+	#label $winNewProj.la_empty -text "               "	
+	#label $winNewProj.la_empty1 -text "               "
+	#label $titleInnerFrame1.la_empty2 -text "" -width 17 ; # used for aligning
+	#label $titleInnerFrame1.la_pjname -text "Project Name :" -justify left
+	#label $titleInnerFrame1.la_pjpath -text "Project Path   :" -justify left
+	#label $titleInnerFrame1.la_empty3 -text "               "
+	#label $titleInnerFrame1.la_empty4 -text "               " -width 62
+	#label $titleInnerFrame2_1.la_empty5 -text "" -width 5
+	
+label $winNewProj.la_empty -text "               "	
+label $winNewProj.la_empty1 -text "               "
+label $frame1_1.la_pjname -text "Project Name" -justify left
+label $frame1_1.la_pjpath -text "Choose Path" -justify left
+label $frame1_1.la_saveoption -text "Choose Save Option" -justify left
+label $frame1_1.la_desc -text "Description"
+label $frame1_1.la_empty1 -text ""
+label $frame1_1.la_empty2 -text ""
+label $frame1_1.la_empty3 -text ""
+label $frame1_1.la_empty4 -text ""
 
-	label $winNewProj.la_empty -text "               "	
-	label $winNewProj.la_empty1 -text "               "
-	label $titleInnerFrame1.la_empty2 -text "" -width 17 ; # used for aligning
-	label $titleInnerFrame1.la_pjname -text "Project Name :" -justify left
-	label $titleInnerFrame1.la_pjpath -text "Project Path   :" -justify left
-	label $titleInnerFrame1.la_empty3 -text "               "
-	label $titleInnerFrame1.la_empty4 -text "               " -width 62
-	label $titleInnerFrame2_1.la_empty5 -text "" -width 5
-
-	entry $titleInnerFrame1.en_pjname -textvariable tmpPjtName -background white -relief ridge -validate key -vcmd "Validation::IsValidName %P" -width 35
+	#entry $titleInnerFrame1.en_pjname -textvariable tmpPjtName -background white -relief ridge -validate key -vcmd "Validation::IsValidName %P" -width 35
+entry $frame1_1.en_pjname -textvariable tmpPjtName -background white -relief ridge -validate key -vcmd "Validation::IsValidName %P" -width 35	
 	set tmpPjtName  [Operations::GenerateAutoName $defaultProjectDir Project ""]
 
-	$titleInnerFrame1.en_pjname selection range 0 end
-	$titleInnerFrame1.en_pjname icursor end
+	#$titleInnerFrame1.en_pjname selection range 0 end
+	#$titleInnerFrame1.en_pjname icursor end
+$frame1_1.en_pjname selection range 0 end
+$frame1_1.en_pjname icursor end
 
-	entry $titleInnerFrame1.en_pjpath -textvariable tmpPjtDir -background white -relief ridge -width 35 
+	#entry $titleInnerFrame1.en_pjpath -textvariable tmpPjtDir -background white -relief ridge -width 35
+entry $frame1_1.en_pjpath -textvariable tmpPjtDir -background white -relief ridge -width 35	
 	set tmpPjtDir $defaultProjectDir
 	
-	text $titleInnerFrame2.t_desc -height 2 -width 30 -state disabled -background white
+	#text $titleInnerFrame2.t_desc -height 2 -width 30 -state disabled -background white
+text $frame1_1.t_desc -height 5 -width 40 -state disabled -background white	
 	
-	radiobutton $titleInnerFrame2_1.ra_save -text "Auto Save" -variable ra_proj -value 0 -command "ChildWindows::NewProjectText $titleInnerFrame2.t_desc 0"
-	radiobutton $titleInnerFrame2_1.ra_prompt -text "Prompt" -variable ra_proj -value 1 -command "ChildWindows::NewProjectText $titleInnerFrame2.t_desc 1"
-	radiobutton $titleInnerFrame2_1.ra_discard -text "Discard" -variable ra_proj -value 2 -command "ChildWindows::NewProjectText $titleInnerFrame2.t_desc 2"
-	$titleInnerFrame2_1.ra_prompt select
-	ChildWindows::NewProjectText $titleInnerFrame2.t_desc 1
-	
+	#radiobutton $titleInnerFrame2_1.ra_save -text "Auto Save" -variable ra_proj -value 0 -command "ChildWindows::NewProjectText $titleInnerFrame2.t_desc 0"
+	#radiobutton $titleInnerFrame2_1.ra_prompt -text "Prompt" -variable ra_proj -value 1 -command "ChildWindows::NewProjectText $titleInnerFrame2.t_desc 1"
+	#radiobutton $titleInnerFrame2_1.ra_discard -text "Discard" -variable ra_proj -value 2 -command "ChildWindows::NewProjectText $titleInnerFrame2.t_desc 2"
+	#$titleInnerFrame2_1.ra_prompt select
+	#ChildWindow::NewProjectText $titleInnerFrame2.t_desc 1
+radiobutton $frame1_1.ra_save -text "Auto Save" -variable ra_proj -value 0 -command "ChildWindows::NewProjectText $frame1_1.t_desc 0"
+radiobutton $frame1_1.ra_prompt -text "Prompt" -variable ra_proj -value 1 -command "ChildWindows::NewProjectText $frame1_1.t_desc 1"
+radiobutton $frame1_1.ra_discard -text "Discard" -variable ra_proj -value 2 -command "ChildWindows::NewProjectText $frame1_1.t_desc 2"
+$frame1_1.ra_prompt select
+ChildWindows::NewProjectText $frame1_1.t_desc 1	
 
 	
 
-	button $titleInnerFrame1.bt_pjpath -width 8 -text Browse -command {
+	#button $titleInnerFrame1.bt_pjpath -width 8 -text Browse -command {   }
+	button $frame1_1.bt_pjpath -width 8 -text Browse -command {
 		set tmpPjtDir [tk_chooseDirectory -title "Project Location" -initialdir $defaultProjectDir -parent .newprj]
 		if {$tmpPjtDir == ""} {
 			focus .newprj
@@ -1070,8 +938,10 @@ proc ChildWindows::NewProjectWindow {} {
 		}
 	}
 
-	button $frame1.bt_back -state disabled -width 8 -text "Back"
-	button $frame1.bt_next -width 8 -text " Next " -command {
+	#button $frame1.bt_back -state disabled -width 8 -text "Back"
+	button $frame1_4.bt_back -state disabled -width 8 -text "Back"
+	#button $frame1.bt_next -width 8 -text " Next " -command {   }
+	button $frame1_4.bt_next -width 8 -text " Next " -command {   
 		set tmpPjtName [string trim $tmpPjtName]
 		if {$tmpPjtName == "" } {
 			tk_messageBox -message "Enter Project Name" -title "Set Project Name error" -icon warning -parent .newprj
@@ -1096,7 +966,8 @@ proc ChildWindows::NewProjectWindow {} {
 					#TODO does the existing project need to be deleted
 			 	}			 
    		     		no  {
-					focus $titleInnerFrame1.en_pjname
+					#focus $titleInnerFrame1.en_pjname
+					focus $frame1_1.en_pjname
 			   		return
 			 	}
    			 }
@@ -1106,60 +977,98 @@ proc ChildWindows::NewProjectWindow {} {
 		grid remove $winNewProj.frame1
 		grid $winNewProj.frame2
 		#grid remove $winNewProj.frame3
-		bind $winNewProj <KeyPress-Return> "$frame3_2.bt_next invoke"
+		bind $winNewProj <KeyPress-Return> "$frame2_2.bt_next invoke"
 	}
 	
-	button $frame1.bt_cancel -width 8 -text Cancel -command { 
-		unset tmpPjtName
-		unset tmpPjtDir
-		unset tmpImpDir
-		unset frame1
-		unset frame3_2
-		#unset frame2_3
-		unset titleInnerFrame1
-		unset titleInnerFrame2
-		#unset tmpIPaddr
-		unset newProjectFrame2
-		unset titleInnerFrame1_2
-		unset titleInnerFrame2_2
-		#unset titleInnerFrame2_3
-		unset winNewProj
+	#button $frame1.bt_cancel -width 8 -text Cancel -command { }
+	button $frame1_4.bt_cancel -width 8 -text Cancel -command { 
+		catch {
+			unset tmpPjtName
+			unset tmpPjtDir
+			unset tmpImpDir
+			#unset frame1
+			#unset frame3_2
+			##unset frame2_3
+			#unset titleInnerFrame1
+			#unset titleInnerFrame2
+			##unset tmpIPaddr
+			unset newProjectFrame2
+			#unset titleInnerFrame1_2
+			#unset titleInnerFrame2_2
+			##unset titleInnerFrame2_3
+			unset frame1_1
+			unset frame1_4
+			unset frame2_1
+			unset frame2_2
+			unset frame2_3
+			unset winNewProj
+		}
 		catch { destroy .newprj }
 		return
 	}
 
 	
-	grid config $titleFrame1 -row 1 -column 0 -padx 10 -pady 10
+	#grid config $titleFrame1 -row 1 -column 0 -padx 10 -pady 10
+	#
+	#grid config $titleInnerFrame1.la_pjname -row 1 -column 0 -sticky w
+	#grid config $titleInnerFrame1.en_pjname -row 1 -column 1 -sticky w
+	#grid config $titleInnerFrame1.la_empty2 -row 1 -column 2 -sticky w
+	#grid config $titleInnerFrame1.la_pjpath -row 2 -column 0 -sticky w
+	#grid config $titleInnerFrame1.en_pjpath -row 2 -column 1 -sticky w
+	#grid config $titleInnerFrame1.bt_pjpath -row 2 -column 2 -sticky w
+	#
+	#grid config $titleInnerFrame1.la_empty3 -row 4 -column 0 
+	#
+	#grid config $titleFrame2 -row 5 -column 0 -columnspan 3 -sticky "news" 
+	#grid config $titleInnerFrame2_1 -row 0 -column 0 -padx 103
+	#
+	#grid config $titleInnerFrame2_1.ra_save -row 0 -column 0 
+	#grid config $titleInnerFrame2_1.ra_prompt -row 0 -column 1 -padx 5
+	#grid config $titleInnerFrame2_1.ra_discard -row 0 -column 2 
+	#grid config $titleInnerFrame2.t_desc -row 1 -column 0 -pady 10 
+	#	
+	#grid config $titleInnerFrame1.la_empty4 -row 6 -column 0 -columnspan 3
+	#
+	#grid config $frame1 -row 7 -column 0 -columnspan 3
+	#grid config $frame1.bt_back -row 0 -column 0 
+	#grid config $frame1.bt_next -row 0 -column 1 -padx 5
+	#grid config $frame1.bt_cancel -row 0 -column 2 
 
-	grid config $titleInnerFrame1.la_pjname -row 1 -column 0 -sticky w
-	grid config $titleInnerFrame1.en_pjname -row 1 -column 1 -sticky w
-	grid config $titleInnerFrame1.la_empty2 -row 1 -column 2 -sticky w
-	grid config $titleInnerFrame1.la_pjpath -row 2 -column 0 -sticky w
-	grid config $titleInnerFrame1.en_pjpath -row 2 -column 1 -sticky w
-	grid config $titleInnerFrame1.bt_pjpath -row 2 -column 2 -sticky w
-
-	grid config $titleInnerFrame1.la_empty3 -row 4 -column 0 
-
-	grid config $titleFrame2 -row 5 -column 0 -columnspan 3 -sticky "news" 
-	grid config $titleInnerFrame2_1 -row 0 -column 0 -padx 103
-
-	grid config $titleInnerFrame2_1.ra_save -row 0 -column 0 
-	grid config $titleInnerFrame2_1.ra_prompt -row 0 -column 1 -padx 5
-	grid config $titleInnerFrame2_1.ra_discard -row 0 -column 2 
-	grid config $titleInnerFrame2.t_desc -row 1 -column 0 -pady 10 
-		
-	grid config $titleInnerFrame1.la_empty4 -row 6 -column 0 -columnspan 3
 	
-	grid config $frame1 -row 7 -column 0 -columnspan 3
-	grid config $frame1.bt_back -row 0 -column 0 
-	grid config $frame1.bt_next -row 0 -column 1 -padx 5
-	grid config $frame1.bt_cancel -row 0 -column 2 
-	
-	wm protocol .newprj WM_DELETE_WINDOW "$frame1.bt_cancel invoke"
-	bind $winNewProj <KeyPress-Return> "$frame1.bt_next invoke"
-	bind $winNewProj <KeyPress-Escape> "$frame1.bt_cancel invoke"
+grid config $frame1_1 -row 0 -column 0 -sticky w 
+grid config $frame1_1.la_pjname -row 0 -column 0 -sticky w
+grid config $frame1_1.en_pjname -row 0 -column 1 -sticky w -padx 5
+#grid config $frame1_1.la_empty1 -row 1 -column 0
+#grid config $frame1_1 -row 1 -column 0 -sticky w
+grid config $frame1_1.la_pjpath -row 2 -column 0 -sticky w
+grid config $frame1_1.en_pjpath -row 2 -column 1 -sticky w -padx 5 -pady 10
+grid config $frame1_1.bt_pjpath -row 2 -column 2 -sticky w 
+#grid config $frame1_1.la_empty2 -row 3 -column 0
+#grid config $frame1_1 -row 2 -column 0 -sticky w
+grid config $frame1_1.la_saveoption -row 4 -column 0 -columnspan 2 -sticky w
+grid config $frame1_1.ra_save -row 5 -column 1 -sticky w -pady 2
+grid config $frame1_1.ra_prompt -row 6 -column 1 -sticky w
+grid config $frame1_1.ra_discard -row 7 -column 1 -sticky w -pady 2
+#grid config $frame1_1.la_empty3 -row 8 -column 0
+grid config $frame1_1.la_desc -row 8 -column 0 -sticky w
+grid config $frame1_1.t_desc -row 9 -column 0 -columnspan 3 -pady 10 -sticky news
+#grid config $frame1_1.la_empty3 -row 10 -column 0
 
-	focus $titleInnerFrame1.en_pjname
+grid config $frame1_4 -row 11 -column 0
+grid config $frame1_4.bt_back -row 0 -column 0
+grid config $frame1_4.bt_next -row 0 -column 1
+grid config $frame1_4.bt_cancel -row 0 -column 2
+
+	#wm protocol .newprj WM_DELETE_WINDOW "$frame1.bt_cancel invoke"
+	#bind $winNewProj <KeyPress-Return> "$frame1.bt_next invoke"
+	#bind $winNewProj <KeyPress-Escape> "$frame1.bt_cancel invoke"
+	#
+	#focus $titleInnerFrame1.en_pjname
+wm protocol .newprj WM_DELETE_WINDOW "$frame1_4.bt_cancel invoke"
+bind $winNewProj <KeyPress-Return> "$frame1_4.bt_next invoke"
+bind $winNewProj <KeyPress-Escape> "$frame1_4.bt_cancel invoke"
+
+focus $frame1_1.en_pjname	
 	Operations::centerW $winNewProj
 	###################################################################################
 
@@ -1202,9 +1111,9 @@ proc ChildWindows::NewProjectMNText {t_desc} {
 	global ra_auto
 	
 	if { $conf == "on" } {
-		set msg1 "Import xdd file designed by Kalycito for openPOWERLINK MN"
+		set msg1 "Import default xdd file designed by Kalycito for openPOWERLINK MN"
 	} else {
-		set msg1 "Import user selected xdd or xdc file for MN"
+		set msg1 "Import user selected xdd or xdc file for openPOWERLINK MN"
 	}
 	
 	if { $ra_auto == 1 } {
@@ -1397,7 +1306,6 @@ proc ImportProgress {stat} {
 		#wm transient $winImpoProg .
 		wm deiconify $winImpoProg
 		grab $winImpoProg
-		set LocvarProgbar 0
 		#set prog [ProgressBar $winImpoProg.prog -orient horizontal -width 200 -maximum 100 -height 10 -variable LocvarProgbar -type incremental -bg white -fg blue]
 		#set prog [ttk::progressbar $winImpoProg.prog -mode indeterminate]
 		if {![winfo exists .prog]} {
@@ -1425,8 +1333,8 @@ proc ImportProgress {stat} {
 		catch {	.prog stop }
 		#destroy .impoProg
 		wm withdraw .
-	} elseif {$stat == "incr"} {
-		incr LocvarProgbar
+	} else {
+		
 	}
 
 }
@@ -1642,9 +1550,11 @@ $treePath itemconfigure $subIndexNode-$tempSidxCount -open 0
 		$frame2.bt_cancel invoke
 	}
 	button $frame2.bt_cancel -width 8 -text Cancel -command { 
-		unset indexVar
-		unset frame2
-		destroy .addIdx	
+		catch {
+			unset indexVar
+			unset frame2
+		}
+		catch { destroy .addIdx	 }
 		return
 	}
 	grid config $winAddIdx.la_empty1 -row 0 -column 0 
@@ -1798,9 +1708,11 @@ proc ChildWindows::AddSubIndexWindow {} {
 
 	}
 	button $frame2.bt_cancel -width 8 -text Cancel -command { 
-		unset subIndexVar
-		unset frame2
-		destroy .addSidx
+		catch {
+			unset subIndexVar
+			unset frame2
+		}
+		catch { destroy .addSidx }
 		return
 	}
 	grid config $winAddSidx.la_empty1 -row 0 -column 0 
@@ -2028,9 +1940,11 @@ proc ChildWindows::AddPDOWindow {} {
 		
 	}
 	button $frame2.bt_cancel -width 8 -text Cancel -command { 
-		unset pdoVar
-		unset frame2
-		destroy .addPdo	
+		catch {
+			unset pdoVar
+			unset frame2
+		}
+		catch { destroy .addPdo	}
 		return
 	}
 	grid config $winAddPdo.la_empty1 -row 0 -column 0 

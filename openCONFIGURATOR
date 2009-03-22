@@ -93,7 +93,6 @@ if { [ catch { package require Thread } ] } {
 global rootDir
 global homeVar
 global defaultProjectDir
-global ConfigData
 global infoWindow
 global warWindow
 global errWindow
@@ -102,7 +101,7 @@ global errWindow
 #	Source files 
 #-------------------------
 set rootDir [pwd]
-
+tsv::set application rootDir $rootDir
 source [file join $rootDir console.tcl]
 source [file join $rootDir notebookManager.tcl]
 source [file join $rootDir wrapperInteractions.tcl]
@@ -110,10 +109,11 @@ source [file join $rootDir childWindows.tcl]
 source [file join $rootDir validation.tcl]
 source [file join $rootDir operations.tcl]
 
+#-------------------------
+#	Package Definition
+#-------------------------
 set path_to_BWidget [file join $rootDir BWidget-1.2.1]
 lappend auto_path $path_to_BWidget
-
-### Package Definition
 package require -exact BWidget 1.2.1
 
 #---------------------------------------------------------------------------------------------------
@@ -135,7 +135,6 @@ proc InitOpenConfigurator {argc argv} {
 	
 	global tcl_platform
 	global auto_path
-	global ConfigData
 	global treePath
 	global projectDir
 	global projectName
@@ -144,23 +143,11 @@ proc InitOpenConfigurator {argc argv} {
 
 	lappend auto_path ..
 	
-	# Loading shared libraries
-	if {"$tcl_platform(platform)" == "windows"} {
-		if {[catch {load openCONFIGURATORwrapper.dll openCONFIGURATORwrapper}]} {
-			tk_messageBox -message "Error loading Shared Library\nCannot proceed\nTry reinstalling the tool" -title Info -icon error
-			exit
-		}
-	} elseif { "$tcl_platform(platform)" == "unix"} {
-		if { [catch {load ./Tcl_WrapperMain.so}] } {
-			tk_messageBox -message "Error loading Shared Library\nCannot proceed\nTry reinstalling the tool" -title Info -icon error
-			exit
-		}
+	if {"$tcl_platform(platform)" != "windows"} {
 		# Background color based on OS
 		option add *background #d7d5d3 userDefault
-	} else {
-			tk_messageBox -message "Shared Library not created for $tcl_platform(platform) platform\nCannot proceed" -title Info -icon error
-			exit
 	}
+	
 	# Title frame font set for tablelist widget
 	option add *TitleFrame.font {helvetica 11 bold italic}
 	
@@ -195,22 +182,35 @@ proc InitOpenConfigurator {argc argv} {
 	# Draw the Main window
 	wm withdraw .
 	wm title . "openCONFIGURATOR"
-	wm attributes . -zoomed 1
+	if { "$tcl_platform(platform)" == "unix"} {
+		wm attributes . -zoomed 1
+	} else {
+		wm state . zoomed
+	}
 	Operations::BasicFrames
 	BWidget::place . 0 0 center
 	update idletasks
-	# Get the size of the window
-	if {[info exists ConfigData(options,mainWinSize)]} {
-		wm geom . $ConfigData(options,mainWinSize)
-		update
-	}
 	after idle {
 		wm deiconify .
 		raise .
 		focus .
-		set Operations::initialized 1
 	}
-	 
+
+	# Loading shared libraries
+	if {"$tcl_platform(platform)" == "windows"} {
+		if {[catch {load openCONFIGURATORwrapper.dll openCONFIGURATORwrapper}]} {
+			tk_messageBox -message "Error loading Shared Library\nCannot proceed\nTry reinstalling the tool" -title Info -icon error
+			exit
+		}
+	} elseif { "$tcl_platform(platform)" == "unix"} {
+		if { [catch {load ./Tcl_WrapperMain.so}] } {
+			tk_messageBox -message "Error loading Shared Library\nCannot proceed\nTry reinstalling the tool" -title Info -icon error
+			exit
+		}
+	} else {
+			tk_messageBox -message "Shared Library not created for $tcl_platform(platform) platform\nCannot proceed" -title Info -icon error
+			exit
+	}	 
 
 	$treePath delete end root ProjectNode
 	set projectDir ""
@@ -220,5 +220,8 @@ proc InitOpenConfigurator {argc argv} {
 	Operations::InsertTree
 	# Childwindow for startup project window
 	ChildWindows::StartUp
+	
+
+
 }
 InitOpenConfigurator $argc $argv

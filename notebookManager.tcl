@@ -62,7 +62,7 @@
 
 
 #---------------------------------------------------------------------------------------------------
-#  NameSpace Dclaration
+#  NameSpace Declaration
 #
 #  namespace : NoteBookManager
 #---------------------------------------------------------------------------------------------------
@@ -860,7 +860,6 @@ proc NoteBookManager::DiscardValue {frame0 frame1} {
 	#	Global variables
 	#-------------------------
 	global nodeSelect
-	#global nodeObj
 	global nodeIdList
 	global treePath
 	global userPrefList
@@ -871,7 +870,6 @@ proc NoteBookManager::DiscardValue {frame0 frame1} {
 
 	set oldName [$treePath itemcget $nodeSelect -text]
 	if {[string match "*SubIndexValue*" $nodeSelect]} {
-		#set sIdxValue [CBaseIndex_getIndexValue $nodeObj($tmpNodeSelect)]
 		set subIndexId [string range $oldName end-2 end-1]
 		set parent [$treePath parent $nodeSelect]
 		set indexId [string range [$treePath itemcget $parent -text] end-4 end-1]

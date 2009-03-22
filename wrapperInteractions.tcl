@@ -70,8 +70,6 @@ namespace eval WrapperInteractions {
 ##########################FOR TEST########################################################
 proc WrapperInteractions::SortNode {nodeType nodeID nodePos choice {indexPos ""} {indexId ""}} {
 	global treePath
-	global nodeObj
-
 
 	set errorString []
 	if { $choice == "ind" } {
@@ -113,6 +111,7 @@ proc WrapperInteractions::SortNode {nodeType nodeID nodePos choice {indexPos ""}
 		for {set incZero 0} {$incZero < $appZero} {incr incZero} {
 			#appending zeros
 			set tmpInc 0$tmpInc
+			puts -nonewline "\ttmpInc->$tmpInc"
 		}	
 		if { $choice == "ind" } {
 			set catchErrCode [GetIndexIDbyPositions $nodePos $inc]
@@ -123,7 +122,8 @@ proc WrapperInteractions::SortNode {nodeType nodeID nodePos choice {indexPos ""}
 			#puts "GetSubIndexIDbyPositions nodePos->$nodePos indexPos->$indexPos inc->$inc"
 			set catchErrCode [GetSubIndexIDbyPositions $nodePos $indexPos $inc]
 			set subIndexId [lindex $catchErrCode 1]
-			#puts "subIndexId->$subIndexId"
+			
+			puts -nonewline "\tsubIndexId->$subIndexId"
 			lappend sortList $subIndexId$tmpInc
 		} else {
 			#puts "Invalid choice for SortNode"
@@ -131,11 +131,11 @@ proc WrapperInteractions::SortNode {nodeType nodeID nodePos choice {indexPos ""}
 		}
 	
 	}
-	#puts "b4sortList->$sortList"
+	puts "b4sortList->$sortList"
 	#lsort -increasing $sortList
 	set sortList [lsort -ascii $sortList]
 	#also chk out dictionary option
-	#puts sortList->$sortList
+	puts "sortList->$sortList"
 
 	if { $choice == "ind"} {
 		set sortListIdx ""
@@ -167,6 +167,7 @@ proc WrapperInteractions::SortNode {nodeType nodeID nodePos choice {indexPos ""}
 		#puts "sortListIdx->$sortListIdx"
 		#puts "sortListTpdo->$sortListTpdo"
 		#puts "sortListRpdo->$sortListRpdo"
+		#tk_messageBox -message "check"
 		return [list $sortListIdx $sortListTpdo $sortListRpdo]
 	} elseif {$choice == "sub"} {
 		set corrList ""
@@ -183,6 +184,8 @@ proc WrapperInteractions::SortNode {nodeType nodeID nodePos choice {indexPos ""}
 			lappend corrList $sortInc
 	
 		}
+		#puts "\ncorrList->$corrList\n"
+		#tk_messageBox -message "check subindex"
 		return $corrList
 	} else {
 		#check the choice
@@ -237,7 +240,7 @@ proc WrapperInteractions::Import {parentNode nodeType nodeID } {
 
 	#puts "catchErrCode->$catchErrCode====nodePos->$nodePos"
 
-
+#puts "[$treePath nodes $parentNode]"
 
 
 
@@ -260,7 +263,11 @@ proc WrapperInteractions::Import {parentNode nodeType nodeID } {
 	set count [llength $corrList]
 	for { set inc 0 } { $inc < $count } { incr inc } {
 		set sortedIndexPos [lindex $corrList $inc]
+		#puts "GetIndexIDbyPositions $nodePos $sortedIndexPos"
 		set IndexValue [GetIndexIDbyPositions $nodePos $sortedIndexPos]
+		if { [ocfmRetCode_code_get [lindex $IndexValue 0]] != 0 } {
+			continue
+		}
 		set IndexValue [lindex $IndexValue 1]
 		#puts "IndexValue->$IndexValue"
 		#set IndexName [GetIndexAttributes $nodeID $nodeType $IndexValue 0]
@@ -268,7 +275,12 @@ proc WrapperInteractions::Import {parentNode nodeType nodeID } {
 		#ocfmRetCode GetIndexAttributesbyPositions(int NodePos, int IndexPos, EAttributeType AttributeType, char* Out_AttributeValue);
 		set catchErr [GetIndexAttributesbyPositions $nodePos $sortedIndexPos 0 ]
 		set IndexName [lindex $catchErr 1]
+		if { [ocfmRetCode_code_get [lindex $catchErr 0]] != 0 } {
+			set IndexName []
+		}
+		
 		$treePath insert $inc $parentNode IndexValue-$parentId-$inc -text $IndexName\(0x$IndexValue\) -open 0 -image [Bitmap::get index]
+		#puts "WrapperInteractions::SortNode $nodeType $nodeID $nodePos sub $sortedIndexPos $IndexValue"
 		set sidxCorrList [WrapperInteractions::SortNode $nodeType $nodeID $nodePos sub $sortedIndexPos $IndexValue]
 		#puts "IndexValue->$IndexValue\nsidxCorrList-->$sidxCorrList\n"
 
@@ -279,12 +291,21 @@ proc WrapperInteractions::Import {parentNode nodeType nodeID } {
 		for { set tmpCount 0 } { $tmpCount < $SIdxCount } { incr tmpCount } {
 			#puts "in sub index"
 			set sortedSubIndexPos [lindex $sidxCorrList $tmpCount]
-			set SIdxValue [GetSubIndexIDbyPositions $nodePos $sortedIndexPos $sortedSubIndexPos ]
+			#puts "GetSubIndexIDbyPositions $nodePos $sortedIndexPos $sortedSubIndexPos"
+			set SIdxValue [GetSubIndexIDbyPositions $nodePos $sortedIndexPos $sortedSubIndexPos]
+			if { [ocfmRetCode_code_get [lindex $SIdxValue 0]] != 0 } {
+				continue
+			}
+			#puts "SI catchErr->[ocfmRetCode_code_get [lindex $SIdxValue 0]] "
 			set SIdxValue [lindex $SIdxValue 1]
 			#puts "SIdxValue->$SIdxValue"
 			#ocfmRetCode GetSubIndexAttributesbyPositions(int NodePos, int IndexPos, int SubIndexPos, EAttributeType AttributeType, char* Out_AttributeValue);
 			set catchErr [GetSubIndexAttributesbyPositions $nodePos $sortedIndexPos $sortedSubIndexPos 0 ]
 			set SIdxName [lindex $catchErr 1]
+			if { [ocfmRetCode_code_get [lindex $catchErr 0]] != 0 } {
+				set SIdxName []
+			}
+			#puts "catchErr->[ocfmRetCode_code_get [lindex $catchErr 0]] [lindex $catchErr 1]"
 			#set SIdxName [GetSubIndexAttributes $nodeID $nodeType $IndexValue $SIdxValue 0]
 			#set SIdxName [lindex $SIdxName 1]
 			#set SIdxName [CBaseIndex_getName $ObjSIdx]
@@ -293,7 +314,7 @@ proc WrapperInteractions::Import {parentNode nodeType nodeID } {
 		update idletasks
 	}
 #	puts "last inc->$inc"
-	set LocvarProgbar 50
+	#set LocvarProgbar 50
 
 
 ###########################################for TPDO
@@ -306,11 +327,17 @@ proc WrapperInteractions::Import {parentNode nodeType nodeID } {
 	for { set inc 0 } { $inc < $count } { incr inc } {
 		set sortedIndexPos [lindex $corrList $inc]
 		set IndexValue [GetIndexIDbyPositions $nodePos $sortedIndexPos]
+		if { [ocfmRetCode_code_get [lindex $IndexValue 0]] != 0 } {
+			continue
+		}
 		set IndexValue [lindex $IndexValue 1]
 		#puts "IndexValue->$IndexValue"
 		#ocfmRetCode GetIndexAttributesbyPositions(int NodePos, int IndexPos, EAttributeType AttributeType, char* Out_AttributeValue);
 		set catchErr [GetIndexAttributesbyPositions $nodePos $sortedIndexPos 0 ]
 		set IndexName [lindex $catchErr 1]
+		if { [ocfmRetCode_code_get [lindex $catchErr 0]] != 0 } {
+			set IndexName []
+		}
 		#set IndexName [GetIndexAttributes $nodeID $nodeType $IndexValue 0]
 		#set IndexName [lindex $IndexName 1]
 		$treePath insert $inc TPDO-$parentId TPdoIndexValue-$parentId-$inc -text $IndexName\(0x$IndexValue\) -open 0 -image [Bitmap::get index]
@@ -323,18 +350,24 @@ proc WrapperInteractions::Import {parentNode nodeType nodeID } {
 		for { set tmpCount 0 } { $tmpCount < $SIdxCount } { incr tmpCount } {
 			set sortedSubIndexPos [lindex $sidxCorrList $tmpCount]
 			set SIdxValue [GetSubIndexIDbyPositions $nodePos $sortedIndexPos $sortedSubIndexPos]
+			if { [ocfmRetCode_code_get [lindex $SIdxValue 0]] != 0 } {
+				continue
+			}
 			set SIdxValue [lindex $SIdxValue 1]
 			#puts "SIdxValue->$SIdxValue"
 			#ocfmRetCode GetSubIndexAttributesbyPositions(int NodePos, int IndexPos, int SubIndexPos, EAttributeType AttributeType, char* Out_AttributeValue);
 			set catchErr [GetSubIndexAttributesbyPositions $nodePos $sortedIndexPos $sortedSubIndexPos 0 ]
 			set SIdxName [lindex $catchErr 1]
+			if { [ocfmRetCode_code_get [lindex $catchErr 0]] != 0 } {
+				set SIdxName []
+			}
 			#set SIdxName [GetSubIndexAttributes $nodeID $nodeType $IndexValue $SIdxValue 0]
 			#set SIdxName [lindex $SIdxName 1]
 			$treePath insert end TPdoIndexValue-$parentId-$inc TPdoSubIndexValue-$parentId-$inc-$tmpCount -text $SIdxName\(0x$SIdxValue\) -open 0 -image [Bitmap::get subindex]
 		}
 		update idletasks
 	}
-	set LocvarProgbar 75	
+	#set LocvarProgbar 75	
 ###########################################for RPDO
 	set corrList [lindex $returnList 2]
 	#puts "corrList->$corrList"
@@ -344,11 +377,17 @@ proc WrapperInteractions::Import {parentNode nodeType nodeID } {
 	for { set inc 0 } { $inc < $count } { incr inc } {
 		set sortedIndexPos [lindex $corrList $inc]
 		set IndexValue [GetIndexIDbyPositions $nodePos $sortedIndexPos]
+		if { [ocfmRetCode_code_get [lindex $IndexValue 0]] != 0 } {
+			continue
+		}
 		set IndexValue [lindex $IndexValue 1]
 		#puts "IndexValue->$IndexValue"
 		#ocfmRetCode GetIndexAttributesbyPositions(int NodePos, int IndexPos, EAttributeType AttributeType, char* Out_AttributeValue);
 		set catchErr [GetIndexAttributesbyPositions $nodePos $sortedIndexPos 0 ]
 		set IndexName [lindex $catchErr 1]
+		if { [ocfmRetCode_code_get [lindex $catchErr 0]] != 0 } {
+			set IndexName []
+		}
 		#set IndexName [GetIndexAttributes $nodeID $nodeType $IndexValue 0]
 		#set IndexName [lindex $IndexName 1]
 		$treePath insert $inc RPDO-$parentId RPdoIndexValue-$parentId-$inc -text $IndexName\(0x$IndexValue\) -open 0 -image [Bitmap::get index]
@@ -361,18 +400,24 @@ proc WrapperInteractions::Import {parentNode nodeType nodeID } {
 		for { set tmpCount 0 } { $tmpCount < $SIdxCount } { incr tmpCount } {
 			set sortedSubIndexPos [lindex $sidxCorrList $tmpCount]
 			set SIdxValue [GetSubIndexIDbyPositions $nodePos $sortedIndexPos $sortedSubIndexPos]
+			if { [ocfmRetCode_code_get [lindex $SIdxValue 0]] != 0 } {
+				continue
+			}
 			set SIdxValue [lindex $SIdxValue 1]
 			#puts "SIdxValue->$SIdxValue"
 			#set SIdxName [GetSubIndexAttributes $nodeID $nodeType $IndexValue $SIdxValue 0]
 			#set SIdxName [lindex $SIdxName 1]
 			#ocfmRetCode GetSubIndexAttributesbyPositions(int NodePos, int IndexPos, int SubIndexPos, EAttributeType AttributeType, char* Out_AttributeValue);
 			set catchErr [GetSubIndexAttributesbyPositions $nodePos $sortedIndexPos $sortedSubIndexPos 0 ]
+			if { [ocfmRetCode_code_get [lindex $catchErr 0]] != 0 } {
+				set SIdxName []
+			}
 			set SIdxName [lindex $catchErr 1]
 			$treePath insert end RPdoIndexValue-$parentId-$inc RPdoSubIndexValue-$parentId-$inc-$tmpCount -text $SIdxName\(0x$SIdxValue\) -open 0 -image [Bitmap::get subindex]
 		}
 		update idletasks
 	}
 	#puts "errorString->$errorString...nodeType->$nodeType...nodeID->$nodeID..."
-	set LocvarProgbar 100
+	#set LocvarProgbar 100
 }
 

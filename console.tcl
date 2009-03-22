@@ -79,12 +79,6 @@ global errWindow
 #  Description : Creates the Information window and returns the path of the text widget
 #---------------------------------------------------------------------------------------------------
 proc InitInfoWindow {win {width 60} {height 5}} {
-	
-	#-------------------------
-	#	Global variables
-	#-------------------------
-        global ConfigData
-	
 	set windowPath $win
 	set promptChar $
 	
@@ -93,7 +87,6 @@ proc InitInfoWindow {win {width 60} {height 5}} {
 	}
    
 	text $windowPath.t -width $width -height $height -bg white 
-	catch {$windowPath.t configure -font $ConfigData(options,fonts,editorFont)}
 	
 	$windowPath.t tag configure output -foreground blue
 	$windowPath.t tag configure promptChar -foreground grey40
@@ -158,12 +151,6 @@ proc DisplayInfo {var {tag output} {win {}} {see 1}} {
 #  Description : Creates the Error window and returns the path of the text widget
 #---------------------------------------------------------------------------------------------------
 proc InitErrorWindow {win {width 60} {height 5}} {
-	
-	#-------------------------
-	#	Global variables
-	#-------------------------
-        global ConfigData
-	
 	set windowPath $win
 	set promptChar $
 	
@@ -172,7 +159,6 @@ proc InitErrorWindow {win {width 60} {height 5}} {
 	}
 
 	text $windowPath.t -width $width -height $height -bg white
-	catch {$windowPath.t configure -font $ConfigData(options,fonts,editorFont)}
 	
 	$windowPath.t tag configure output -foreground blue 
 	$windowPath.t tag configure promptChar -foreground grey40
@@ -238,12 +224,6 @@ proc DisplayErrMsg {var {tag output} {win {}} {see 1}} {
 #  Description : Creates the warning window and returns the path of the text widget
 #---------------------------------------------------------------------------------------------------
 proc InitWarnWindow {win {width 60} {height 5}} {
-
-	#-------------------------
-	#	Global variables
-	#-------------------------
-	global ConfigData
-	
 	set windowPath $win
 	set promptChar $
 	
@@ -252,7 +232,6 @@ proc InitWarnWindow {win {width 60} {height 5}} {
 	}
 
 	text $windowPath.t -width $width -height $height -bg white
-	catch {$windowPath.t configure -font $ConfigData(options,fonts,editorFont)}
 	
 	$windowPath.t tag configure output -foreground blue
 	$windowPath.t tag configure promptChar -foreground grey40

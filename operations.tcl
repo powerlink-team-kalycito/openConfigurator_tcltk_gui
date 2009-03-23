@@ -971,6 +971,9 @@ proc Operations::_tool_intro { } {
 	pack $splashscreen
 	BWidget::place $top 0 0 center
 	wm deiconify $top
+	update idletasks
+	update
+	after 1000
 }
 
 #---------------------------------------------------------------------------------------------------
@@ -2258,7 +2261,7 @@ proc Operations::StartStack {} {
 		set startFile [file join $projectDir scripts start.bat]
 	}
 	if { [file exists $startFile] } {
-		exec $startFile
+		catch { exec $startFile }
 	}
 }
 
@@ -2281,7 +2284,7 @@ proc Operations::StopStack {} {
 		set stopFile [file join $projectDir scripts stop.bat]
 	}
 	if { [file exists $stopFile] } {
-		exec $stopFile
+		catch { exec $stopFile }
 	}
 }
 
@@ -2305,7 +2308,7 @@ proc Operations::TransferCDCXAP {choice} {
 	}
 	
 	if { [file exists $transferFile] } {
-		exec $transferFile
+		catch { exec $transferFile }
 	}
 }
 

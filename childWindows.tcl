@@ -307,9 +307,12 @@ proc ChildWindows::AddCNWindow {} {
 	global cnName
 	global nodeId
 	global tmpImpCnDir
-	global frame1
+	#global frame1
 	global lastXD
-	global titleInnerFrame3
+	#global titleInnerFrame3
+	
+	global frame1
+	global frame3
 	
 	set winAddCN .addCN
 	catch "destroy $winAddCN"
@@ -322,53 +325,43 @@ proc ChildWindows::AddCNWindow {} {
 
 	label $winAddCN.la_empty -text ""	
 
-	set titleFrame1 [TitleFrame $winAddCN.titleFrame1 -text "Add CN" ]
-	set titleInnerFrame1 [$titleFrame1 getframe]
-	set frame1 [frame $titleInnerFrame1.fram1]
-	set frame2 [frame $titleInnerFrame1.fram2]
-	set titleFrame2 [TitleFrame $titleInnerFrame1.titleFrame2 -text "Select Node" ]
-	set titleInnerFrame2 [$titleFrame2 getframe]
-	set titleFrame3 [TitleFrame $titleInnerFrame1.titleFrame3 -text "CN Configuration" ]
-	set titleInnerFrame3 [$titleFrame3 getframe]
+	set frame1 [frame $winAddCN.frame1]
+	set frame2 [frame $frame1.frame2]
+	set frame3 [frame $winAddCN.frame3]
 
-	label $titleInnerFrame1.la_empty1 -text "               "
-	label $titleInnerFrame1.la_empty2 -text "               "
 	label $frame2.la_name -text "Name :   " -justify left
 	label $frame2.la_node -text "Node ID :" -justify left
-	label $titleInnerFrame1.la_empty3 -text "               "
-	label $titleInnerFrame1.la_empty4 -text "              "
-	label $winAddCN.la_empty5 -text " "
-
-	radiobutton $titleInnerFrame3.ra_def -text "Default" -variable confCn -value on  -command {
-		$titleInnerFrame3.en_imppath config -state disabled 
-		$titleInnerFrame3.bt_imppath config -state disabled 
-	}		
-
+	label $frame1.la_cn -text "CN Configuration"
 	
-	radiobutton $titleInnerFrame3.ra_imp -text "Import XDC/XDD" -variable confCn -value off -command {
-		$titleInnerFrame3.en_imppath config -state normal 
-		$titleInnerFrame3.bt_imppath config -state normal 
+	radiobutton $frame1.ra_def -text "Default" -variable confCn -value on  -command {
+		$frame1.en_imppath config -state disabled 
+		$frame1.bt_imppath config -state disabled 
+	}		
+	radiobutton $frame1.ra_imp -text "Import XDC/XDD" -variable confCn -value off -command {
+		#$titleInnerFrame3.en_imppath config -state normal 
+		#$titleInnerFrame3.bt_imppath config -state normal
+		$frame1.en_imppath config -state normal 
+		$frame1.bt_imppath config -state normal 
 	}
-	$titleInnerFrame3.ra_def select
-
+	$frame1.ra_def select
+	
 	set autoGen [ChildWindows::GenerateCNname]
 
 	entry $frame2.en_name -textvariable cnName -background white -relief ridge -validate key -vcmd "Validation::IsValidName %P"
 	set cnName [lindex $autoGen 0]	
 	$frame2.en_name selection range 0 end
 	$frame2.en_name icursor end
-
 	entry $frame2.en_node -textvariable nodeId -background white -relief ridge -validate key -vcmd "Validation::IsInt %P %V"
 	set nodeId [lindex $autoGen 1]
-	entry $titleInnerFrame3.en_imppath -textvariable tmpImpCnDir -background white -relief ridge -width 35
+	entry $frame1.en_imppath -textvariable tmpImpCnDir -background white -relief ridge -width 25
 	if {![file isdirectory $lastXD] && [file exists $lastXD] } {	
 		set tmpImpCnDir $lastXD	
 	} else {
 		set tmpImpCnDir ""
 	}
-	$titleInnerFrame3.en_imppath config -state disabled
+	$frame1.en_imppath config -state disabled
 
-	button $titleInnerFrame3.bt_imppath -width 8 -text Browse -command {
+	button $frame1.bt_imppath -width 8 -text Browse -command {
 		set types {
 		        {{XDC/XDD Files} {.xd*} }
 		        {{XDD Files}     {.xdd} }
@@ -380,9 +373,8 @@ proc ChildWindows::AddCNWindow {} {
 			set tmpImpCnDir [tk_getOpenFile -title "Import XDC/XDD" -filetypes $types -parent .addCN]
 		}
 	}
- 	$titleInnerFrame3.bt_imppath config -state disabled 
-
-	button $frame1.bt_ok -width 8 -text "  Ok  " -command {
+	$frame1.bt_imppath config -state disabled 
+	button $frame3.bt_ok -width 8 -text "  Ok  " -command {
 		set cnName [string trim $cnName]
 		if {$cnName == "" } {
 			tk_messageBox -message "Enter CN Name" -title "Set Node Name error" -parent .addCN -icon error
@@ -426,54 +418,47 @@ proc ChildWindows::AddCNWindow {} {
 			if {[file exists $tmpImpCnDir]} {
 				set chk [Operations::AddCN $cnName $tmpImpCnDir $nodeId]
 			} else {
-			#	#there is no default cn.xdd file in required path
+				#there is no default xdd file in required path
 				tk_messageBox -message "Default xdd file for CN not found" -icon error -parent .addCN
 				focus .addCN
 				return
 			}
 		}
-		$frame1.bt_cancel invoke
+		$frame3.bt_cancel invoke
 	}
 
-	button $frame1.bt_cancel -width 8 -text Cancel -command { 
+	button $frame3.bt_cancel -width 8 -text Cancel -command { 
 		catch {
 			unset cnName
 			unset nodeId
 			unset tmpImpCnDir
 			unset frame1
-			unset titleInnerFrame3
+			unset frame3
 		}
 		catch { destroy .addCN }
 	}
-	grid config $winAddCN.la_empty -row 0 -column 0  
-	grid config $titleFrame1 -row 1 -column 0 -sticky "news" 
-	grid config $titleInnerFrame1.la_empty1 -row 0 -column 0  
-
-	grid config $frame2 -row 2 -column 0 
-	grid config $frame2.la_name -row 0 -column 0 
-	grid config $frame2.en_name -row 0 -column 1 
-	grid config $frame2.la_node -row 1 -column 0 
-	grid config $frame2.en_node -row 1 -column 1 
-
-	grid config $titleInnerFrame1.la_empty3 -row 3 -column 0  
-
-	grid config $titleFrame3 -row 4 -column 0 -sticky "news"
-	grid config $titleInnerFrame3.ra_def -row 0 -column 0 -sticky "w"
-	grid config $titleInnerFrame3.ra_imp -row 1 -column 0
-	grid config $titleInnerFrame3.en_imppath -row 1 -column 1
-	grid config $titleInnerFrame3.bt_imppath -row 1 -column 2
- 
-	grid config $titleInnerFrame1.la_empty4 -row 5 -column 0  
 	
-	grid config $frame1 -row 6 -column 0 
-	grid config $frame1.bt_ok -row 0 -column 0  
-	grid config $frame1.bt_cancel -row 0 -column 1
+	grid config $frame1 -row 0 -column 0 -padx 15 -pady 15
 	
-	grid config $winAddCN.la_empty5 -row 7 -column 0  
-
-	wm protocol .addCN WM_DELETE_WINDOW "$frame1.bt_cancel invoke"
-	bind $winAddCN <KeyPress-Return> "$frame1.bt_ok invoke"
-	bind $winAddCN <KeyPress-Escape> "$frame1.bt_cancel invoke"
+	grid config $frame2 -row 0 -column 0 -columnspan 2 -sticky w 
+	grid config $frame2.la_name -row 0 -column 0 -sticky w 
+	grid config $frame2.en_name -row 0 -column 1 -sticky w -pady 5
+	grid config $frame2.la_node -row 1 -column 0 -sticky w 
+	grid config $frame2.en_node -row 1 -column 1 -sticky w -pady 5
+	
+	grid config $frame1.la_cn -row 1 -column 0 -sticky w -pady 5
+	grid config $frame1.ra_def -row 2 -column 0 -sticky w -pady 5
+	grid config $frame1.ra_imp -row 3 -column 0 -sticky w 
+	grid config $frame1.en_imppath -row 3 -column 1 -padx 5 -pady 5 -sticky w 
+	grid config $frame1.bt_imppath -row 3 -column 2 -sticky w 
+	
+	grid config $frame3 -row 4 -column 0 -columnspan 3 -pady 5
+	grid config $frame3.bt_ok -row 0 -column 0 -padx 3 
+	grid config $frame3.bt_cancel -row 0 -column 1 -padx 3
+	
+	wm protocol .addCN WM_DELETE_WINDOW "$frame3.bt_cancel invoke"
+	bind $winAddCN <KeyPress-Return> "$frame3.bt_ok invoke"
+	bind $winAddCN <KeyPress-Escape> "$frame3.bt_cancel invoke"
 
 	focus $frame2.en_name
 	Operations::centerW $winAddCN
@@ -562,9 +547,7 @@ proc ChildWindows::SaveProjectAsWindow {} {
 		DisplayInfo "No Project Selected" info
 		return
 	} else {
-		puts "Save Project As->[file join $projectDir $projectName]"
 		set saveProjectAs [tk_getSaveFile -parent . -title "Save Project As" -initialdir $projectDir -initialfile $projectName] 
-		#set fileLocation_CDC [tk_getSaveFile -filetypes $types -initialdir $projectDir -initialfile [Operations::GenerateAutoName $projectDir CDC .cdc ] -title "Transfer CDC"]
 		if { $saveProjectAs == "" } {
 			return
 		}
@@ -991,7 +974,6 @@ proc ChildWindows::NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf tempRa_
 			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning -parent .
 		} else {
 			tk_messageBox -message "Unknown Error" -title Warning -icon warning -parent .
-                        puts "Unknown Error ->[ocfmRetCode_errorString_get $catchErrCode]\n"
 		}
 		return
 	}
@@ -1001,10 +983,10 @@ proc ChildWindows::NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf tempRa_
 	set status_save 1
 
 	$treePath insert end ProjectNode MN-$mnCount -text "openPOWERLINK_MN(240)" -open 1 -image [Bitmap::get mn]
-	lappend nodeIdList 240 ; #removed obj and obj node
+	lappend nodeIdList 240 
 
 	if {$conf == "off" || $conf == "on" } {
-		thread::send [tsv::get application importProgress] "StartProgress" ; #
+		thread::send [tsv::get application importProgress] "StartProgress" 
 		set catchErrCode [ImportXML "$tmpImpDir" 240 0]
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
 		if { $ErrCode != 0 } {

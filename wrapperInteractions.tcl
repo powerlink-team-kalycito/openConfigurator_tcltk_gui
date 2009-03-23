@@ -265,9 +265,9 @@ proc WrapperInteractions::Import {parentNode nodeType nodeID } {
         set IndexName [lindex $catchErr 1]
         if { [ocfmRetCode_code_get [lindex $catchErr 0]] != 0 } {
 	        if { [ string is ascii [ocfmRetCode_errorString_get [lindex $catchErr 0]] ] } {
-		        tk_messageBox -message "[ocfmRetCode_errorString_get [lindex $catchErr 0]]\nClosing the project" -title Warning -icon warning -parent .
+		        tk_messageBox -message "[ocfmRetCode_errorString_get [lindex $catchErr 0]]\nClosing the project" -title Error -icon error -parent .
 	        } else {
-		        tk_messageBox -message "Unknown Error\nClosing the project" -title Warning -icon warning -parent .
+		        tk_messageBox -message "Unknown Error\nClosing the project" -title Error -icon error -parent .
 	        }
 	        Operations::CloseProject
 	        return fail
@@ -284,9 +284,9 @@ proc WrapperInteractions::Import {parentNode nodeType nodeID } {
 	        set SIdxValue [GetSubIndexIDbyPositions $nodePos $sortedIndexPos $sortedSubIndexPos]
 	        if { [ocfmRetCode_code_get [lindex $SIdxValue 0]] != 0 } {
 		        if { [ string is ascii [ocfmRetCode_errorString_get [lindex $SIdxValue 0]] ] } {
-			        tk_messageBox -message "[ocfmRetCode_errorString_get [lindex $SIdxValue 0] ]\nClosing the project" -title Warning -icon warning -parent .
+			        tk_messageBox -message "[ocfmRetCode_errorString_get [lindex $SIdxValue 0] ]\nClosing the project" -title Error -icon error -parent .
 		        } else {
-			        tk_messageBox -message "Unknown Error\nClosing the project" -title Warning -icon warning -parent .
+			        tk_messageBox -message "Unknown Error\nClosing the project" -title Error -icon error -parent .
 		        }
 		        Operations::CloseProject
 		        return fail
@@ -296,9 +296,9 @@ proc WrapperInteractions::Import {parentNode nodeType nodeID } {
 	        set SIdxName [lindex $catchErr 1]
 	        if { [ocfmRetCode_code_get [lindex $catchErr 0]] != 0 } {
 		        if { [ string is ascii [ocfmRetCode_errorString_get [lindex $catchErr 0]] ] } {
-			        tk_messageBox -message "[ocfmRetCode_errorString_get [lindex $catchErr 0]]\nClosing the project" -title Warning -icon warning -parent .
+			        tk_messageBox -message "[ocfmRetCode_errorString_get [lindex $catchErr 0]]\nClosing the project" -title Error -icon error -parent .
 		        } else {
-			        tk_messageBox -message "Unknown Error\nClosing the project" -title Warning -icon warning -parent .
+			        tk_messageBox -message "Unknown Error\nClosing the project" -title Error -icon error -parent .
 		        }
 		        Operations::CloseProject
 		        return fail
@@ -317,9 +317,9 @@ proc WrapperInteractions::Import {parentNode nodeType nodeID } {
         set IndexValue [GetIndexIDbyPositions $nodePos $sortedIndexPos]
         if { [ocfmRetCode_code_get [lindex $IndexValue 0]] != 0 } {
 	        if { [ string is ascii [ocfmRetCode_errorString_get [lindex $IndexValue 0]] ] } {
-		        tk_messageBox -message "[ocfmRetCode_errorString_get [lindex $IndexValue 0]]\nClosing the project" -title Warning -icon warning -parent .
+		        tk_messageBox -message "[ocfmRetCode_errorString_get [lindex $IndexValue 0]]\nClosing the project" -title Error -icon error -parent .
 	        } else {
-		        tk_messageBox -message "Unknown Error\nClosing the project" -title Warning -icon warning -parent .
+		        tk_messageBox -message "Unknown Error\nClosing the project" -title Error -icon error -parent .
 	        }
 	        Operations::CloseProject
 	        return fail
@@ -329,9 +329,9 @@ proc WrapperInteractions::Import {parentNode nodeType nodeID } {
         set IndexName [lindex $catchErr 1]
         if { [ocfmRetCode_code_get [lindex $catchErr 0]] != 0 } {
 	        if { [ string is ascii [ocfmRetCode_errorString_get [lindex $catchErr 0]] ] } {
-		        tk_messageBox -message "[ocfmRetCode_errorString_get [lindex $catchErr 0]]\nClosing the project" -title Warning -icon warning -parent .
+		        tk_messageBox -message "[ocfmRetCode_errorString_get [lindex $catchErr 0]]\nClosing the project" -title Error -icon error -parent .
 	        } else {
-		        tk_messageBox -message "Unknown Error\nClosing the project" -title Warning -icon warning -parent .
+		        tk_messageBox -message "Unknown Error\nClosing the project" -title Error -icon error -parent .
 	        }
 	        Operations::CloseProject
 	        return fail
@@ -346,9 +346,9 @@ proc WrapperInteractions::Import {parentNode nodeType nodeID } {
 	        set SIdxValue [GetSubIndexIDbyPositions $nodePos $sortedIndexPos $sortedSubIndexPos]
 	        if { [ocfmRetCode_code_get [lindex $SIdxValue 0]] != 0 } {
 		        if { [ string is ascii [ocfmRetCode_errorString_get [lindex $SIdxValue 0]] ] } {
-			        tk_messageBox -message "[ocfmRetCode_errorString_get [lindex $SIdxValue 0] ]\nClosing the project" -title Warning -icon warning -parent .
+			        tk_messageBox -message "[ocfmRetCode_errorString_get [lindex $SIdxValue 0] ]\nClosing the project" -title Error -icon error -parent .
 		        } else {
-			        tk_messageBox -message "Unknown Error\nClosing the project" -title Warning -icon warning -parent .
+			        tk_messageBox -message "Unknown Error\nClosing the project" -title Error -icon error -parent .
 		        }
 		        Operations::CloseProject
 		        return fail
@@ -358,9 +358,9 @@ proc WrapperInteractions::Import {parentNode nodeType nodeID } {
 	        set SIdxName [lindex $catchErr 1]
 	        if { [ocfmRetCode_code_get [lindex $catchErr 0]] != 0 } {
 		        if { [ string is ascii [ocfmRetCode_errorString_get [lindex $catchErr 0]] ] } {
-			        tk_messageBox -message "[ocfmRetCode_errorString_get [lindex $catchErr 0]]\nClosing the project" -title Warning -icon warning -parent .
+			        tk_messageBox -message "[ocfmRetCode_errorString_get [lindex $catchErr 0]]\nClosing the project" -title Error -icon error -parent .
 		        } else {
-			        tk_messageBox -message "Unknown Error\nClosing the project" -title Warning -icon warning -parent .
+			        tk_messageBox -message "Unknown Error\nClosing the project" -title Error -icon error -parent .
 		        }
 		        Operations::CloseProject
 		        return fail
@@ -378,9 +378,9 @@ proc WrapperInteractions::Import {parentNode nodeType nodeID } {
         set IndexValue [GetIndexIDbyPositions $nodePos $sortedIndexPos]
         if { [ocfmRetCode_code_get [lindex $IndexValue 0]] != 0 } {
 	        if { [ string is ascii [ocfmRetCode_errorString_get [lindex $IndexValue 0]] ] } {
-		        tk_messageBox -message "[ocfmRetCode_errorString_get [lindex $IndexValue 0]]\nClosing the project" -title Warning -icon warning -parent .
+		        tk_messageBox -message "[ocfmRetCode_errorString_get [lindex $IndexValue 0]]\nClosing the project" -title Error -icon error -parent .
 	        } else {
-		        tk_messageBox -message "Unknown Error\nClosing the project" -title Warning -icon warning -parent .
+		        tk_messageBox -message "Unknown Error\nClosing the project" -title Error -icon error -parent .
 	        }
 	        Operations::CloseProject
 	        return fail
@@ -390,9 +390,9 @@ proc WrapperInteractions::Import {parentNode nodeType nodeID } {
         set IndexName [lindex $catchErr 1]
         if { [ocfmRetCode_code_get [lindex $catchErr 0]] != 0 } {
 	        if { [ string is ascii [ocfmRetCode_errorString_get [lindex $catchErr 0]] ] } {
-		        tk_messageBox -message "[ocfmRetCode_errorString_get [lindex $catchErr 0]]\nClosing the project" -title Warning -icon warning -parent .
+		        tk_messageBox -message "[ocfmRetCode_errorString_get [lindex $catchErr 0]]\nClosing the project" -title Error -icon error -parent .
 	        } else {
-		        tk_messageBox -message "Unknown Error\nClosing the project" -title Warning -icon warning -parent .
+		        tk_messageBox -message "Unknown Error\nClosing the project" -title Error -icon error -parent .
 	        }
 	        Operations::CloseProject
 	        return fail
@@ -407,9 +407,9 @@ proc WrapperInteractions::Import {parentNode nodeType nodeID } {
 	        set SIdxValue [GetSubIndexIDbyPositions $nodePos $sortedIndexPos $sortedSubIndexPos]
 	        if { [ocfmRetCode_code_get [lindex $SIdxValue 0]] != 0 } {
 		        if { [ string is ascii [ocfmRetCode_errorString_get [lindex $SIdxValue 0]] ] } {
-			        tk_messageBox -message "[ocfmRetCode_errorString_get [lindex $SIdxValue 0] ]\nClosing the project" -title Warning -icon warning -parent .
+			        tk_messageBox -message "[ocfmRetCode_errorString_get [lindex $SIdxValue 0] ]\nClosing the project" -title Error -icon error -parent .
 		        } else {
-			        tk_messageBox -message "Unknown Error\nClosing the project" -title Warning -icon warning -parent .
+			        tk_messageBox -message "Unknown Error\nClosing the project" -title Error -icon error -parent .
 		        }
 		        Operations::CloseProject
 		        return fail
@@ -418,9 +418,9 @@ proc WrapperInteractions::Import {parentNode nodeType nodeID } {
 	        set catchErr [GetSubIndexAttributesbyPositions $nodePos $sortedIndexPos $sortedSubIndexPos 0 ]
 	        if { [ocfmRetCode_code_get [lindex $catchErr 0]] != 0 } {
 		        if { [ string is ascii [ocfmRetCode_errorString_get [lindex $catchErr 0]] ] } {
-			        tk_messageBox -message "[ocfmRetCode_errorString_get [lindex $catchErr 0]]\nClosing the project" -title Warning -icon warning -parent .
+			        tk_messageBox -message "[ocfmRetCode_errorString_get [lindex $catchErr 0]]\nClosing the project" -title Error -icon error -parent .
 		        } else {
-			        tk_messageBox -message "Unknown Error\nClosing the project" -title Warning -icon warning -parent .
+			        tk_messageBox -message "Unknown Error\nClosing the project" -title Error -icon error -parent .
 		        }
 		        Operations::CloseProject
 		        return fail

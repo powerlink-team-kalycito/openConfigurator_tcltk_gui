@@ -116,7 +116,7 @@ proc ChildWindows::StartUp {} {
                 destroy .startUp
                 Operations::openProject $samplePjt
             } else {
-                DisplayErrMsg "Sample project is not present" error	
+                DisplayErrMsg "Sample project not present" error	
                 focus .startUp
                 return
             }
@@ -199,7 +199,7 @@ proc ChildWindows::ProjectSettingWindow {} {
     global ra_auto
 
 	if {$projectDir == "" || $projectName == "" } {
-		#DisplayInfo "No Project is opened or created" info
+
 		return
 	}
 	
@@ -210,9 +210,9 @@ proc ChildWindows::ProjectSettingWindow {} {
     set ErrCode [ocfmRetCode_code_get $catchErrCode]
     if { $ErrCode != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
-            tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]\nAuto generate is set to \"No\" and project Setting set to \"Discard\" " -title Warning -icon warning
+            tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]\nAuto generate is set to \"No\" and project Setting set to \"Discard\" " -title Error -icon error
         } else {
-            tk_messageBox -message "Unknown Error\nAuto generate is set to \"No\" and project Setting set to \"Discard\" " -title Warning -icon warning
+            tk_messageBox -message "Unknown Error\nAuto generate is set to \"No\" and project Setting set to \"Discard\" " -title Error -icon error
         }
         set ra_auto 0
         set ra_proj 2
@@ -251,9 +251,9 @@ proc ChildWindows::ProjectSettingWindow {} {
         set ErrCode [ocfmRetCode_code_get $catchErrCode]
         if { $ErrCode != 0 } {
             if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
-                tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning -parent .projSett
+                tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .projSett
             } else {
-	            tk_messageBox -message "Unknown Error" -title Warning -icon warning -parent .projSett
+	            tk_messageBox -message "Unknown Error" -title Error -icon error -parent .projSett
             }
 	    }
 		
@@ -370,7 +370,7 @@ proc ChildWindows::AddCNWindow {} {
 	button $frame3.bt_ok -width 8 -text "  Ok  " -command {
 		set cnName [string trim $cnName]
 		if {$cnName == "" } {
-			tk_messageBox -message "Enter CN Name" -title "Set Node Name error" -parent .addCN -icon error
+			tk_messageBox -message "Enter CN name" -parent .addCN -icon error
 			focus .addCN
 			return
 		}
@@ -386,7 +386,7 @@ proc ChildWindows::AddCNWindow {} {
 		}
 		if {$confCn=="off"} {
 			if {![file isfile $tmpImpCnDir]} {
-				tk_messageBox -message "Entered path for Import XDC/XDD not exist " -icon error -parent .addCN
+				tk_messageBox -message "Entered path to Import XDC/XDD file does not exist" -icon error -parent .addCN
 				focus .addCN
 				return
 			}
@@ -557,9 +557,9 @@ proc ChildWindows::SaveProjectAsWindow {} {
 	    set ErrCode [ocfmRetCode_code_get $catchErrCode]
 	    if { $ErrCode != 0 } {
 		    if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
-			    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning -parent .
+			    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
 		    } else {
-			    tk_messageBox -message "Unknown Error" -title Warning -icon warning -parent .
+			    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
 		    }
 		    DisplayErrMsg "Error in saving project $saveProjectAs"
 		    return
@@ -684,7 +684,7 @@ proc ChildWindows::NewProjectWindow {} {
     button $frame2_2.bt_next -width 8 -text "  Ok  " -command {
 	    if {$conf=="off" } {
 		    if {![file isfile $tmpImpDir]} {
-			    tk_messageBox -message "Entered path for Import XDC/XDD not exist " -icon warning -parent .newprj
+			    tk_messageBox -message "Entered path to Import XDC/XDD file does not exist" -icon warning -parent .newprj
 			    focus .newprj
 			    return
 		    }
@@ -793,7 +793,7 @@ proc ChildWindows::NewProjectWindow {} {
     button $frame1_4.bt_next -width 8 -text " Next " -command {   
 	    set tmpPjtName [string trim $tmpPjtName]
 	    if {$tmpPjtName == "" } {
-		    tk_messageBox -message "Enter Project Name" -title "Set Project Name error" -icon warning -parent .newprj
+		    tk_messageBox -message "Enter Project Name" -icon warning -parent .newprj
 		    focus .newprj
 		    return
 	    }
@@ -964,9 +964,9 @@ proc ChildWindows::NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf tempRa_
     set ErrCode [ocfmRetCode_code_get $catchErrCode]
     if { $ErrCode != 0 } {
 	    if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
-		    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning -parent .
+		    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
 	    } else {
-		    tk_messageBox -message "Unknown Error" -title Warning -icon warning -parent .
+		    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
 	    }
 	    return
     }
@@ -984,9 +984,9 @@ proc ChildWindows::NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf tempRa_
 	    set ErrCode [ocfmRetCode_code_get $catchErrCode]
 	    if { $ErrCode != 0 } {
 		    if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
-			    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning -parent .
+			    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
 		    } else {
-			    tk_messageBox -message "Unknown Error" -title Warning -icon warning -parent .
+			    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
 		    }
 		    return
 	    }
@@ -1015,9 +1015,9 @@ proc ChildWindows::NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf tempRa_
     set ErrCode [ocfmRetCode_code_get $catchErrCode]
     if { $ErrCode != 0 } {
 	    if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
-		    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning -parent .
+		    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
 	    } else {
-		    tk_messageBox -message "Unknown Error" -title Warning -icon warning -parent .
+		    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
 	    }
     }
     set ra_proj $tempRa_proj
@@ -1194,9 +1194,9 @@ proc ChildWindows::AddIndexWindow {} {
 	    set ErrCode [ocfmRetCode_code_get $catchErrCode]
 	    if { $ErrCode != 0 } {
 		    if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
-			    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning -parent .addIdx
+			    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .addIdx
 		    } else {
-			    tk_messageBox -message "Unknown Error" -title Warning -icon warning -parent .addIdx
+			    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .addIdx
 		    }
 		    $frame2.bt_cancel invoke
 	    }
@@ -1213,9 +1213,9 @@ proc ChildWindows::AddIndexWindow {} {
 		    #the node exist continue 
 	    } else {
 		    if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
-			    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning -parent .addIdx
+			    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .addIdx
 		    } else {
-			    tk_messageBox -message "Unknown Error" -title Warning -icon warning -parent .addIdx
+			    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .addIdx
 		    }
 		    $frame2.bt_cancel invoke
 	    }
@@ -1372,9 +1372,9 @@ proc ChildWindows::AddSubIndexWindow {} {
 	    set ErrCode [ocfmRetCode_code_get $catchErrCode]
 	    if { $ErrCode != 0 } {
 		    if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
-			    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning -parent .addSidx
+			    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .addSidx
 		    } else {
-			    tk_messageBox -message "Unknown Error" -title Warning -icon warning -parent .addSidx
+			    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .addSidx
 		    }
 		    $frame2.bt_cancel invoke
 	    }
@@ -1544,9 +1544,9 @@ proc ChildWindows::AddPDOWindow {} {
 	    set ErrCode [ocfmRetCode_code_get $catchErrCode]
 	    if { $ErrCode != 0 } {
 		    if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
-			    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning -parent .addPdo
+			    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .addPdo
 		    } else {
-			    tk_messageBox -message "Unknown Error" -title Warning -icon warning -parent .addPdo
+			    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .addPdo
 		    }
 		    $frame2.bt_cancel invoke
 	    }
@@ -1564,10 +1564,9 @@ proc ChildWindows::AddPDOWindow {} {
 		    #the node exist continue 
 	    } else {
 		    if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
-			    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning -parent .addPdo
+			    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .addPdo
 		    } else {
-			    tk_messageBox -message "Unknown Error" -title Warning -icon warning -parent .addPdo
-		        #puts "Unknown Error in AddPDOWindow 2 ->[ocfmRetCode_errorString_get $catchErrCode]\n"
+			    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .addPdo
 		    }
 		    $frame2.bt_cancel invoke
 	    }

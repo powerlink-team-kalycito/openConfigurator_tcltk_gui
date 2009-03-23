@@ -299,7 +299,7 @@ proc Operations::exit_app {} {
     #check whether project has changed
     if {$status_save} {
 	    #Prompt for Saving the Existing Project
-	    set result [tk_messageBox -message "Save Project $projectName ?" -type yesnocancel -icon question -title "Question" -parent .]
+	    set result [tk_messageBox -message "Save Project $projectName?" -type yesnocancel -icon question -title "Question" -parent .]
 	    switch -- $result {
 	         yes {			 
 	                 Operations::Saveproject
@@ -343,7 +343,7 @@ proc Operations::OpenProjectWindow { } {
 	    #check whether project has changed
 	    if {$status_save} {
 		    #Prompt for Saving the Existing Project
-		    set result [tk_messageBox -message "Save Project $projectName ?" -type yesnocancel -icon question -title "Question" -parent .]
+		    set result [tk_messageBox -message "Save Project $projectName?" -type yesnocancel -icon question -title "Question" -parent .]
        		switch -- $result {
        		     yes {
 				    DisplayInfo "Project $projectName Saved" info
@@ -422,10 +422,9 @@ proc Operations::openProject {projectfilename} {
     set ErrCode [ocfmRetCode_code_get $catchErrCode]
     if { $ErrCode != 0 } {
 	    if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
-		    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -parent . -title Warning -icon warning
+		    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -parent . -title Error -icon error
 	    } else {
-		    tk_messageBox -message "Unknown Error" -parent . -title Warning -icon warning
-            #puts "Unknown Error ->[ocfmRetCode_errorString_get $catchErrCode]"
+		    tk_messageBox -message "Unknown Error" -parent . -title Error -icon error
 	    }
 	    thread::send -async [tsv::set application importProgress] "StopProgress"
 	    return
@@ -443,10 +442,9 @@ proc Operations::openProject {projectfilename} {
     set ErrCode [ocfmRetCode_code_get $catchErrCode]
     if { $ErrCode != 0 } {
 	    if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
-		    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]\nAuto generate is set to \"No\" and project Setting set to \"Discard\" " -title Warning -icon warning
+		    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]\nAuto generate is set to \"No\" and project Setting set to \"Discard\" " -title Error -icon error
 	    } else {
-		     tk_messageBox -message "Unknown Error\nAuto generate is set to \"No\" and project Setting set to \"Discard\" " -title Warning -icon warning
-		    #puts "Unknown Error ->[ocfmRetCode_errorString_get $catchErrCode]\n"
+		     tk_messageBox -message "Unknown Error\nAuto generate is set to \"No\" and project Setting set to \"Discard\" " -title Error -icon error
 	    }
 	    set ra_auto 0
 	    set ra_proj 2
@@ -1030,7 +1028,7 @@ proc Operations::SingleClickNode {node} {
 		    Validation::ResetPromptFlag
 	    } elseif { $ra_proj == "1" } {
 		    if { $chkPrompt == 1 } {
-			    set result [tk_messageBox -message "Do you want to save ?" -parent . -type yesno -icon question]
+			    set result [tk_messageBox -message "Do you want to save?" -parent . -type yesno -icon question]
 			    switch -- $result {
 				    yes {
 					    #save the value
@@ -1092,10 +1090,9 @@ proc Operations::SingleClickNode {node} {
 	    #the node exist continue 
     } else {
 	    if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
-		    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -parent . -title Warning -icon warning
+		    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -parent . -title Error -icon error
 	    } else {
-		    tk_messageBox -message "Unknown Error" -parent . -title Warning -icon warning
-            #puts "Unknown Error ->[ocfmRetCode_errorString_get $catchErrCode]"
+		    tk_messageBox -message "Unknown Error" -parent . -title Error -icon error
 	    }
 	    return
     }
@@ -1268,9 +1265,9 @@ proc Operations::SingleClickNode {node} {
 	    set catchErrCode [IfSubIndexExists $nodeId $nodeType $indexId $subIndexId $subIndexPos $indexPos]
 	    if { [ocfmRetCode_code_get $catchErrCode] != 0 } {
 		    if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
-			    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning -parent .
+			    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
 		    } else {
-			    tk_messageBox -message "Unknown Error" -title Warning -icon warning -parent .
+			    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
 		    }
 		    return
 	    }
@@ -1320,9 +1317,9 @@ proc Operations::SingleClickNode {node} {
 	    set catchErrCode [IfIndexExists $nodeId $nodeType $indexId $indexPos]
 	    if { [ocfmRetCode_code_get $catchErrCode] != 0 } {
 		    if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
-			    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning -parent .
+			    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
 		    } else {
-			    tk_messageBox -message "Unknown Error" -title Warning -icon warning -parent .
+			    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
 		    }
 		    return
 	    }
@@ -1609,13 +1606,13 @@ proc Operations::Saveproject {} {
 	    thread::send -async [tsv::set application importProgress] "StopProgress"
 	    set ErrCode [ocfmRetCode_code_get $catchErrCode]
 	    if { $ErrCode != 0 } {
-		    #tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+
 		    if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
-			    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -parent . -title Warning -icon warning
+			    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -parent . -title Error -icon error
 		    } else {
-			    tk_messageBox -message "Unknown Error" -parent . -title Warning -icon warning
+			    tk_messageBox -message "Unknown Error" -parent . -title Error -icon error
 		    }
-		    DisplayErrMsg "Project $projectName at location $projectDir  is saved" error
+		    DisplayErrMsg "Project $projectName at location $projectDir is saved" error
 		    return 
 	    }
 	
@@ -1815,9 +1812,9 @@ proc Operations::AddCN {cnName tmpImpDir nodeId} {
     set ErrCode [ocfmRetCode_code_get $catchErrCode]
     if { $ErrCode != 0 } {
 	    if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
-		    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]"  -title Warning -icon warning
+		    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error
 	    } else {
-		    tk_messageBox -message "Unknown Error" -title Warning -icon warning
+		    tk_messageBox -message "Unknown Error" -title Error -icon error
 	    }
 	    return 
     }
@@ -1836,14 +1833,13 @@ proc Operations::AddCN {cnName tmpImpDir nodeId} {
 
     if {$tmpImpDir != ""} {
 	    #API
-	    #DllExport ocfmRetCode ImportXML(char* fileName, int NodeID, ENodeType NodeType);
 	    set catchErrCode [ImportXML "$tmpImpDir" $nodeId 1]
 	    set ErrCode [ocfmRetCode_code_get $catchErrCode]
 	    if { $ErrCode != 0 } {
 		    if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
-			    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning
+			    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error
 		    } else {
-			    tk_messageBox -message "Unknown Error" -title Warning -icon warning
+			    tk_messageBox -message "Unknown Error" -title Error -icon error
 		    }
 		    return 
 	    } else {
@@ -2317,9 +2313,9 @@ proc Operations::BuildProject {} {
 
     if { $ErrCode != 0 } {
 	    if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
-		    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning -parent .
+		    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
 	    } else {
-		    tk_messageBox -message "Unknown Error" -title Warning -icon warning -parent .
+		    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
 	    }
 	    #error in generating CDC dont generate XAP
 	    DisplayErrMsg "Error in generating cdc. xap was not generated" error
@@ -2341,9 +2337,9 @@ proc Operations::BuildProject {} {
 	    set ErrCode [ocfmRetCode_code_get $catchErrCode]
 	    if { $ErrCode != 0 } {
 		    if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
-			    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning -parent .
+			    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
 		    } else {
-			    tk_messageBox -message "Unknown Error" -title Warning -icon warning -parent .
+			    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
 		    }
 		    DisplayErrMsg "xap is not generated"
 		    thread::send -async [tsv::set application importProgress] "StopProgress"			
@@ -2431,7 +2427,7 @@ proc Operations::ReImport {} {
     if {$tmpImpDir != ""} {
 	    set lastXD $tmpImpDir
 
-	    set result [tk_messageBox -message "Do you want to Import $tmpImpDir ?" -type yesno -icon question -title "Question" -parent .]
+	    set result [tk_messageBox -message "Do you want to Import $tmpImpDir?" -type yesno -icon question -title "Question" -parent .]
 	     switch -- $result {
 	         yes {
 		       DisplayInfo "Importing file $tmpImpDir for Node ID : $nodeId"
@@ -2445,9 +2441,9 @@ proc Operations::ReImport {} {
 	    set ErrCode [ocfmRetCode_code_get $catchErrCode]
 	    if { $ErrCode != 0 } {
 		    if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
-			    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning -parent .
+			    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
 		    } else {
-			    tk_messageBox -message "Unknown Error" -title Warning -icon warning -parent .
+			    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
 		    }
 		    return
 	    } else {
@@ -2591,7 +2587,7 @@ proc Operations::DeleteTreeNode {} {
 		    set compareIdx [ string toupper $idx]
 		    set safeObjectList [list 1006 1020 1300 1C02 1C09 1F26 1F27 1F84 1F89 1F8A 1F8B 1F8D 1F92]
 		    if { [lsearch -exact $safeObjectList $compareIdx] != -1 } {
-			    set result [tk_messageBox -type yesno -message "$idx is a special Index\nDeleting lead to unexpected cdc generation\nDo you want to delete?" ]
+			    set result [tk_messageBox -type yesno -message "$idx is a special Index\nDeleting it lead to unexpected cdc generation\nDo you want to delete?" ]
 			    switch -- $result {
 				    yes {#continue with process}
 				    no {return}
@@ -2610,9 +2606,9 @@ proc Operations::DeleteTreeNode {} {
     set ErrCode [ocfmRetCode_code_get $catchErrCode]
     if { $ErrCode != 0 } {
 	    if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
-		    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning -parent .
+		    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
 	    } else {
-		    tk_messageBox -message "Unknown Error" -title Warning -icon warning -parent .
+		    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
 	    }
 	    return
     }
@@ -3056,7 +3052,7 @@ proc Operations::AutoGenerateMNOBD {} {
 			return
 		}
 
-		set result [tk_messageBox -message "Do you want to Auto Generate object dictionary for MN ?" -type yesno -icon question -title "Question" -parent .]
+		set result [tk_messageBox -message "Do you want to Auto Generate object dictionary for MN?" -type yesno -icon question -title "Question" -parent .]
    		 switch -- $result {
    		     yes {
 			   DisplayInfo "Auto Generating object dictionary for MN"
@@ -3070,9 +3066,9 @@ proc Operations::AutoGenerateMNOBD {} {
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
 		if { $ErrCode != 0 } {
 			if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
-				tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning -parent .
+				tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
 			} else {
-				tk_messageBox -message "Unknown Error" -title Warning -icon warning -parent .
+				tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
 			}
 			return
 		} 

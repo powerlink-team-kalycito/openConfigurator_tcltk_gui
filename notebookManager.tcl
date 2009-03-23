@@ -711,7 +711,8 @@ proc NoteBookManager::SaveValue {frame0 frame1} {
             if { [string match -nocase "18??" $indexId] || [string match "14??" $indexId]} {
                 if { [string match "01" $subIndexId] } {
                     if { $value == "" || [expr $value > 0xef] || [expr $value < 0x1] } {
-                        tk_messageBox -message "Value for subindex 01 in index $indexId should be in range 0x1 to 0xef" -title Warning -icon warning -parent .
+                        tk_messageBox -message "Value is range 0x1 to 0xEF\nFor subindex 01 in index $indexId" -title Warning -icon warning -parent .
+			return
                     }
                 }
             }
@@ -719,7 +720,8 @@ proc NoteBookManager::SaveValue {frame0 frame1} {
             if { [string match -nocase "1A??" $indexId] || [string match "16??" $indexId]} {
                 if { ![string match "00" $subIndexId] } {
                     if { $value == "" || [string length $value] != 18 } {
-                        tk_messageBox -message "Value for subindex $subIndexId in index $indexId should be 16 character long in hexadecimal" -title Warning -icon warning -parent .
+                        tk_messageBox -message "Value should be 16 digit hexadecimal\nFor subindex $subIndexId in index $indexId" -title Warning -icon warning -parent .
+			return
                     }
                 }
             }
@@ -740,9 +742,9 @@ proc NoteBookManager::SaveValue {frame0 frame1} {
     set ErrCode [ocfmRetCode_code_get $catchErrCode]
     if { $ErrCode != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
-            tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning -parent .
+            tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
         } else {
-            tk_messageBox -message "Unknown Error" -title Warning -icon warning -parent .
+            tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
         }
         return
     }
@@ -804,9 +806,9 @@ proc NoteBookManager::DiscardValue {frame0 frame1} {
         #the node exist continue 
     } else {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
-            tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning -parent .
+            tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
         } else {
-            tk_messageBox -message "Unknown Error" -title Warning -icon warning -parent .
+            tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
         }
         return
     }

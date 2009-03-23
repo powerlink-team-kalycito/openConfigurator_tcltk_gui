@@ -346,14 +346,14 @@ proc Operations::OpenProjectWindow { } {
 		    set result [tk_messageBox -message "Save Project $projectName?" -type yesnocancel -icon question -title "Question" -parent .]
        		switch -- $result {
        		     yes {
-				    DisplayInfo "Project $projectName Saved" info
+				    DisplayInfo "Project $projectName saved" info
 				    Operations::Saveproject
 			    }
        		     no  {
-				    DisplayInfo "Project $projectName Not Saved" info
+				    DisplayInfo "Project $projectName not saved" info
 			    }
        		     cancel {
-				    DisplayInfo "Open Project Canceled" info
+				    DisplayInfo "Open Project canceled" info
 				    return
 			    }
        		}
@@ -534,7 +534,7 @@ proc Operations::RePopulate { projectDir projectName } {
 
     } else {
 	    Operations::CloseProject
-	    DisplayErrMsg "MN node is not found" error
+	    DisplayErrMsg "MN node not found" error
     }
     return 1
 }
@@ -667,7 +667,7 @@ proc Operations::BasicFrames { } {
 	    if {[file exists $samplePjt]} {
 		    Operations::openProject $samplePjt
 	    } else {
-		    DisplayErrMsg "Sample project is not present" error	
+		    DisplayErrMsg "Sample project not present" error	
 	    }
     } 
     $Operations::projMenu insert 1 command -label "New Project" -command { Operations::InitiateNewProject}
@@ -1157,7 +1157,6 @@ proc Operations::SingleClickNode {node} {
 					    set tempIndexProp [GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos 5 ]
 					    set ErrCode [ocfmRetCode_code_get [lindex $tempIndexProp 0] ]		
 					    if {$ErrCode != 0} {
-						    #puts "ErrCode in singleclick for TDDO and RPDO : $ErrCode"
 						    continue	
 					    }
 					    set IndexActualValue [lindex $tempIndexProp 1]
@@ -1372,7 +1371,7 @@ proc Operations::SingleClickNode {node} {
     $tmpInnerf1.en_data1 configure -state $entryState -bg white
 
 
-    $tmpInnerf1.en_default1 configure -state normal
+    $tmpInnerf1.en_default1 configure -state normal -validate none
     $tmpInnerf1.en_default1 delete 0 end
     $tmpInnerf1.en_default1 insert 0 [lindex $IndexProp 4]
     $tmpInnerf1.en_default1 configure -state $entryState -bg white
@@ -1432,9 +1431,7 @@ proc Operations::SingleClickNode {node} {
 		    grid $tmpInnerf1.frame1.ra_dec
 		    grid $tmpInnerf1.frame1.ra_hex
 		
-		    #puts "\nIN singleclicknode userPrefList->$userPrefList"
 		    set schRes [lsearch $userPrefList [list $nodeSelect *]]
-		    #puts "schRes->$schRes\n STATE=[$tmpInnerf1.en_value1 cget -state] \t $tmpInnerf1.en_value1\n"
 		    if { $schRes != -1 } {
 			    if { [lindex [lindex $userPrefList $schRes] 1] == "dec" } {
 				    if {[string match -nocase "0x*" [lindex $IndexProp 5]]} {
@@ -1476,7 +1473,6 @@ proc Operations::SingleClickNode {node} {
 				    set lastConv hex
 				    $tmpInnerf1.frame1.ra_hex select
 			    } else {
-				    #puts "\n\nInvalid userpref [lindex $userPrefList 1]\n\n"
 				    return 
 			    }
 		    } else {
@@ -1533,22 +1529,28 @@ proc Operations::SingleClickNode {node} {
 	    grid $tmpInnerf1.co_pdo1
 	
 	    $tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::IsValidStr %P"
-	
+	    $tmpInnerf1.en_default1 configure -validate key -vcmd "Validation::IsValidStr %P"
 	    if { [string match -nocase "A???" $indexId] == 1 } {
-		    #make the save button disabled
-		    $indexSaveBtn configure -state disabled
-		    $subindexSaveBtn configure -state disabled
-		
-		    $tmpInnerf0.en_nam1 configure -state disabled
-		    $tmpInnerf1.en_data1 configure -state disabled
-		    $tmpInnerf1.en_default1 configure -state disabled
-		    $tmpInnerf1.en_value1 configure -state disabled
-		    $tmpInnerf1.en_lower1 configure -state disabled
-		    $tmpInnerf1.en_upper1 configure -state disabled
-		    $tmpInnerf1.co_obj1 configure -state disabled
-		    $tmpInnerf1.co_access1 configure -state disabled
-		    $tmpInnerf1.co_pdo1 configure -state disabled
+		set widgetState disabled
+		set comboState disabled
+	    } else {
+		set widgetState normal
+		set comboState readonly
 	    }
+		    #make the save button disabled
+		    $indexSaveBtn configure -state $widgetState
+		    $subindexSaveBtn configure -state $widgetState
+		
+		    $tmpInnerf0.en_nam1 configure -state $widgetState
+		    $tmpInnerf1.en_data1 configure -state $widgetState
+		    $tmpInnerf1.en_default1 configure -state $widgetState
+		    $tmpInnerf1.en_value1 configure -state $widgetState
+		    $tmpInnerf1.en_lower1 configure -state $widgetState
+		    $tmpInnerf1.en_upper1 configure -state $widgetState
+		    $tmpInnerf1.co_obj1 configure -state $comboState
+		    $tmpInnerf1.co_access1 configure -state $comboState
+		    $tmpInnerf1.co_pdo1 configure -state $comboState
+
 	
     }
     return
@@ -1612,7 +1614,7 @@ proc Operations::Saveproject {} {
 		    } else {
 			    tk_messageBox -message "Unknown Error" -parent . -title Error -icon error
 		    }
-		    DisplayErrMsg "Project $projectName at location $projectDir is saved" error
+		    DisplayErrMsg "Project $projectName at location $projectDir not saved" error
 		    return 
 	    }
 	
@@ -1621,7 +1623,7 @@ proc Operations::Saveproject {} {
     #project is saved so change status to zero
     set status_save 0
 
-    DisplayInfo "Project $projectName at location $projectDir  is saved"
+    DisplayInfo "Project $projectName at location $projectDir is saved"
 }
 
 #---------------------------------------------------------------------------------------------------
@@ -1868,7 +1870,7 @@ proc Operations::AddCN {cnName tmpImpDir nodeId} {
 #  Description : Displays message for non implemented function 
 #---------------------------------------------------------------------------------------------------
 proc YetToImplement {} {
-    tk_messageBox -message "Yet to be Implemented !" -title Info -icon info
+    tk_messageBox -message "Yet to be Implemented" -title Info -icon info
 }
 
 #---------------------------------------------------------------------------------------------------
@@ -2341,12 +2343,12 @@ proc Operations::BuildProject {} {
 		    } else {
 			    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
 		    }
-		    DisplayErrMsg "xap is not generated"
+		    DisplayErrMsg "Error in generating xap"
 		    thread::send -async [tsv::set application importProgress] "StopProgress"			
 		    return
 	    } else {
-		    DisplayInfo "CDC and XAP are successfully generated"
-		    DisplayInfo "files mnobd.txt mnobd.cdc xap.xml xap.h are generated in location [file join $projectDir cdc_xap]"
+		    #DisplayInfo "CDC and XAP are successfully generated"
+		    DisplayInfo "files mnobd.txt, mnobd.cdc, xap.xml, xap.h are generated in location [file join $projectDir cdc_xap]"
 		    thread::send -async [tsv::set application importProgress] "StopProgress"
 	    }
 	    #project is built need to save
@@ -2371,7 +2373,7 @@ proc Operations::CleanProject {} {
 	    set CleanFile [file join $projectDir cdc_xap $tempFile]
 	    catch {file delete -force $CleanFile}
     }
-    DisplayInfo "files mnobd.txt mnobd.cdc xap.xml xap.h in [file join $projectDir cdc_xap] are deleted "
+    DisplayInfo "files mnobd.txt, mnobd.cdc, xap.xml, xap.h in [file join $projectDir cdc_xap] are deleted"
 }
 
 #---------------------------------------------------------------------------------------------------
@@ -2447,7 +2449,7 @@ proc Operations::ReImport {} {
 		    }
 		    return
 	    } else {
-		    DisplayInfo "ReImported $tmpImpDir for Node ID:$nodeId"
+		    DisplayInfo "Imported file $tmpImpDir for Node ID:$nodeId"
 	    }
 
 	    pack forget [lindex $f0 0]

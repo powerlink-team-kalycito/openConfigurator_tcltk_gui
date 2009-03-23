@@ -474,7 +474,10 @@ proc NoteBookManager::ConvertDec {framePath} {
 #---------------------------------------------------------------------------------------------------
 proc NoteBookManager::InsertDecimal {entryPath} {
     set entryValue [$entryPath get]
-    set entryValue [string range $entryValue 2 end]
+    if { [string match -nocase "0x*" $entryValue] } {
+    	set entryValue [string range $entryValue 2 end]
+    }
+   
     if { $entryValue == 0 } {
         # value is zero 
         $entryPath delete 0 end

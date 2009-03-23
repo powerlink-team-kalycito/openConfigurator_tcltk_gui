@@ -101,6 +101,7 @@ global errWindow
 #	Source files 
 #-------------------------
 set rootDir [pwd]
+#set rootDir /usr/share/openCONFIGURATOR-0.9
 tsv::set application rootDir $rootDir
 source [file join $rootDir console.tcl]
 source [file join $rootDir notebookManager.tcl]
@@ -203,7 +204,7 @@ proc InitOpenConfigurator {argc argv} {
 			exit
 		}
 	} elseif { "$tcl_platform(platform)" == "unix"} {
-		if { [catch {load ./Tcl_WrapperMain.so}] } {
+		if { [catch {load $rootDir/Tcl_WrapperMain.so}] } {
 			tk_messageBox -message "Error loading Shared Library\nCannot proceed\nTry reinstalling the tool" -title Info -icon error
 			exit
 		}

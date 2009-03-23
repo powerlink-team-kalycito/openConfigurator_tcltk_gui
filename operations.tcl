@@ -85,7 +85,7 @@ namespace eval Operations {
 }
 
 # For including Tablelist Package
-set path_to_Tablelist ./tablelist4.10
+set path_to_Tablelist [file join $rootDir tablelist4.10]
 lappend auto_path $path_to_Tablelist
 package require Tablelist
 
@@ -155,24 +155,63 @@ Validation::ResetPromptFlag
 #  Description : Information about tool developer
 #---------------------------------------------------------------------------------------------------
 proc Operations::about {} {\
-    	set aboutWindow .about
-    	catch "destroy $aboutWindow"
-    	toplevel $aboutWindow
-    	wm resizable $aboutWindow 0 0
-    	wm transient $aboutWindow .
-    	wm deiconify $aboutWindow
-    	grab $aboutWindow
-    	wm title	 $aboutWindow	"About"
-    	wm protocol $aboutWindow WM_DELETE_WINDOW "destroy $aboutWindow"
-    	label $aboutWindow.l_msg -image [Bitmap::get info] -compound left -text "\n          openCONFIGURATOR Tool\n                    Designed by\n                        Kalycito\nwww.kalycito.com\n"
-    	button $aboutWindow.bt_ok -text Ok -width 8 -command "destroy $aboutWindow"
-    	grid config $aboutWindow.l_msg -row 0 -column 0 
-    	grid config $aboutWindow.bt_ok -row 1 -column 0
-    	bind $aboutWindow <KeyPress-Return> "destroy $aboutWindow"
-    	focus $aboutWindow.bt_ok
-    	Operations::centerW .about
+	
+	    set aboutWindow .about
+    catch "destroy $aboutWindow"
+    toplevel $aboutWindow
+    wm resizable $aboutWindow 0 0
+    wm transient $aboutWindow .
+    wm deiconify $aboutWindow
+    grab $aboutWindow
+    wm title	 $aboutWindow	"About"
+    wm protocol $aboutWindow WM_DELETE_WINDOW "destroy $aboutWindow"
+    label $aboutWindow.l_msg -compound left -text "\nopenCONFIGURATOR Tool\nDesigned by\nKalycito\n"
+    label $aboutWindow.l_msg1 -text "www.kalycito.com   \n" -foreground blue -activeforeground blue
+    button $aboutWindow.bt_ok -text Ok -command "destroy $aboutWindow" -width 8
+    grid config $aboutWindow.l_msg -row 0 -column 0
+    grid config $aboutWindow.l_msg1 -row 1 -column 0  
+    grid config $aboutWindow.bt_ok -row 2 -column 0
+    bind $aboutWindow.l_msg1 <Enter> "$aboutWindow.l_msg1 config -cursor hand2"
+    bind $aboutWindow.l_msg1 <1> Operations::LocateUrl
+    bind $aboutWindow <KeyPress-Return> "destroy $aboutWindow"
+    bind $aboutWindow <KeyPress-Escape> "destroy $aboutWindow"
+    wm protocol $aboutWindow WM_DELETE_WINDOW "destroy $aboutWindow"
+    focus $aboutWindow.bt_ok
+        Operations::centerW .about
+	
 }
 
+#---------------------------------------------------------------------------------------------------
+#  Operations::LocateUrl
+# 
+#  Arguments : -
+#
+#  Results : -
+#
+#  Description : opens the web browser
+#---------------------------------------------------------------------------------------------------
+proc Operations::LocateUrl {} {
+	global tcl_platform
+	set browser ""
+	if {$tcl_platform(platform)=="unix"} {
+		set lentries [glob -nocomplain [file join /usr/bin/ "*"]]
+		set lentries [lsort -dictionary $lentries]
+		foreach filePath $lentries {
+			if {[regexp {/usr/bin/firefox} $filePath]} {
+				set browser "firefox"
+				break
+			}
+		}
+		if {$browser==""} {
+			tk_messageBox -message "Please visit the site www.kalycito.com for more information." -title Info -icon info
+		} else {
+			exec /usr/bin/$browser "www.kalycito.com"
+		}
+		
+	} elseif {$tcl_platform(platform)=="windows"} {
+		eval exec [auto_execok start] "www.kalycito.com"
+	}
+}
 #---------------------------------------------------------------------------------------------------
 #  Operations::centerW
 # 
@@ -509,9 +548,12 @@ proc Operations::RePopulate { projectDir projectName } {
 					set child [$treePath insert end MN-$mnCount CN-$mnCount-$cnCount -text "$nodeName\($nodeId\)" -open 0 -image [Bitmap::get cn]]
 					set node CN-$mnCount-$cnCount
 				}
-				if { [ catch { WrapperInteractions::Import $node $nodeType $nodeId } ] } {
+				if { [ catch { set result [WrapperInteractions::Import $node $nodeType $nodeId] } ] } {
 					# error has occured
 					Operations::CloseProject
+					return 0
+				}
+				if { $result == "fail" } {
 					return 0
 				}
 				incr cnCount
@@ -816,8 +858,14 @@ proc Operations::BasicFrames { } {
 	$treeWindow bindText <Double-1> Operations::DoubleClickNode
 	$treeWindow bindText <ButtonPress-3> {Operations::tselectright %X %Y}
 	if {"$tcl_platform(platform)" == "unix"} {
-		bind $treeWindow <Button-4> {global treePath ; $treePath yview scroll -5 units}
-		bind $treeWindow <Button-5> {global treePath ; $treePath yview scroll 5 units}
+		bind $treeWindow <Button-4> {
+			global treePath
+			$treePath yview scroll -5 units
+		}
+		bind $treeWindow <Button-5> {
+			global treePath
+			$treePath yview scroll 5 units
+		}
 	}
 	bind $treeWindow <Enter> { Operations::BindTree }
 	bind $treeWindow <Leave> { Operations::UnbindTree }
@@ -1278,7 +1326,7 @@ proc Operations::SingleClickNode {node} {
 			}
 		
 	}
-	#puts "IndexProp->$IndexProp"
+#puts "IndexProp->$IndexProp"
 
 		$tmpInnerf0.en_idx1 configure -state normal
 		$tmpInnerf0.en_idx1 delete 0 end
@@ -1824,12 +1872,11 @@ proc Operations::AddCN {cnName tmpImpDir nodeId} {
 	set parentId [join $parentId -]
 
 	lappend nodeIdList $nodeId 
-	#creating the GUI for CN
+	#inserting CN in tree widget
 	set child [$treePath insert end $node CN-$parentId-$cnCount -text "$cnName\($nodeId\)" -open 0 -image [Bitmap::get cn]]
 
 	if {$tmpImpDir != ""} {
 		#API
-		#DllExport ocfmRetCode ImportXML(char* fileName, int NodeID, ENodeType NodeType);
 		set catchErrCode [ImportXML "$tmpImpDir" $nodeId 1]
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
 		if { $ErrCode != 0 } {
@@ -1843,8 +1890,11 @@ proc Operations::AddCN {cnName tmpImpDir nodeId} {
 			DisplayInfo "Imported $tmpImpDir for Node ID: $nodeId"
 		}
                 thread::send -async [tsv::set application importProgress] "StartProgress"
-		WrapperInteractions::Import CN-$parentId-$cnCount 1 $nodeId 
+		set result [WrapperInteractions::Import CN-$parentId-$cnCount 1 $nodeId]
 		thread::send -async [tsv::set application importProgress] "StopProgress"
+		if { $result == "fail" } {
+			return
+		}
 		
 	} else {
 		lappend nodeIdList $nodeId 
@@ -2198,7 +2248,18 @@ proc FindSpace::Next {} {
 #  Description : 
 #---------------------------------------------------------------------------------------------------
 proc Operations::StartStack {} {
+	global projectDir
+	global tcl_platform
 	
+	if { "$tcl_platform(platform)" == "unix" } {
+		
+		set startFile [file join $projectDir scripts start.sh]
+	} elseif { "$tcl_platform(platform)" == "windows" } {
+		set startFile [file join $projectDir scripts start.bat]
+	}
+	if { [file exists $startFile] } {
+		exec $startFile
+	}
 }
 
 #---------------------------------------------------------------------------------------------------
@@ -2211,7 +2272,17 @@ proc Operations::StartStack {} {
 #  Description : 
 #---------------------------------------------------------------------------------------------------
 proc Operations::StopStack {} {
+	global projectDir
+	global tcl_platform
 	
+	if { "$tcl_platform(platform)" == "unix" } {
+		set stopFile [file join $projectDir scripts stop.sh]
+	} elseif { "$tcl_platform(platform)" == "windows" } {
+		set stopFile [file join $projectDir scripts stop.bat]
+	}
+	if { [file exists $stopFile] } {
+		exec $stopFile
+	}
 }
 
 #---------------------------------------------------------------------------------------------------
@@ -2224,7 +2295,18 @@ proc Operations::StopStack {} {
 #  Description : 
 #---------------------------------------------------------------------------------------------------
 proc Operations::TransferCDCXAP {choice} {
+	global projectDir
+	global tcl_platform
 	
+	if { "$tcl_platform(platform)" == "unix" } {
+		set transferFile [file join $projectDir scripts transfer.sh]
+	} elseif { "$tcl_platform(platform)" == "windows" } {
+		set transferFile [file join $projectDir scripts transfer.bat]
+	}
+	
+	if { [file exists $transferFile] } {
+		exec $transferFile
+	}
 }
 
 #---------------------------------------------------------------------------------------------------
@@ -2260,7 +2342,7 @@ proc Operations::BuildProject {} {
 	}
 
 	if { $ra_auto == 1 } {
-		set result [tk_messageBox -message "MN saved values will be lost\nDo you want to Build Project ?" -type yesno -icon question -title "Question" -parent .]
+		set result [tk_messageBox -message "MN saved values will be lost\nDo you want to Build Project?" -type yesno -icon question -title "Question" -parent .]
 		switch -- $result {
 			yes {
 				#continue
@@ -2276,8 +2358,13 @@ proc Operations::BuildProject {} {
 	set ErrCode [ocfmRetCode_code_get $catchErrCode]
 
 	if { $ErrCode != 0 } {
+		if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning -parent .
+		} else {
+			tk_messageBox -message "Unknown Error" -title Warning -icon warning -parent .
+		}
 		#error in generating CDC dont generate XAP
-		DisplayErrMsg "Error in generating cdc. xap not generated" error
+		DisplayErrMsg "Error in generating cdc. xap was not generated" error
 		thread::send [tsv::get application importProgress] "StopProgress"
 		return
 	} else {
@@ -2295,12 +2382,17 @@ proc Operations::BuildProject {} {
 		set catchErrCode [GenerateXAP [file join $projectDir cdc_xap xap] ]
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
 		if { $ErrCode != 0 } {
+			if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+				tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning -parent .
+			} else {
+				tk_messageBox -message "Unknown Error" -title Warning -icon warning -parent .
+			}
 			DisplayErrMsg "xap is not generated"
 			thread::send -async [tsv::set application importProgress] "StopProgress"			
 			return
 		} else {
 			DisplayInfo "CDC and XAP are successfully generated"
-			DisplayInfo "files mnobd.txt mnobd.cdc xap.xml xap.h are generated in [file join $projectDir cdc_xap]"
+			DisplayInfo "files mnobd.txt mnobd.cdc xap.xml xap.h are generated in location [file join $projectDir cdc_xap]"
 			thread::send -async [tsv::set application importProgress] "StopProgress"
 		}
 		#project is built need to save
@@ -2431,7 +2523,7 @@ proc Operations::ReImport {} {
 		$treePath itemconfigure $node -open 0
 		
 		thread::send -async [tsv::set application importProgress] "StartProgress"
-		WrapperInteractions::Import $node $nodeType $nodeId
+		set result [WrapperInteractions::Import $node $nodeType $nodeId]
 		thread::send -async [tsv::set application importProgress] "StopProgress"
 		
 	}
@@ -2528,7 +2620,6 @@ proc Operations::DeleteTreeNode {} {
 			#gets SubIndexId of selected node
 			set sidx [string range [$treePath itemcget $node -text] end-2 end-1 ]
 			if { $sidx == "00" } {
-				#should not allow to delete 00 subindex
 				tk_messageBox -message "SubIndex 00 cannot be deleted" -parent .
 				return
 			}
@@ -2542,7 +2633,7 @@ proc Operations::DeleteTreeNode {} {
 			set compareIdx [ string toupper $idx]
 			set safeObjectList [list 1006 1020 1300 1C02 1C09 1F26 1F27 1F84 1F89 1F8A 1F8B 1F8D 1F92]
 			if { [lsearch -exact $safeObjectList $compareIdx] != -1 } {
-				set result [tk_messageBox -type yesno -message "$idx is a special Index\nDeleting them lead to unexpected cdc generation\nDo you want to delete?" ]
+				set result [tk_messageBox -type yesno -message "$idx is a special Index\nDeleting lead to unexpected cdc generation\nDo you want to delete?" ]
 				switch -- $result {
 					yes {#continue with process}
 					no {return}
@@ -2564,7 +2655,6 @@ proc Operations::DeleteTreeNode {} {
 			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Warning -icon warning -parent .
 		} else {
 			tk_messageBox -message "Unknown Error" -title Warning -icon warning -parent .
-                        puts "Unknown Error in DeleteTreeNode->[ocfmRetCode_errorString_get $catchErrCode]\n"
 		}
 		return
 	}
@@ -2579,7 +2669,6 @@ proc Operations::DeleteTreeNode {} {
 	if {[llength $nxtSelList] == 1} {
 		#it is the only node so select parent
 		$treePath selection set $parent
-		#if TPDO or RPDO is selected Gui should be deleted before calling procedure Operations::SingleClickNode
 		catch {$treePath delete $node}
 		Validation::ResetPromptFlag
 		Operations::SingleClickNode $parent
@@ -2605,13 +2694,17 @@ proc Operations::DeleteTreeNode {} {
 	catch {$treePath delete $node}
 }
 
-################################################################################################
-#proc Operations::DeleteList
-#Input       : -
-#Output      : -
-#Description : searches a variable in list if present delete it 
-#	       used for deleting nodeId from nodeIdlist
-################################################################################################
+#---------------------------------------------------------------------------------------------------
+#  Operations::DeleteList
+# 
+#  Arguments : tempList  - list in which value to be deleted
+#              deleteVar - value to be deleted
+#              choice    - to indicate sent list
+#
+#  Results : list with deleted value
+#
+#  Description : Deletes variable if present in list
+#---------------------------------------------------------------------------------------------------
 proc Operations::DeleteList {tempList deleteVar choice} {
 	if { $choice == 0 } {
 		set res [lsearch $tempList $deleteVar]
@@ -2635,19 +2728,21 @@ proc Operations::DeleteList {tempList deleteVar choice} {
 	return $tempList
 }
 
-################################################################################################
-#proc CleanList
-#Input       : node
-#Output      : -
-#Description : searches the savedValueList and deletes the node under it if they are present
-#	       
-################################################################################################
+#---------------------------------------------------------------------------------------------------
+#  Operations::CleanList
+# 
+#  Arguments : node   - node to be deleted
+#              choice - to indicate sent list
+#
+#  Results : -
+#
+#  Description : Deletes node in savedValueList and userPrefList according to choice
+#---------------------------------------------------------------------------------------------------
 proc Operations::CleanList {node choice} {
 	global savedValueList
 	global userPrefList
 
 	if { $choice == 0 } {
-		#called for cleaning savedValueList
 		set tempList $savedValueList
 	} elseif { $choice == 1 } {
 		set tempList $userPrefList
@@ -2691,12 +2786,17 @@ proc Operations::CleanList {node choice} {
 
 }
 
-################################################################################################
-#proc Operations::NodeCreate
-#Input       : -
-#Output      : pointer to object
-#Description : creates an object for node
-################################################################################################
+#---------------------------------------------------------------------------------------------------
+#  Operations::NodeCreate
+# 
+#  Arguments : NodeID   - node id 
+#              NodeType - indicate MN or CN
+#              NodeName - node name
+#
+#  Results : -
+#
+#  Description : Creates a node with given data
+#---------------------------------------------------------------------------------------------------
 proc Operations::NodeCreate {NodeID NodeType NodeName} {
 	set objNode [new_CNode]
 	set objNodeCollection [new_CNodeCollection]
@@ -2710,6 +2810,15 @@ proc Operations::NodeCreate {NodeID NodeType NodeName} {
 	return $catchErrCode 
 }
 
+#---------------------------------------------------------------------------------------------------
+#  Operations::GetNodeList
+# 
+#  Arguments : -
+#
+#  Results : list containing nodes of MN and CN from tree widget
+#
+#  Description : Creates a node with given data
+#---------------------------------------------------------------------------------------------------
 ################################################################################################
 #proc Operations::GetNodeList
 #Input       : -
@@ -2736,12 +2845,16 @@ proc Operations::GetNodeList {} {
 	}
 	return $nodeList
 }
-################################################################################################
-#proc GetNodeIdType
-#Input       : node
-#Output      : node Id and nodeType
-#Description : 
-################################################################################################
+
+#---------------------------------------------------------------------------------------------------
+#  Operations::GetNodeIdType
+# 
+#  Arguments : node - node of tree widget for which id and type is to be found
+#
+#  Results : node id and node type
+#
+#  Description : Returns the node id and node type for the node from tree widget
+#---------------------------------------------------------------------------------------------------
 proc Operations::GetNodeIdType {node} {
 	global treePath
 	global nodeIdList
@@ -2749,10 +2862,9 @@ proc Operations::GetNodeIdType {node} {
 	if {[string match "*SubIndex*" $node]} {
 		set parent [$treePath parent [$treePath parent $node]]
 		if {[string match "?Pdo*" $node]} {
-			#it must be subindex in TPDO orRPDO
+			# subindex in TPDO orRPDO
 			set parent [$treePath parent [$treePath parent $parent]]
 		} else {
-			#must be subindex which is not a TPDO or RPDO
 		}
 	} elseif {[string match "*Index*" $node]} {
 		set parent [$treePath parent $node]
@@ -2760,7 +2872,6 @@ proc Operations::GetNodeIdType {node} {
 			#it must be index in TPDO or RPDO
 			set parent [$treePath parent [$treePath parent $parent]]
 		} else {
-			#must be index which is not a TPDO or RPDO
 		}
 	} elseif {[string match "TPDO-*" $node] || [string match "RPDO-*" $node]} {
 		#it must be either TPDO or RPDO
@@ -2771,7 +2882,7 @@ proc Operations::GetNodeIdType {node} {
 	} elseif {[string match "OBD-*" $node] || [string match "CN-*" $node]} {
 		set parent $node
 	} else {
-		#must be root or ProjectNode
+		#it is root or ProjectNode
 		return
 	}
 
@@ -2780,23 +2891,24 @@ proc Operations::GetNodeIdType {node} {
 	set searchCount [lsearch -exact $nodeList $parent ]
 	set nodeId [lindex $nodeIdList $searchCount]
 	if {[string match "OBD*" $parent]} {
-		#it must be a mn
+		#it is a mn
 		set nodeType 0
 	} else {
-		#it must be cn
+		#it is a cn
 		set nodeType 1
 	}
 	return [list $nodeId $nodeType]
 }
 
-
-################################################################################################
-#proc ArrowUp
-#Input       : -
-#Output      : -
-#Description : Traversal for tree window
-################################################################################################
-
+#---------------------------------------------------------------------------------------------------
+#  Operations::ArrowUp
+# 
+#  Arguments : -
+#
+#  Results : -
+#
+#  Description : Traverse the tree widget for up arrow key
+#---------------------------------------------------------------------------------------------------
 proc Operations::ArrowUp {} {
 	global treePath
 	set node [$treePath selection get]
@@ -2831,6 +2943,15 @@ proc Operations::ArrowUp {} {
 	}
 }
 
+#---------------------------------------------------------------------------------------------------
+#  Operations::_ArrowUp
+# 
+#  Arguments : node - parent node of node to be highlighted
+#
+#  Results : -
+#
+#  Description : Highlights the node for up arrow key
+#---------------------------------------------------------------------------------------------------
 proc Operations::_ArrowUp {node} {
 	global treePath
 
@@ -2849,13 +2970,16 @@ proc Operations::_ArrowUp {node} {
 		}	
 	}
 }
-################################################################################################
-#proc ArrowDown
-#Input       : -
-#Output      : -
-#Description : Traversal for tree window
-################################################################################################
 
+#---------------------------------------------------------------------------------------------------
+#  Operations::ArrowDown
+# 
+#  Arguments : -
+#
+#  Results : -
+#
+#  Description : Traverse the tree widget for down arrow key
+#---------------------------------------------------------------------------------------------------
 proc Operations::ArrowDown {} {
 	global treePath
 
@@ -2882,8 +3006,15 @@ proc Operations::ArrowDown {} {
 	}
 }
 
-
-
+#---------------------------------------------------------------------------------------------------
+#  Operations::_ArrowDown
+# 
+#  Arguments : node - parent node of node to be highlighted
+#
+#  Results : -
+#
+#  Description : Highlights the node for down arrow key
+#---------------------------------------------------------------------------------------------------
 proc Operations::_ArrowDown {node origNode} {
 	global treePath
 	if { $node == "root" } {
@@ -2905,12 +3036,15 @@ proc Operations::_ArrowDown {node origNode} {
 
 }
 
-################################################################################################
-#proc ArrowLeft
-#Input       : -
-#Output      : -
-#Description : Traversal for tree window
-################################################################################################
+#---------------------------------------------------------------------------------------------------
+#  Operations::ArrowLeft
+# 
+#  Arguments : -
+#
+#  Results : -
+#
+#  Description : Collapse the highlighted node 
+#---------------------------------------------------------------------------------------------------
 proc Operations::ArrowLeft {} {
 	global treePath
 	set node [$treePath selection get]
@@ -2921,12 +3055,15 @@ proc Operations::ArrowLeft {} {
 	}
 }
 
-################################################################################################
-#proc ArrowRight
-#Input       : -
-#Output      : -
-#Description : Traversal for tree window
-################################################################################################
+#---------------------------------------------------------------------------------------------------
+#  Operations::ArrowRight
+# 
+#  Arguments : -
+#
+#  Results : -
+#
+#  Description : Expands the highlighted node 
+#---------------------------------------------------------------------------------------------------
 proc Operations::ArrowRight {} {
 	global treePath
 	set node [$treePath selection get]
@@ -2938,13 +3075,15 @@ proc Operations::ArrowRight {} {
 
 }
 
-################################################################################################
-#proc Operations::AutoGenerateMNOBD
-#Input       : -
-#Output      : -
-#Description : AutoGenerates the MN OBD and populates the tree.
-################################################################################################
-
+#---------------------------------------------------------------------------------------------------
+#  Operations::AutoGenerateMNOBD
+# 
+#  Arguments : -
+#
+#  Results : -
+#
+#  Description : Auto generates object dictionary for MN and populates the tree.
+#---------------------------------------------------------------------------------------------------
 proc Operations::AutoGenerateMNOBD {} {
 	global treePath
 	global nodeIdList
@@ -2957,28 +3096,18 @@ proc Operations::AutoGenerateMNOBD {} {
 	if {[string match "MN*" $node]} {
 		set child [$treePath nodes $node]
 		set tmpNode [string range $node 2 end]
-		# since a MN has only one OBD so -1 is appended
 		set node OBD$tmpNode-1
-
-		# check whether import is first time or not 
-		#so as to add OBD icon in GUI
 		set res [lsearch $child "OBD$tmpNode-1*"]
-
 		set nodeId 240
 		set nodeType 0
-	} else {
 		set result [Operations::GetNodeIdType $node]
 		if {$result != "" } {
 			set nodeId [lindex $result 0]
 			set nodeType [lindex $result 1]
 		} else {
-			#must be some other node this condition should never reach
 			return
 		}
 
-	}	
-	set tmpImpDir .
-	if {$tmpImpDir != ""} {
 		set result [tk_messageBox -message "Do you want to Auto Generate object dictionary for MN ?" -type yesno -icon question -title "Question" -parent .]
    		 switch -- $result {
    		     yes {
@@ -2988,7 +3117,7 @@ proc Operations::AutoGenerateMNOBD {} {
 			   DisplayInfo "Auto Generate is cancelled for MN"
 			   return
 			 }
-   		}
+		 }
 		set catchErrCode [GenerateMNOBD]		
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
 		if { $ErrCode != 0 } {
@@ -3009,13 +3138,15 @@ proc Operations::AutoGenerateMNOBD {} {
 				$treePath insert 0 MN$tmpNode OBD$tmpNode-1 -text "OBD" -open 0 -image [Bitmap::get pdo]
 			}
 		}
-		catch {$treePath delete [$treePath nodes $node]}
+		catch {$treePath delete [$treePath nodes OBD$tmpNode-1]}
 		$treePath itemconfigure $node -open 0
 		
 		thread::send -async [tsv::set application importProgress] "StartProgress"
-		WrapperInteractions::Import $node $nodeType $nodeId
+		set result [WrapperInteractions::Import $node $nodeType $nodeId]
 		thread::send -async [tsv::set application importProgress] "StopProgress"
-		
+		if { $result == "fail" } {
+			return
+		}
 		#to clear the list from child of the node from savedvaluelist and userpreflist
 		Operations::CleanList $node 0
 		Operations::CleanList $node 1
@@ -3023,13 +3154,24 @@ proc Operations::AutoGenerateMNOBD {} {
 	}
 }
 
-proc Operations::GenerateAutoName {Dir Name ext} {
+#---------------------------------------------------------------------------------------------------
+#  Operations::GenerateAutoName
+# 
+#  Arguments : dir  - directory in which name of file is auto generated
+#              name - default file name for which unique file name is generated
+#              ext  - extension of the file
+#
+#  Results : auto generated file name
+#
+#  Description : Generates unique file name in the path
+#---------------------------------------------------------------------------------------------------
+proc Operations::GenerateAutoName {dir name ext} {
 	#should check for extension but should send back unique name without extension
-	for {set inc 1} {1} {incr inc} {
-		set autoName $Name$inc$ext
-		if {![file exists [file join $Dir $autoName]]} {
+	for {set loopCount 1} {1} {incr loopCount} {
+		set autoName $name$loopCount$ext
+		if {![file exists [file join $dir $autoName]]} {
 			break;
 		}
 	}
-	return $Name$inc
+	return $name$loopCount
 }

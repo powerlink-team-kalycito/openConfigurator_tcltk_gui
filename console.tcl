@@ -70,7 +70,7 @@ global errWindow
 #---------------------------------------------------------------------------------------------------
 #  InitInfoWindow
 # 
-#  Arguments : window - path of the window where the text widget is created
+#  Arguments : win - path of the window where the text widget is created
 # 	           width  - width of the text widget
 #              height - height of the text widget
 #
@@ -79,24 +79,24 @@ global errWindow
 #  Description : Creates the Information window and returns the path of the text widget
 #---------------------------------------------------------------------------------------------------
 proc InitInfoWindow {win {width 60} {height 5}} {
-	set windowPath $win
-	set promptChar $
-	
-	if {$windowPath == "."} {
-		set windowPath ""
-	}
-   
-	text $windowPath.t -width $width -height $height -bg white 
-	
-	$windowPath.t tag configure output -foreground blue
-	$windowPath.t tag configure promptChar -foreground grey40
-	$windowPath.t tag configure error -foreground red
-	$windowPath.t insert end "$promptChar " promptChar
-	$windowPath.t mark set promptChar insert
-	$windowPath.t mark gravity promptChar left
-	$windowPath.t configure -state disabled
-	pack $windowPath.t -fill both -expand yes
-	return $windowPath.t
+    set windowPath $win
+    set promptChar $
+
+    if {$windowPath == "."} {
+	    set windowPath ""
+    }
+
+    text $windowPath.t -width $width -height $height -bg white 
+
+    $windowPath.t tag configure output -foreground blue
+    $windowPath.t tag configure promptChar -foreground grey40
+    $windowPath.t tag configure error -foreground red
+    $windowPath.t insert end "$promptChar " promptChar
+    $windowPath.t mark set promptChar insert
+    $windowPath.t mark gravity promptChar left
+    $windowPath.t configure -state disabled
+    pack $windowPath.t -fill both -expand yes
+    return $windowPath.t
 }
 
 #---------------------------------------------------------------------------------------------------
@@ -113,36 +113,33 @@ proc InitInfoWindow {win {width 60} {height 5}} {
 #---------------------------------------------------------------------------------------------------	
 proc DisplayInfo {var {tag output} {win {}} {see 1}} {
 	
-	#-------------------------
-	#	Global variables
-	#-------------------------
-        global infoWindow
+    global infoWindow
         
-	set promptChar $
+    set promptChar $
         
-	if {$win == {}} {
-		set win [lindex $infoWindow 0]
-	}
-	$win configure -state normal
-	$win mark gravity promptChar right
-	$win insert end $var $tag
-	if {[string index $var [expr [string length $var]-1]] != "\n"} {
-		$win insert end "\n"
-	}
-	
-	$win insert end "$promptChar " promptChar
-	$win mark gravity promptChar left
-	if $see {$win see insert}
-	update
-	$win configure -state disabled
-	[lindex $infoWindow 1] raise [lindex $infoWindow 2]
-	return
+    if {$win == {}} {
+	    set win [lindex $infoWindow 0]
+    }
+    $win configure -state normal
+    $win mark gravity promptChar right
+    $win insert end $var $tag
+    if {[string index $var [expr [string length $var]-1]] != "\n"} {
+	    $win insert end "\n"
+    }
+
+    $win insert end "$promptChar " promptChar
+    $win mark gravity promptChar left
+    if $see {$win see insert}
+    update
+    $win configure -state disabled
+    [lindex $infoWindow 1] raise [lindex $infoWindow 2]
+    return
 }
 
 #---------------------------------------------------------------------------------------------------
 #  InitErrorWindow
 # 
-#  Arguments : window - path of the window where the text widget is created
+#  Arguments : win - path of the window where the text widget is created
 # 	       	   width - width of the text widget
 #              height - height of the text widget
 #
@@ -151,25 +148,25 @@ proc DisplayInfo {var {tag output} {win {}} {see 1}} {
 #  Description : Creates the Error window and returns the path of the text widget
 #---------------------------------------------------------------------------------------------------
 proc InitErrorWindow {win {width 60} {height 5}} {
-	set windowPath $win
-	set promptChar $
-	
-	if {$windowPath == "."} {
-		set windowPath ""
-	}
+    set windowPath $win
+    set promptChar $
 
-	text $windowPath.t -width $width -height $height -bg white
-	
-	$windowPath.t tag configure output -foreground blue 
-	$windowPath.t tag configure promptChar -foreground grey40
-	$windowPath.t tag configure error -foreground red
-	$windowPath.t insert end "$promptChar " promptChar
-	$windowPath.t mark set promptChar insert
-	$windowPath.t mark gravity promptChar left
-	$windowPath.t configure -state disabled
-	
-	pack $windowPath.t -fill both -expand yes
-	return $windowPath.t
+    if {$windowPath == "."} {
+	    set windowPath ""
+    }
+
+    text $windowPath.t -width $width -height $height -bg white
+
+    $windowPath.t tag configure output -foreground blue 
+    $windowPath.t tag configure promptChar -foreground grey40
+    $windowPath.t tag configure error -foreground red
+    $windowPath.t insert end "$promptChar " promptChar
+    $windowPath.t mark set promptChar insert
+    $windowPath.t mark gravity promptChar left
+    $windowPath.t configure -state disabled
+
+    pack $windowPath.t -fill both -expand yes
+    return $windowPath.t
 }
 
 #---------------------------------------------------------------------------------------------------
@@ -185,37 +182,33 @@ proc InitErrorWindow {win {width 60} {height 5}} {
 #  Description :  Display the error message
 #---------------------------------------------------------------------------------------------------
 proc DisplayErrMsg {var {tag output} {win {}} {see 1}} {
-	
-	#-------------------------
-	#	Global variables
-	#-------------------------
-	global errWindow
-	
-        set promptChar $
+    global errWindow
+
+    set promptChar $
         
-	if {$win == {}} {
-		set win [lindex $errWindow 0]
-	}
-	$win configure -state normal
-	$win mark gravity promptChar right
-	$win insert end $var $tag
-	if {[string index $var [expr [string length $var]-1]] != "\n"} {
-		$win insert end "\n"
-	}
-	
-	$win insert end "$promptChar " promptChar
-	$win mark gravity promptChar left
-	if $see {$win see insert}
-	update
-	$win configure -state disabled
-	[lindex $errWindow 1] raise [lindex $errWindow 2]
-	return
+    if {$win == {}} {
+	    set win [lindex $errWindow 0]
+    }
+    $win configure -state normal
+    $win mark gravity promptChar right
+    $win insert end $var $tag
+    if {[string index $var [expr [string length $var]-1]] != "\n"} {
+	    $win insert end "\n"
+    }
+
+    $win insert end "$promptChar " promptChar
+    $win mark gravity promptChar left
+    if $see {$win see insert}
+    update
+    $win configure -state disabled
+    [lindex $errWindow 1] raise [lindex $errWindow 2]
+    return
 }
 
 #---------------------------------------------------------------------------------------------------
 #  InitWarnWindow
 # 
-#  Arguments : window - path of the window where the text widget is created
+#  Arguments : win - path of the window where the text widget is created
 # 	       	   width  - width of the text widget
 #              height - height of the text widget
 #
@@ -224,25 +217,25 @@ proc DisplayErrMsg {var {tag output} {win {}} {see 1}} {
 #  Description : Creates the warning window and returns the path of the text widget
 #---------------------------------------------------------------------------------------------------
 proc InitWarnWindow {win {width 60} {height 5}} {
-	set windowPath $win
-	set promptChar $
-	
-	if {$windowPath == "."} {
-		set windowPath ""
-	}
+    set windowPath $win
+    set promptChar $
 
-	text $windowPath.t -width $width -height $height -bg white
-	
-	$windowPath.t tag configure output -foreground blue
-	$windowPath.t tag configure promptChar -foreground grey40
-	$windowPath.t tag configure error -foreground red
-	$windowPath.t insert end "$promptChar " promptChar
-	$windowPath.t mark set promptChar insert
-	$windowPath.t mark gravity promptChar left
-	$windowPath.t configure -state disabled
-	
-	pack $windowPath.t -fill both -expand yes
-	return $windowPath.t
+    if {$windowPath == "."} {
+	    set windowPath ""
+    }
+
+    text $windowPath.t -width $width -height $height -bg white
+
+    $windowPath.t tag configure output -foreground blue
+    $windowPath.t tag configure promptChar -foreground grey40
+    $windowPath.t tag configure error -foreground red
+    $windowPath.t insert end "$promptChar " promptChar
+    $windowPath.t mark set promptChar insert
+    $windowPath.t mark gravity promptChar left
+    $windowPath.t configure -state disabled
+
+    pack $windowPath.t -fill both -expand yes
+    return $windowPath.t
 }
 
 #---------------------------------------------------------------------------------------------------
@@ -259,29 +252,26 @@ proc InitWarnWindow {win {width 60} {height 5}} {
 #---------------------------------------------------------------------------------------------------
 proc DisplayWarning {var {tag output} {win {}} {see 1}} {
 
-	#-------------------------
-	#	Global variables
-	#-------------------------
-	global warWindow
-	
-        set promptChar $
-	if {$win == {}} {
-		set win [lindex $warWindow 0]
-	}
-	$win configure -state normal
-	$win mark gravity promptChar right
-	$win insert end $var $tag
-	if {[string index $var [expr [string length $var]-1]] != "\n"} {
-		$win insert end "\n"
-	}
-	
-	$win insert end "$promptChar " promptChar
-	$win mark gravity promptChar left
-	if $see {$win see insert}
-	update
-	$win configure -state disabled
-	[lindex $warWindow 1] raise [lindex $warWindow 2]
-	return
+    global warWindow
+
+    set promptChar $
+    if {$win == {}} {
+	    set win [lindex $warWindow 0]
+    }
+    $win configure -state normal
+    $win mark gravity promptChar right
+    $win insert end $var $tag
+    if {[string index $var [expr [string length $var]-1]] != "\n"} {
+	    $win insert end "\n"
+    }
+
+    $win insert end "$promptChar " promptChar
+    $win mark gravity promptChar left
+    if $see {$win see insert}
+    update
+    $win configure -state disabled
+    [lindex $warWindow 1] raise [lindex $warWindow 2]
+    return
 }
 
 #---------------------------------------------------------------------------------------------------
@@ -295,19 +285,16 @@ proc DisplayWarning {var {tag output} {win {}} {see 1}} {
 #---------------------------------------------------------------------------------------------------
 proc ClearMsgs {} {
 
-	#-------------------------
-	#	Global variables
-	#-------------------------
-	global infoWindow
-	global warWindow
-	global errWindow
-	
-	set promptChar $
-	foreach windowPath [list [lindex $infoWindow 0] [lindex $warWindow 0]  [lindex $errWindow 0] ] {
-		$windowPath configure -state normal
-		$windowPath delete 1.0 end
-		$windowPath insert end "$promptChar " promptChar
-		$windowPath configure -state disabled
-	}
+    global infoWindow
+    global warWindow
+    global errWindow
+
+    set promptChar $
+    foreach windowPath [list [lindex $infoWindow 0] [lindex $warWindow 0]  [lindex $errWindow 0] ] {
+	    $windowPath configure -state normal
+	    $windowPath delete 1.0 end
+	    $windowPath insert end "$promptChar " promptChar
+	    $windowPath configure -state disabled
+    }
 	
 }

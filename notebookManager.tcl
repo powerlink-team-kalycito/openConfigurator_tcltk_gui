@@ -714,7 +714,7 @@ proc NoteBookManager::SaveValue {frame0 frame1} {
             if { [string match -nocase "18??" $indexId] || [string match "14??" $indexId]} {
                 if { [string match "01" $subIndexId] } {
                     if { $value == "" || [expr $value > 0xef] || [expr $value < 0x1] } {
-                        tk_messageBox -message "Value is range 0x1 to 0xEF\nFor subindex 01 in index $indexId" -title Warning -icon warning -parent .
+                        tk_messageBox -message "Value should be between 0x1 to 0xEF\nFor subindex 01 in index $indexId\nEdited values not saved" -title Warning -icon warning -parent .
 			return
                     }
                 }
@@ -723,7 +723,7 @@ proc NoteBookManager::SaveValue {frame0 frame1} {
             if { [string match -nocase "1A??" $indexId] || [string match "16??" $indexId]} {
                 if { ![string match "00" $subIndexId] } {
                     if { $value == "" || [string length $value] != 18 } {
-                        tk_messageBox -message "Value should be 16 digit hexadecimal\nFor subindex $subIndexId in index $indexId" -title Warning -icon warning -parent .
+                        tk_messageBox -message "Value should be a 16 digit hexadecimal\nFor subindex $subIndexId in index $indexId\nEdited values not saved" -title Warning -icon warning -parent .
 			return
                     }
                 }
@@ -1067,7 +1067,7 @@ proc NoteBookManager::SaveTable {tableWid} {
     }
 
     if { $flag == 1} {
-        DisplayInfo "\nValues which are not completely filled are not saved\n "
+        DisplayInfo "Values which completely filled are (Offset, Length, Index and Sub Index) only saved"
     }
 
     #PDO entries value is changed need to save 

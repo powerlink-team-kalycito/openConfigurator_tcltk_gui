@@ -177,11 +177,7 @@ proc InitOpenConfigurator {argc argv} {
     # Draw the Main window
     wm withdraw .
     wm title . "openCONFIGURATOR"
-    if { "$tcl_platform(platform)" == "unix"} {
-	    wm attributes . -zoomed 1
-    } else {
-	    wm state . zoomed
-    }
+
     Operations::BasicFrames
     BWidget::place . 0 0 center
     update idletasks

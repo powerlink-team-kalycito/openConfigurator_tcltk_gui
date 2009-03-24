@@ -152,9 +152,10 @@ Validation::ResetPromptFlag
 #
 #  Results : -
 #
-#  Description : Information about the tool
+#  Description : Information about tool developer
 #---------------------------------------------------------------------------------------------------
 proc Operations::about {} {\
+	
     set aboutWindow .about
     catch "destroy $aboutWindow"
     toplevel $aboutWindow
@@ -164,13 +165,48 @@ proc Operations::about {} {\
     grab $aboutWindow
     wm title	 $aboutWindow	"About"
     wm protocol $aboutWindow WM_DELETE_WINDOW "destroy $aboutWindow"
-    label $aboutWindow.l_msg -image [Bitmap::get info] -compound left -text "\n          openCONFIGURATOR Tool\n                    Designed by\n                        Kalycito\nwww.kalycito.com\n"
-    button $aboutWindow.bt_ok -text Ok -width 8 -command "destroy $aboutWindow"
-    grid config $aboutWindow.l_msg -row 0 -column 0 
-    grid config $aboutWindow.bt_ok -row 1 -column 0
+    label $aboutWindow.l_msg -compound left -text "\nopenCONFIGURATOR Tool\nDesigned by\nKalycito\n"
+    label $aboutWindow.l_msg1 -text "www.kalycito.com   \n" -foreground blue -activeforeground blue
+    button $aboutWindow.bt_ok -text Ok -command "destroy $aboutWindow" -width 8
+    grid config $aboutWindow.l_msg -row 0 -column 0
+    grid config $aboutWindow.l_msg1 -row 1 -column 0  
+    grid config $aboutWindow.bt_ok -row 2 -column 0
+    bind $aboutWindow.l_msg1 <Enter> "$aboutWindow.l_msg1 config -cursor hand2"
+    bind $aboutWindow.l_msg1 <1> Operations::LocateUrl
     bind $aboutWindow <KeyPress-Return> "destroy $aboutWindow"
+    bind $aboutWindow <KeyPress-Escape> "destroy $aboutWindow"
+    wm protocol $aboutWindow WM_DELETE_WINDOW "destroy $aboutWindow"
     focus $aboutWindow.bt_ok
-    Operations::centerW .about
+        Operations::centerW .about
+	
+}
+
+#---------------------------------------------------------------------------------------------------
+#  Operations::LocateUrl
+# 
+#  Arguments : -
+#
+#  Results : -
+#
+#  Description : opens the web browser
+#---------------------------------------------------------------------------------------------------
+proc Operations::LocateUrl {} {
+	global tcl_platform
+	set browser ""
+	if {$tcl_platform(platform)=="unix"} {
+		set browser ""
+		if { [file exists /usr/bin/firefox] } {
+			set browser "firefox"
+		}
+		if {$browser==""} {
+			tk_messageBox -message "Please visit the site www.kalycito.com for more information." -title Info -icon info
+		} else {
+			exec $browser "www.kalycito.com"
+		}
+		
+	} elseif {$tcl_platform(platform)=="windows"} {
+		eval exec [auto_execok start] "www.kalycito.com"
+	}
 }
 
 #---------------------------------------------------------------------------------------------------
@@ -524,11 +560,11 @@ proc Operations::RePopulate { projectDir projectName } {
 		    }
 	    }
 
-	    if { [$Operations::projMenu index 3] != "3" } {
-		    $Operations::projMenu insert 3 command -label "Close Project" -command "Operations::InitiateCloseProject"
+	    if { [$Operations::projMenu index 2] != "2" } {
+		    $Operations::projMenu insert 2 command -label "Close Project" -command "Operations::InitiateCloseProject"
 	    }
-	    if { [$Operations::projMenu index 4] != "4" } {
-		    $Operations::projMenu insert 4 command -label "Properties" -command "ChildWindows::PropertiesWindow"
+	    if { [$Operations::projMenu index 3] != "3" } {
+		    $Operations::projMenu insert 3 command -label "Properties" -command "ChildWindows::PropertiesWindow"
 	    }
 	    #puts nodeIdList->$nodeIdList
 
@@ -599,12 +635,6 @@ proc Operations::BasicFrames { } {
         		{separator}
         		{command "Project Settings" {}  "Project Settings" {} -command ChildWindows::ProjectSettingWindow }
         	}
-        	"&Actions" all options 0 {
-                {command "Transfer CDC and XAP  Ctrl+F5" {noFile} "Transfer CDC and XAP" {} -command "Operations::TransferCDCXAP 1" }
-                {separator}
-                {command "Start MN" {noFile} "Start the Managing Node" {} -command Operations::StartStack }
-                {command "Stop MN" {noFile} "Stop the Managing Node" {} -command Operations::StopStack }
-        	}
         	"&View" all options 0 {
                 {checkbutton "Show Output Console" {all option} "Show Console Window" {}
                     -variable Operations::options(DisplayConsole)
@@ -635,7 +665,6 @@ proc Operations::BasicFrames { } {
     bind . <Key-F7> "Operations::BuildProject"
      #to prevent BuildProject called
     bind . <Control-Key-F7> "" 
-    bind . <Control-Key-F5> "Operations::TransferCDCXAP 1"
     bind . <Control-Key-f> { FindSpace::FindDynWindow }
     bind . <Control-Key-F> { FindSpace::FindDynWindow }
     bind . <KeyPress-Escape> { FindSpace::EscapeTree }
@@ -661,17 +690,8 @@ proc Operations::BasicFrames { } {
 
     # Menu for the Project
     set Operations::projMenu [menu  .projMenu -tearoff 0]
-    $Operations::projMenu insert 0 command -label "Sample Project" -command {
-	    global rootDir
-	    set samplePjt [file join $rootDir Sample Sample.oct]
-	    if {[file exists $samplePjt]} {
-		    Operations::openProject $samplePjt
-	    } else {
-		    DisplayErrMsg "Sample project not present" error	
-	    }
-    } 
-    $Operations::projMenu insert 1 command -label "New Project" -command { Operations::InitiateNewProject}
-    $Operations::projMenu insert 2 command -label "Open Project" -command {Operations::OpenProjectWindow} 
+    $Operations::projMenu insert 0 command -label "New Project" -command { Operations::InitiateNewProject}
+    $Operations::projMenu insert 1 command -label "Open Project" -command {Operations::OpenProjectWindow} 
 
     # Menu for the object dictionary
     set Operations::obdMenu [menu .obdMenu -tearoff 0]
@@ -747,40 +767,6 @@ proc Operations::BasicFrames { } {
 
     set bbox [ButtonBox::create $toolbar.bbox4 -spacing 1 -padx 1 -pady 1]
     pack $bbox -side left -anchor w
-    set bb_cdc [ButtonBox::add $bbox -image [Bitmap::get transfercdc]\
-            	-height 21\
-            	-width 21\
-            	-helptype balloon\
-            	-highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
-            	-helptext "Transfer CDC and XAP"\
-	        	-command "Operations::TransferCDCXAP 1"]
-    pack $bb_cdc -side left -padx 4
-
-    set sep4 [Separator::create $toolbar.sep4 -orient vertical]
-    pack $sep4 -side left -fill y -padx 4 -anchor w 
-
-    set bbox [ButtonBox::create $toolbar.bbox2 -spacing 0 -padx 4 -pady 1]
-    set bb_start [ButtonBox::add $bbox -image [Bitmap::get start] \
-            	-height 21\
-            	-width 21\
-            	-highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
-            	-helptext "Start stack" -command Operations::StartStack]
-    pack $bb_start -side left -padx 4
-    pack $bbox -side left -anchor w -padx 2
-
-    set bbox [ButtonBox::create $toolbar.bbox3 -spacing 1 -padx 1 -pady 1]
-    set bb_stop [ButtonBox::add $bbox -image [Bitmap::get stop]\
-            	-height 21\
-            	-width 21\
-            	-helptype balloon\
-            	-highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
-            	-helptext "Stop stack"\
-       	-command Operations::StopStack]
-    pack $bb_stop -side left -padx 4
-    pack $bbox -side left -anchor w
-
-    set sep1 [Separator::create $toolbar.sep1 -orient vertical]
-    pack $sep1 -side left -fill y -padx 4 -anchor w
 
     set bbox [ButtonBox::create $toolbar.bbox7 -spacing 1 -padx 1 -pady 1]
     pack $bbox -side right
@@ -834,12 +820,13 @@ proc Operations::BasicFrames { } {
     set cf2 [NoteBookManager::create_infoWindow $infotabs_notebook "Warning" 3]
 
     NoteBook::compute_size $infotabs_notebook
-    $infotabs_notebook configure -height 1
+    $infotabs_notebook configure -height 80
     pack $infotabs_notebook -side bottom -fill both -expand yes -padx 4 -pady 4
 
     pack $pannedwindow1 -fill both -expand yes
     NoteBook::compute_size $tree_notebook
-    $tree_notebook configure -width 250
+    $tree_notebook configure -width 350
+    $tree_notebook configure -height 390
     pack $tree_notebook -side left -fill both -expand yes -padx 2 -pady 4
     catch {font create TkFixedFont -family Courier -size -12 -weight bold}
 
@@ -930,6 +917,9 @@ proc Operations::_tool_intro { } {
     pack $splashscreen
     BWidget::place $top 0 0 center
     wm deiconify $top
+    update
+    update idletasks
+    after 1000
 }
 
 #---------------------------------------------------------------------------------------------------
@@ -1695,11 +1685,11 @@ proc Operations::CloseProject {} {
 
     catch {$treePath delete ProjectNode}
 
-    if { [$Operations::projMenu index 4] == "4" } {
-	    catch {$Operations::projMenu delete 4}
-    }
     if { [$Operations::projMenu index 3] == "3" } {
 	    catch {$Operations::projMenu delete 3}
+    }
+    if { [$Operations::projMenu index 2] == "2" } {
+	    catch {$Operations::projMenu delete 2}
     }
 
     Operations::InsertTree
@@ -2192,77 +2182,6 @@ proc FindSpace::Next {} {
         }
         return
     }
-}
-
-#---------------------------------------------------------------------------------------------------
-#  Operations::StartStack
-# 
-#  Arguments : -
-#
-#  Results : -
-#
-#  Description : 
-#---------------------------------------------------------------------------------------------------
-proc Operations::StartStack {} {
-	global projectDir
-	global tcl_platform
-	
-	if { "$tcl_platform(platform)" == "unix" } {
-		
-		set startFile [file join $projectDir scripts start.sh]
-	} elseif { "$tcl_platform(platform)" == "windows" } {
-		set startFile [file join $projectDir scripts start.bat]
-	}
-	if { [file exists $startFile] } {
-		catch { exec $startFile }
-	}
-}
-
-#---------------------------------------------------------------------------------------------------
-#  Operations::StopStack
-# 
-#  Arguments : -
-#
-#  Results : -
-#
-#  Description : 
-#---------------------------------------------------------------------------------------------------
-proc Operations::StopStack {} {
-	global projectDir
-	global tcl_platform
-	
-	if { "$tcl_platform(platform)" == "unix" } {
-		set stopFile [file join $projectDir scripts stop.sh]
-	} elseif { "$tcl_platform(platform)" == "windows" } {
-		set stopFile [file join $projectDir scripts stop.bat]
-	}
-	if { [file exists $stopFile] } {
-		catch { exec $stopFile }
-	}
-}
-
-#---------------------------------------------------------------------------------------------------
-#  Operations::TransferCDCXAP
-# 
-#  Arguments : -
-#
-#  Results : -
-#
-#  Description : 
-#---------------------------------------------------------------------------------------------------
-proc Operations::TransferCDCXAP {choice} {
-	global projectDir
-	global tcl_platform
-	
-	if { "$tcl_platform(platform)" == "unix" } {
-		set transferFile [file join $projectDir scripts transfer.sh]
-	} elseif { "$tcl_platform(platform)" == "windows" } {
-		set transferFile [file join $projectDir scripts transfer.bat]
-	}
-	
-	if { [file exists $transferFile] } {
-		catch { exec $transferFile }
-	}
 }
 
 #---------------------------------------------------------------------------------------------------

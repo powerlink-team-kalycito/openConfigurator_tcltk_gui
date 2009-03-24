@@ -102,28 +102,16 @@ proc ChildWindows::StartUp {} {
 
     text $frame1.t_desc -height 5 -width 40 -state disabled -background white
 
-    radiobutton $frame1.ra_default  -text "Open Sample Project"   -variable startVar -value 1 -font custom2 -command "ChildWindows::StartUpText $frame1.t_desc 1" 
-    radiobutton $frame1.ra_newProj  -text "Create New Project"    -variable startVar -value 2 -font custom2 -command "ChildWindows::StartUpText $frame1.t_desc 2" 
-    radiobutton $frame1.ra_openProj -text "Open Existing Project" -variable startVar -value 3 -font custom2 -command "ChildWindows::StartUpText $frame1.t_desc 3" 
-    $frame1.ra_default select
+    radiobutton $frame1.ra_newProj  -text "Create New Project"    -variable startVar -value 1 -font custom2 -command "ChildWindows::StartUpText $frame1.t_desc 1" 
+    radiobutton $frame1.ra_openProj -text "Open Existing Project" -variable startVar -value 2 -font custom2 -command "ChildWindows::StartUpText $frame1.t_desc 2" 
+    $frame1.ra_newProj select
     ChildWindows::StartUpText $frame1.t_desc 1
 	 
     button $frame2.bt_ok -width 8 -text "  Ok  " -command { 
         if {$startVar == 1} {
-            global rootDir
-            set samplePjt [file join $rootDir Sample Sample.oct]
-            if {[file exists $samplePjt]} {
-                destroy .startUp
-                Operations::openProject $samplePjt
-            } else {
-                DisplayErrMsg "Sample project not present" error	
-                focus .startUp
-                return
-            }
-        } elseif {$startVar == 2} {
             destroy .startUp
             ChildWindows::NewProjectWindow
-        } elseif {$startVar == 3} {
+        } elseif {$startVar == 2} {
             destroy .startUp
             Operations::OpenProjectWindow
         }
@@ -142,7 +130,6 @@ proc ChildWindows::StartUp {} {
 
     grid config $frame1 -row 0 -column 0 -padx 35 -pady 10
 
-    grid config $frame1.ra_default -row 0 -column 0 -sticky w -padx 5 -pady 5
     grid config $frame1.ra_newProj -row 1 -column 0 -sticky w  -padx 5 -pady 5
     grid config $frame1.ra_openProj -row 2 -column 0 -sticky w -padx 5 -pady 5
     grid config $frame1.la_desc -row 3 -column 0 -sticky w -padx 5 -pady 5
@@ -174,8 +161,6 @@ proc ChildWindows::StartUpText {t_desc choice} {
     $t_desc configure -state normal
     $t_desc delete 1.0 end
     if { $choice == 1 } {
-        $t_desc insert end "Open the sample Project"
-    } elseif { $choice == 2 } {
         $t_desc insert end "Create a new Project"
     } else {
         $t_desc insert end "Open Existing Project"
@@ -370,17 +355,17 @@ proc ChildWindows::AddCNWindow {} {
 	button $frame3.bt_ok -width 8 -text "  Ok  " -command {
 		set cnName [string trim $cnName]
 		if {$cnName == "" } {
-			tk_messageBox -message "Enter CN name" -parent .addCN -icon error
+			tk_messageBox -message "Enter CN name (free form text without space)" -parent .addCN -icon error
 			focus .addCN
 			return
 		}
 		if {$nodeId == "" } {
-			tk_messageBox -message "Enter Node id" -parent .addCN -icon error
+			tk_messageBox -message "Enter Node id (1 to 239)" -parent .addCN -icon error
 			focus .addCN
 			return
 		}
 		if {$nodeId < 1 || $nodeId > 239 } {
-			tk_messageBox -message "Node id value range is 1 to 239" -parent .addCN -icon error
+			tk_messageBox -message "Node id should be between 1 to 239" -parent .addCN -icon error
 			focus .addCN
 			return
 		}
@@ -499,7 +484,7 @@ proc ChildWindows::SaveProjectWindow {} {
     global status_save	
 
     if {$projectDir == "" || $projectName == "" } {
-	    DisplayInfo "No project is present" info
+	    DisplayInfo "No project present to save" info
 	    return
     } else {	
 	    #check whether project has changed from last saved
@@ -508,7 +493,7 @@ proc ChildWindows::SaveProjectWindow {} {
 		    switch -- $result {
 			    yes {			 
 				    Operations::Saveproject
-				    DisplayInfo "Project $projectName is saved" info
+				    DisplayInfo "Project $projectName at location $projectDir is saved" info
 				    return yes
 			    }
 			    no {
@@ -537,7 +522,7 @@ proc ChildWindows::SaveProjectAsWindow {} {
     global projectDir
 
     if {$projectDir == "" || $projectName == "" } {
-	    DisplayInfo "No Project Selected" info
+	    DisplayInfo "No Project present to save" info
 	    return
     } else {
 	    set saveProjectAs [tk_getSaveFile -parent . -title "Save Project As" -initialdir $projectDir -initialfile $projectName] 
@@ -1003,11 +988,11 @@ proc ChildWindows::NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf tempRa_
 	    file mkdir [file join $projectDir octx]
 	    file mkdir [file join $projectDir scripts]
 	
-	    if { [$Operations::projMenu index 3] != "3" } {
-		    $Operations::projMenu insert 3 command -label "Close Project" -command "Operations::InitiateCloseProject"
+	    if { [$Operations::projMenu index 2] != "2" } {
+		    $Operations::projMenu insert 2 command -label "Close Project" -command "Operations::InitiateCloseProject"
 	    }
-	    if { [$Operations::projMenu index 4] != "4" } {
-		    $Operations::projMenu insert 4 command -label "Properties" -command "ChildWindows::PropertiesWindow"
+	    if { [$Operations::projMenu index 3] != "3" } {
+		    $Operations::projMenu insert 3 command -label "Properties" -command "ChildWindows::PropertiesWindow"
 	    }
     }
 
@@ -1041,7 +1026,7 @@ proc ChildWindows::CloseProjectWindow {} {
     global status_save	
 
     if {$projectDir == "" || $projectName == "" } {
-	    DisplayInfo "No Project Selected" info
+	    DisplayInfo "No Project present to close" info
 	    Operations::CloseProject
 	    return
     } else {	
@@ -1135,7 +1120,7 @@ proc ChildWindows::AddIndexWindow {} {
 
     button $frame2.bt_ok -width 8 -text "  Ok  " -command {
 	    if {[string length $indexVar] != 4} {
-		    set res [tk_messageBox -message "Invalid Index" -type ok -parent .addIdx]
+		    set res [tk_messageBox -message "Invalid Index should be 4 characters long" -type ok -parent .addIdx]
 		    focus .addIdx
 		    return
 	    }
@@ -1326,7 +1311,7 @@ proc ChildWindows::AddSubIndexWindow {} {
 	    if {[string length $subIndexVar] == 1} {
 		    set subIndexVar 0$subIndexVar
 	    } elseif { [string length $subIndexVar] != 2 } {
-		    set res [tk_messageBox -message "Invalid SubIndex" -type ok -parent .addSidx]
+		    set res [tk_messageBox -message "Invalid SubIndex should be 2 characters long" -type ok -parent .addSidx]
 		    focus .addSidx
 		    return
 	    }		
@@ -1465,7 +1450,7 @@ proc ChildWindows::AddPDOWindow {} {
 
     button $frame2.bt_ok -width 8 -text "  Ok  " -command {
 	    if {[string length $pdoVar] != 4} {
-		    set res [tk_messageBox -message "Invalid PDO Index" -type ok -parent .addPdo]
+		    set res [tk_messageBox -message "Invalid PDO Index should be 4 characters long" -type ok -parent .addPdo]
 		    focus .addPdo
 		    return
 	    }
@@ -1483,7 +1468,7 @@ proc ChildWindows::AddPDOWindow {} {
 	    }
 	    if {$flag == 1} {
 		    #it did not match any thing
-		    set res [tk_messageBox -message "Invalid PDO Index" -type ok -parent .addPdo]
+		    set res [tk_messageBox -message "Invalid PDO Index \nfirst two characters should be 14, 16, 18 or 1A" -type ok -parent .addPdo]
 		    focus .addPdo
 		    return
 	    }

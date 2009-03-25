@@ -147,7 +147,6 @@ proc Validation::IsMAC {str type} {
 				    set valExp $valExp\:
 				    set flag 1
 			    } else {
-				    #puts "\nThis condition never reach in IsMAC flag->$flag\n"
 			    }
 		    }
 		    set valExp [subst -nocommands -nobackslashes $valExp]

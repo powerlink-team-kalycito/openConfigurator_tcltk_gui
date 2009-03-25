@@ -621,10 +621,12 @@ proc NoteBookManager::SaveValue {frame0 frame1} {
         set indexId [string range [$treePath itemcget $parent -text ] end-4 end-1]
         set indexId [string toupper $indexId]
         set oldName [string range $oldName end-5 end ]
-    } else {
+    } elseif {[string match "*IndexValue*" $nodeSelect]} {
         set indexId [string range $oldName end-4 end-1 ]
         set indexId [string toupper $indexId]
         set oldName [string range $oldName end-7 end ]
+    } else {
+        return
     }
 
     #gets the nodeId and Type of selected node
@@ -632,9 +634,9 @@ proc NoteBookManager::SaveValue {frame0 frame1} {
     if {$result != "" } {
 	    set nodeId [lindex $result 0]
         set nodeType [lindex $result 1]
-	} else {
-        #must be some other node this condition should never reach
-        return
+    } else {
+            #must be some other node this condition should never reach
+            return
     }
 	
     set tmpVar0 [$frame0.en_nam1 cget -textvariable]
@@ -715,7 +717,8 @@ proc NoteBookManager::SaveValue {frame0 frame1} {
                 if { [string match "01" $subIndexId] } {
                     if { $value == "" || [expr $value > 0xef] || [expr $value < 0x1] } {
                         tk_messageBox -message "Value should be between 0x1 to 0xEF\nFor subindex 01 in index $indexId\nEdited values not saved" -title Warning -icon warning -parent .
-			return
+                        Validation::ResetPromptFlag
+	             		return
                     }
                 }
             }
@@ -724,7 +727,8 @@ proc NoteBookManager::SaveValue {frame0 frame1} {
                 if { ![string match "00" $subIndexId] } {
                     if { $value == "" || [string length $value] != 18 } {
                         tk_messageBox -message "Value should be a 16 digit hexadecimal\nFor subindex $subIndexId in index $indexId\nEdited values not saved" -title Warning -icon warning -parent .
-			return
+                        Validation::ResetPromptFlag
+		             	return
                     }
                 }
             }
@@ -749,6 +753,7 @@ proc NoteBookManager::SaveValue {frame0 frame1} {
         } else {
             tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
         }
+        Validation::ResetPromptFlag
         return
     }
 

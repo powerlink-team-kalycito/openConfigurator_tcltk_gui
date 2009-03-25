@@ -88,24 +88,18 @@ proc WrapperInteractions::SortNode {nodeType nodeID nodePos choice {indexPos ""}
     set errorString []
     if { $choice == "ind" } {
 	    set count [new_intp]
-	    #DllExport ocfmRetCode GetIndexCount(int NodeID, ENodeType NodeType, int* Out_IndexCount);
 	    set catchErrCode [GetIndexCount $nodeID $nodeType $count]
 	    set count [intp_value $count]
 	    set sortRange 4
     } elseif { $choice == "sub" } {
 	    set count [new_intp]
-	    #DllExport ocfmRetCode GetSubIndexCount(int NodeID, ENodeType NodeType, char* IndexID, int* Out_SubIndexCount);
-	    #puts "GetSubIndexCount nodeID->$nodeID nodeType->$nodeType indexId->$indexId count->$count"
 	    set catchErrCode [GetSubIndexCount $nodeID $nodeType $indexId $count]
 	    set count [intp_value $count]
-	    #puts "\nSortNode:subindex count ->$count"
 	    set sortRange 2
     } else {
-	    #puts "Invalid choice for SortNode"
 	    return
     }
 
-    #puts COUNT$count
     #if count is zero no need to proceed		
     set cntLen [string length $count]
     if {$count == 0} {
@@ -131,7 +125,6 @@ proc WrapperInteractions::SortNode {nodeType nodeID nodePos choice {indexPos ""}
 		    set indexId [lindex $catchErrCode 1]
 		    lappend sortList $indexId$tmpInc
 	    } elseif { $choice == "sub" } {
-		    #puts "GetSubIndexIDbyPositions nodePos->$nodePos indexPos->$indexPos inc->$inc"
 		    set catchErrCode [GetSubIndexIDbyPositions $nodePos $indexPos $inc]
 		    set subIndexId [lindex $catchErrCode 1]
 		    lappend sortList $subIndexId$tmpInc
@@ -140,10 +133,7 @@ proc WrapperInteractions::SortNode {nodeType nodeID nodePos choice {indexPos ""}
 	    }
 
     }
-    #puts "b4sortList->$sortList"
-    #lsort -increasing $sortList
     set sortList [lsort -ascii $sortList]
-    #also chk out dictionary option
 
     if { $choice == "ind"} {
 	    set sortListIdx ""
@@ -228,23 +218,28 @@ proc WrapperInteractions::Import {parentNode nodeType nodeID } {
 	        tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error
         } else {
 	        tk_messageBox -message "Unknown Error" -title Error -icon error
-            #puts "Unknown Error in Import ->[ocfmRetCode_errorString_get $catchErrCode]\n"
         }
         Operations::CloseProject
         return fail
     }
+    
+    set parentId [split $parentNode -]
+    set parentId [lrange $parentId 1 end]
+    set parentId [join $parentId -]
+    
+    $treePath insert end $parentNode PDO-$parentId -text "PDO" -open 0 -image [Bitmap::get pdo]
+    $treePath insert end PDO-$parentId TPDO-$parentId -text "TPDO" -open 0 -image [Bitmap::get pdo]
+    $treePath insert end PDO-$parentId RPDO-$parentId -text "RPDO" -open 0 -image [Bitmap::get pdo]
 
     #ocfmRetCode GetIndexCount(int NodeID, ENodeType NodeType, int* Out_IndexCount);
     set count [new_intp]
     set catchErrCode [GetIndexCount $nodeID $nodeType $count]
     set count [intp_value $count]
     if {$count == 0} {
-      		return fail
+      		return 
     }
 
-    set parentId [split $parentNode -]
-    set parentId [lrange $parentId 1 end]
-    set parentId [join $parentId -]
+
     set returnList [WrapperInteractions::SortNode $nodeType $nodeID $nodePos ind]
     set corrList [lindex $returnList 0]
     set count [llength $corrList]
@@ -310,8 +305,7 @@ proc WrapperInteractions::Import {parentNode nodeType nodeID } {
     #for TPDO
     set corrList [lindex $returnList 1]
     set count [llength $corrList]
-    $treePath insert end $parentNode PDO-$parentId -text "PDO" -open 0 -image [Bitmap::get pdo]
-    $treePath insert end PDO-$parentId TPDO-$parentId -text "TPDO" -open 0 -image [Bitmap::get pdo]
+
     for { set inc 0 } { $inc < $count } { incr inc } {
         set sortedIndexPos [lindex $corrList $inc]
         set IndexValue [GetIndexIDbyPositions $nodePos $sortedIndexPos]
@@ -372,7 +366,7 @@ proc WrapperInteractions::Import {parentNode nodeType nodeID } {
     #for RPDO
     set corrList [lindex $returnList 2]
     set count [llength $corrList]
-    $treePath insert end PDO-$parentId RPDO-$parentId -text "RPDO" -open 0 -image [Bitmap::get pdo]
+    
     for { set inc 0 } { $inc < $count } { incr inc } {
         set sortedIndexPos [lindex $corrList $inc]
         set IndexValue [GetIndexIDbyPositions $nodePos $sortedIndexPos]

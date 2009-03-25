@@ -1756,4 +1756,5 @@ proc ChildWindows::PropertiesWindow {} {
     bind $winProp <KeyPress-Return> "$winProp.bt_ok invoke"
     bind $winProp <KeyPress-Escape> "$winProp.bt_ok invoke"
     Operations::centerW $winProp
+    focus $winProp
 }

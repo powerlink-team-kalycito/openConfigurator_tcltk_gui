@@ -256,7 +256,7 @@ proc NoteBookManager::create_tab { nbpath choice } {
     grid config $fram.bt_dis -row 1 -column 2 -sticky s
     pack $fram -side bottom
 
-    return [list $outerFrame $tabInnerf0 $tabInnerf1 ]
+    return [list $outerFrame $tabInnerf0 $tabInnerf1 $sf]
 }
 
 #---------------------------------------------------------------------------------------------------
@@ -708,6 +708,111 @@ proc NoteBookManager::SaveValue {frame0 frame1} {
             #no value has been inputed by user
             set value []
         }
+    }
+    if { $value == "" || $dataType == ""  } {
+        #no need to check
+    } else {
+        foreach stdDataType [list Integer8 Unsigned8 Integer16 Unsigned16 Integer32 Unsigned32 Integer24 Unsigned24 Integer40 Unsigned40 \
+                             Integer48 Unsigned48 Integer56 Unsigned56 Integer64 Unsigned64 ] {
+            puts "string match -nocase $stdDataType $dataType ->[string match -nocase $stdDataType $dataType]"
+            if { [string match -nocase $stdDataType $dataType] } {
+                #matched to a datatype in list and value is non empty
+                switch -- $stdDataType {
+                    Integer8 {
+                        set decLimit 127
+                        set hexLimit 0x7F
+                    }
+                    Unsigned8 {
+                        set decLimit 255
+                        set hexLimit 0xFF
+                        
+                    }
+                    Integer16 {
+                        set decLimit 32767
+                        set hexLimit 0x7FFF
+                    }
+                    Unsigned16 {
+                        set decLimit 65535
+                        set hexLimit 0xFFFF
+                    }
+                    Integer32 {
+                        set decLimit 2147483647
+                        set hexLimit 0x7FFFFFFF
+                    }
+                    Unsigned32 {
+                        set decLimit 4294967295
+                        set hexLimit 0xFFFFFFFF
+                    }
+                    Integer24 {
+                        set decLimit 8388607
+                        set hexLimit 0x7FFFFF
+                    }
+                    Unsigned24 {
+                        set decLimit 16777215
+                        set hexLimit 0xFFFFFF
+                    }
+                    Integer40 {
+                        set decLimit 549755813887
+                        set hexLimit 0x7FFFFFFFFF
+                    }
+                    Unsigned40 {
+                        set decLimit 1099511627775
+                        set hexLimit 0xFFFFFFFFFF
+                    }
+                    Integer48 {
+                        set decLimit 140737488355327
+                        set hexLimit 0x7FFFFFFFFFFF
+                    }
+                    Unsigned48 {
+                        set decLimit 281474976710655
+                        set hexLimit 0xFFFFFFFFFFFF
+                    }
+                    Integer56 {
+                        set decLimit 36028797018963967
+                        set hexLimit 0x7FFFFFFFFFFFFF
+                    }
+                    Unsigned56 {
+                        set decLimit 72057594037927935
+                        set hexLimit 0xFFFFFFFFFFFFFF
+                    }
+                    Integer64 {
+                        set decLimit 9223372036854775807
+                        set hexLimit 0x7FFFFFFFFFFFFFFF
+                    }
+                    Unsigned64 {
+                        set decLimit 18446744073709551615
+                        set hexLimit 0xFFFFFFFFFFFFFFFF
+                    }
+                }
+                
+                if { [string match -nocase "0x*" $value] } {
+                    set checkno [ Validation::CheckHexaNumber [string range $value 2 end] ]
+                    set msg "Not a valid Hexadecimal number"
+                    set maxlimit $hexLimit
+                    set minlimit 0x0
+                } else {
+                    set checkno [ Validation::CheckDecimalNumber $value ]
+                    set msg "Not a valid Decimal number"
+                    set maxlimit $decLimit
+                     set minlimit 0
+                }
+                if { $checkno == 0 } {
+                    tk_messageBox -message $msg -parent .
+                    Validation::ResetPromptFlag
+                    return
+                }
+                if { [expr $value > $maxlimit] || [expr $value < $minlimit] } {
+                    #out of range
+                    tk_messageBox -message "value out of range for $dataType\n Should be in range $minlimit to $maxlimit" -parent .
+                    Validation::ResetPromptFlag
+                    return
+                }
+                break
+            } else {
+                #continue to check till end of value
+            }
+        }
+        
     }
     if {[string match "*SubIndexValue*" $nodeSelect]} {
         if { [expr 0x$indexId > 0x1fff] } {

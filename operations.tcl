@@ -838,7 +838,61 @@ proc Operations::BasicFrames { } {
     pack $alignFrame -expand yes -fill both
 
     set f0 [NoteBookManager::create_tab $alignFrame index ]
+    bind [lindex $f0 0] <Enter> {
+        bind . <KeyPress-Return> {
+            global indexSaveBtn
+            $indexSaveBtn invoke
+        }
+    }
+    bind [lindex $f0 0] <Leave> {
+        bind . <KeyPress-Return> ""
+    }
+    bind [lindex $f0 3] <Enter> {
+	global f0
+        if {"$tcl_platform(platform)" == "unix"} {
+	    bind . <Button-4> "[lindex $f0 3] yview scroll -5 units"
+            bind . <Button-5> "[lindex $f0 3] yview scroll 5 units"
+        } elseif {"$tcl_platform(platform)" == "windows"} {
+            #bind . <MouseWheel> "[lindex $f0 3] yview scroll [expr -%D/24] units"
+        }
+    }
+    bind [lindex $f0 3] <Leave> {
+        if {"$tcl_platform(platform)" == "unix"} {
+	    bind . <Button-4> ""
+            bind . <Button-5> ""
+        } elseif {"$tcl_platform(platform)" == "windows"} {
+            bind . <MouseWheel> ""
+        }
+    }
+
     set f1 [NoteBookManager::create_tab $alignFrame subindex ]
+    bind [lindex $f1 0] <Enter> {
+        bind . <KeyPress-Return> {
+            global subindexSaveBtn
+	    $subindexSaveBtn invoke
+        }
+    }
+    bind [lindex $f1 0] <Leave> {
+        bind . <KeyPress-Return> ""
+    }
+    bind [lindex $f1 3] <Enter> {
+	global f1
+        if {"$tcl_platform(platform)" == "unix"} {
+	    bind . <Button-4> "[lindex $f1 3] yview scroll -5 units"
+            bind . <Button-5> "[lindex $f1 3] yview scroll 5 units"
+        } elseif {"$tcl_platform(platform)" == "windows"} {
+            #bind . <MouseWheel> "[lindex $f1 3] yview scroll [expr -%D/24] units"
+        }
+    }
+    bind [lindex $f1 3] <Leave> {
+        if {"$tcl_platform(platform)" == "unix"} {
+	    bind . <Button-4> ""
+            bind . <Button-5> ""
+        } elseif {"$tcl_platform(platform)" == "windows"} {
+             bind . <MouseWheel> ""
+        }
+    }
+
     set f2 [NoteBookManager::create_table $alignFrame  "pdo"]
     [lindex $f2 1] columnconfigure 0 -background #e0e8f0 -width 6 -sortmode integer
     [lindex $f2 1] columnconfigure 1 -background #e0e8f0 -width 14 
@@ -847,7 +901,16 @@ proc Operations::BasicFrames { } {
     [lindex $f2 1] columnconfigure 4 -background #e0e8f0 -width 11
     [lindex $f2 1] columnconfigure 5 -background #e0e8f0 -width 11
 
-    #binding for tablelist widget	
+    #binding for tablelist widget
+    bind [lindex $f2 0] <Enter> {
+        bind . <KeyPress-Return> {
+                global tableSaveBtn
+                $tableSaveBtn invoke
+        }
+    }
+    bind [lindex $f2 0] <Leave> {
+        bind . <KeyPress-Return> ""
+    }
     bind [lindex $f2 1] <Enter> {
 	    global LastTableFocus
 	    if { [ winfo exists $LastTableFocus ] && [ string match "[lindex $f2 1]*" $LastTableFocus ] } {
@@ -1590,9 +1653,12 @@ proc Operations::Saveproject {} {
 	    #there is no project directory or project name no need to save
 	    return
     } else {
+            foreach filePath [glob -nocomplain [file join $projectDir octx "*"]] {
+                catch { file delete -force $filePath }
+            }
 	    set savePjtName [string range $projectName 0 end-[ string length [file extension $projectName] ]]
 	    set savePjtDir [string range $projectDir 0 end-[string length $savePjtName] ]
-        thread::send -async [tsv::set application importProgress] "StartProgress"
+            thread::send -async [tsv::set application importProgress] "StartProgress"
 	    set catchErrCode [SaveProject $savePjtDir $savePjtName]
 	    thread::send -async [tsv::set application importProgress] "StopProgress"
 	    set ErrCode [ocfmRetCode_code_get $catchErrCode]

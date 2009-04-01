@@ -715,8 +715,8 @@ proc NoteBookManager::SaveValue {frame0 frame1} {
         } else {
             if { [string match -nocase "18??" $indexId] || [string match "14??" $indexId]} {
                 if { [string match "01" $subIndexId] } {
-                    if { $value == "" || [expr $value > 0xef] || [expr $value < 0x1] } {
-                        tk_messageBox -message "Value should be between 0x1 to 0xEF\nFor subindex 01 in index $indexId\nEdited values not saved" -title Warning -icon warning -parent .
+                    if { $value == "" || [expr $value > 0xef] || [expr $value < 0x0] } {
+                        tk_messageBox -message "Value should be between 0x0 to 0xEF\nFor subindex 01 in index $indexId\nEdited values not saved" -title Warning -icon warning -parent .
                         Validation::ResetPromptFlag
 	             		return
                     }

@@ -344,6 +344,9 @@ proc Operations::exit_app {} {
 		         DisplayInfo "Project $projectName is saved" info
 	         }
 	         no  {DisplayInfo "Project $projectName not saved" info
+	            if { ![file exists [file join $projectDir $projectName].oct] } {
+		            catch { file delete -force $projectDir }
+                }
 	         }
 	         cancel {
 		         DisplayInfo "Exit Canceled" info
@@ -466,10 +469,10 @@ proc Operations::openProject {projectfilename} {
 	    thread::send -async [tsv::set application importProgress] "StopProgress"
 	    return
     } 
-    set projectDir $tempPjtDir
-    set projectName $tempPjtName
+    set projectDir $tempPjtDir 
+    set projectName [string range $tempPjtName 0 end-[string length [file extension $tempPjtName]]]
 
-    set result [ Operations::RePopulate $projectDir [string range $projectName 0 end-[string length [file extension $projectName]]] ]
+    set result [ Operations::RePopulate $projectDir $projectName ]
     thread::send [tsv::set application importProgress] "StopProgress"
 
     # API to get project settings
@@ -617,7 +620,7 @@ proc Operations::BasicFrames { } {
     set prgressindicator -1
     Operations::_tool_intro
     update
-	sleep 1000
+	Operations::Sleep 1000
 	
     # Menu description
     set descmenu {
@@ -1785,6 +1788,8 @@ proc Operations::DeleteAllNode {} {
 	    }
     } else {
     }
+    
+    FreeProjectMemory
 }
 
 #---------------------------------------------------------------------------------------------------
@@ -1851,7 +1856,6 @@ proc Operations::AddCN {cnName tmpImpDir nodeId} {
 	    }
 	
     } else {
-	    lappend nodeIdList $nodeId 
     }
     return 
 }
@@ -3038,23 +3042,32 @@ proc Operations::GenerateAutoName {dir name ext} {
 }
 
 #---------------------------------------------------------------------------------------------------
-#  uniqkey and sleep proc
+#  Operations::Uniqkey 
 # 
 #  Arguments : -
 #
 #  Results : -
 #
-#  Description : Provide a sleep functionality to tcl
+#  Description : Calculates clock seconds
 #---------------------------------------------------------------------------------------------------
-proc uniqkey { } {
+proc Operations::Uniqkey { } {
      set key   [ expr { pow(2,31) + [ clock clicks ] } ]
      set key   [ string range $key end-8 end-3 ]
      set key   [ clock seconds ]$key
      return $key
  }
 
- proc sleep { ms } {
-     set uniq [ uniqkey ]
+#---------------------------------------------------------------------------------------------------
+#  Operations::Sleep 
+# 
+#  Arguments : ms - time to sleep
+#
+#  Results : -
+#
+#  Description : Provides a sleep functionality to tcl
+#---------------------------------------------------------------------------------------------------
+proc Operations::Sleep { ms } {
+     set uniq [ Operations::Uniqkey ]
      set ::__sleep__tmp__$uniq 0
      after $ms set ::__sleep__tmp__$uniq 1
      vwait ::__sleep__tmp__$uniq

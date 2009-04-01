@@ -387,9 +387,11 @@ proc ChildWindows::AddCNWindow {} {
 		}
 
 		if {$confCn == "off"} {
+		        catch { destroy .addCN }
 			#import the user selected xdc/xdd file for cn
 			set chk [Operations::AddCN $cnName $tmpImpCnDir $nodeId]
 		} else {
+		        catch { destroy .addCN }
 			#import the default cn xdd file
 			global rootDir
 			set tmpImpCnDir [file join $rootDir openPOWERLINK_CN.xdd]
@@ -402,7 +404,7 @@ proc ChildWindows::AddCNWindow {} {
 				return
 			}
 		}
-		$frame3.bt_cancel invoke
+		catch { $frame3.bt_cancel invoke }
 	}
 
 	button $frame3.bt_cancel -width 8 -text Cancel -command { 
@@ -498,6 +500,9 @@ proc ChildWindows::SaveProjectWindow {} {
 			    }
 			    no {
 				    DisplayInfo "Project $projectName not saved" info
+				    if { ![file exists [file join $projectDir $projectName].oct ] } {
+				        catch { file delete -force $projectDir }
+				    }
 				    return no
 			    }
 			    cancel {
@@ -534,8 +539,9 @@ proc ChildWindows::SaveProjectAsWindow {} {
 	    catch {file mkdir $saveProjectAs}
 	    catch {file mkdir [file join $saveProjectAs cdc_xap]}
 	    catch {file mkdir [file join $saveProjectAs octx]}
-	
-                thread::send -async [tsv::set application importProgress] "StartProgress"
+	    catch {file mkdir [file join $saveProjectAs scripts]}
+	    
+            thread::send -async [tsv::set application importProgress] "StartProgress"
 	    set catchErrCode [SaveProject $tempProjectDir [string range $tempProjectName 0 end-[string length [file extension $tempProjectName]]]]
 	    thread::send -async [tsv::set application importProgress] "StopProgress"
 
@@ -709,7 +715,7 @@ proc ChildWindows::NewProjectWindow {} {
     }
 
     button 	$frame2_2.bt_cancel -width 8 -text "Cancel" -command {
-	    $frame1_4.bt_cancel invoke
+	    catch { $frame1_4.bt_cancel invoke }
     }
 
     grid config $frame2_1 -row 0 -column 0 -sticky w 
@@ -1183,7 +1189,7 @@ proc ChildWindows::AddIndexWindow {} {
 		    } else {
 			    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .addIdx
 		    }
-		    $frame2.bt_cancel invoke
+		    catch { $frame2.bt_cancel invoke }
 	    }
 
 	    #Index is added need to save
@@ -1202,7 +1208,7 @@ proc ChildWindows::AddIndexWindow {} {
 		    } else {
 			    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .addIdx
 		    }
-		    $frame2.bt_cancel invoke
+		    catch { $frame2.bt_cancel invoke }
 	    }
 	    set indexPos [new_intp]
 	    set catchErrCode [IfIndexExists $nodeId $nodeType $indexVar $indexPos]
@@ -1236,7 +1242,7 @@ proc ChildWindows::AddIndexWindow {} {
 		    $treePath insert $tempSidxCount $indexNode $subIndexNode-$tempSidxCount -text [lindex $subIndexName 1]\(0x$subIndexId\) -open 0 -image [Bitmap::get subindex]
 		    $treePath itemconfigure $subIndexNode-$tempSidxCount -open 0
 	    }
-	    $frame2.bt_cancel invoke
+	    catch { $frame2.bt_cancel invoke }
     }
     button $frame2.bt_cancel -width 8 -text Cancel -command { 
 	    catch {
@@ -1361,7 +1367,7 @@ proc ChildWindows::AddSubIndexWindow {} {
 		    } else {
 			    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .addSidx
 		    }
-		    $frame2.bt_cancel invoke
+		    catch { $frame2.bt_cancel invoke }
 	    }
 
 	    #SubIndex is added need to save
@@ -1377,7 +1383,7 @@ proc ChildWindows::AddSubIndexWindow {} {
 	    } else {
 		    $treePath insert $subIndexPos $node SubIndexValue-$nodePos-$count -text [lindex $subIndexName 1]\(0x$subIndexVar\) -open 0 -image [Bitmap::get subindex]
 	    }
-	    $frame2.bt_cancel invoke
+	    catch { $frame2.bt_cancel invoke }
 
     }
     button $frame2.bt_cancel -width 8 -text Cancel -command { 
@@ -1533,7 +1539,7 @@ proc ChildWindows::AddPDOWindow {} {
 		    } else {
 			    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .addPdo
 		    }
-		    $frame2.bt_cancel invoke
+		    catch { $frame2.bt_cancel invoke }
 	    }
 
 	    #Index is added to PDO need to save
@@ -1553,7 +1559,7 @@ proc ChildWindows::AddPDOWindow {} {
 		    } else {
 			    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .addPdo
 		    }
-		    $frame2.bt_cancel invoke
+		    catch { $frame2.bt_cancel invoke }
 	    }
 	    set indexPos [new_intp]
 	    set catchErrCode [IfIndexExists $nodeId $nodeType $pdoVar $indexPos]
@@ -1586,7 +1592,7 @@ proc ChildWindows::AddPDOWindow {} {
 		    $treePath insert $tempSidxCount $indexNode $subIndexNode-$tempSidxCount -text [lindex $subIndexName 1]\(0x$subIndexId\) -open 0 -image [Bitmap::get subindex]
 		    $treePath itemconfigure $subIndexNode-$tempSidxCount -open 0
 	    }
-	    $frame2.bt_cancel invoke
+	    catch { $frame2.bt_cancel invoke }
 	
     }
     button $frame2.bt_cancel -width 8 -text Cancel -command { 

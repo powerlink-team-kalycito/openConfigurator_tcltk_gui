@@ -391,11 +391,11 @@ proc ChildWindows::AddCNWindow {} {
 			#import the user selected xdc/xdd file for cn
 			set chk [Operations::AddCN $cnName $tmpImpCnDir $nodeId]
 		} else {
-		        catch { destroy .addCN }
 			#import the default cn xdd file
 			global rootDir
 			set tmpImpCnDir [file join $rootDir openPOWERLINK_CN.xdd]
 			if {[file exists $tmpImpCnDir]} {
+			        catch { destroy .addCN }
 				set chk [Operations::AddCN $cnName $tmpImpCnDir $nodeId]
 			} else {
 				#there is no default xdd file in required path
@@ -1190,6 +1190,7 @@ proc ChildWindows::AddIndexWindow {} {
 			    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .addIdx
 		    }
 		    catch { $frame2.bt_cancel invoke }
+		    return
 	    }
 
 	    #Index is added need to save
@@ -1209,6 +1210,7 @@ proc ChildWindows::AddIndexWindow {} {
 			    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .addIdx
 		    }
 		    catch { $frame2.bt_cancel invoke }
+		    return
 	    }
 	    set indexPos [new_intp]
 	    set catchErrCode [IfIndexExists $nodeId $nodeType $indexVar $indexPos]
@@ -1368,6 +1370,7 @@ proc ChildWindows::AddSubIndexWindow {} {
 			    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .addSidx
 		    }
 		    catch { $frame2.bt_cancel invoke }
+		    return
 	    }
 
 	    #SubIndex is added need to save
@@ -1384,6 +1387,7 @@ proc ChildWindows::AddSubIndexWindow {} {
 		    $treePath insert $subIndexPos $node SubIndexValue-$nodePos-$count -text [lindex $subIndexName 1]\(0x$subIndexVar\) -open 0 -image [Bitmap::get subindex]
 	    }
 	    catch { $frame2.bt_cancel invoke }
+	    return
 
     }
     button $frame2.bt_cancel -width 8 -text Cancel -command { 
@@ -1540,6 +1544,7 @@ proc ChildWindows::AddPDOWindow {} {
 			    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .addPdo
 		    }
 		    catch { $frame2.bt_cancel invoke }
+		    return
 	    }
 
 	    #Index is added to PDO need to save
@@ -1560,6 +1565,7 @@ proc ChildWindows::AddPDOWindow {} {
 			    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .addPdo
 		    }
 		    catch { $frame2.bt_cancel invoke }
+		    return
 	    }
 	    set indexPos [new_intp]
 	    set catchErrCode [IfIndexExists $nodeId $nodeType $pdoVar $indexPos]
@@ -1593,6 +1599,7 @@ proc ChildWindows::AddPDOWindow {} {
 		    $treePath itemconfigure $subIndexNode-$tempSidxCount -open 0
 	    }
 	    catch { $frame2.bt_cancel invoke }
+	    return
 	
     }
     button $frame2.bt_cancel -width 8 -text Cancel -command { 

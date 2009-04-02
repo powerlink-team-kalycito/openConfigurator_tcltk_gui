@@ -197,6 +197,23 @@ proc Validation::IsValidStr {input} {
 }
 
 #---------------------------------------------------------------------------------------------------
+#  Validation::IsValidEntryData
+# 
+#  Arguments : input - string to be validate 
+# 	
+#  Results : 0 or 1
+#
+#  Description : Validates whether an entry contains only alphanumeric character and underscore
+#---------------------------------------------------------------------------------------------------
+proc Validation::IsValidEntryData {input} {
+    if { ([string is wordchar $input] == 1 || [string match "*.*" $input] || [string match "*:*" $input]) && [string length $input] <= 32 } {
+	    Validation::SetPromptFlag
+	    return 1
+    } else {
+	    return 0
+    }
+}
+#---------------------------------------------------------------------------------------------------
 #  Validation::IsValidName
 # 
 #  Arguments : input - string (project name)
@@ -227,8 +244,8 @@ proc Validation::IsValidName { input } {
 #---------------------------------------------------------------------------------------------------
 proc Validation::IsDec {input entryPath mode idx} {
     set tempInput $input
-    #115792089237316195423570985008687907853269984665640564039457584007913129639935 is corresponding value of 64 F's
-    if { [string length $tempInput] > 78 || $tempInput > 115792089237316195423570985008687907853269984665640564039457584007913129639935 || [Validation::CheckNumber $tempInput] == 0  } {
+    
+    if { [string length $tempInput] > 20 || $tempInput > 18446744073709551615 || [Validation::CheckDecimalNumber $tempInput] == 0  } {
 	    return 0
     } else {
 	    after 1 Validation::SetValue $entryPath $mode $idx $input
@@ -238,7 +255,7 @@ proc Validation::IsDec {input entryPath mode idx} {
 }
 
 #---------------------------------------------------------------------------------------------------
-#  Validation::CheckNumber
+#  Validation::CheckDecimalNumber
 # 
 #  Arguments : input - string to be validated
 #
@@ -246,7 +263,7 @@ proc Validation::IsDec {input entryPath mode idx} {
 #
 #  Description : Validates string is containing only numbers 0 to 9
 #---------------------------------------------------------------------------------------------------
-proc Validation::CheckNumber {input} {
+proc Validation::CheckDecimalNumber {input} {
     set exp {[0-9]}
     for {set checkCount 0} {$checkCount < [string length $input]} {incr checkCount} {
         set res [regexp -- $exp [string index $input $checkCount] ]
@@ -260,10 +277,80 @@ proc Validation::CheckNumber {input} {
 }
 
 #---------------------------------------------------------------------------------------------------
+#  Validation::CheckHexaNumber
+# 
+#  Arguments : input - string to be validated
+#
+#  Results : 0 or 1
+#
+#  Description : Validates string is containing only numbers 0 to 9 and characters a to f
+#---------------------------------------------------------------------------------------------------
+proc Validation::CheckHexaNumber {input} {
+    set exp {[0-9]|[a-f]|[A-F]}
+    for {set checkCount 0} {$checkCount < [string length $input]} {incr checkCount} {
+        set res [regexp -- $exp [string index $input $checkCount] ]
+        if {$res == 1} {
+	        #continue with process
+        } else {
+	        return 0
+        }
+    }
+    return 1
+}
+
+#---------------------------------------------------------------------------------------------------
+#  Validation::CheckBitNumber
+# 
+#  Arguments : input - string to be validated
+#
+#  Results : 0 or 1
+#
+#  Description : Validates string is containing only 0 and 1
+#---------------------------------------------------------------------------------------------------
+proc Validation::CheckBitNumber {input} {
+    if { [string length $input] > 8 } {
+	return 0
+    }
+    set exp {0|1}
+    for {set checkCount 0} {$checkCount < [string length $input]} {incr checkCount} {
+        set res [regexp -- $exp [string index $input $checkCount] ]
+        if {$res == 1} {
+	        #continue with process
+        } else {
+	        return 0
+        }
+    }
+    return 1    
+}
+
+#---------------------------------------------------------------------------------------------------
+#  Validation::BintoHex
+#   
+# Arguments:  bin - number in binary format
+#  
+# Results: hexadecimal number
+#  
+#---------------------------------------------------------------------------------------------------
+proc Validation::BintoHex {binNo} {
+    ## No sanity checking is done
+    array set template {
+	0000 0 0001 1 0010 2 0011 3 0100 4
+	0101 5 0110 6 0111 7 1000 8 1001 9
+	1010 a 1011 b 1100 c 1101 d 1110 e 1111 f
+    }
+    set diff [expr {4-[string length $binNo]%4}]
+    if {$diff != 4} {
+        set binNo [format %0${diff}d$binNo 0]
+    }
+    regsub -all .... $binNo {$template(&)} hex
+    return [subst $hex]
+}
+
+#---------------------------------------------------------------------------------------------------
 #  Validation::IsHex
 # 
 #  Arguments : input     - string 
-# 	           preinput  - valid previous entry
+#              preinput  - valid previous entry
 #              mode      - Mode of the entry (insert - 1 / delete - 0) 
 #              idx       - Index where the character was inserted or deleted  
 #
@@ -432,7 +519,7 @@ proc Validation::InputToHex {input} {
     if { $input == 0 } {
 	    #if value is zero return as it is
 	    return 0x$input
-    } elseif { $input == "" || [Validation::CheckNumber $input] == 0 } {
+    } elseif { $input == "" || [Validation::CheckDecimalNumber $input] == 0 } {
 	    #if value empty or not an int return back same value
 	    return $input
     }

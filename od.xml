@@ -227,7 +227,7 @@ User: Administrator
 	<Object index="1022" name="CFM_StoreDevDescrFormat_U16" objectType="9" dataType="0006" accessType="rw/ro" defaultValue="FF" PDOmapping="no">
 	 </Object>
 
-	<Object index="1030" name="NMT_InterfaceGroup_Xh_REC" objectType="9" dataType="042B" range="0-F" nameIndex="1">
+	<Object index="1030" name="NMT_InterfaceGroup_Xh_REC" objectType="9" dataType="042B" range="0-F">
 		    <SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="const" defaultValue="9" />
 		    <SubObject subIndex="01" name="InterfaceIndex_U16" objectType="7" dataType="0006" accessType="ro" defaultValue="no"  PDOmapping="no" />
 		    <SubObject subIndex="02" name="InterfaceDescription_VSTR" objectType="7" dataType="0009" accessType="const" defaultValue="no" PDOmapping="no"/>
@@ -263,7 +263,7 @@ User: Administrator
 		    <SubObject subIndex="07" name="ExceptionNewEdge_U32" objectType="7" dataType="0007" accessType="Ro" defaultValue="0" PDOmapping="no"/>
 	</Object>
 
-	<Object index="1200" name="SDO_ServerContainerParam_XXh_REC" objectType="9" dataType="0422" range="00-7F" nameIndex="1"> 	
+	<Object index="1200" name="SDO_ServerContainerParam_XXh_REC" objectType="9" dataType="0422" range="00-7F" > 	
 		<SubObject subIndex="00" name="NumberOfEntries" objectType="9" dataType="0005" accessType="const" defaultValue="4" />
 		<SubObject subIndex="01" name="ClientNodeID_U8" objectType="9" dataType="0005" accessType="Rw" defaultValue="-" PDOmapping="no" />
 		<SubObject subIndex="02" name="ServerNodeID_U8" objectType="9" dataType="0005" accessType="Rw" defaultValue="-" PDOmapping="no" />
@@ -271,7 +271,7 @@ User: Administrator
 		<SubObject subIndex="04" name="HistorySize_U8" objectType="9" dataType="0005" accessType="Rw" defaultValue="-" PDOmapping="no" />
 	</Object>
 
-	<Object index="1280" name="SDO_ClientContainerParam_XXh_REC" objectType="9" dataType="0422" range="80-FF" nameIndex="1">
+	<Object index="1280" name="SDO_ClientContainerParam_XXh_REC" objectType="9" dataType="0422" range="80-FF" >
 		<SubObject subIndex="00" name="NumberOfEntries" objectType="9" dataType="0005" accessType="const" defaultValue="5" />
 		<SubObject subIndex="01" name="ClientNodeID_U8" objectType="9" dataType="0005" accessType="Rw" defaultValue="-" PDOmapping="no" />
 		<SubObject subIndex="02" name="ServerNodeID_U8" objectType="9" dataType="0005" accessType="Rw" defaultValue="-" PDOmapping="no" />
@@ -285,27 +285,27 @@ User: Administrator
 	<Object index="1301" name="SDO_CmdLayerTimeout_U32" objectType="7" dataType="0007" accessType="rw" defaultValue="no"    PDOmapping="no" >	
 	</Object>
 
-	<Object index="1400" name="PDO_RxCommParam_XXh_REC" objectType="9" dataType="0420" range="00-FF" nameIndex="1">
+	<Object index="1400" name="PDO_RxCommParam_XXh_REC" objectType="9" dataType="0420" range="00-FF" >
 		    <SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="const" defaultValue="2" PDOmapping="no" />
 		    <SubObject subIndex="01" name="NodeID_U8" objectType="7" dataType="0005" accessType="rw" defaultValue="0" PDOmapping="no" />
 		    <SubObject subIndex="02" name="MappingVersion_U8" objectType="7" dataType="0005" accessType="rw/ro" defaultValue="0" PDOmapping="no" />
 	</Object>
-	<Object index="1600" name="PDO_RxMappParam_XXh_AU64" objectType="8" dataType="001B"  range="00-FF" nameIndex="1">
+	<Object index="1600" name="PDO_RxMappParam_XXh_AU64" objectType="8" dataType="001B"  range="00-FF" >
 		    <SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="rw" defaultValue="0" />
-		    <SubObject subIndex="01" name="ObjectMapping" objectType="7" dataType="001B" accessType="rw/ro" defaultValue="0" PDOmapping="no"  range="01-FE" nameIndex="0" />		
+		    <SubObject subIndex="01" name="ObjectMapping" objectType="7" dataType="001B" accessType="rw/ro" defaultValue="0" PDOmapping="no"  range="01-FE"  />		
 	</Object>
-	<Object index="1800" name="PDO_TxCommParam_XXh_REC" objectType="9" dataType="0420" range="00-FF" nameIndex="1">
+	<Object index="1800" name="PDO_TxCommParam_XXh_REC" objectType="9" dataType="0420" range="00-FF" >
 		    <SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="const" defaultValue="2" />
 		    <SubObject subIndex="01" name="NodeID_U8" objectType="7" dataType="0005" accessType="rw" defaultValue="0" PDOmapping="no" />
 		    <SubObject subIndex="02" name="MappingVersion_U8" objectType="7" dataType="0005" accessType="rw/ro" defaultValue="0" PDOmapping="no" />
 	</Object>
 
 
-	<Object index="1A00" name="PDO_TxMappParam_XXh_AU64" objectType="8" dataType="001B" range="00-FF" nameIndex="1" >
+	<Object index="1A00" name="PDO_TxMappParam_XXh_AU64" objectType="8" dataType="001B" range="00-FF"  >
 		    <SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="rw" defaultValue="0" PDOmapping="no" />
-		    <SubObject subIndex="01" name="ObjectMapping" objectType="7" dataType="001B" accessType="rw/ro" defaultValue="0"  PDOmapping="no"  range="01-FF" nameIndex="0"/>	
+		    <SubObject subIndex="01" name="ObjectMapping" objectType="7" dataType="001B" accessType="rw/ro" defaultValue="0"  PDOmapping="no"  range="01-FF" />	
 	</Object>
-	<Object index="1B00" name="RT1_AclFwdTable_XXh_REC" objectType="9" dataType="0434"  range="00-FF" nameIndex="1" >
+	<Object index="1B00" name="RT1_AclFwdTable_XXh_REC" objectType="9" dataType="0434"  range="00-FF"  >
 		    <SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="const" defaultValue="9" PDOmapping="no" />
 		    <SubObject subIndex="01" name="SrcIp_IPAD" objectType="7" dataType="0402" accessType="Rw" defaultValue="-"  PDOmapping="no" />
 		    <SubObject subIndex="02" name="SrcMask_IPAD" objectType="7" dataType="0402" accessType="Rw" defaultValue="-"  PDOmapping="no" />
@@ -344,33 +344,33 @@ User: Administrator
 
 	<Object index="1C04" name="DLL_MNCNLatePResCumCnt_AU32" objectType="8" dataType="0007">
 		    <SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="ro" defaultValue="254" PDOmapping="no"/>
-	<SubObject subIndex="01" name="CumCnt" objectType="7" dataType="0007" accessType="rw" defaultValue="0" PDOmapping="no" range="01-FE" nameIndex="0"/>	
+	<SubObject subIndex="01" name="CumCnt" objectType="7" dataType="0007" accessType="rw" defaultValue="0" PDOmapping="no" range="01-FE" />	
 	</Object>
 
 	<Object index="1C05" name="DLL_MNCNLatePResThrCnt_AU32" objectType="8" dataType="0007">
 		<SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="ro" defaultValue="254" PDOmapping="no"/>
-		<SubObject subIndex="01" name="ThrCnt" objectType="7" dataType="0007" accessType="ro" defaultValue="0" PDOmapping="no"  range="01-FE" nameIndex="0"/>		
+		<SubObject subIndex="01" name="ThrCnt" objectType="7" dataType="0007" accessType="ro" defaultValue="0" PDOmapping="no"  range="01-FE" />		
 	</Object>
 
 	<Object index="1C06" name="DLL_MNCNLatePResThreshold_AU32" objectType="8" dataType="0007">
 		<SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="ro" defaultValue="254" PDOmapping="no"/>
-		<SubObject subIndex="01" name="Threshold" objectType="7" dataType="0007" accessType="rw" defaultValue="15" PDOmapping="no"  range="01-FE" nameIndex="0"/>
+		<SubObject subIndex="01" name="Threshold" objectType="7" dataType="0007" accessType="rw" defaultValue="15" PDOmapping="no"  range="01-FE" />
 	</Object>
 
 	<Object index="1C07" name="DLL_MNCNLossPResCumCnt_AU32" objectType="8" dataType="0007">
 		<SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="ro" defaultValue="254" PDOmapping="no"/>
-		<SubObject subIndex="01" name="CumCnt" objectType="7" dataType="0007" accessType="rw" defaultValue="0" PDOmapping="no"  range="01-FE" nameIndex="0"/>
+		<SubObject subIndex="01" name="CumCnt" objectType="7" dataType="0007" accessType="rw" defaultValue="0" PDOmapping="no"  range="01-FE" />
 	</Object>
 
 	<Object index="1C08" name="DLL_MNCNLossPResThrCnt_AU32 " objectType="8" dataType="0007">
 		    <SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="ro" defaultValue="254" PDOmapping="no"/>
-			<SubObject subIndex="01" name="ThrCnt" objectType="7" dataType="0007" accessType="ro" defaultValue="0" PDOmapping="no"  range="01-FE" nameIndex="0"/>			
+			<SubObject subIndex="01" name="ThrCnt" objectType="7" dataType="0007" accessType="ro" defaultValue="0" PDOmapping="no"  range="01-FE" />			
 			
 	</Object>
 
 	<Object index="1C09" name="DLL_MNCNLossPResThreshold_AU32" objectType="8" dataType="0007">
 		<SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="ro" defaultValue="254" PDOmapping="no"/>
-		<SubObject subIndex="01" name="Threshold" objectType="7" dataType="0007" accessType="rw" defaultValue="15" PDOmapping="no"  range="01-FE" nameIndex="0"/>
+		<SubObject subIndex="01" name="Threshold" objectType="7" dataType="0007" accessType="rw" defaultValue="15" PDOmapping="no"  range="01-FE" />
 	</Object>
 
 	<Object index="1C0A" name="DLL_CNCollision_REC" objectType="9" dataType="0424">
@@ -429,17 +429,17 @@ User: Administrator
 
 	<Object index="1C15" name="DLL_MNLossStatusResCumCnt_AU32" objectType="8" dataType="0007">
 		<SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="ro" defaultValue="254" PDOmapping="no"/>
-		<SubObject subIndex="01" name="CumCnt" objectType="7" dataType="0007" accessType="rw" defaultValue="0" PDOmapping="no"  range="01-FE" nameIndex="0"/>
+		<SubObject subIndex="01" name="CumCnt" objectType="7" dataType="0007" accessType="rw" defaultValue="0" PDOmapping="no"  range="01-FE" />
 	</Object>
 
 	<Object index="1C16" name="DLL_MNLossStatusResThrCnt_AU32" objectType="8" dataType="0007">
 		<SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="ro" defaultValue="254" PDOmapping="no"/>
-		<SubObject subIndex="01" name="ThrCnt" objectType="7" dataType="0007" accessType="ro" defaultValue="0" PDOmapping="no"  range="01-FE" nameIndex="0"/>	
+		<SubObject subIndex="01" name="ThrCnt" objectType="7" dataType="0007" accessType="ro" defaultValue="0" PDOmapping="no"  range="01-FE" />	
 	</Object>
 
 	<Object index="1C17" name="DLL_MNLossStatusResThreshold_AU32" objectType="8" dataType="0007">
 		<SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="ro" defaultValue="254" PDOmapping="no"/>
-		<SubObject subIndex="01" name="ThrCnt" objectType="7" dataType="0007" accessType="rw" defaultValue="15" PDOmapping="no"  range="01-FE" nameIndex="0"/>
+		<SubObject subIndex="01" name="ThrCnt" objectType="7" dataType="0007" accessType="rw" defaultValue="15" PDOmapping="no"  range="01-FE" />
 		
 	</Object>
 
@@ -449,14 +449,14 @@ User: Administrator
 	<Object index="1C81" name="PDO_ErrShort_RX_OSTR" objectType="7" dataType="000A" accessType="rw" defaultValue="0" PDOmapping="no">
 	</Object>
 
-	<Object index="1D00" name="RT1_NatTable_XXh_REC" objectType="9" dataType="0432"  range="00-FF" nameIndex="1">
+	<Object index="1D00" name="RT1_NatTable_XXh_REC" objectType="9" dataType="0432"  range="00-FF" >
 		<SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="Ro" defaultValue="4" PDOmapping="no"/>
 		<SubObject subIndex="01" name="EplIpAddr_IPAD" objectType="7" dataType="0402" accessType="Rw" defaultValue="-" PDOmapping="no"/>
 		<SubObject subIndex="02" name="ExtIpAddr_IPAD" objectType="7" dataType="0402" accessType="Rw" defaultValue="-" PDOmapping="no"/>
 		<SubObject subIndex="03" name="Mask_IPAD" objectType="7" dataType="0402" accessType="Rw" defaultValue="-" PDOmapping="no"/>
 		<SubObject subIndex="04" name=" Type_U8" objectType="7" dataType="0005" accessType="Rw" defaultValue="2" PDOmapping="no"/>
 	</Object>
-	<Object index="1E40" name="NWL_IpAddrTable_Xh_REC" objectType="9" dataType="0426" range="00-09" nameIndex="1">
+	<Object index="1E40" name="NWL_IpAddrTable_Xh_REC" objectType="9" dataType="0426" range="0-9" >
 		    <SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="const" defaultValue="5" PDOmapping="no"/>
 		    <SubObject subIndex="01" name="IfIndex_U16" objectType="7" dataType="0006" accessType="ro" defaultValue="-" PDOmapping="no"/>
 		    <SubObject subIndex="02" name="Addr_IPAD" objectType="7" dataType="0402" accessType="rw/ro" defaultValue="-" PDOmapping="no"/>
@@ -485,7 +485,7 @@ User: Administrator
 		<SubObject subIndex="03" name=" OutTablePolicy_U8" objectType="7" dataType="0005" accessType="Rw" defaultValue="1" PDOmapping="no"/>
 	</Object>
 
-	<Object index="1E90" name="RT1_IpRoutingTable_XXh_REC" objectType="9" dataType="0431"  range="90-CF" nameIndex="1">
+	<Object index="1E90" name="RT1_IpRoutingTable_XXh_REC" objectType="9" dataType="0431"  range="90-CF" >
 	    <SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="Ro" defaultValue="7" PDOmapping="no"/>
 		    <SubObject subIndex="01" name="IpForwardDest_IPAD" objectType="7" dataType="0402" accessType="Rw" defaultValue="-" PDOmapping="no"/>
 		<SubObject subIndex="02" name="IpForwardMask_IPAD" objectType="7" dataType="0402" accessType="Rw " defaultValue="0.0.0.0" PDOmapping="no"/>
@@ -496,7 +496,7 @@ User: Administrator
 		<SubObject subIndex="07" name="IpForwardMetric1_S32" objectType="7" dataType="0004" accessType="Rw " defaultValue="-1" PDOmapping="no"/>
 	</Object>
 
-	<Object index="1ED0" name="RT1_AclInTable_Xh_REC" objectType="9" dataType="0434"  range="0-F" nameIndex="1">
+	<Object index="1ED0" name="RT1_AclInTable_Xh_REC" objectType="9" dataType="0434"  range="0-F" >
 	    <SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="const" defaultValue="9" PDOmapping="no"/>
 		    <SubObject subIndex="01" name="SrcIp_IPAD" objectType="7" dataType="0402" accessType="Rw" defaultValue="-" PDOmapping="no"/>
 		<SubObject subIndex="02" name="SrcMask_IPAD" objectType="7" dataType="0402" accessType="Rw " defaultValue="-" PDOmapping="no"/>
@@ -510,7 +510,7 @@ User: Administrator
 	</Object>
 
 
-	<Object index="1EE0" name="RT1_AclOutTable_Xh_REC" objectType="9" dataType="0434"  range="0-F" nameIndex="1">
+	<Object index="1EE0" name="RT1_AclOutTable_Xh_REC" objectType="9" dataType="0434"  range="0-F" >
 	    <SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="const" defaultValue="9" PDOmapping="no"/>
 		    <SubObject subIndex="01" name="SrcIp_IPAD" objectType="7" dataType="0402" accessType="Rw" defaultValue="-" PDOmapping="no"/>
 		<SubObject subIndex="02" name="SrcMask_IPAD" objectType="7" dataType="0402" accessType="Rw " defaultValue="-" PDOmapping="no"/>
@@ -526,63 +526,63 @@ User: Administrator
 
 	<Object index="1F20" name="CFM_StoreDcfList_ADOM" objectType="8" dataType="000F">
 	    <SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="ro" defaultValue="254" PDOmapping="opt"/>
-		    <SubObject subIndex="01" name="CNDcf" objectType="7" dataType="0007" accessType="rw" defaultValue="-" PDOmapping="no"  range="01-FE" nameIndex="0"/>
+		    <SubObject subIndex="01" name="CNDcf" objectType="7" dataType="0007" accessType="rw" defaultValue="-" PDOmapping="no"  range="01-FE" />
 	</Object>
 
 	<Object index="1F21" name="CFM_DcfStorageFormatList_AU8" objectType="8" dataType="0005">
 		<SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="ro" defaultValue="254" PDOmapping="opt"/>
-		<SubObject subIndex="01" name="CNDcfFormat" objectType="7" dataType="0007" accessType="rw" defaultValue="FF" PDOmapping="no"  range="01-FE" nameIndex="0"/>
+		<SubObject subIndex="01" name="CNDcfFormat" objectType="7" dataType="0007" accessType="rw" defaultValue="FF" PDOmapping="no"  range="01-FE" />
 		
 	</Object>
 
 	<Object index="1F22" name="CFM_StoreDcfList_ADOM" objectType="8" dataType="000F">
 		<SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="ro" defaultValue="254" PDOmapping="opt"/>
-		<SubObject subIndex="01" name="CNDcf" objectType="7" dataType="0007" accessType="rw" defaultValue="-" PDOmapping="no"  range="01-FE" nameIndex="0"/>
+		<SubObject subIndex="01" name="CNDcf" objectType="7" dataType="0007" accessType="rw" defaultValue="-" PDOmapping="no"  range="01-FE" />
 		
 	</Object>
 
 	<Object index="1F23" name="CFM_StoreDevDescrFileList_ADOM" objectType="8" dataType="000F">
 		<SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="ro" defaultValue="254" PDOmapping="opt"/>
-		<SubObject subIndex="01" name="CNDevDescrFile" objectType="7" dataType="0007" accessType="rw" defaultValue="no" PDOmapping="no"  range="01-FE" nameIndex="0"/>
+		<SubObject subIndex="01" name="CNDevDescrFile" objectType="7" dataType="0007" accessType="rw" defaultValue="no" PDOmapping="no"  range="01-FE" />
 		
 	</Object>
 
 	<Object index="1F24" name="CFM_DevDescrFileFormatList_AU8" objectType="8" dataType="0005">
 		<SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="ro" defaultValue="254" PDOmapping="opt"/>
-		<SubObject subIndex="01" name="CNDevDescrFileFormat" objectType="7" dataType="0007" accessType="rw" defaultValue="FF" PDOmapping="no" range="01-FE" nameIndex="0" />
+		<SubObject subIndex="01" name="CNDevDescrFileFormat" objectType="7" dataType="0007" accessType="rw" defaultValue="FF" PDOmapping="no" range="01-FE"  />
 		
 	</Object>
 
 	<Object index="1F25" name="CFM_ConfCNRequest_AU32" objectType="8" dataType="0007">
 		<SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="ro" defaultValue="254" PDOmapping="opt"/>
-		<SubObject subIndex="01" name="CNConfigurationRequest" objectType="7" dataType="0007" accessType="wo" defaultValue="0" PDOmapping="no" range="01-FE" nameIndex="0"/>
+		<SubObject subIndex="01" name="CNConfigurationRequest" objectType="7" dataType="0007" accessType="wo" defaultValue="0" PDOmapping="no" range="01-FE" />
 	</Object>
 
 <Object index="1F26" name="CFM_ExpConfDateList_AU32" objectType="8" dataType="0007">
 <SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="ro" defaultValue="254" PDOmapping="opt"/>
-<SubObject subIndex="01" name="CNConfigurationDate" objectType="7" dataType="0007" accessType="rw" defaultValue="0" PDOmapping="no" range="01-FE" nameIndex="0"/>
+<SubObject subIndex="01" name="CNConfigurationDate" objectType="7" dataType="0007" accessType="rw" defaultValue="0" PDOmapping="no" range="01-FE" />
 </Object>
 
 	<Object index="1F27" name="CFM_ExpConfTimeList_AU32" objectType="8" dataType="0007">
 		<SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="ro" defaultValue="254" PDOmapping="opt"/>
-		<SubObject subIndex="01" name="CNConfigurationTime" objectType="7" dataType="0007" accessType="rw" defaultValue="0" PDOmapping="no" range="01-FE" nameIndex="0"/>		
+		<SubObject subIndex="01" name="CNConfigurationTime" objectType="7" dataType="0007" accessType="rw" defaultValue="0" PDOmapping="no" range="01-FE" />		
 	</Object>
 
 	<Object index="1F28" name="CFM_ExpConfIdList_AU32" objectType="8" dataType="0007">
 		<SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="ro" defaultValue="254" PDOmapping="opt"/>
-		<SubObject subIndex="01" name="CNConfigurationId" objectType="7" dataType="0007" accessType="rw" defaultValue="0" PDOmapping="no" range="01-FE" nameIndex="0"/>
+		<SubObject subIndex="01" name="CNConfigurationId" objectType="7" dataType="0007" accessType="rw" defaultValue="0" PDOmapping="no" range="01-FE" />
 	</Object>
 
 	<Object index="1F50" name="PDL_DownloadProgData_ADOM" objectType="8" dataType="000F">
 		<SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="rw" defaultValue="1" PDOmapping="no"/>
 		<SubObject subIndex="01" name="Program" objectType="7" dataType="000F" accessType="rw" defaultValue="-" PDOmapping="no"/>          
-		<SubObject subIndex="02" name="Program" objectType="7" dataType="000F" accessType="rw" defaultValue="-" PDOmapping="no" range="01-FE" nameIndex="0"/>
+		<SubObject subIndex="02" name="Program" objectType="7" dataType="000F" accessType="rw" defaultValue="-" PDOmapping="no" range="01-FE" />
 	</Object>
 
 	<Object index="1F51" name="PDL_ProgCtrl_AU8" objectType="8" dataType="0005">
 		<SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="rw" defaultValue="1" />
 		<SubObject subIndex="01" name="ProgCtrl" objectType="7" dataType="000F" accessType="rw" defaultValue="0" PDOmapping="no"/>          
-		<SubObject subIndex="02" name="ProgCtrl" objectType="7" dataType="000F" accessType="rw" defaultValue="no" PDOmapping="no" range="01-FE" nameIndex="0"/>
+		<SubObject subIndex="02" name="ProgCtrl" objectType="7" dataType="000F" accessType="rw" defaultValue="no" PDOmapping="no" range="01-FE" />
 		
 	</Object>
 
@@ -594,12 +594,12 @@ User: Administrator
 
           <Object index="1F53" name="PDL_MnExpAppSwDateList_AU32" objectType="8" dataType="0007">
             <SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="rw" defaultValue="FE" PDOmapping="no"/>
-            <SubObject subIndex="01" name="ApplSwDate " objectType="7" dataType="0007" accessType="rw" defaultValue="0" PDOmapping="no" range="01-FE" nameIndex="0"/>
+            <SubObject subIndex="01" name="ApplSwDate " objectType="7" dataType="0007" accessType="rw" defaultValue="0" PDOmapping="no" range="01-FE" />
 	</Object>
 
           <Object index="1F54" name="PDL_MnExpAppSwTimeList_AU32" objectType="8" dataType="0007">
             <SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="const" defaultValue="2" PDOmapping="no"/>
-            <SubObject subIndex="01" name="ApplSwTime" objectType="7" dataType="0007" accessType="rw" defaultValue="0" PDOmapping="no" range="01-FE" nameIndex="0"/>
+            <SubObject subIndex="01" name="ApplSwTime" objectType="7" dataType="0007" accessType="rw" defaultValue="0" PDOmapping="no" range="01-FE" />
 	      </Object>
 
           <Object index="1F70" name="INP_ProcessImage_REC" objectType="8" dataType="0428">
@@ -613,7 +613,7 @@ User: Administrator
 
 	<Object index="1F81" name="NMT_NodeAssignment_AU32" objectType="8" dataType="0007">
 		<SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="rw" defaultValue="254" PDOmapping="no"/>
-		<SubObject subIndex="01" name="CNAssignment" objectType="7" dataType="0007" accessType="rw" defaultValue="0" PDOmapping="no" range="01-FE" nameIndex="0" />
+		<SubObject subIndex="01" name="CNAssignment" objectType="7" dataType="0007" accessType="rw" defaultValue="0" PDOmapping="no" range="01-FE"  />
 	</Object>
 
 	<Object index="1F82" name="NMT_FeatureFlags_U32" objectType="7" dataType="0007" accessType="const" defaultValue="no" PDOmapping="no">
@@ -624,23 +624,23 @@ User: Administrator
 
 	<Object index="1F84" name="NMT_MNDeviceTypeIdList_AU32" objectType="8" dataType="0007">
 		<SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="rw" defaultValue="254" PDOmapping="no"/>
-		<SubObject subIndex="01" name="CNDeviceTypeId" objectType="7" dataType="0007" accessType="rw" defaultValue="0" PDOmapping="no" range="01-FE" nameIndex="0" />
+		<SubObject subIndex="01" name="CNDeviceTypeId" objectType="7" dataType="0007" accessType="rw" defaultValue="0" PDOmapping="no" range="01-FE" />
 		
 	</Object>
 
 	<Object index="1F85" name="NMT_MNVendorIdList_AU32" objectType="8" dataType="0007">
 		<SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="rw" defaultValue="254" PDOmapping="no"/>
-		<SubObject subIndex="01" name="CNVendorId" objectType="7" dataType="0007" accessType="rw" defaultValue="0" PDOmapping="no" range="01-FE" nameIndex="0" />
+		<SubObject subIndex="01" name="CNVendorId" objectType="7" dataType="0007" accessType="rw" defaultValue="0" PDOmapping="no" range="01-FE"  />
 	</Object>
 
 	<Object index="1F86" name="NMT_MNProductCodeList_AU32" objectType="8" dataType="0007">
 		<SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="rw" defaultValue="254" PDOmapping="no"/>
-		<SubObject subIndex="01" name="CNProductCode" objectType="7" dataType="0007" accessType="rw" defaultValue="0" PDOmapping="no" range="01-FE" nameIndex="0"/>
+		<SubObject subIndex="01" name="CNProductCode" objectType="7" dataType="0007" accessType="rw" defaultValue="0" PDOmapping="no" range="01-FE" />
 	</Object>
 
 	<Object index="1F88" name="NNMT_MNSerialNoList_AU32" objectType="8" dataType="0007">
 		<SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="rw" defaultValue="254" PDOmapping="no"/>
-		  <SubObject subIndex="01" name="CNSerialNo" objectType="7" dataType="0007" accessType="rw" defaultValue="0" PDOmapping="no" range="01-FE" nameIndex="0" />
+		  <SubObject subIndex="01" name="CNSerialNo" objectType="7" dataType="0007" accessType="rw" defaultValue="0" PDOmapping="no" range="01-FE" />
 	</Object>
 
 	<Object index="1F89" name="NMT_BootTime_REC" objectType="9" dataType="042E">
@@ -664,7 +664,7 @@ User: Administrator
 
 	<Object index="1F8B" name="NMT_MNPReqPayloadLimitList_AU16" objectType="8" dataType="0006">
 		<SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="rw" defaultValue="254" PDOmapping="no"/>
-		<SubObject subIndex="01" name="CNPReqPayload" objectType="7" dataType="0006" accessType="rw" defaultValue="36" PDOmapping="no" range="01-FE" nameIndex="0"/>
+		<SubObject subIndex="01" name="CNPReqPayload" objectType="7" dataType="0006" accessType="rw" defaultValue="36" PDOmapping="no" range="01-FE" />
 	</Object>
 
 	<Object index="1F8C" name="NMT_CurrNMTState_U8" objectType="7" dataType="0005" accessType="ro" defaultValue="1C" PDOmapping="yes">
@@ -672,12 +672,12 @@ User: Administrator
 
 	<Object index="1F8D" name="NMT_PResPayloadLimitList_AU16" objectType="8" dataType="0006">
 		<SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="rw" defaultValue="254" PDOmapping="no"/>
-		<SubObject subIndex="01" name=" PResPayloadLimit" objectType="7" dataType="0006" accessType="rw" defaultValue="36" PDOmapping="no" range="01-FE" nameIndex="0"/>
+		<SubObject subIndex="01" name=" PResPayloadLimit" objectType="7" dataType="0006" accessType="rw" defaultValue="36" PDOmapping="no" range="01-FE" />
 	</Object>
 
 	<Object index="1F8E" name="NMT_MNNodeCurrState_AU8" objectType="8" dataType="0006">
 		<SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="const" defaultValue="254" PDOmapping="no"/>
-		<SubObject subIndex="01" name="CurrState" objectType="7" dataType="0007" accessType="ro" defaultValue="1C" PDOmapping="no" range="01-FE" nameIndex="0"/>
+		<SubObject subIndex="01" name="CurrState" objectType="7" dataType="0007" accessType="ro" defaultValue="1C" PDOmapping="no" range="01-FE" />
 	</Object>
 
 	<Object index="1F8F" name="NMT_MNNodeExpState_AU8" objectType="8" dataType="0006">
@@ -687,7 +687,7 @@ User: Administrator
 
 	<Object index="1F92" name="NMT_MNCNPResTimeout_AU32" objectType="8" dataType="0007">
 		<SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="rw" defaultValue="254" PDOmapping="no"/>
-		<SubObject subIndex="01" name="CNResTimeout" objectType="7" dataType="0007" accessType="rw" defaultValue="25000" PDOmapping="no" range="01-FE" nameIndex="0" />
+		<SubObject subIndex="01" name="CNResTimeout" objectType="7" dataType="0007" accessType="rw" defaultValue="25000" PDOmapping="no" range="01-FE"  />
 	</Object>
 
 	<Object index="1F93" name="NMT_EPLNodeID_REC" objectType="9" dataType="0439">
@@ -718,12 +718,12 @@ User: Administrator
 
           <Object index="1F9B" name="NMT_MultipleCycleAssign_AU8" objectType="8" dataType="0005">
             <SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="rw" defaultValue="254" />
-			<SubObject subIndex="01" name="CycleNo" objectType="7" dataType="0005" accessType="rw" defaultValue="0" PDOmapping="no" range="01-FE" nameIndex="0"/>
+			<SubObject subIndex="01" name="CycleNo" objectType="7" dataType="0005" accessType="rw" defaultValue="0" PDOmapping="no" range="01-FE" />
 	</Object>
 
 	<Object index="1F9C" name="NMT_IsochrSlotAssign_AU8" objectType="8" dataType="0005">
             <SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="rw" defaultValue="254" />
-	<SubObject subIndex="01" name="NodeId" objectType="7" dataType="0005" accessType="rw" defaultValue="0" PDOmapping="no" range="01-FE" nameIndex="0"/>
+	<SubObject subIndex="01" name="NodeId" objectType="7" dataType="0005" accessType="rw" defaultValue="0" PDOmapping="no" range="01-FE" />
 	</Object>
 
 	<Object index="1F9E" name="NMT_ResetCmd_U8" objectType="7" dataType="0005" accessType="rw" defaultValue="FF" PDOmapping="no">

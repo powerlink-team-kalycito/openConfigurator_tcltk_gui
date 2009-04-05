@@ -242,15 +242,115 @@ proc Validation::IsValidName { input } {
 #
 #  Description : Validates whether an entry is an integer and does not exceed specified range.
 #---------------------------------------------------------------------------------------------------
-proc Validation::IsDec {input entryPath mode idx} {
+proc Validation::IsDec {input entryPath mode idx dataType} {
     set tempInput $input
     
-    if { [string length $tempInput] > 20 || $tempInput > 18446744073709551615 || [Validation::CheckDecimalNumber $tempInput] == 0  } {
-	    return 0
-    } else {
+    set stdDataType [ string toupper $dataType ]
+    puts "Validation::IsDec dataType->$dataType stdDataType->$stdDataType"
+    switch -- $stdDataType {
+        BOOLEAN {
+            set minLimit 0
+            set maxLimit 1
+	    set reqLengt 1
+        }
+        INTEGER8 {
+            set minLimit -128
+            set maxLimit 127
+	    set reqLengt 3
+        }
+        UNSIGNED8 {
+            set minLimit 0
+            set maxLimit 255
+	    set reqLengt 3
+        }
+        INTEGER16 {
+            set minLimit -32768
+            set maxLimit 32767
+	    set reqLengt 5
+        }
+        UNSIGNED16 {
+	    set minLimit 0
+	    set maxLimit 65535
+	    set reqLengt 5
+        }
+        INTEGER24 {
+            set minLimit -8388608
+            set maxLimit 8388607
+	    set reqLengt 7
+        }
+        UNSIGNED24 {
+            set minLimit 0
+            set maxLimit 16777215
+	    set reqLengt 8
+        }
+        INTEGER32 {
+            set minLimit -2147483648
+            set maxLimit 2147483647
+	    set reqLengt 10
+        }
+        UNSIGNED32 {
+            set minLimit 0
+            set maxLimit 4294967295
+	    set reqLengt 10
+        }
+        INTEGER40 {
+            set minLimit -549755813888
+            set maxLimit 549755813887
+	    set reqLengt 12
+        }
+        UNSIGNED40 {
+            set minLimit 0
+            set maxLimit 1099511627775
+	    set reqLengt 13
+        }
+        INTEGER48 {
+            set minLimit -140737488355328
+            set maxLimit 140737488355327
+	    set reqLengt 15
+        }
+        UNSIGNED48 {
+	    set minLimit 0
+            set maxLimit 281474976710655
+	    set reqLengt 15
+        }
+        INTEGER56 {
+	    set minLimit -36028797018963968
+            set maxLimit 36028797018963967
+	    set reqLengt 17
+        }
+        UNSIGNED56 {
+            set minLimit 0
+            set maxLimit 72057594037927935
+	    set reqLengt 17
+        }
+        INTEGER64 {
+            set minLimit -9223372036854775808
+            set maxLimit 9223372036854775807
+	    set reqLengt 19
+        }
+        UNSIGNED64 {
+            set minLimit 0
+            set maxLimit 18446744073709551615
+	    set reqLengt 20
+        }
+	default  {
+		return 0
+	}
+    }
+    
+#    if { [string length $tempInput] > 20 || $tempInput > 18446744073709551615 || [Validation::CheckDecimalNumber $tempInput] == 0  } {
+#	    return 0
+#    } else {
+#	    after 1 Validation::SetValue $entryPath $mode $idx $input
+#	    Validation::SetPromptFlag
+#	    return 1
+#    }
+    if { $tempInput == "" || ([Validation::CheckDecimalNumber $tempInput] == 1 && ( ($tempInput <= $maxLimit && $tempInput >= $minLimit && [string length $tempInput] <= $reqLengt ) || $tempInput == "-" )) } {
 	    after 1 Validation::SetValue $entryPath $mode $idx $input
 	    Validation::SetPromptFlag
 	    return 1
+    } else {
+	    return 0
     }
 }
 
@@ -264,9 +364,14 @@ proc Validation::IsDec {input entryPath mode idx} {
 #  Description : Validates string is containing only numbers 0 to 9
 #---------------------------------------------------------------------------------------------------
 proc Validation::CheckDecimalNumber {input} {
+    set firstExp {-|[0-9]}
     set exp {[0-9]}
     for {set checkCount 0} {$checkCount < [string length $input]} {incr checkCount} {
-        set res [regexp -- $exp [string index $input $checkCount] ]
+	if { $checkCount == 0 } {
+	    set res [regexp -- $firstExp [string index $input $checkCount] ]
+	} else {
+	    set res [regexp -- $exp [string index $input $checkCount] ]
+	}
         if {$res == 1} {
 	        #continue with process
         } else {
@@ -358,7 +463,110 @@ proc Validation::BintoHex {binNo} {
 #
 #  Description : Validates whether an entry is an integer and does not exceed specified range.
 #---------------------------------------------------------------------------------------------------
-proc Validation::IsHex {input preinput entryPath mode idx} {
+proc Validation::IsHex {input preinput entryPath mode idx dataType} {
+
+    set stdDataType [ string toupper $dataType ]
+    switch -- $stdDataType {
+        BOOLEAN {
+            set minLimit 0x0
+            set maxLimit 0x1
+	    set reqLengt 1
+        }
+        INTEGER8 {
+            set minLimit 0x0
+            set maxLimit 0xFF
+	    set reqLengt 2
+        }
+        UNSIGNED8 {
+            set minLimit 0x0
+            set maxLimit 0xFF
+	    set reqLengt 2
+        }
+        INTEGER16 {
+	    set minLimit 0x0
+            set maxLimit 0xFFFF
+	    set reqLengt 4
+        }
+        UNSIGNED16 {
+            set minLimit 0x0
+            set maxLimit 0xFFFF
+	    set reqLengt 4
+        }
+        INTEGER24 {
+            set minLimit 0x0
+            set maxLimit 0xFFFFFF
+	    set reqLengt 6
+        }
+        UNSIGNED24 {
+            set minLimit 0x0
+            set maxLimit 0xFFFFFF
+	    set reqLengt 6
+        }
+        INTEGER32 {
+            set minLimit 0x0
+            set maxLimit 0xFFFFFFFF
+	    set reqLengt 8
+        }
+        UNSIGNED32 {
+            set minLimit 0x0
+            set maxLimit 0xFFFFFFFF
+	    set reqLengt 8
+        }
+        INTEGER40 {
+            set minLimit 0x0
+            set maxLimit 0xFFFFFFFFFF
+	    set reqLengt 10
+        }
+        UNSIGNED40 {
+            set minLimit 0x0
+	    set maxLimit 0xFFFFFFFFFF
+	    set reqLengt 10
+        }
+        INTEGER48 {
+            set minLimit 0x0
+            set maxLimit 0xFFFFFFFFFFFF
+	    set reqLengt 12
+        }
+        UNSIGNED48 {
+            set minLimit 0x0
+            set maxLimit 0xFFFFFFFFFFFF
+	    set reqLengt 12
+        }
+        INTEGER56 {
+            set minLimit 0x0
+            set maxLimit 0xFFFFFFFFFFFFFF
+	    set reqLengt 14
+        }
+        UNSIGNED56 {
+            set minLimit 0x0
+            set maxLimit 0xFFFFFFFFFFFFFF
+	    set reqLengt 14
+        }
+        INTEGER64 {
+            set minLimit 0x0
+	    set maxLimit 0xFFFFFFFFFFFFFFFF
+	    set reqLengt 16
+        }
+        UNSIGNED64 {
+            set minLimit 0x0
+            set maxLimit 0xFFFFFFFFFFFFFFFF
+	    set reqLengt 16
+        }
+        REAL32 {
+            set minLimit 0x0
+            set maxLimit 0xFFFFFFFFFFFFFFFF
+	    set reqLengt 16
+        }
+        REAL64 {
+            set minLimit 0x0
+            set maxLimit 0xFFFFFFFFFFFFFFFF
+	    set reqLengt 16
+        }
+	default  {
+		return 0
+	}
+    }
+
     if {[string match -nocase "0x*" $input]} {
 	    set tempInput [string range $input 2 end]
     } elseif {[string match -nocase "x*" $input]} {
@@ -374,16 +582,16 @@ proc Validation::IsHex {input preinput entryPath mode idx} {
 		    set tempInput $input
 	    }
     }
-    if { [string length $tempInput] > 64 || [string is xdigit $tempInput ] == 0 } {
+    
+    if { $tempInput == "" || ([string is xdigit $tempInput ] == 1 && [expr 0x$tempInput <= $maxLimit] && [expr 0x$tempInput >= $minLimit] && [string length $tempInput] <= $reqLengt )} {
+	set tempInput 0x$tempInput
+	after 1 Validation::SetValue $entryPath $mode $idx $tempInput
+	Validation::SetPromptFlag
+	return 1
+    } else { 
 	    return 0
-    } else {
-	    set tempInput 0x$tempInput
-	    after 1 Validation::SetValue $entryPath $mode $idx $tempInput
-	
-	    Validation::SetPromptFlag
-	
-	    return 1
     }
+    
 }
 
 #---------------------------------------------------------------------------------------------------
@@ -484,9 +692,9 @@ proc Validation::IsTableHex {input preinput mode idx reqLen tablePath rowIndex c
 #  Validation::SetTableValue
 # 
 #  Arguments : entryPath - embedded entry in tablelist
-#	           mode      - indicaties deletion or insertion of character
-#	           idx       - index where cursor is set
-#	           input     - input to be validated
+#              mode      - indicaties deletion or insertion of character
+#              idx       - index where cursor is set
+#              input     - input to be validated
 #
 #  Results : -
 #
@@ -509,23 +717,67 @@ proc Validation::SetTableValue { entryPath mode idx input } {
 #---------------------------------------------------------------------------------------------------
 # Validation::InputToHex
 # 
-#  Arguments : input - input to be validated
+#  Arguments : input    - input to be validated
+#              dataType - data type of the input
 #	      
 #  Results : converted value
 #
-#  Description : converts the input decinmal value into hexadecimal value
+#  Description : converts the input decimal value into hexadecimal value
 #---------------------------------------------------------------------------------------------------
-proc Validation::InputToHex {input} {
+proc Validation::InputToHex {input dataType} {
+    set stdDataType [ string toupper $dataType ]
     if { $input == 0 } {
 	    #if value is zero return as it is
-	    return 0x$input
-    } elseif { $input == "" || [Validation::CheckDecimalNumber $input] == 0 } {
+	    return [list 0x$input pass]
+    } elseif { $input == "" || [Validation::CheckDecimalNumber $input ] == 0 } {
 	    #if value empty or not an int return back same value
-	    return $input
+	    return [list $input fail]
     }
-     #counting the leading zero if they are present
-    set zeroCount [NoteBookManager::CountLeadZero $input] 
-    set input [string trimleft $input 0]
+    
+        
+    if { $input < 0 } {
+	switch -- $stdDataType {
+	    INTEGER8 {
+	        set maxLimit 256
+	    }
+	    INTEGER16 {
+	        set maxLimit 65536
+	    }
+	    INTEGER24 {
+	        set maxLimit 16777216
+	    }
+	    INTEGER32 {
+	        set maxLimit 4294967296
+	    }
+	    INTEGER40 {
+	        set maxLimit 1099511627776
+	    }
+	    INTEGER48 {
+	        set maxLimit 281474976710656
+	    }
+	    INTEGER56 {
+	        set maxLimit 72057594037927936
+	    }
+	    INTEGER64 {
+	        set maxLimit 18446744073709551616
+	    }
+	    default  {
+	        return [list $input fail]
+	    }
+	}
+	#removing negative sign
+	set input [string range $input 1 end]
+	 #counting the leading zero if they are present
+	set zeroCount [NoteBookManager::CountLeadZero $input] 
+	set input [string trimleft $input 0]
+	set input [expr $maxLimit-$input]
+	puts "conv neg input->$input"
+    } else {
+	 #counting the leading zero if they are present
+	set zeroCount [NoteBookManager::CountLeadZero $input] 
+	set input [string trimleft $input 0]
+    }
+    
     if { $input > 4294967295 } {
 	    set calcVal $input
 	    set finalVal ""
@@ -547,13 +799,92 @@ proc Validation::InputToHex {input} {
     } else {
 	    if { [catch {set input [format %X $input]}] } {
 		    #raised an error in conversion
+		    return [list $input fail]
 	    } else {
 		    #appending trimmed leading zero if any
 		    set input [ NoteBookManager::AppendZero $input [expr $zeroCount+[string length $input] ] ] 
 		    set input 0x$input
 	    }
     }
-    return $input
+    return [list $input pass]
+}
+
+#---------------------------------------------------------------------------------------------------
+# Validation::InputToDec
+# 
+#  Arguments : input    - input to be validated
+#              dataType - data type of the input
+#	      
+#  Results : converted value
+#
+#  Description : converts the input hexadecimal value into decimal value
+#---------------------------------------------------------------------------------------------------
+proc Validation::InputToDec {input dataType} {
+    set stdDataType [string toupper $dataType]
+    set signFlag 0
+    puts "Validation::InputToDec dataType->$dataType stdDataType->$stdDataType"
+    if { $input == 0 } {
+        # value is zero 
+	return [list $input pass]
+    } elseif { $input != "" } {
+        #counting the leading zero if they are present
+        set zeroCount [NoteBookManager::CountLeadZero $input]
+        if { [ catch {set input [expr 0x$input]} ] } {
+            #error raised should not convert
+	    return [list $input fail]
+        } else {
+	    #convert value according to datatype
+	    if {[string match -nocase "INTEGER*" $stdDataType]} {
+		switch -- $stdDataType {
+		    INTEGER8 {
+			set posLimit 127
+		        set maxLimit 256
+		    }
+		    INTEGER16 {
+			set posLimit 32767
+		        set maxLimit 65536
+		    }
+		    INTEGER24 {
+			set posLimit 8388607
+		        set maxLimit 16777216
+		    }
+	            INTEGER32 {
+			set posLimit 2147483647
+	                set maxLimit 4294967296
+	            }
+	            INTEGER40 {
+			set posLimit 549755813887
+	                set maxLimit 1099511627776
+	            }
+		    INTEGER48 {
+			set posLimit 140737488355327
+	                set maxLimit 281474976710656
+	            }
+	            INTEGER56 {
+			set posLimit 36028797018963967
+	                set maxLimit 72057594037927936
+	            }
+	            INTEGER64 {
+			set posLimit 9223372036854775807
+	                set maxLimit 18446744073709551616
+	            }
+		}
+		if { $input > $posLimit } {
+		    set input [expr $maxLimit-$input]
+		    set signFlag 1
+		}
+	    }
+            #appending trimmed leading zero if any
+            set input [ NoteBookManager::AppendZero $input [expr $zeroCount+[string length $input] ] ]
+	    if { $signFlag == 1} {
+		#since it is a negative number append minus sign
+		set input -$input
+	    }
+	    return [list $input pass]
+        }
+    } else {
+	return [list "" pass]
+    }
 }
 
 #---------------------------------------------------------------------------------------------------

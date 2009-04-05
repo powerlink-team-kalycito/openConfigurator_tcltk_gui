@@ -147,7 +147,7 @@ proc NoteBookManager::create_tab { nbpath choice } {
     entry $tabInnerf1.en_lower1 -state disabled -width 20 -validate key -vcmd "Validation::IsHex %P %s $tabInnerf1.en_lower1 %d %i"
     entry $tabInnerf1.en_pdo1 -state disabled -width 20
     entry $tabInnerf1.en_default1 -state disabled -width 20
-    entry $tabInnerf1.en_value1 -width 20 -textvariable tmpValue$_pageCounter  -relief ridge -bg white -validate key -vcmd "Validation::IsDec %P $tabInnerf1.en_value1 %d %i"
+    entry $tabInnerf1.en_value1 -width 20 -textvariable tmpValue$_pageCounter  -relief ridge -bg white 
 	    
     if {"$tcl_platform(platform)" == "windows"} {
         set comboWidth 17
@@ -170,8 +170,8 @@ proc NoteBookManager::create_tab { nbpath choice } {
     ComboBox $tabInnerf1.co_pdo1 -values $pdoColist -editable no -textvariable co_pdo -modifycmd "NoteBookManager::ChangeValidation $tabInnerf1 $tabInnerf1.co_pdo1" -width $comboWidth
 
     set frame1 [frame $tabInnerf1.frame1]
-    set ra_dec [radiobutton $frame1.ra_dec -text "Dec" -variable ra_dataType -value dec -command "NoteBookManager::ConvertDec $tabInnerf1"]
-    set ra_hex [radiobutton $frame1.ra_hex -text "Hex" -variable ra_dataType -value hex -command "NoteBookManager::ConvertHex $tabInnerf1"]
+    set ra_dec [radiobutton $frame1.ra_dec -text "Dec" -variable ra_dataType -value dec -command "NoteBookManager::ConvertDec $tabInnerf0 $tabInnerf1"]
+    set ra_hex [radiobutton $frame1.ra_hex -text "Hex" -variable ra_dataType -value hex -command "NoteBookManager::ConvertHex $tabInnerf0 $tabInnerf1"]
 
     set ch_gen [checkbutton $tabInnerf0_1.ch_gen -onvalue 1 -offvalue 0 -command { Validation::SetPromptFlag } -variable ch_generate]
 
@@ -445,7 +445,7 @@ proc NoteBookManager::create_treeBrowserWindow {nbpath } {
 #
 #  Description : converts value into decimal and changes validation for entry
 #---------------------------------------------------------------------------------------------------
-proc NoteBookManager::ConvertDec {framePath} {
+proc NoteBookManager::ConvertDec {framePath0 framePath1} {
     global lastConv
     global userPrefList
     global nodeSelect
@@ -458,16 +458,30 @@ proc NoteBookManager::ConvertDec {framePath} {
         } else {
             set userPrefList [lreplace $userPrefList $schRes $schRes [list $nodeSelect dec] ]
         }
+        $framePath0.en_idx1 configure -state normal
+        set indexId [string range [$framePath0.en_idx1 get] 2 end]
+        puts "convertdec indexId->$indexId"
+        $framePath0.en_idx1 configure -state disabled
+        if { [expr 0x$indexId <= 0x1fff] } {
+            $framePath1.en_data1 configure -state normal
+            set dataType [$framePath1.en_data1 get]
+            $framePath1.en_data1 configure -state disabled
+        } else {
+            set state [$framePath1.co_data1 cget -state]
+            $framePath1.co_data1 configure -state normal
+            set dataType [NoteBookManager::GetComboValue $framePath1.co_data1]
+            $framePath1.co_data1 configure -state $state
+        }
+puts "convertdec dataType->$dataType"
+        set state [$framePath1.en_value1 cget -state]
+        $framePath1.en_value1 configure -validate none -state normal
+        NoteBookManager::InsertDecimal $framePath1.en_value1 $dataType
+        $framePath1.en_value1 configure -validate key -vcmd "Validation::IsDec %P $framePath1.en_value1 %d %i $dataType" -state $state
 
-        set state [$framePath.en_value1 cget -state]
-        $framePath.en_value1 configure -validate none -state normal
-        NoteBookManager::InsertDecimal $framePath.en_value1
-        $framePath.en_value1 configure -validate key -vcmd "Validation::IsDec %P $framePath.en_value1 %d %i" -state $state
-
-        set state [$framePath.en_default1 cget -state]
-        $framePath.en_default1 configure -state normal
-        NoteBookManager::InsertDecimal $framePath.en_default1
-        $framePath.en_default1 configure -state $state	
+        set state [$framePath1.en_default1 cget -state]
+        $framePath1.en_default1 configure -state normal
+        NoteBookManager::InsertDecimal $framePath1.en_default1 $dataType
+        $framePath1.en_default1 configure -state $state	
     } else {
         #already dec is selected
     }
@@ -482,31 +496,34 @@ proc NoteBookManager::ConvertDec {framePath} {
 #
 #  Description : Convert the value into decimal and insert into the entry widget
 #---------------------------------------------------------------------------------------------------
-proc NoteBookManager::InsertDecimal {entryPath} {
+proc NoteBookManager::InsertDecimal {entryPath dataType} {
     set entryValue [$entryPath get]
     if { [string match -nocase "0x*" $entryValue] } {
     	set entryValue [string range $entryValue 2 end]
     }
    
-    if { $entryValue == 0 } {
-        # value is zero 
-        $entryPath delete 0 end
-        $entryPath insert 0 $entryValue
-    } elseif { $entryValue != "" } {
-        #counting the leading zero if they are present
-        set zeroCount [NoteBookManager::CountLeadZero $entryValue]
-        if { [ catch {set entryValue [expr 0x$entryValue]} ] } {
-            #error raised should not convert
-        } else {
-            #appending trimmed leading zero if any
-            set entryValue [ NoteBookManager::AppendZero $entryValue [expr $zeroCount+[string length $entryValue] ] ] 
-            $entryPath delete 0 end
-            $entryPath insert 0 $entryValue
-        }
-    } else {
-        #value is empty clear previous data
-        $entryPath delete 0 end
-    }
+    $entryPath delete 0 end
+    set entryValue [lindex [Validation::InputToDec $entryValue $dataType] 0]
+    $entryPath insert 0 $entryValue
+    #if { $entryValue == 0 } {
+    #    # value is zero 
+    #    $entryPath delete 0 end
+    #    $entryPath insert 0 $entryValue
+    #} elseif { $entryValue != "" } {
+    #    #counting the leading zero if they are present
+    #    set zeroCount [NoteBookManager::CountLeadZero $entryValue]
+    #    if { [ catch {set entryValue [expr 0x$entryValue]} ] } {
+    #        #error raised should not convert
+    #    } else {
+    #        #appending trimmed leading zero if any
+    #        set entryValue [ NoteBookManager::AppendZero $entryValue [expr $zeroCount+[string length $entryValue] ] ] 
+    #        $entryPath delete 0 end
+    #        $entryPath insert 0 $entryValue
+    #    }
+    #} else {
+    #    #value is empty clear previous data
+    #    $entryPath delete 0 end
+    #}
 }
 
 #---------------------------------------------------------------------------------------------------
@@ -518,7 +535,7 @@ proc NoteBookManager::InsertDecimal {entryPath} {
 #
 #  Description : converts the value to hexadecimal and changes validation for entry
 #---------------------------------------------------------------------------------------------------
-proc NoteBookManager::ConvertHex {framePath} {
+proc NoteBookManager::ConvertHex {framePath0 framePath1} {
     global lastConv
     global userPrefList
     global nodeSelect
@@ -531,16 +548,30 @@ proc NoteBookManager::ConvertHex {framePath} {
         } else {
            set userPrefList [lreplace $userPrefList $schRes $schRes [list $nodeSelect hex] ]
         }
+        $framePath0.en_idx1 configure -state normal
+        set indexId [string range [$framePath0.en_idx1 get] 2 end]
+        $framePath0.en_idx1 configure -state disabled
+        puts "converthex indexId->$indexId"
+        if { [expr 0x$indexId <= 0x1fff] } {
+            $framePath1.en_data1 configure -state normal
+            set dataType [$framePath1.en_data1 get]
+            $framePath1.en_data1 configure -state disabled
+        } else {
+            set state [$framePath1.co_data1 cget -state]
+            $framePath1.co_data1 configure -state normal
+            set dataType [NoteBookManager::GetComboValue $framePath1.co_data1]
+            $framePath1.co_data1 configure -state $state
+        }
+puts "converthex dataType->$dataType"
+        set state [$framePath1.en_value1 cget -state]
+        $framePath1.en_value1 configure -validate none -state normal
+        NoteBookManager::InsertHex $framePath1.en_value1 $dataType
+        $framePath1.en_value1 configure -validate key -vcmd "Validation::IsHex %P %s $framePath1.en_value1 %d %i $dataType" -state $state
 
-        set state [$framePath.en_value1 cget -state]
-        $framePath.en_value1 configure -validate none -state normal
-        NoteBookManager::InsertHex $framePath.en_value1
-        $framePath.en_value1 configure -validate key -vcmd "Validation::IsHex %P %s $framePath.en_value1 %d %i" -state $state
-
-        set state [$framePath.en_default1 cget -state]
-        $framePath.en_default1 configure -state normal
-        NoteBookManager::InsertHex $framePath.en_default1
-        $framePath.en_default1 configure -state $state
+        set state [$framePath1.en_default1 cget -state]
+        $framePath1.en_default1 configure -state normal
+        NoteBookManager::InsertHex $framePath1.en_default1 $dataType
+        $framePath1.en_default1 configure -state $state
     } else {
         #already hex is selected
     }
@@ -555,11 +586,11 @@ proc NoteBookManager::ConvertHex {framePath} {
 #
 #  Description : Convert the value into hexadecimal and insert into the entry widget
 #---------------------------------------------------------------------------------------------------
-proc NoteBookManager::InsertHex {entryPath} {
+proc NoteBookManager::InsertHex {entryPath dataType} {
     set entryValue [$entryPath get]
     if { $entryValue != "" } {
         $entryPath delete 0 end
-        set entryValue [Validation::InputToHex $entryValue]
+        set entryValue [lindex [Validation::InputToHex $entryValue $dataType] 0]
         $entryPath insert 0 $entryValue
     } else {
         $entryPath delete 0 end
@@ -732,9 +763,8 @@ proc NoteBookManager::SaveValue {frame0 frame1} {
         #}
     }
     
-    if { $dataType == "IP_ADDRESS" || $dataType == "MAC_ADDRESS" || $dataType ==  "Visible_String" || [string match -nocase "BIT" $dataType] } {
-        #no need to convert
-    } else {
+    if { [string match -nocase "INTEGER*" $dataType] || [string match -nocase "UNSIGNED*" $dataType] || [string match -nocase "BOOLEAN" $dataType ] } {
+        #need to convert
         set radioSel [$frame1.frame1.ra_dec cget -variable]
         global $radioSel
         set radioSel [subst $[subst $radioSel]]
@@ -750,7 +780,7 @@ proc NoteBookManager::SaveValue {frame0 frame1} {
                 }
             } elseif { $radioSel == "dec" } {
                 #is is dec value convert to hex
-                set value [Validation::InputToHex $value]
+                set value [lindex [Validation::InputToHex $value $dataType] 0]
                 if { $value == "" } {
                     set value ""
                 } else {
@@ -763,6 +793,26 @@ proc NoteBookManager::SaveValue {frame0 frame1} {
                 #invalid condition
             }
         }
+    } elseif { [string match -nocase "BIT" $dataType] } {
+        #continue
+    } elseif { [string match -nocase "REAL*" $dataType] } {
+        #continue
+    } elseif { $dataType == "IP_ADDRESS" } {
+        set result [$frame1.en_value1 validate]
+        if {$result == 0} {
+            tk_messageBox -message "IP address not complete\nValues not saved" -title Warning -icon warning -parent .
+            Validation::ResetPromptFlag
+            return
+        }
+    } elseif { $dataType == "MAC_ADDRESS" } {
+        set result [$frame1.en_value1 validate]
+        if {$result == 0} {
+            tk_messageBox -message "MAC address not complete\nValues not saved" -title Warning -icon warning -parent .
+            Validation::ResetPromptFlag
+            return
+        }
+    } elseif { $dataType ==  "Visible_String" } {
+        #continue
     }
     
     if { $value == "" || $dataType == ""  } {
@@ -784,153 +834,153 @@ proc NoteBookManager::SaveValue {frame0 frame1} {
         }
     } else {
         
-        if { ( $accessType == "const" || $accessType == "ro" || $accessType == "" ) && [expr 0x$indexId <= 0x1fff] } {
-            #access type is const or ro or empty for indexid specified in object dictionary do not validate value for save as it is
-        } else {
-            foreach stdDataType [list BIT BOOLEAN INTEGER8 INTEGER16 INTEGER24 INTEGER32 INTEGER40 INTEGER48 INTEGER56 INTEGER64 \
-                    UNSIGNED8 UNSIGNED16 UNSIGNED24 UNSIGNED32 UNSIGNED40 UNSIGNED48 UNSIGNED56 UNSIGNED64 REAL32 REAL64 MAC_ADDRESS IP_ADDRESS] {
-                if { [string match -nocase $stdDataType $dataType] } {
-                    #matched to a standard datatype in list and value is non empty
-                    switch -- $stdDataType {
-                        BIT {
-                            if { [string length $value] == 8 && [Validation::CheckBitNumber $value] == 1 } {
-                                set value 0x[Validation::BintoHex $value]
-                                set decLimit 255
-                                set hexLimit 0xff
-                                break
-                            } else {
-                                tk_messageBox -message "Invalid Bit value\nEntered value should be 8 character long\nEdited Values not saved" -title Warning -icon warning -parent .
-                                Validation::ResetPromptFlag
-                                return
-                            }
-                        }
-                        BOOLEAN {
-                            set decLimit 1
-                            set hexLimit 0x1
-                        }
-                        INTEGER8 {
-                            set decLimit 127
-                            set hexLimit 0x7F
-                        }
-                        UNSIGNED8 {
-                            set decLimit 255
-                            set hexLimit 0xFF
-                            
-                        }
-                        INTEGER16 {
-                            set decLimit 32767
-                            set hexLimit 0x7FFF
-                        }
-                        UNSIGNED16 {
-                            set decLimit 65535
-                            set hexLimit 0xFFFF
-                        }
-                        INTEGER24 {
-                            set decLimit 8388607
-                            set hexLimit 0x7FFFFF
-                        }
-                        UNSIGNED24 {
-                            set decLimit 16777215
-                            set hexLimit 0xFFFFFF
-                        }
-                        INTEGER32 {
-                            set decLimit 2147483647
-                            set hexLimit 0x7FFFFFFF
-                        }
-                        UNSIGNED32 {
-                            set decLimit 4294967295
-                            set hexLimit 0xFFFFFFFF
-                        }
-                        INTEGER40 {
-                            set decLimit 549755813887
-                            set hexLimit 0x7FFFFFFFFF
-                        }
-                        UNSIGNED40 {
-                            set decLimit 1099511627775
-                            set hexLimit 0xFFFFFFFFFF
-                        }
-                        INTEGER48 {
-                            set decLimit 140737488355327
-                            set hexLimit 0x7FFFFFFFFFFF
-                        }
-                        UNSIGNED48 {
-                            set decLimit 281474976710655
-                            set hexLimit 0xFFFFFFFFFFFF
-                        }
-                        INTEGER56 {
-                            set decLimit 36028797018963967
-                            set hexLimit 0x7FFFFFFFFFFFFF
-                        }
-                        UNSIGNED56 {
-                            set decLimit 72057594037927935
-                            set hexLimit 0xFFFFFFFFFFFFFF
-                        }
-                        INTEGER64 {
-                            set decLimit 9223372036854775807
-                            set hexLimit 0x7FFFFFFFFFFFFFFF
-                        }
-                        UNSIGNED64 {
-                            set decLimit 18446744073709551615
-                            set hexLimit 0xFFFFFFFFFFFFFFFF
-                        }
-                        REAL32 {
-                            set decLimit 18446744073709551615
-                            set hexLimit 0xFFFFFFFFFFFFFFFF
-                        }
-                        REAL64 {
-                            set decLimit 18446744073709551615
-                            set hexLimit 0xFFFFFFFFFFFFFFFF
-                        }
-                        MAC_ADDRESS {
-                            set validRes [Validation::IsMAC $value forced]
-                            if { $validRes == 0 } {
-                                tk_messageBox -message "Invalid MAC address \nValues not saved" -title Warning -icon warning -parent .
-                                Validation::ResetPromptFlag
-                                return
-                            } else {
-                                break    
-                            }
-                        }
-                        IP_ADDRESS {
-                            set validRes [Validation::IsIP $value forced]
-                            if { $validRes == 0 } {
-                                tk_messageBox -message "Invalid IP address \nValues not saved" -title Warning -icon warning -parent .
-                                Validation::ResetPromptFlag
-                                return
-                            } else {
-                                break    
-                            }
-                        }
-                    }
-                    
-                    if { [string match -nocase "0x*" $value] } {
-                        set checkno [ Validation::CheckHexaNumber [string range $value 2 end] ]
-                        set msg "Not a valid Hexadecimal number"
-                        set maxlimit $hexLimit
-                        set minlimit 0x0
-                    } else {
-                        set checkno [ Validation::CheckDecimalNumber $value ]
-                        set msg "Not a valid Decimal number"
-                        set maxlimit $decLimit
-                        set minlimit 0
-                    }
-                    if { $checkno == 0 } {
-                        tk_messageBox -message $msg -parent .
-                        Validation::ResetPromptFlag
-                        return
-                    }
-                    if { [expr $value > $maxlimit] || [expr $value < $minlimit] } {
-                        #out of range
-                        tk_messageBox -message "Value out of range for $dataType\nShould be in range $minlimit to $maxlimit" -parent .
-                        Validation::ResetPromptFlag
-                        return
-                    }
-                    break
-                } else {
-                    #continue to check till end of value
-                }
-            }
-        }
+        #if { ( $accessType == "const" || $accessType == "ro" || $accessType == "" ) && [expr 0x$indexId <= 0x1fff] } {
+        #    #access type is const or ro or empty for indexid specified in object dictionary do not validate value for save as it is
+        #} else {
+        #    foreach stdDataType [list BIT BOOLEAN INTEGER8 INTEGER16 INTEGER24 INTEGER32 INTEGER40 INTEGER48 INTEGER56 INTEGER64 \
+        #            UNSIGNED8 UNSIGNED16 UNSIGNED24 UNSIGNED32 UNSIGNED40 UNSIGNED48 UNSIGNED56 UNSIGNED64 REAL32 REAL64 MAC_ADDRESS IP_ADDRESS] {
+        #        if { [string match -nocase $stdDataType $dataType] } {
+        #            #matched to a standard datatype in list and value is non empty
+        #            switch -- $stdDataType {
+        #                BIT {
+        #                    if { [string length $value] == 8 && [Validation::CheckBitNumber $value] == 1 } {
+        #                        set value 0x[Validation::BintoHex $value]
+        #                        set decLimit 255
+        #                        set hexLimit 0xff
+        #                        break
+        #                    } else {
+        #                        tk_messageBox -message "Invalid Bit value\nEntered value should be 8 character long\nEdited Values not saved" -title Warning -icon warning -parent .
+        #                        Validation::ResetPromptFlag
+        #                        return
+        #                    }
+        #                }
+        #                BOOLEAN {
+        #                    set decLimit 1
+        #                    set hexLimit 0x1
+        #                }
+        #                INTEGER8 {
+        #                    set decLimit 127
+        #                    set hexLimit 0x7F
+        #                }
+        #                UNSIGNED8 {
+        #                    set decLimit 255
+        #                    set hexLimit 0xFF
+        #                    
+        #                }
+        #                INTEGER16 {
+        #                    set decLimit 32767
+        #                    set hexLimit 0x7FFF
+        #                }
+        #                UNSIGNED16 {
+        #                    set decLimit 65535
+        #                    set hexLimit 0xFFFF
+        #                }
+        #                INTEGER24 {
+        #                    set decLimit 8388607
+        #                    set hexLimit 0x7FFFFF
+        #                }
+        #                UNSIGNED24 {
+        #                    set decLimit 16777215
+        #                    set hexLimit 0xFFFFFF
+        #                }
+        #                INTEGER32 {
+        #                    set decLimit 2147483647
+        #                    set hexLimit 0x7FFFFFFF
+        #                }
+        #                UNSIGNED32 {
+        #                    set decLimit 4294967295
+        #                    set hexLimit 0xFFFFFFFF
+        #                }
+        #                INTEGER40 {
+        #                    set decLimit 549755813887
+        #                    set hexLimit 0x7FFFFFFFFF
+        #                }
+        #                UNSIGNED40 {
+        #                    set decLimit 1099511627775
+        #                    set hexLimit 0xFFFFFFFFFF
+        #                }
+        #                INTEGER48 {
+        #                    set decLimit 140737488355327
+        #                    set hexLimit 0x7FFFFFFFFFFF
+        #                }
+        #                UNSIGNED48 {
+        #                    set decLimit 281474976710655
+        #                    set hexLimit 0xFFFFFFFFFFFF
+        #                }
+        #                INTEGER56 {
+        #                    set decLimit 36028797018963967
+        #                    set hexLimit 0x7FFFFFFFFFFFFF
+        #                }
+        #                UNSIGNED56 {
+        #                    set decLimit 72057594037927935
+        #                    set hexLimit 0xFFFFFFFFFFFFFF
+        #                }
+        #                INTEGER64 {
+        #                    set decLimit 9223372036854775807
+        #                    set hexLimit 0x7FFFFFFFFFFFFFFF
+        #                }
+        #                UNSIGNED64 {
+        #                    set decLimit 18446744073709551615
+        #                    set hexLimit 0xFFFFFFFFFFFFFFFF
+        #                }
+        #                REAL32 {
+        #                    set decLimit 18446744073709551615
+        #                    set hexLimit 0xFFFFFFFFFFFFFFFF
+        #                }
+        #                REAL64 {
+        #                    set decLimit 18446744073709551615
+        #                    set hexLimit 0xFFFFFFFFFFFFFFFF
+        #                }
+        #                MAC_ADDRESS {
+        #                    set validRes [Validation::IsMAC $value forced]
+        #                    if { $validRes == 0 } {
+        #                        tk_messageBox -message "Invalid MAC address \nValues not saved" -title Warning -icon warning -parent .
+        #                        Validation::ResetPromptFlag
+        #                        return
+        #                    } else {
+        #                        break    
+        #                    }
+        #                }
+        #                IP_ADDRESS {
+        #                    set validRes [Validation::IsIP $value forced]
+        #                    if { $validRes == 0 } {
+        #                        tk_messageBox -message "Invalid IP address \nValues not saved" -title Warning -icon warning -parent .
+        #                        Validation::ResetPromptFlag
+        #                        return
+        #                    } else {
+        #                        break    
+        #                    }
+        #                }
+        #            }
+        #            
+        #            if { [string match -nocase "0x*" $value] } {
+        #                set checkno [ Validation::CheckHexaNumber [string range $value 2 end] ]
+        #                set msg "Not a valid Hexadecimal number"
+        #                set maxlimit $hexLimit
+        #                set minlimit 0x0
+        #            } else {
+        #                set checkno [ Validation::CheckDecimalNumber $value ]
+        #                set msg "Not a valid Decimal number"
+        #                set maxlimit $decLimit
+        #                set minlimit 0
+        #            }
+        #            if { $checkno == 0 } {
+        #                tk_messageBox -message $msg -parent .
+        #                Validation::ResetPromptFlag
+        #                return
+        #            }
+        #            if { [expr $value > $maxlimit] || [expr $value < $minlimit] } {
+        #                #out of range
+        #                tk_messageBox -message "Value out of range for $dataType\nShould be in range $minlimit to $maxlimit" -parent .
+        #                Validation::ResetPromptFlag
+        #                return
+        #            }
+        #            break
+        #        } else {
+        #            #continue to check till end of value
+        #        }
+        #    }
+        #}
     }
     if {[string match "*SubIndexValue*" $nodeSelect]} {
         if { [expr 0x$indexId > 0x1fff] } {
@@ -1411,7 +1461,7 @@ proc NoteBookManager::ChangeValidation {framePath comboPath} {
         $framePath.en_value1 configure -validate none
         $framePath.en_value1 delete 0 end
         $framePath.en_value1 insert 0 0x
-	$framePath.en_value1 configure -validate key -vcmd "Validation::IsHex %P %s $framePath.en_value1 %d %i"
+	$framePath.en_value1 configure -validate key -vcmd "Validation::IsHex %P %s $framePath.en_value1 %d %i $dataType"
         switch -- $stdDataType {
             BIT {
                 set lastConv ""
@@ -1456,9 +1506,13 @@ proc NoteBookManager::ChangeValidation {framePath comboPath} {
             UNSIGNED64 {
             }
             REAL32 {
+		grid remove $framePath.frame1.ra_dec
+                grid remove $framePath.frame1.ra_hex
                 tk_messageBox -message "Floating point not supported for $dataType\nPlease refer IEEE 754 standard to represent" -parent .
             }
             REAL64 {
+		grid remove $framePath.frame1.ra_dec
+                grid remove $framePath.frame1.ra_hex
                 tk_messageBox -message "Floating point not supported for $dataType\nPlease refer IEEE 754 standard to represent" -parent .
             }
             MAC_ADDRESS {
@@ -1478,6 +1532,5 @@ proc NoteBookManager::ChangeValidation {framePath comboPath} {
                 $framePath.en_value1 configure -validate key -vcmd "Validation::IsIP %P %V"
             }
         }
-        #puts "vcmd -> [$framePath.en_value1 cget -vcmd]"
     }    
 }

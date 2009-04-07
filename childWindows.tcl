@@ -967,10 +967,10 @@ proc ChildWindows::NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf tempRa_
     set status_save 1
 
     $treePath insert end ProjectNode MN-$mnCount -text "openPOWERLINK_MN(240)" -open 1 -image [Bitmap::get mn]
-    lappend nodeIdList 240 ; #removed obj and obj node
+    lappend nodeIdList 240 
 
     if {$conf == "off" || $conf == "on" } {
-	    thread::send [tsv::get application importProgress] "StartProgress" ; #
+	    thread::send [tsv::get application importProgress] "StartProgress" 
 	    set catchErrCode [ImportXML "$tmpImpDir" 240 0]
 	    set ErrCode [ocfmRetCode_code_get $catchErrCode]
 	    if { $ErrCode != 0 } {

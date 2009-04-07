@@ -338,13 +338,7 @@ proc Validation::IsDec {input entryPath mode idx {dataType ""}} {
 	}
     }
     
-#    if { [string length $tempInput] > 20 || $tempInput > 18446744073709551615 || [Validation::CheckDecimalNumber $tempInput] == 0  } {
-#	    return 0
-#    } else {
-#	    after 1 Validation::SetValue $entryPath $mode $idx $input
-#	    Validation::SetPromptFlag
-#	    return 1
-#    }
+
     if { [string match -nocase "INTEGER*" $stdDataType] && [string match -nocase "-?*" $tempInput] } {
 	set reqLengt [expr $reqLengt+1]
     }

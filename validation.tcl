@@ -345,7 +345,10 @@ proc Validation::IsDec {input entryPath mode idx dataType} {
 #	    Validation::SetPromptFlag
 #	    return 1
 #    }
-    if { $tempInput == "" || ([Validation::CheckDecimalNumber $tempInput] == 1 && ( ($tempInput <= $maxLimit && $tempInput >= $minLimit && [string length $tempInput] <= $reqLengt ) || $tempInput == "-" )) } {
+    if { [string match -nocase "INTEGER*" $stdDataType] && [string match -nocase "-?*" $tempInput] } {
+	set reqLengt [expr $reqLengt+1]
+    }
+    if { $tempInput == "" || ([Validation::CheckDecimalNumber $tempInput] == 1 &&  $tempInput <= $maxLimit && $tempInput >= $minLimit && [string length $tempInput] <= $reqLengt ) || ($tempInput == "-" && [string match -nocase "INTEGER*" $stdDataType]) } {
 	    after 1 Validation::SetValue $entryPath $mode $idx $input
 	    Validation::SetPromptFlag
 	    return 1
@@ -554,8 +557,8 @@ proc Validation::IsHex {input preinput entryPath mode idx dataType} {
         }
         REAL32 {
             set minLimit 0x0
-            set maxLimit 0xFFFFFFFFFFFFFFFF
-	    set reqLengt 16
+            set maxLimit 0xFFFFFFFF
+	    set reqLengt 8
         }
         REAL64 {
             set minLimit 0x0

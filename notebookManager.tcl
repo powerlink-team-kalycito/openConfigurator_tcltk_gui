@@ -1472,6 +1472,14 @@ proc NoteBookManager::ChangeValidation {framePath comboPath} {
         $framePath.en_value1 delete 0 end
         $framePath.en_value1 insert 0 0x
 	$framePath.en_value1 configure -validate key -vcmd "Validation::IsHex %P %s $framePath.en_value1 %d %i $dataType"
+        $framePath.en_upper1 configure -validate none -state normal
+        $framePath.en_upper1 delete 0 end
+        $framePath.en_upper1 insert 0 0x
+	$framePath.en_upper1 configure -validate key -vcmd "Validation::IsHex %P %s $framePath.en_upper1 %d %i $dataType"
+        $framePath.en_lower1 configure -validate none -state normal
+        $framePath.en_lower1 delete 0 end
+        $framePath.en_lower1 insert 0 0x
+	$framePath.en_lower1 configure -validate key -vcmd "Validation::IsHex %P %s $framePath.en_lower1 %d %i $dataType"
         switch -- $stdDataType {
             BIT {
                 set lastConv ""
@@ -1480,6 +1488,12 @@ proc NoteBookManager::ChangeValidation {framePath comboPath} {
                 $framePath.en_value1 configure -validate none
                 $framePath.en_value1 delete 0 end
                 $framePath.en_value1 configure -validate key -vcmd "Validation::CheckBitNumber %P"
+                $framePath.en_upper1 configure -validate none
+                $framePath.en_upper1 delete 0 end
+                $framePath.en_upper1 configure -state disabled
+                $framePath.en_lower1 configure -validate none
+                $framePath.en_lower1 delete 0 end
+                $framePath.en_lower1 configure -state disabled
             }
             BOOLEAN {
             }
@@ -1532,6 +1546,12 @@ proc NoteBookManager::ChangeValidation {framePath comboPath} {
                 $framePath.en_value1 configure -validate none
                 $framePath.en_value1 delete 0 end
                 $framePath.en_value1 configure -validate key -vcmd "Validation::IsMAC %P %V"
+                $framePath.en_upper1 configure -validate none
+                $framePath.en_upper1 delete 0 end
+                $framePath.en_upper1 configure -state disabled
+                $framePath.en_lower1 configure -validate none
+                $framePath.en_lower1 delete 0 end
+                $framePath.en_lower1 configure -state disabled
             }
             IP_ADDRESS {
                 set lastConv ""
@@ -1540,6 +1560,12 @@ proc NoteBookManager::ChangeValidation {framePath comboPath} {
                 $framePath.en_value1 configure -validate none
                 $framePath.en_value1 delete 0 end
                 $framePath.en_value1 configure -validate key -vcmd "Validation::IsIP %P %V"
+                $framePath.en_upper1 configure -validate none
+                $framePath.en_upper1 delete 0 end
+                $framePath.en_upper1 configure -state disabled
+                $framePath.en_lower1 configure -validate none
+                $framePath.en_lower1 delete 0 end
+                $framePath.en_lower1 configure -state disabled
             }
         }
     }    

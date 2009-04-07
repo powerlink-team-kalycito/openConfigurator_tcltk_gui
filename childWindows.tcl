@@ -998,7 +998,7 @@ proc ChildWindows::NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf tempRa_
 		    $Operations::projMenu insert 2 command -label "Close Project" -command "Operations::InitiateCloseProject"
 	    }
 	    if { [$Operations::projMenu index 3] != "3" } {
-		    $Operations::projMenu insert 3 command -label "Properties" -command "ChildWindows::PropertiesWindow"
+		    $Operations::projMenu insert 3 command -label "Properties..." -command "ChildWindows::PropertiesWindow"
 	    }
     }
 

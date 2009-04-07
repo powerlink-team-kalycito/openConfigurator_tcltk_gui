@@ -573,7 +573,7 @@ proc Operations::RePopulate { projectDir projectName } {
 		    $Operations::projMenu insert 2 command -label "Close Project" -command "Operations::InitiateCloseProject"
 	    }
 	    if { [$Operations::projMenu index 3] != "3" } {
-		    $Operations::projMenu insert 3 command -label "Properties" -command "ChildWindows::PropertiesWindow"
+		    $Operations::projMenu insert 3 command -label "Properties..." -command "ChildWindows::PropertiesWindow"
 	    }
 
     } else {
@@ -681,42 +681,42 @@ proc Operations::BasicFrames { } {
     # Menu for the Controlled Nodes
     set Operations::cnMenu [menu  .cnMenu -tearoff 0]
     set Operations::IndexaddMenu .cnMenu.indexaddMenu
-    $Operations::cnMenu add command -label "Add Index" -command "ChildWindows::AddIndexWindow"
-    $Operations::cnMenu add command -label "Import XDC/XDD" -command {Operations::ReImport}
+    $Operations::cnMenu add command -label "Add Index..." -command "ChildWindows::AddIndexWindow"
+    $Operations::cnMenu add command -label "Replace with XDC/XDD..." -command {Operations::ReImport}
     $Operations::cnMenu add separator
     $Operations::cnMenu add command -label "Delete" -command {Operations::DeleteTreeNode}
-    $Operations::cnMenu add command -label "Properties" -command {ChildWindows::PropertiesWindow} 
+    $Operations::cnMenu add command -label "Properties..." -command {ChildWindows::PropertiesWindow} 
 
     # Menu for the Managing Nodes
     set Operations::mnMenu [menu  .mnMenu -tearoff 0]
-    $Operations::mnMenu add command -label "Add CN" -command "ChildWindows::AddCNWindow" 
-    $Operations::mnMenu add command -label "Import XDC/XDD" -command "Operations::ReImport"
+    $Operations::mnMenu add command -label "Add CN..." -command "ChildWindows::AddCNWindow" 
+    $Operations::mnMenu add command -label "Replace with XDC/XDD..." -command "Operations::ReImport"
     $Operations::mnMenu add separator
     $Operations::mnMenu add command -label "Auto Generate" -command {Operations::AutoGenerateMNOBD} 
     $Operations::mnMenu add command -label "Delete OBD" -command {Operations::DeleteTreeNode}
     $Operations::mnMenu add separator
-    $Operations::mnMenu add command -label "Properties" -command {ChildWindows::PropertiesWindow}
+    $Operations::mnMenu add command -label "Properties..." -command {ChildWindows::PropertiesWindow}
 
     # Menu for the Project
     set Operations::projMenu [menu  .projMenu -tearoff 0]
-    $Operations::projMenu insert 0 command -label "New Project" -command { Operations::InitiateNewProject}
-    $Operations::projMenu insert 1 command -label "Open Project" -command {Operations::OpenProjectWindow} 
+    $Operations::projMenu insert 0 command -label "New Project..." -command { Operations::InitiateNewProject}
+    $Operations::projMenu insert 1 command -label "Open Project..." -command {Operations::OpenProjectWindow} 
 
     # Menu for the object dictionary
     set Operations::obdMenu [menu .obdMenu -tearoff 0]
     $Operations::obdMenu add separator 
-    $Operations::obdMenu add command -label "Add Index" -command "ChildWindows::AddIndexWindow"   
+    $Operations::obdMenu add command -label "Add Index..." -command "ChildWindows::AddIndexWindow"   
     $Operations::obdMenu add separator  
 
     # Menu for the PDO
     set Operations::pdoMenu [menu .pdoMenu -tearoff 0]
     $Operations::pdoMenu add separator 
-    $Operations::pdoMenu add command -label "Add PDO" -command "ChildWindows::AddPDOWindow"   
+    $Operations::pdoMenu add command -label "Add PDO..." -command "ChildWindows::AddPDOWindow"   
     $Operations::pdoMenu add separator  
 
     # Menu for the index
     set Operations::idxMenu [menu .idxMenu -tearoff 0]
-    $Operations::idxMenu add command -label "Add SubIndex" -command "ChildWindows::AddSubIndexWindow"   
+    $Operations::idxMenu add command -label "Add SubIndex..." -command "ChildWindows::AddSubIndexWindow"   
     $Operations::idxMenu add separator
     $Operations::idxMenu add command -label "Delete Index" -command {Operations::DeleteTreeNode}
 
@@ -1636,8 +1636,8 @@ proc Operations::SingleClickNode {node} {
                     #default entry always disabled
                     $tmpInnerf1.en_default1 configure -state disabled
 		    $tmpInnerf1.en_value1 configure -state $widgetState
-		    $tmpInnerf1.en_lower1 configure -state $widgetState
-		    $tmpInnerf1.en_upper1 configure -state $widgetState
+		    $tmpInnerf1.en_lower1 configure -state $widgetState -validate key -vcmd "Validation::IsHex %P %s $tmpInnerf1.en_lower1 %d %i [lindex $IndexProp 2]"
+		    $tmpInnerf1.en_upper1 configure -state $widgetState -validate key -vcmd "Validation::IsHex %P %s $tmpInnerf1.en_upper1 %d %i [lindex $IndexProp 2]"
                     $tmpInnerf1.co_data1 configure -state $comboState
 		    $tmpInnerf1.co_obj1 configure -state $comboState
 		    $tmpInnerf1.co_access1 configure -state $comboState
@@ -2513,11 +2513,20 @@ proc Operations::CleanProject {} {
     global projectDir
     global projectName 
 
+    if { $projectDir == "" || $projectName == "" } {
+        return
+    }
+    set cleanMsg ""
     foreach tempFile [list mnobd.txt mnobd.cdc xap.xml xap.h] {
 	    set CleanFile [file join $projectDir cdc_xap $tempFile]
-	    catch {file delete -force -- $CleanFile}
+            if {[file exists [file join $projectDir cdc_xap $tempFile]]} {
+                catch {file delete -force -- $CleanFile}
+                set cleanMsg "$cleanMsg $tempFile"
+            }
     }
-    DisplayInfo "files mnobd.txt, mnobd.cdc, xap.xml, xap.h in [file join $projectDir cdc_xap] are deleted"
+    if { $cleanMsg != "" } {
+        DisplayInfo "files$cleanMsg at [file join $projectDir cdc_xap] are deleted"
+    }
 }
 
 #---------------------------------------------------------------------------------------------------

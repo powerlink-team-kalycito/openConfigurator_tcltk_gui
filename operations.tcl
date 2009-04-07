@@ -172,9 +172,9 @@ proc Operations::about {} {\
     grid config $aboutWindow.l_msg -row 0 -column 0
     grid config $aboutWindow.l_msg1 -row 1 -column 0
     grid config $aboutWindow.bt_ok -row 2 -column 0
-    #bind $aboutWindow.l_msg1 <Enter> "$aboutWindow.l_msg1 config -cursor hand2"
-    bind $aboutWindow.l_msg1 <Enter> "$aboutWindow.l_msg1 config -cursor hand2 ; font configure urlFont -underline 1"
-    bind $aboutWindow.l_msg1 <Leave> "font configure urlFont -underline 0"
+    bind $aboutWindow.l_msg1 <Enter> "$aboutWindow.l_msg1 config -cursor hand2"
+    #bind $aboutWindow.l_msg1 <Enter> "$aboutWindow.l_msg1 config -cursor hand2 ; font configure urlFont -underline 1"
+    #bind $aboutWindow.l_msg1 <Leave> "font configure urlFont -underline 0"
     bind $aboutWindow.l_msg1 <1> "Operations::LocateUrl www.kalycito.com"
     bind $aboutWindow <KeyPress-Return> "destroy $aboutWindow"
     bind $aboutWindow <KeyPress-Escape> "destroy $aboutWindow"

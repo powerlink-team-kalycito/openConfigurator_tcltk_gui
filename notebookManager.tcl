@@ -695,7 +695,7 @@ proc NoteBookManager::SaveValue {frame0 frame1} {
     set newName [subst $[subst $tmpVar0]]
     if { $newName == "" } {
         #set newName []
-        tk_messageBox -message "Name is empty \nValues not saved" -parent .
+        tk_messageBox -message "Name field is empty\nValues not saved" -parent .
         Validation::ResetPromptFlag
         return
     }
@@ -806,7 +806,11 @@ proc NoteBookManager::SaveValue {frame0 frame1} {
     } elseif { [string match -nocase "BIT" $dataType] } {
         #continue
     } elseif { [string match -nocase "REAL*" $dataType] } {
-        #continue
+        if { [string match -nocase "0x" $value] } {
+            set value ""
+        } else {
+            #continue    
+        }
     } elseif { $dataType == "IP_ADDRESS" } {
         set result [$frame1.en_value1 validate]
         if {$result == 0} {
@@ -829,7 +833,7 @@ proc NoteBookManager::SaveValue {frame0 frame1} {
         #no need to check
         if { $dataType == "" && [expr 0x$indexId > 0x1fff] } {
             #for objects in spec, datatype is not editable so alow user to save
-            tk_messageBox -message "Select a datatype\nEdited Values not saved" -title Warning -icon warning -parent .
+            tk_messageBox -message "Select a datatype\nValues not saved" -title Warning -icon warning -parent .
             Validation::ResetPromptFlag
             return
         }
@@ -837,7 +841,7 @@ proc NoteBookManager::SaveValue {frame0 frame1} {
             if { ([expr 0x$indexId <= 0x1fff]) && ( $accessType == "const" || $accessType == "ro" || $accessType == "" ) } {
                 #since the entry box of value is disabled in this condition user cannot change value so allow user to save
             } else {
-                tk_messageBox -message "Value is empty\nEdited Values not saved" -title Warning -icon warning -parent .
+                tk_messageBox -message "Value field is empty\nValues not saved" -title Warning -icon warning -parent .
                 Validation::ResetPromptFlag
                 return
             }
@@ -1003,7 +1007,7 @@ proc NoteBookManager::SaveValue {frame0 frame1} {
             if { [string match -nocase "18??" $indexId] || [string match "14??" $indexId]} {
                 if { [string match "01" $subIndexId] } {
                     if { $value == "" || [expr $value > 0xfe] || [expr $value < 0x0] } {
-                        tk_messageBox -message "Value should be between 0x0 to 0xFE\nFor subindex 01 in index $indexId\nEdited values not saved" -title Warning -icon warning -parent .
+                        tk_messageBox -message "Value should be in range 0x0 to 0xFE\nFor subindex 01 in index $indexId\nValues not saved" -title Warning -icon warning -parent .
                         Validation::ResetPromptFlag
 	             		return
                     }
@@ -1013,7 +1017,7 @@ proc NoteBookManager::SaveValue {frame0 frame1} {
             if { [string match -nocase "1A??" $indexId] || [string match "16??" $indexId]} {
                 if { ![string match "00" $subIndexId] } {
                     if { $value == "" || [string length $value] != 18 } {
-                        tk_messageBox -message "Value should be a 16 digit hexadecimal\nFor subindex $subIndexId in index $indexId\nEdited values not saved" -title Warning -icon warning -parent .
+                        tk_messageBox -message "Value should be a 16 digit hexadecimal\nFor subindex $subIndexId in index $indexId\nValues not saved" -title Warning -icon warning -parent .
                         Validation::ResetPromptFlag
 		             	return
                     }
@@ -1457,7 +1461,10 @@ proc NoteBookManager::ChangeValidation {framePath comboPath} {
     global userPrefList
     global nodeSelect
     global lastConv
+    global chkPrompt
+
     if {[string match "*.co_data1" $comboPath]} {
+        set chkPrompt 1
         set value [$comboPath getvalue]
         set valueList [$comboPath cget -values]
         set dataType [lindex $valueList $value]
@@ -1571,5 +1578,7 @@ proc NoteBookManager::ChangeValidation {framePath comboPath} {
                 $framePath.en_lower1 configure -state disabled
             }
         }
-    }    
+    }
+    focus -force $framePath.en_value1
+    return
 }

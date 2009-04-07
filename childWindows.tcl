@@ -876,7 +876,7 @@ proc ChildWindows::NewProjectText {t_desc choice} {
 	    }
 	    1 {
 		    $t_desc delete 1.0 end
-		    $t_desc insert end "Prompts a message for saving edited data"
+		    $t_desc insert end "Prompts the user for saving the edited data"
 	    }
 	    2 {
 		    $t_desc delete 1.0 end
@@ -900,9 +900,9 @@ proc ChildWindows::NewProjectMNText {t_desc} {
     global ra_auto
 
     if { $conf == "on" } {
-	    set msg1 "Import default xdd file designed by Kalycito for openPOWERLINK MN"
+	    set msg1 "Imports default xdd file designed by Kalycito for openPOWERLINK MN"
     } else {
-	    set msg1 "Import user selected xdd or xdc file for openPOWERLINK MN"
+	    set msg1 "Imports user selected xdd or xdc file for openPOWERLINK MN"
     }
 
     if { $ra_auto == 1 } {
@@ -913,7 +913,7 @@ proc ChildWindows::NewProjectMNText {t_desc} {
 
     $t_desc configure -state normal
     $t_desc delete 1.0 end
-    $t_desc insert 1.0 "$msg1\n$msg2"
+    $t_desc insert 1.0 "$msg1\n\n$msg2"
     $t_desc configure -state disabled
 }
 

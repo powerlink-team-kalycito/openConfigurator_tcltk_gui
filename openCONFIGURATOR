@@ -150,8 +150,16 @@ proc InitOpenConfigurator {argc argv} {
 
     # Title frame font set for tablelist widget
     option add *TitleFrame.font {helvetica 11 bold italic}
-
-    set homeVar [file join $::env(HOME) Documents]
+    
+    if {"$tcl_platform(platform)" == "windows"} {
+        if { [ catch {package require registry 1.0} ] } {
+            set homeVar [file join $::env(HOME) Documents]
+        } else {
+            set homeVar [registry get {HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders} {Personal}]
+        }
+    } else {
+        set homeVar [file join $::env(HOME) Documents]
+    }
     if {[file exists $homeVar] && ![file isfile $homeVar]} {
 	    #folder exists
     } else {

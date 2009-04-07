@@ -242,7 +242,7 @@ proc Validation::IsValidName { input } {
 #
 #  Description : Validates whether an entry is an integer and does not exceed specified range.
 #---------------------------------------------------------------------------------------------------
-proc Validation::IsDec {input entryPath mode idx dataType} {
+proc Validation::IsDec {input entryPath mode idx {dataType ""}} {
     set tempInput $input
     
     set stdDataType [ string toupper $dataType ]
@@ -466,7 +466,7 @@ proc Validation::BintoHex {binNo} {
 #
 #  Description : Validates whether an entry is an integer and does not exceed specified range.
 #---------------------------------------------------------------------------------------------------
-proc Validation::IsHex {input preinput entryPath mode idx dataType} {
+proc Validation::IsHex {input preinput entryPath mode idx {dataType ""}} {
 
     set stdDataType [ string toupper $dataType ]
     switch -- $stdDataType {

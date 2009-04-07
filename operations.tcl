@@ -165,16 +165,16 @@ proc Operations::about {} {\
     grab $aboutWindow
     wm title	 $aboutWindow	"About"
     wm protocol $aboutWindow WM_DELETE_WINDOW "destroy $aboutWindow"
-    set urlFont [font create -family TkDefaultFont -size 9 -underline true -overstrike true]
+    set urlFont [font create -family TkDefaultFont -size 9 -underline 0]
     label $aboutWindow.l_msg -compound left -text "\nopenCONFIGURATOR Tool\nDesigned by\nKalycito\n"
     label $aboutWindow.l_msg1 -text "www.kalycito.com\n" -foreground blue -activeforeground blue -font $urlFont
     button $aboutWindow.bt_ok -text Ok -command "destroy $aboutWindow ; font delete $urlFont" -width 8
     grid config $aboutWindow.l_msg -row 0 -column 0
     grid config $aboutWindow.l_msg1 -row 1 -column 0
     grid config $aboutWindow.bt_ok -row 2 -column 0
-    bind $aboutWindow.l_msg1 <Enter> "$aboutWindow.l_msg1 config -cursor hand2"
-    #bind $aboutWindow.l_msg1 <Enter> "$aboutWindow.l_msg1 config -cursor hand2 ; font configure urlFont -underline 1"
-    #bind $aboutWindow.l_msg1 <Leave> "font configure urlFont -underline 1"
+    #bind $aboutWindow.l_msg1 <Enter> "$aboutWindow.l_msg1 config -cursor hand2"
+    bind $aboutWindow.l_msg1 <Enter> "$aboutWindow.l_msg1 config -cursor hand2 ; font configure urlFont -underline 1"
+    bind $aboutWindow.l_msg1 <Leave> "font configure urlFont -underline 0"
     bind $aboutWindow.l_msg1 <1> "Operations::LocateUrl www.kalycito.com"
     bind $aboutWindow <KeyPress-Return> "destroy $aboutWindow"
     bind $aboutWindow <KeyPress-Escape> "destroy $aboutWindow"

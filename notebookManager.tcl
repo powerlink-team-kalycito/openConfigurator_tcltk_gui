@@ -238,6 +238,9 @@ proc NoteBookManager::create_tab { nbpath choice } {
         grid config $tabInnerf0_1.la_generate -row 0 -column 0 -sticky w 
         grid config $tabInnerf0_1.ch_gen -row 0 -column 1 -sticky e -padx 5
         grid config $tabInnerf0.la_empty3 -row 5 -column 0 -columnspan 2
+        
+        bind $tabInnerf0_1.la_generate <1> "$tabInnerf0_1.ch_gen toggle"
+        $tabInnerf0_1.la_generate configure -text "Include Index in CDC generation"
     } elseif { $choice == "subindex" } {
         $tabTitlef0 configure -text "Sub Index" 
         $tabTitlef1 configure -text "Properties" 

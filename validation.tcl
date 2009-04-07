@@ -583,6 +583,7 @@ proc Validation::IsHex {input preinput entryPath mode idx dataType} {
 		    return 0
 	    } else {
 		    set tempInput $input
+		    set idx [expr $idx+2]
 	    }
     }
     
@@ -765,6 +766,7 @@ proc Validation::InputToHex {input dataType} {
 	        set maxLimit 18446744073709551616
 	    }
 	    default  {
+			#negative number should be an integer
 	        return [list $input fail]
 	    }
 	}

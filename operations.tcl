@@ -661,7 +661,7 @@ proc Operations::BasicFrames { } {
                 }
         	}
         	"&Help" {} {} 0 {
-                {command "How to" {noFile} "How to Manual" {} -command YetToImplement }
+                {command "How to" {noFile} "How to Manual" {} -command "Operations::LocateUrl www.kalycito.com/downloads.html" }
                 {separator}
                 {command "About" {} "About" {F1} -command Operations::about }
         	}

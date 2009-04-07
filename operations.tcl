@@ -341,16 +341,16 @@ proc Operations::exit_app {} {
 	    switch -- $result {
 	        yes {			 
 	                 Operations::Saveproject
-		         DisplayInfo "Project $projectName is saved" info
+		         Console::DisplayInfo "Project $projectName is saved" info
 	        }
 	        no  {
-                    DisplayInfo "Project $projectName not saved" info
+                    Console::DisplayInfo "Project $projectName not saved" info
 	            if { ![file exists [file join $projectDir $projectName].oct] } {
 		            catch { file delete -force -- $projectDir }
                     }
 	        }
 	        cancel {
-		         DisplayInfo "Exit Canceled" info
+		         Console::DisplayInfo "Exit Canceled" info
 		         return
 	        }
 	    }
@@ -388,17 +388,17 @@ proc Operations::OpenProjectWindow { } {
 		    set result [tk_messageBox -message "Save Project $projectName?" -type yesnocancel -icon question -title "Question" -parent .]
        		switch -- $result {
        		     yes {
-				    DisplayInfo "Project $projectName saved" info
+				    Console::DisplayInfo "Project $projectName saved" info
 				    Operations::Saveproject
 			    }
        		     no  {
-				    DisplayInfo "Project $projectName not saved" info
+				    Console::DisplayInfo "Project $projectName not saved" info
                                     if { ![file exists [file join $projectDir $projectName].oct ] } {
 				        catch { file delete -force -- $projectDir }
 				    }
 			    }
        		     cancel {
-				    DisplayInfo "Open Project canceled" info
+				    Console::DisplayInfo "Open Project canceled" info
 				    return
 			    }
        		}
@@ -497,11 +497,11 @@ proc Operations::openProject {projectfilename} {
 	    set ra_proj [EAutoSavep_value $ra_projp]
     }
 
-    ClearMsgs
+    Console::ClearMsgs
     if { $result == 1 } {
-	    DisplayInfo "Project $projectName at $projectDir is successfully opened"
+	    Console::DisplayInfo "Project $projectName at $projectDir is successfully opened"
     } else {
-	    DisplayErrMsg "Error in opening project $tempPjtName at $tempPjtDir"
+	    Console::DisplayErrMsg "Error in opening project $tempPjtName at $tempPjtDir"
     }
 	
 }
@@ -578,7 +578,7 @@ proc Operations::RePopulate { projectDir projectName } {
 
     } else {
 	    Operations::CloseProject
-	    DisplayErrMsg "MN node not found" error
+	    Console::DisplayErrMsg "MN node not found" error
     }
     return 1
 }
@@ -1818,7 +1818,7 @@ proc Operations::Saveproject {} {
 		    } else {
 			    tk_messageBox -message "Unknown Error" -parent . -title Error -icon error
 		    }
-		    DisplayErrMsg "Project $projectName at location $projectDir not saved" error
+		    Console::DisplayErrMsg "Project $projectName at location $projectDir not saved" error
 		    return 
 	    }
 	
@@ -1827,7 +1827,7 @@ proc Operations::Saveproject {} {
     #project is saved so change status to zero
     set status_save 0
 
-    DisplayInfo "Project $projectName at location $projectDir is saved"
+    Console::DisplayInfo "Project $projectName at location $projectDir is saved"
 }
 
 #---------------------------------------------------------------------------------------------------
@@ -1865,10 +1865,10 @@ proc Operations::InitiateCloseProject {} {
 	    switch -- $result {
 		    yes {			 
 			    Operations::Saveproject
-			    DisplayInfo "Project $projectName is saved" info
+			    Console::DisplayInfo "Project $projectName is saved" info
 		    }
 		    no {
-			    DisplayInfo "Project $projectName not saved" info
+			    Console::DisplayInfo "Project $projectName not saved" info
 		    }
 		    cancel {
 			    return
@@ -2062,7 +2062,7 @@ proc Operations::AddCN {cnName tmpImpDir nodeId} {
 		    }
 		    return 
 	    } else {
-		    DisplayInfo "Imported $tmpImpDir for Node ID: $nodeId"
+		    Console::DisplayInfo "Imported $tmpImpDir for Node ID: $nodeId"
 	    }
             thread::send -async [tsv::set application importProgress] "StartProgress"
 	    set result [WrapperInteractions::Import $treeNodeCN 1 $nodeId]
@@ -2437,7 +2437,7 @@ proc Operations::BuildProject {} {
     global status_save
 
     if {$projectDir == "" || $projectName == "" } {
-	    DisplayErrMsg "No project to Build"
+	    Console::DisplayErrMsg "No project to Build"
 	    return	
     }
 
@@ -2464,7 +2464,7 @@ proc Operations::BuildProject {} {
 		    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
 	    }
 	    #error in generating CDC dont generate XAP
-	    DisplayErrMsg "Error in generating cdc. xap was not generated" error
+	    Console::DisplayErrMsg "Error in generating cdc, xap was not generated" error
 	    thread::send [tsv::get application importProgress] "StopProgress"
 	    return
     } else {
@@ -2487,12 +2487,12 @@ proc Operations::BuildProject {} {
 		    } else {
 			    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
 		    }
-		    DisplayErrMsg "Error in generating xap"
+		    Console::DisplayErrMsg "Error in generating xap"
 		    thread::send -async [tsv::set application importProgress] "StopProgress"			
 		    return
 	    } else {
-		    #DisplayInfo "CDC and XAP are successfully generated"
-		    DisplayInfo "files mnobd.txt, mnobd.cdc, xap.xml, xap.h are generated in location [file join $projectDir cdc_xap]"
+		    #Console::DisplayInfo "CDC and XAP are successfully generated"
+		    Console::DisplayInfo "files mnobd.txt, mnobd.cdc, xap.xml, xap.h are generated at location [file join $projectDir cdc_xap]"
 		    thread::send -async [tsv::set application importProgress] "StopProgress"
 	    }
 	    #project is built need to save
@@ -2525,7 +2525,7 @@ proc Operations::CleanProject {} {
             }
     }
     if { $cleanMsg != "" } {
-        DisplayInfo "files$cleanMsg at [file join $projectDir cdc_xap] are deleted"
+        Console::DisplayInfo "files$cleanMsg at [file join $projectDir cdc_xap] are deleted"
     }
 }
 
@@ -2585,10 +2585,10 @@ proc Operations::ReImport {} {
 	    set result [tk_messageBox -message "Do you want to Import $tmpImpDir?" -type yesno -icon question -title "Question" -parent .]
 	     switch -- $result {
 	         yes {
-		       DisplayInfo "Importing file $tmpImpDir for Node ID : $nodeId"
+		       Console::DisplayInfo "Importing file $tmpImpDir for Node ID : $nodeId"
 		     }			 
 	         no  {
-		       DisplayInfo "Importing $tmpImpDir is cancelled for Node ID : $nodeId"
+		       Console::DisplayInfo "Importing $tmpImpDir is cancelled for Node ID : $nodeId"
 		       return
 		     }
 	    }
@@ -2602,7 +2602,7 @@ proc Operations::ReImport {} {
 		    }
 		    return
 	    } else {
-		    DisplayInfo "Imported file $tmpImpDir for Node ID:$nodeId"
+		    Console::DisplayInfo "Imported file $tmpImpDir for Node ID:$nodeId"
 	    }
 
 	    pack forget [lindex $f0 0]
@@ -3201,10 +3201,10 @@ proc Operations::AutoGenerateMNOBD {} {
 		set result [tk_messageBox -message "Do you want to Auto Generate object dictionary for MN?" -type yesno -icon question -title "Question" -parent .]
    		 switch -- $result {
    		     yes {
-			   DisplayInfo "Auto Generating object dictionary for MN"
+			   Console::DisplayInfo "Auto Generating object dictionary for MN"
 			 }			 
    		     no  {
-			   DisplayInfo "Auto Generate is cancelled for MN"
+			   Console::DisplayInfo "Auto Generate is cancelled for MN"
 			   return
 			 }
 		 }

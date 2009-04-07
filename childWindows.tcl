@@ -486,7 +486,7 @@ proc ChildWindows::SaveProjectWindow {} {
     global status_save	
 
     if {$projectDir == "" || $projectName == "" } {
-	    DisplayInfo "No project present to save" info
+	    Console::DisplayInfo "No project present to save" info
 	    return
     } else {	
 	    #check whether project has changed from last saved
@@ -495,11 +495,11 @@ proc ChildWindows::SaveProjectWindow {} {
 		    switch -- $result {
 			    yes {			 
 				    Operations::Saveproject
-				    DisplayInfo "Project $projectName at location $projectDir is saved" info
+				    Console::DisplayInfo "Project $projectName at location $projectDir is saved" info
 				    return yes
 			    }
 			    no {
-				    DisplayInfo "Project $projectName not saved" info
+				    Console::DisplayInfo "Project $projectName not saved" info
 				    if { ![file exists [file join $projectDir $projectName].oct ] } {
 				        catch { file delete -force -- $projectDir }
 				    }
@@ -527,7 +527,7 @@ proc ChildWindows::SaveProjectAsWindow {} {
     global projectDir
 
     if {$projectDir == "" || $projectName == "" } {
-	    DisplayInfo "No Project present to save" info
+	    Console::DisplayInfo "No Project present to save" info
 	    return
     } else {
 	    set saveProjectAs [tk_getSaveFile -parent . -title "Save Project As" -initialdir $projectDir -initialfile $projectName] 
@@ -552,10 +552,10 @@ proc ChildWindows::SaveProjectAsWindow {} {
 		    } else {
 			    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
 		    }
-		    DisplayErrMsg "Error in saving project $saveProjectAs"
+		    Console::DisplayErrMsg "Error in saving project $saveProjectAs"
 		    return
 	    }
-	    DisplayInfo "project $saveProjectAs is saved"
+	    Console::DisplayInfo "project $saveProjectAs is saved"
     }
 }
 
@@ -987,7 +987,7 @@ proc ChildWindows::NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf tempRa_
 	    if { $result == "fail" } {
 		    return
 	    }
-	    DisplayInfo "Imported file $tmpImpDir for MN"
+	    Console::DisplayInfo "Imported file $tmpImpDir for MN"
 
 	    file mkdir [file join $projectDir ]
 	    file mkdir [file join $projectDir cdc_xap]
@@ -1013,7 +1013,7 @@ proc ChildWindows::NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf tempRa_
     }
     set ra_proj $tempRa_proj
     set ra_auto $tempRa_auto
-    ClearMsgs
+    Console::ClearMsgs
 }
 
 #---------------------------------------------------------------------------------------------------
@@ -1032,7 +1032,7 @@ proc ChildWindows::CloseProjectWindow {} {
     global status_save	
 
     if {$projectDir == "" || $projectName == "" } {
-	    DisplayInfo "No Project present to close" info
+	    Console::DisplayInfo "No Project present to close" info
 	    Operations::CloseProject
 	    return
     } else {	

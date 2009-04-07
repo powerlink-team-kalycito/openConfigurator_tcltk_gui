@@ -76,7 +76,7 @@ if { $argc == 1 && ( $argv == "--version" || $argv == "-V" ) } {
 }
 
 if { [ catch { package require Tk 8.5 } ] } {
-    tk_messageBox -message "Package TK 8.5 not found \nplease install Tk 8.5 and uninstall older version\nTo run the tool" -title Info -icon error
+    puts "\nPackage TK 8.5 not found \nplease install Tk 8.5 and uninstall older version to run the tool\n"
     exit
 }
 
@@ -168,7 +168,7 @@ proc InitOpenConfigurator {argc argv} {
 		    #folder exists
 	    } else {
 		    #Both the folders does not exist, create new folder "Documents" or "My Documents"
-		    set result [tk_messageBox -message "Folder \"Documents\" and \"My Documents\" are not present. \n Do you want to create one? " -type yesno -title Info -icon error]
+		    set result [tk_messageBox -message "Folder \"Documents\" not present.\nDo you want to create one?" -type yesno -title Info -icon error]
 		    switch -- $result {
 			    yes {
 				    set homeVar [file join $::env(HOME) Documents]

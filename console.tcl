@@ -59,7 +59,14 @@
 #  REVISION HISTORY:
 #  
 ####################################################################################################
-
+#---------------------------------------------------------------------------------------------------
+#  NameSpace Declaration
+#
+#  namespace : Console
+#---------------------------------------------------------------------------------------------------
+namespace eval Console {
+	
+}
 #-------------------------
 #	Global variables
 #-------------------------
@@ -68,7 +75,7 @@ global warWindow
 global errWindow
 
 #---------------------------------------------------------------------------------------------------
-#  InitInfoWindow
+#  Console::InitInfoWindow
 # 
 #  Arguments : win - path of the window where the text widget is created
 # 	           width  - width of the text widget
@@ -78,7 +85,7 @@ global errWindow
 #
 #  Description : Creates the Information window and returns the path of the text widget
 #---------------------------------------------------------------------------------------------------
-proc InitInfoWindow {win {width 60} {height 5}} {
+proc Console::InitInfoWindow {win {width 60} {height 5}} {
     set windowPath $win
     set promptChar $
 
@@ -100,7 +107,7 @@ proc InitInfoWindow {win {width 60} {height 5}} {
 }
 
 #---------------------------------------------------------------------------------------------------
-#  DisplayInfo
+#  Console::DisplayInfo
 # 
 #  Arguments : var - string to be displayed
 # 	       	   tag - tag binded with text widget
@@ -111,7 +118,7 @@ proc InitInfoWindow {win {width 60} {height 5}} {
 #
 #  Description : Display the information message
 #---------------------------------------------------------------------------------------------------	
-proc DisplayInfo {var {tag output} {win {}} {see 1}} {
+proc Console::DisplayInfo {var {tag output} {win {}} {see 1}} {
 	
     global infoWindow
         
@@ -137,7 +144,7 @@ proc DisplayInfo {var {tag output} {win {}} {see 1}} {
 }
 
 #---------------------------------------------------------------------------------------------------
-#  InitErrorWindow
+#  Console::InitErrorWindow
 # 
 #  Arguments : win - path of the window where the text widget is created
 # 	       	   width - width of the text widget
@@ -147,7 +154,7 @@ proc DisplayInfo {var {tag output} {win {}} {see 1}} {
 #
 #  Description : Creates the Error window and returns the path of the text widget
 #---------------------------------------------------------------------------------------------------
-proc InitErrorWindow {win {width 60} {height 5}} {
+proc Console::InitErrorWindow {win {width 60} {height 5}} {
     set windowPath $win
     set promptChar $
 
@@ -170,7 +177,7 @@ proc InitErrorWindow {win {width 60} {height 5}} {
 }
 
 #---------------------------------------------------------------------------------------------------
-#  DisplayErrMsg
+#  Console::DisplayErrMsg
 # 
 #  Arguments : var - string to be displayed
 # 	     	   tag - tag binded with text widget
@@ -181,7 +188,7 @@ proc InitErrorWindow {win {width 60} {height 5}} {
 #
 #  Description :  Display the error message
 #---------------------------------------------------------------------------------------------------
-proc DisplayErrMsg {var {tag output} {win {}} {see 1}} {
+proc Console::DisplayErrMsg {var {tag output} {win {}} {see 1}} {
     global errWindow
 
     set promptChar $
@@ -206,7 +213,7 @@ proc DisplayErrMsg {var {tag output} {win {}} {see 1}} {
 }
 
 #---------------------------------------------------------------------------------------------------
-#  InitWarnWindow
+#  Console::InitWarnWindow
 # 
 #  Arguments : win - path of the window where the text widget is created
 # 	       	   width  - width of the text widget
@@ -216,7 +223,7 @@ proc DisplayErrMsg {var {tag output} {win {}} {see 1}} {
 #
 #  Description : Creates the warning window and returns the path of the text widget
 #---------------------------------------------------------------------------------------------------
-proc InitWarnWindow {win {width 60} {height 5}} {
+proc Console::InitWarnWindow {win {width 60} {height 5}} {
     set windowPath $win
     set promptChar $
 
@@ -239,7 +246,7 @@ proc InitWarnWindow {win {width 60} {height 5}} {
 }
 
 #---------------------------------------------------------------------------------------------------
-#  DisplayWarning
+#  Console::DisplayWarning
 # 
 #  Arguments : var - string to be displayed
 # 	       	   tag - tag binded with text widget
@@ -250,7 +257,7 @@ proc InitWarnWindow {win {width 60} {height 5}} {
 #
 #  Description :  Display the warning message
 #---------------------------------------------------------------------------------------------------
-proc DisplayWarning {var {tag output} {win {}} {see 1}} {
+proc Console::DisplayWarning {var {tag output} {win {}} {see 1}} {
 
     global warWindow
 
@@ -275,15 +282,15 @@ proc DisplayWarning {var {tag output} {win {}} {see 1}} {
 }
 
 #---------------------------------------------------------------------------------------------------
-#  ClearMsgs
+#  Console::ClearMsgs
 # 
 #  Arguments : -
 #
 #  Results : -
 #
-#  Description :  Clear displayinfo, error and warning message
+#  Description :  Clear information, error and warning message
 #---------------------------------------------------------------------------------------------------
-proc ClearMsgs {} {
+proc Console::ClearMsgs {} {
 
     global infoWindow
     global warWindow

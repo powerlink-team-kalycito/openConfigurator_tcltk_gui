@@ -375,17 +375,17 @@ proc NoteBookManager::create_infoWindow {nbpath tabname choice} {
 
     set scrollWin [ScrolledWindow::create $frmPath.scrollWin -auto both]
     if {$choice == 1} {
-        set infoWindow [InitInfoWindow $scrollWin]
+        set infoWindow [Console::InitInfoWindow $scrollWin]
         set window $infoWindow
         lappend infoWindow $nbpath $nbname
         $nbpath itemconfigure $nbname -image [Bitmap::get file]
     } elseif {$choice == 2} {
-        set errWindow [InitErrorWindow $scrollWin]
+        set errWindow [Console::InitErrorWindow $scrollWin]
         set window $errWindow
         lappend errWindow $nbpath $nbname
         $nbpath itemconfigure $nbname -image [Bitmap::get error_small]
     } elseif {$choice == 3} {    
-        set warWindow [InitWarnWindow $scrollWin]
+        set warWindow [Console::InitWarnWindow $scrollWin]
         set window $warWindow
         lappend warWindow $nbpath $nbname
         $nbpath itemconfigure $nbname -image [Bitmap::get warning_small]
@@ -1368,7 +1368,7 @@ proc NoteBookManager::SaveTable {tableWid} {
     }
 
     if { $flag == 1} {
-        DisplayInfo "Values which completely filled are (Offset, Length, Index and Sub Index) only saved"
+        Console::DisplayInfo "Values which completely filled are (Offset, Length, Index and Sub Index) only saved"
     }
 
     #PDO entries value is changed need to save 

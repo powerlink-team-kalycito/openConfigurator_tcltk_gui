@@ -461,7 +461,6 @@ proc NoteBookManager::ConvertDec {framePath0 framePath1} {
         }
         $framePath0.en_idx1 configure -state normal
         set indexId [string range [$framePath0.en_idx1 get] 2 end]
-        puts "convertdec indexId->$indexId"
         $framePath0.en_idx1 configure -state disabled
         if { [expr 0x$indexId <= 0x1fff] } {
             $framePath1.en_data1 configure -state normal
@@ -533,7 +532,6 @@ proc NoteBookManager::ConvertHex {framePath0 framePath1} {
         $framePath0.en_idx1 configure -state normal
         set indexId [string range [$framePath0.en_idx1 get] 2 end]
         $framePath0.en_idx1 configure -state disabled
-        puts "converthex indexId->$indexId"
         if { [expr 0x$indexId <= 0x1fff] } {
             $framePath1.en_data1 configure -state normal
             set dataType [$framePath1.en_data1 get]
@@ -544,7 +542,6 @@ proc NoteBookManager::ConvertHex {framePath0 framePath1} {
             set dataType [NoteBookManager::GetComboValue $framePath1.co_data1]
             $framePath1.co_data1 configure -state $state
         }
-puts "converthex dataType->$dataType"
         set state [$framePath1.en_value1 cget -state]
         $framePath1.en_value1 configure -validate none -state normal
         NoteBookManager::InsertHex $framePath1.en_value1 $dataType

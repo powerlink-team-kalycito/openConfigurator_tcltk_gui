@@ -246,7 +246,6 @@ proc Validation::IsDec {input entryPath mode idx {dataType ""}} {
     set tempInput $input
     
     set stdDataType [ string toupper $dataType ]
-    puts "Validation::IsDec dataType->$dataType stdDataType->$stdDataType"
     switch -- $stdDataType {
         BOOLEAN {
             set minLimit 0
@@ -770,7 +769,6 @@ proc Validation::InputToHex {input dataType} {
 	set zeroCount [NoteBookManager::CountLeadZero $input] 
 	set input [string trimleft $input 0]
 	set input [expr $maxLimit-$input]
-	puts "conv neg input->$input"
     } else {
 	 #counting the leading zero if they are present
 	set zeroCount [NoteBookManager::CountLeadZero $input] 
@@ -821,7 +819,6 @@ proc Validation::InputToHex {input dataType} {
 proc Validation::InputToDec {input dataType} {
     set stdDataType [string toupper $dataType]
     set signFlag 0
-    puts "Validation::InputToDec dataType->$dataType stdDataType->$stdDataType"
     if { $input == 0 } {
         # value is zero 
 	return [list $input pass]

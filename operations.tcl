@@ -175,7 +175,7 @@ proc Operations::about {} {\
     bind $aboutWindow.l_msg1 <Enter> "$aboutWindow.l_msg1 config -cursor hand2"
     #bind $aboutWindow.l_msg1 <Enter> "$aboutWindow.l_msg1 config -cursor hand2 ; font configure urlFont -underline 1"
     #bind $aboutWindow.l_msg1 <Leave> "font configure urlFont -underline 1"
-    bind $aboutWindow.l_msg1 <1> Operations::LocateUrl
+    bind $aboutWindow.l_msg1 <1> "Operations::LocateUrl www.kalycito.com"
     bind $aboutWindow <KeyPress-Return> "destroy $aboutWindow"
     bind $aboutWindow <KeyPress-Escape> "destroy $aboutWindow"
     wm protocol $aboutWindow WM_DELETE_WINDOW "destroy $aboutWindow"
@@ -193,7 +193,7 @@ proc Operations::about {} {\
 #
 #  Description : opens the web browser
 #---------------------------------------------------------------------------------------------------
-proc Operations::LocateUrl {} {
+proc Operations::LocateUrl {webAddress} {
 	global tcl_platform
 	set browser ""
 	if {$tcl_platform(platform)=="unix"} {
@@ -202,13 +202,13 @@ proc Operations::LocateUrl {} {
 			set browser "firefox"
 		}
 		if {$browser==""} {
-			tk_messageBox -message "Please visit the site www.kalycito.com for more information." -title Info -icon info
+			tk_messageBox -message "Please visit the site $webAddress for more information." -title Info -icon info
 		} else {
-			exec $browser "www.kalycito.com" &
+			exec $browser $webAddress &
 		}
 		
 	} elseif {$tcl_platform(platform)=="windows"} {
-		eval exec [auto_execok start] "www.kalycito.com" &
+		eval exec [auto_execok start] $webAddress &
 	}
 }
 
@@ -339,19 +339,20 @@ proc Operations::exit_app {} {
 	    #Prompt for Saving the Existing Project
 	    set result [tk_messageBox -message "Save Project $projectName?" -type yesnocancel -icon question -title "Question" -parent .]
 	    switch -- $result {
-	         yes {			 
+	        yes {			 
 	                 Operations::Saveproject
 		         DisplayInfo "Project $projectName is saved" info
-	         }
-	         no  {DisplayInfo "Project $projectName not saved" info
+	        }
+	        no  {
+                    DisplayInfo "Project $projectName not saved" info
 	            if { ![file exists [file join $projectDir $projectName].oct] } {
-		            catch { file delete -force $projectDir }
-                }
-	         }
-	         cancel {
+		            catch { file delete -force -- $projectDir }
+                    }
+	        }
+	        cancel {
 		         DisplayInfo "Exit Canceled" info
 		         return
-	         }
+	        }
 	    }
     }
         Operations::CloseProject
@@ -380,7 +381,7 @@ proc Operations::OpenProjectWindow { } {
     global lastOpenPjt
     global defaultProjectDir
 
-    if { $projectDir != "" } {
+    if { $projectDir != "" && $projectName != "" } {
 	    #check whether project has changed
 	    if {$status_save} {
 		    #Prompt for Saving the Existing Project
@@ -392,6 +393,9 @@ proc Operations::OpenProjectWindow { } {
 			    }
        		     no  {
 				    DisplayInfo "Project $projectName not saved" info
+                                    if { ![file exists [file join $projectDir $projectName].oct ] } {
+				        catch { file delete -force -- $projectDir }
+				    }
 			    }
        		     cancel {
 				    DisplayInfo "Open Project canceled" info
@@ -1334,7 +1338,7 @@ proc Operations::SingleClickNode {node} {
 	    set indexPos [intp_value $indexPos] 
 	    set subIndexPos [intp_value $subIndexPos] 
 	    set IndexProp []
-	    for {set cnt 0 } {$cnt <= 9} {incr cnt} {
+	    for {set cnt 0 } {$cnt <= 8} {incr cnt} {
 		    set tempIndexProp [GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos $cnt ]
 		    set ErrCode [ocfmRetCode_code_get [lindex $tempIndexProp 0]]
 		    if {$ErrCode == 0} {	
@@ -1405,19 +1409,30 @@ proc Operations::SingleClickNode {node} {
 	    pack forget [lindex $f2 0]
 	    [lindex $f2 1] cancelediting
 	    [lindex $f2 1] configure -state disabled
+            
+            if { [string match -nocase "A???" $indexId] } {
+                $tmpInnerf0.frame1.ch_gen configure -state disabled
+            } else {
+                $tmpInnerf0.frame1.ch_gen configure -state normal
+                if { [lindex $IndexProp 9] == "1" } {
+                        $tmpInnerf0.frame1.ch_gen select
+                } else {
+                        $tmpInnerf0.frame1.ch_gen deselect
+                }
+            }
 	
     }
     
-    if { [string match -nocase "A???" $indexId] } {
-	$tmpInnerf0.frame1.ch_gen configure -state disabled
-    } else {
-        $tmpInnerf0.frame1.ch_gen configure -state normal
-        if { [lindex $IndexProp 9] == "1" } {
-                $tmpInnerf0.frame1.ch_gen select
-        } else {
-                $tmpInnerf0.frame1.ch_gen deselect
-        }
-    }
+#    if { [string match -nocase "A???" $indexId] } {
+#	$tmpInnerf0.frame1.ch_gen configure -state disabled
+#    } else {
+#        $tmpInnerf0.frame1.ch_gen configure -state normal
+#        if { [lindex $IndexProp 9] == "1" } {
+#                $tmpInnerf0.frame1.ch_gen select
+#        } else {
+#                $tmpInnerf0.frame1.ch_gen deselect
+#        }
+#    }
     
     #puts "obj:[lindex $IndexProp 1] data:[lindex $IndexProp 2] access:[lindex $IndexProp 3] pdo:[lindex $IndexProp 6]"
 
@@ -1788,7 +1803,7 @@ proc Operations::Saveproject {} {
 	    return
     } else {
             foreach filePath [glob -nocomplain [file join $projectDir octx "*"]] {
-                catch { file delete -force $filePath }
+                catch { file delete -force -- $filePath }
             }
 	    set savePjtName [string range $projectName 0 end-[ string length [file extension $projectName] ]]
 	    set savePjtDir [string range $projectDir 0 end-[string length $savePjtName] ]
@@ -1838,7 +1853,7 @@ proc Operations::InitiateNewProject {} {
 #
 #  Results : -
 #
-#  Description : Save the current project and close th project
+#  Description : Save the current project and close the project
 #---------------------------------------------------------------------------------------------------
 proc Operations::InitiateCloseProject {} {
     global status_save
@@ -1846,7 +1861,7 @@ proc Operations::InitiateCloseProject {} {
 
     #before close should prompt to close
     if {$status_save} {
-	    set result [tk_messageBox -message "Save Project $projectName Before closing?" -parent . -type yesnocancel -icon question -title "Question"]
+	    set result [tk_messageBox -message "Save project $projectName before closing?" -parent . -type yesnocancel -icon question -title "Question"]
 	    switch -- $result {
 		    yes {			 
 			    Operations::Saveproject
@@ -2500,7 +2515,7 @@ proc Operations::CleanProject {} {
 
     foreach tempFile [list mnobd.txt mnobd.cdc xap.xml xap.h] {
 	    set CleanFile [file join $projectDir cdc_xap $tempFile]
-	    catch {file delete -force $CleanFile}
+	    catch {file delete -force -- $CleanFile}
     }
     DisplayInfo "files mnobd.txt, mnobd.cdc, xap.xml, xap.h in [file join $projectDir cdc_xap] are deleted"
 }
@@ -3103,7 +3118,7 @@ proc Operations::_ArrowDown {node origNode} {
 
     set siblingList [$treePath nodes $parent]
     set cnt [lsearch -exact $siblingList $node]
-    if { $cnt == [expr [llength $siblingList]-1 ]} {
+    if { $cnt == [expr [llength $siblingList]-1 ] } {
 	    Operations::_ArrowDown $parent $origNode
     } else {
 	    $treePath selection set [lindex $siblingList [expr $cnt+1] ]

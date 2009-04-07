@@ -249,6 +249,13 @@ proc NoteBookManager::create_tab { nbpath choice } {
         grid config $tabInnerf0.en_sidx1 -row 2 -column 1 -padx 5
         grid config $tabInnerf0.la_nam -row 2 -column 2 -sticky w 
         grid config $tabInnerf0.en_nam1 -row 2 -column 3  -sticky e -columnspan 1
+        
+        #grid config $tabInnerf0_1 -row 4 -column 0 -columnspan 2 -sticky w
+        #grid config $tabInnerf0_1.la_generate -row 0 -column 0 -sticky w 
+        #grid config $tabInnerf0_1.ch_gen -row 0 -column 1 -sticky e -padx 5
+        #grid config $tabInnerf0.la_empty3 -row 5 -column 0 -columnspan 2
+        
+        $tabInnerf0_1.la_generate configure -text "Include Subindex in CDC generation"
     }
 
     set fram [frame $frame.f1]  
@@ -982,10 +989,13 @@ proc NoteBookManager::SaveValue {frame0 frame1} {
         #    }
         #}
     }
+    
+    #set chkGen [$frame0.frame1.ch_gen cget -variable]
+    #global $chkGen
+    
     if {[string match "*SubIndexValue*" $nodeSelect]} {
         if { [expr 0x$indexId > 0x1fff] } {
-            puts "SetALLSubIndexAttributes NI:$nodeId NT:$nodeType Indid:$indexId SubId:$subIndexId VAL:$value NAM:$newName :ACC:$accessType DAT:$dataType PDO:$pdoType Def:$default UL:$upperLimit LL:$lowerLimit obj:$objectType :0"
-            set catchErrCode [SetALLSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName $accessType $dataType $pdoType $default $upperLimit $lowerLimit $objectType 0]
+            set catchErrCode [SetAllSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName $accessType $dataType $pdoType $default $upperLimit $lowerLimit $objectType 0]
         } else {
             if { [string match -nocase "18??" $indexId] || [string match "14??" $indexId]} {
                 if { [string match "01" $subIndexId] } {
@@ -1006,14 +1016,14 @@ proc NoteBookManager::SaveValue {frame0 frame1} {
                     }
                 }
             }
-            set catchErrCode [SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName]
+            set catchErrCode [SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName 0 ]
         }
     } elseif {[string match "*IndexValue*" $nodeSelect]} {
         set chkGen [$frame0.frame1.ch_gen cget -variable]
         global $chkGen
+        
         if { [expr 0x$indexId > 0x1fff] } {
-            puts  "SetALLIndexAttributes NI:$nodeId NT:$nodeType IndId:$indexId VAL:$value NAM:$newName ACC:$accessType DAT:$dataType PDO:$pdoType DEF:$default UL:$upperLimit LL:$lowerLimit OBJ:$objectType :[subst $[subst $chkGen]] "
-            set catchErrCode [SetALLIndexAttributes $nodeId $nodeType $indexId $value $newName $accessType $dataType $pdoType $default $upperLimit $lowerLimit $objectType [subst $[subst $chkGen]] ]
+            set catchErrCode [SetAllIndexAttributes $nodeId $nodeType $indexId $value $newName $accessType $dataType $pdoType $default $upperLimit $lowerLimit $objectType [subst $[subst $chkGen]] ]
         } else {
             set catchErrCode [SetIndexAttributes $nodeId $nodeType $indexId $value $newName [subst $[subst $chkGen]] ]
         }

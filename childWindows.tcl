@@ -501,7 +501,7 @@ proc ChildWindows::SaveProjectWindow {} {
 			    no {
 				    DisplayInfo "Project $projectName not saved" info
 				    if { ![file exists [file join $projectDir $projectName].oct ] } {
-				        catch { file delete -force $projectDir }
+				        catch { file delete -force -- $projectDir }
 				    }
 				    return no
 			    }

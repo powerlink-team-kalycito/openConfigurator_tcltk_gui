@@ -681,6 +681,14 @@ proc NoteBookManager::SaveValue {frame0 frame1} {
         set pdoType [NoteBookManager::GetComboValue $frame1.co_pdo1]
         set upperLimit [$frame1.en_upper1 get]
         set lowerLimit [$frame1.en_lower1 get]
+        if {[string match -nocase "INTEGER*" $dataType] || [string match -nocase "UNSIGNED*" $dataType] || [string match -nocase "BOOLEAN" $dataType] || [string match -nocase "REAL*" $dataType]} {
+            if {[string match -nocase "0x" $upperLimit]} {
+                set upperLimit [] 
+            }
+            if {[string match -nocase "0x" $lowerLimit]} {
+                set lowerLimit []
+            }
+        }
         set default [$frame1.en_default1 get]
     } else {
         set radioSel [$frame1.frame1.ra_dec cget -variable]
@@ -1044,7 +1052,7 @@ proc NoteBookManager::SaveTable {tableWid} {
                 } else {
                     set value 0x$value
                 }
-                SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $name
+                SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $name 0
                 incr rowCount
             }
         }
@@ -1159,11 +1167,11 @@ proc NoteBookManager::ChangeValidation {framePath comboPath} {
 	$framePath.en_value1 configure -validate key -vcmd "Validation::IsHex %P %s $framePath.en_value1 %d %i $dataType"
         $framePath.en_upper1 configure -validate none -state normal
         $framePath.en_upper1 delete 0 end
-        $framePath.en_upper1 insert 0 0x
+        #$framePath.en_upper1 insert 0 0x
 	$framePath.en_upper1 configure -validate key -vcmd "Validation::IsHex %P %s $framePath.en_upper1 %d %i $dataType"
         $framePath.en_lower1 configure -validate none -state normal
         $framePath.en_lower1 delete 0 end
-        $framePath.en_lower1 insert 0 0x
+        #$framePath.en_lower1 insert 0 0x
 	$framePath.en_lower1 configure -validate key -vcmd "Validation::IsHex %P %s $framePath.en_lower1 %d %i $dataType"
         switch -- $stdDataType {
             BIT {

@@ -65,7 +65,7 @@
 #\
 exec wish "$0" ${1+"$@"}
 
-set version 1.0.0
+set version 0.9.1
 
 if { $argc == 1 && ( $argv == "--version" || $argv == "-V" ) } {
     puts "\nDeveloped by Kalycito Powerlink Team\nopenCONFIGURATOR version $version\n"
@@ -103,7 +103,7 @@ global errWindow
 if {"$tcl_platform(platform)" == "windows"} {
     set rootDir [pwd]
 } elseif {"$tcl_platform(platform)" == "unix"} {
-    set rootDir /usr/share/openCONFIGURATOR-0.9
+    set rootDir /usr/share/openCONFIGURATOR-0.9.1
 }
 tsv::set application rootDir $rootDir
 source [file join $rootDir console.tcl]
@@ -167,15 +167,12 @@ proc InitOpenConfigurator {argc argv} {
 	    if { [file exists $homeVar] && ![file isfile $homeVar] } {
 		    #folder exists
 	    } else {
-		    #Both the folders does not exist, create new folder "Documents" or "My Documents"
-		    set result [tk_messageBox -message "Folder \"Documents\" not present.\nDo you want to create one?" -type yesno -title Info -icon error]
-		    switch -- $result {
-			    yes {
-				    set homeVar [file join $::env(HOME) Documents]
-				    file mkdir $homeVar
-			    }
-			    no { exit }
-		    }
+		    set homeVar [file join $::env(HOME) Documents]
+			if {[file exists $homeVar] && ![file isfile $homeVar]} {
+				#folder exists
+			} else {
+				file mkdir $homeVar
+			}
 	    }
     }
 

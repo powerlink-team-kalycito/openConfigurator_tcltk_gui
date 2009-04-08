@@ -1866,31 +1866,31 @@ proc Operations::ResetGlobalData {} {
 #  Description : Deletes all the node in current project
 #---------------------------------------------------------------------------------------------------
 proc Operations::DeleteAllNode {} {
-    global nodeIdList
-
-    set count [new_intp]
-    set catchErrCode [GetNodeCount 240 $count]
-    set ErrCode [ocfmRetCode_code_get $catchErrCode]
-    if { $ErrCode == 0 } {
-	    set nodeCount [intp_value $count]
-	    for {set inc 0} {$inc < $nodeCount} {incr inc} {
-		    #API for getting node attributes based on node position
-		    set tmp_nodeId [new_intp]			
-		    set catchErrCode [GetNodeAttributesbyNodePos $inc $tmp_nodeId]
-		    set ErrCode [ocfmRetCode_code_get [lindex $catchErrCode 0]]
-		    if { $ErrCode == 0 } {
-			    set nodeId [intp_value $tmp_nodeId]
-			    if {$nodeId == 240} {
-				    set nodeType 0
-			    } else {
-				    set nodeType 1
-			    }
-                DeleteNode $nodeId $nodeType
-		    } else {
-		    }
-	    }
-    } else {
-    }
+#    global nodeIdList
+#
+#    set count [new_intp]
+#    set catchErrCode [GetNodeCount 240 $count]
+#    set ErrCode [ocfmRetCode_code_get $catchErrCode]
+#    if { $ErrCode == 0 } {
+#	    set nodeCount [intp_value $count]
+#	    for {set inc 0} {$inc < $nodeCount} {incr inc} {
+#		    #API for getting node attributes based on node position
+#		    set tmp_nodeId [new_intp]			
+#		    set catchErrCode [GetNodeAttributesbyNodePos $inc $tmp_nodeId]
+#		    set ErrCode [ocfmRetCode_code_get [lindex $catchErrCode 0]]
+#		    if { $ErrCode == 0 } {
+#			    set nodeId [intp_value $tmp_nodeId]
+#			    if {$nodeId == 240} {
+#				    set nodeType 0
+#			    } else {
+#				    set nodeType 1
+#			    }
+#                DeleteNode $nodeId $nodeType
+#		    } else {
+#		    }
+#	    }
+#    } else {
+#    }
     
     FreeProjectMemory
 }

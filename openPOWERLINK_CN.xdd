@@ -273,16 +273,19 @@ www.kalycito.com
           </Object>
 
           <Object index="1400" name="PDO_RxCommParam_00h_REC" objectType="9" dataType="0420" >
+		    <SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="const" defaultValue="2" PDOmapping="no"/>
             <SubObject subIndex="01" name="NodeID_U8" objectType="7" dataType="0005" accessType="rw" defaultValue="0" />
             <SubObject subIndex="02" name="MappingVersion_U8" objectType="7" dataType="0005" accessType="rw/ro" defaultValue="0"  />
           </Object>
 
           <Object index="1401" name="PDO_RxCommParam_01h_REC" objectType="9" dataType="0420" >
+		    <SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="const" defaultValue="2" PDOmapping="no"/>
             <SubObject subIndex="01" name="NodeID_U8" objectType="7" dataType="0005" accessType="rw" defaultValue="0" />
             <SubObject subIndex="02" name="MappingVersion_U8" objectType="7" dataType="0005" accessType="rw/ro" defaultValue="0"  />
           </Object>
 
           <Object index="1402" name="PDO_RxCommParam_02h_REC" objectType="9" dataType="0420" >
+		    <SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="const" defaultValue="2" PDOmapping="no"/>
             <SubObject subIndex="01" name="NodeID_U8" objectType="7" dataType="0005" accessType="rw" defaultValue="0" />
             <SubObject subIndex="02" name="MappingVersion_U8" objectType="7" dataType="0005" accessType="rw/ro" defaultValue="0"  />
           </Object>
@@ -300,19 +303,19 @@ www.kalycito.com
           </Object>
 
           <Object index="1800" name="PDO_TxCommParam_00h_REC" objectType="9" dataType="0420" >
- 	<SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="rw" defaultValue="2"  />
+			<SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="const" defaultValue="2" PDOmapping="no"/>
             <SubObject subIndex="01" name="NodeID_U8" objectType="7" dataType="0005" accessType="rw" defaultValue="0"  />
             <SubObject subIndex="02" name="MappingVersion_U8" objectType="7" dataType="0005" accessType="rw/ro" defaultValue="0"/>
           </Object>
 
           <Object index="1801" name="PDO_TxCommParam_01h_REC" objectType="9" dataType="0420" >
-	 <SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="rw" defaultValue="2"  />
+			<SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="const" defaultValue="2" PDOmapping="no"/>
             <SubObject subIndex="01" name="NodeID_U8" objectType="7" dataType="0005" accessType="rw" defaultValue="0"  />
             <SubObject subIndex="02" name="MappingVersion_U8" objectType="7" dataType="0005" accessType="rw/ro" defaultValue="0"  />
           </Object>
 
           <Object index="1802" name="PDO_TxCommParam_02h_REC" objectType="9" dataType="0420" >
-	 <SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="rw" defaultValue="2"  />
+			<SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="const" defaultValue="2" PDOmapping="no"/>
             <SubObject subIndex="01" name="NodeID_U8" objectType="7" dataType="0005" accessType="rw" defaultValue="0" />
             <SubObject subIndex="02" name="MappingVersion_U8" objectType="7" dataType="0005" accessType="rw/ro" defaultValue="0"  />
           </Object>

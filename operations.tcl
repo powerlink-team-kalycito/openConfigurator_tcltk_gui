@@ -155,7 +155,8 @@ Validation::ResetPromptFlag
 #  Description : Information about tool developer
 #---------------------------------------------------------------------------------------------------
 proc Operations::about {} {\
-	
+    global version
+
     set aboutWindow .about
     catch "destroy $aboutWindow"
     toplevel $aboutWindow
@@ -166,7 +167,7 @@ proc Operations::about {} {\
     wm title	 $aboutWindow	"About"
     wm protocol $aboutWindow WM_DELETE_WINDOW "destroy $aboutWindow"
     set urlFont [font create -family TkDefaultFont -size 9 -underline 0]
-    label $aboutWindow.l_msg -compound left -text "\nopenCONFIGURATOR Tool\nDesigned by\nKalycito\n"
+    label $aboutWindow.l_msg -compound left -text "\nopenCONFIGURATOR-$version Tool\nDesigned by\nKalycito\n"
     label $aboutWindow.l_msg1 -text "www.kalycito.com\n" -foreground blue -activeforeground blue -font $urlFont
     button $aboutWindow.bt_ok -text Ok -command "destroy $aboutWindow ; font delete $urlFont" -width 8
     grid config $aboutWindow.l_msg -row 0 -column 0
@@ -484,12 +485,12 @@ proc Operations::openProject {projectfilename} {
     set ErrCode [ocfmRetCode_code_get $catchErrCode]
     if { $ErrCode != 0 } {
 	    if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
-		    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]\nAuto generate is set to \"No\" and project Setting set to \"Discard\" " -title Error -icon error
+		    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]\nAuto generate is set to \"Yes\" and project Setting set to \"Prompt\" " -title Error -icon error
 	    } else {
-		     tk_messageBox -message "Unknown Error\nAuto generate is set to \"No\" and project Setting set to \"Discard\" " -title Error -icon error
+		     tk_messageBox -message "Unknown Error\nAuto generate is set to \"Yes\" and project Setting set to \"Prompt\" " -title Error -icon error
 	    }
-	    set ra_auto 0
-	    set ra_proj 2
+	    set ra_auto 1
+	    set ra_proj 1
     } else {
 	    set ra_auto [EAutoGeneratep_value $ra_autop]
 	    set ra_proj [EAutoSavep_value $ra_projp]
@@ -628,10 +629,10 @@ proc Operations::BasicFrames { } {
     # Menu description
     set descmenu {
 	    "&File" {} {} 0 {           
-                {command "New &Project" {} "New Project" {Ctrl n}  -command { Operations::InitiateNewProject } }
-                {command "Open Project" {}  "Open Project" {Ctrl o} -command { Operations::OpenProjectWindow } }
+                {command "New &Project..." {} "New Project" {Ctrl n}  -command { Operations::InitiateNewProject } }
+                {command "Open Project..." {}  "Open Project" {Ctrl o} -command { Operations::OpenProjectWindow } }
                 {command "Save Project" {noFile}  "Save Project" {Ctrl s} -command Operations::Saveproject}
-                {command "Save Project as" {noFile}  "Save Project as" {} -command ChildWindows::SaveProjectAsWindow }
+                {command "Save Project as..." {noFile}  "Save Project as" {} -command ChildWindows::SaveProjectAsWindow }
                 {command "Close Project" {}  "Close Project" {} -command Operations::InitiateCloseProject }
                 {separator}
                 {command "E&xit" {}  "Exit openCONFIGURATOR" {Alt x} -command Operations::exit_app}
@@ -640,7 +641,7 @@ proc Operations::BasicFrames { } {
         		{command "Build Project    F7" {noFile} "Generate CDC and XML" {} -command Operations::BuildProject }
         		{command "Clean Project" {noFile} "Clean" {} -command Operations::CleanProject }
         		{separator}
-        		{command "Project Settings" {}  "Project Settings" {} -command ChildWindows::ProjectSettingWindow }
+        		{command "Project Settings..." {}  "Project Settings" {} -command ChildWindows::ProjectSettingWindow }
         	}
         	"&View" all options 0 {
                 {checkbutton "Show Output Console" {all option} "Show Console Window" {}
@@ -1336,7 +1337,7 @@ proc Operations::SingleClickNode {node} {
 	    set indexPos [intp_value $indexPos] 
 	    set subIndexPos [intp_value $subIndexPos] 
 	    set IndexProp []
-	    for {set cnt 0 } {$cnt <= 8} {incr cnt} {
+	    for {set cnt 0 } {$cnt <= 9} {incr cnt} {
 		    set tempIndexProp [GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos $cnt ]
 		    set ErrCode [ocfmRetCode_code_get [lindex $tempIndexProp 0]]
 		    if {$ErrCode == 0} {	
@@ -1406,19 +1407,17 @@ proc Operations::SingleClickNode {node} {
 	    [lindex $f2 1] cancelediting
 	    [lindex $f2 1] configure -state disabled
             
-            if { [string match -nocase "A???" $indexId] } {
-                $tmpInnerf0.frame1.ch_gen configure -state disabled
-            } else {
-                $tmpInnerf0.frame1.ch_gen configure -state normal
-                if { [lindex $IndexProp 9] == "1" } {
-                        $tmpInnerf0.frame1.ch_gen select
-                } else {
-                        $tmpInnerf0.frame1.ch_gen deselect
-                }
-            }
-	
     }
-    
+    if { [string match -nocase "A???" $indexId] } {
+        $tmpInnerf0.frame1.ch_gen configure -state disabled
+    } else {
+        $tmpInnerf0.frame1.ch_gen configure -state normal
+        if { [lindex $IndexProp 9] == "1" } {
+            $tmpInnerf0.frame1.ch_gen select
+        } else {
+            $tmpInnerf0.frame1.ch_gen deselect
+        }
+    }    
 
     $tmpInnerf0.en_nam1 configure -validate none -state normal
     $tmpInnerf0.en_nam1 delete 0 end
@@ -1843,7 +1842,7 @@ proc Operations::ResetGlobalData {} {
     set LastTableFocus ""
     Validation::ResetPromptFlag
     set ra_proj 2 
-    set ra_auto 0 
+    set ra_auto 1
     #no need to reset lastOpenPjt, lastXD, tableSaveBtn, indexSaveBtn and subindexSaveBtn
 
     #no index subindex or pdo table should be displayed

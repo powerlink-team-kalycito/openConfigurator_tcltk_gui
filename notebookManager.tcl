@@ -234,7 +234,6 @@ proc NoteBookManager::create_tab { nbpath choice } {
         grid config $tabInnerf0_1.la_generate -row 0 -column 0 -sticky w 
         grid config $tabInnerf0_1.ch_gen -row 0 -column 1 -sticky e -padx 5
         grid config $tabInnerf0.la_empty3 -row 5 -column 0 -columnspan 2
-        
         bind $tabInnerf0_1.la_generate <1> "$tabInnerf0_1.ch_gen toggle"
         $tabInnerf0_1.la_generate configure -text "Include Index in CDC generation"
     } elseif { $choice == "subindex" } {
@@ -249,6 +248,11 @@ proc NoteBookManager::create_tab { nbpath choice } {
         grid config $tabInnerf0.la_nam -row 2 -column 2 -sticky w 
         grid config $tabInnerf0.en_nam1 -row 2 -column 3  -sticky e -columnspan 1
         
+        grid config $tabInnerf0_1 -row 4 -column 0 -columnspan 2 -sticky w
+        grid config $tabInnerf0_1.la_generate -row 0 -column 0 -sticky w 
+        grid config $tabInnerf0_1.ch_gen -row 0 -column 1 -sticky e -padx 5
+        grid config $tabInnerf0.la_empty3 -row 5 -column 0 -columnspan 2
+        bind $tabInnerf0_1.la_generate <1> "$tabInnerf0_1.ch_gen toggle"
         $tabInnerf0_1.la_generate configure -text "Include Subindex in CDC generation"
     }
 
@@ -758,7 +762,9 @@ proc NoteBookManager::SaveValue {frame0 frame1} {
         if {$value != ""} {
             if { $radioSel == "hex" } {
                 #it is hex value trim leading 0x
-                set value [string range $value 2 end]
+                if {[string match -nocase "0x*" $value]} {
+                    set value [string range $value 2 end]
+                }
                 set value [string toupper $value]
                 if { $value == "" } {
                     set value ""
@@ -828,9 +834,12 @@ proc NoteBookManager::SaveValue {frame0 frame1} {
         
     }
     
+    set chkGen [$frame0.frame1.ch_gen cget -variable]
+    global $chkGen
+    
     if {[string match "*SubIndexValue*" $nodeSelect]} {
         if { [expr 0x$indexId > 0x1fff] } {
-            set catchErrCode [SetAllSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName $accessType $dataType $pdoType $default $upperLimit $lowerLimit $objectType 0]
+            set catchErrCode [SetAllSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName $accessType $dataType $pdoType $default $upperLimit $lowerLimit $objectType [subst $[subst $chkGen]] ]
         } else {
             if { [string match -nocase "18??" $indexId] || [string match "14??" $indexId]} {
                 if { [string match "01" $subIndexId] } {
@@ -851,11 +860,9 @@ proc NoteBookManager::SaveValue {frame0 frame1} {
                     }
                 }
             }
-            set catchErrCode [SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName 0 ]
+            set catchErrCode [SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName [subst $[subst $chkGen]] ]
         }
     } elseif {[string match "*IndexValue*" $nodeSelect]} {
-        set chkGen [$frame0.frame1.ch_gen cget -variable]
-        global $chkGen
         
         if { [expr 0x$indexId > 0x1fff] } {
             set catchErrCode [SetAllIndexAttributes $nodeId $nodeType $indexId $value $newName $accessType $dataType $pdoType $default $upperLimit $lowerLimit $objectType [subst $[subst $chkGen]] ]
@@ -1031,6 +1038,24 @@ proc NoteBookManager::SaveTable {tableWid} {
     set nodeType [lindex $result 1]
     set rowCount 0
     set flag 0
+    
+    set nodePos [new_intp]
+    set ExistfFlag [new_boolp]
+    set catchErrCode [IfNodeExists $nodeId $nodeType $nodePos $ExistfFlag]
+    set nodePos [intp_value $nodePos]
+    set ExistfFlag [boolp_value $ExistfFlag]
+    set ErrCode [ocfmRetCode_code_get $catchErrCode]
+    #puts "SaveTable : ErrCode->$ErrCode ExistfFlag->$ExistfFlag"
+    if { $ErrCode == 0 && $ExistfFlag == 1 } {
+	    #the node exist continue 
+    } else {
+        if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+	    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]\nValues not saved" -parent . -title Error -icon error
+        } else {
+	    tk_messageBox -message "Unknown Error\nValues not saved" -parent . -title Error -icon error
+        }
+        return
+    }
 	foreach childIndex $populatedPDOList {
         set indexId [string range [$treePath itemcget $childIndex -text] end-4 end-1]
         foreach childSubIndex [$treePath nodes $childIndex] {
@@ -1052,14 +1077,34 @@ proc NoteBookManager::SaveTable {tableWid} {
                 } else {
                     set value 0x$value
                 }
-                SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $name 0
+                set indexPos [new_intp] 
+                set subIndexPos [new_intp] 
+                set catchErrCode [IfSubIndexExists $nodeId $nodeType $indexId $subIndexId $subIndexPos $indexPos]
+                if { [ocfmRetCode_code_get $catchErrCode] == 0 } {
+                    set indexPos [intp_value $indexPos] 
+                    set subIndexPos [intp_value $subIndexPos]
+                    #to get include subindex in cdc generation
+                    set tempIndexProp [GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos 9 ]
+		    set ErrCode [ocfmRetCode_code_get [lindex $tempIndexProp 0]]
+		    if {$ErrCode == 0} {	
+			    set incFlag [lindex $tempIndexProp 1]
+		    } else {
+                            #puts "error in getatt ErrCode->$ErrCode [ocfmRetCode_errorString_get [lindex $tempIndexProp 1]]"
+			    set incFlag 0
+		    }
+                } else {
+                    #puts "error in ifsubindexexist [ocfmRetCode_errorString_get $catchErrCode]"
+                    set incFlag 0
+                }
+                #puts "SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $name $incFlag"
+                SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $name $incFlag
                 incr rowCount
             }
         }
     }
 
     if { $flag == 1} {
-        Console::DisplayInfo "Values which completely filled are (Offset, Length, Index and Sub Index) only saved"
+        Console::DisplayInfo "Values which are completely filled (Offset, Length, Index and Sub Index) only saved"
     }
 
     #PDO entries value is changed need to save 

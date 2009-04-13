@@ -729,9 +729,10 @@ proc Validation::InputToHex {input dataType} {
     } elseif { $input == "" || [Validation::CheckDecimalNumber $input ] == 0 } {
 	    #if value empty or not an int return back same value
 	    return [list $input fail]
+    } elseif { $input == "-" } {
+	    return [list 0x pass]
     }
-    
-        
+ 
     if { $input < 0 } {
 	switch -- $stdDataType {
 	    INTEGER8 {

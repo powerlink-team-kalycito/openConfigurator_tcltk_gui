@@ -195,12 +195,12 @@ proc ChildWindows::ProjectSettingWindow {} {
     set ErrCode [ocfmRetCode_code_get $catchErrCode]
     if { $ErrCode != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
-            tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]\nAuto generate is set to \"No\" and project Setting set to \"Discard\" " -title Error -icon error
+            tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]\nAuto generate is set to \"Yes\" and project Setting set to \"Prompt\" " -title Error -icon error
         } else {
-            tk_messageBox -message "Unknown Error\nAuto generate is set to \"No\" and project Setting set to \"Discard\" " -title Error -icon error
+            tk_messageBox -message "Unknown Error\nAuto generate is set to \"Yes\" and project Setting set to \"Prompt\" " -title Error -icon error
         }
-        set ra_auto 0
-        set ra_proj 2
+        set ra_auto 1
+        set ra_proj 1
     } else {
         set ra_auto [EAutoGeneratep_value $ra_autop]
         set ra_proj [EAutoSavep_value $ra_projp]
@@ -641,13 +641,13 @@ proc ChildWindows::NewProjectWindow {} {
 	    $frame2_1.en_imppath config -state normal 
 	    $frame2_1.bt_imppath config -state normal 
     } 
-
     $frame2_1.ra_def select	
-    ChildWindows::NewProjectMNText $frame2_1.t_desc 	
-
+    
+    set ra_auto 1
     radiobutton $frame2_1.ra_yes -text "Yes" -variable ra_auto -value 1 -command "ChildWindows::NewProjectMNText  $frame2_1.t_desc"
     radiobutton $frame2_1.ra_no -text "No" -variable ra_auto -value 0 -command "ChildWindows::NewProjectMNText  $frame2_1.t_desc"
-    $frame2_1.ra_no select
+    $frame2_1.ra_yes select
+    ChildWindows::NewProjectMNText $frame2_1.t_desc 
 
     button $frame2_1.bt_imppath -state disabled -width 8 -text Browse -command {
 	    set types {
@@ -714,7 +714,7 @@ proc ChildWindows::NewProjectWindow {} {
 	    }
     }
 
-    button 	$frame2_2.bt_cancel -width 8 -text "Cancel" -command {
+    button $frame2_2.bt_cancel -width 8 -text "Cancel" -command {
 	    catch { $frame1_4.bt_cancel invoke }
     }
 
@@ -815,7 +815,27 @@ proc ChildWindows::NewProjectWindow {} {
 	    bind $winNewProj <KeyPress-Return> "$frame2_2.bt_next invoke"
     }
 
-    button $frame1_4.bt_cancel -width 8 -text Cancel -command { 
+    button $frame1_4.bt_cancel -width 8 -text Cancel -command {
+	    global projectName
+	    global projectDir
+	    global ra_proj
+	    global ra_auto
+	    catch {
+		if { $projectDir != "" && $projectName != "" } {
+		    set ra_autop [new_EAutoGeneratep]
+		    set ra_projp [new_EAutoSavep]
+		    set catchErrCode [GetProjectSettings $ra_autop $ra_projp]
+		    set ErrCode [ocfmRetCode_code_get $catchErrCode]
+		    if { $ErrCode != 0 } {
+		        set ra_auto [EAutoGeneratep_value $ra_autop]
+		        set ra_proj [EAutoSavep_value $ra_projp]
+		    } else {
+		        set ra_auto 1
+		        set ra_proj 1
+		    }
+		}	
+	    }
+    
 	    catch {
 		    unset tmpPjtName
 		    unset tmpPjtDir

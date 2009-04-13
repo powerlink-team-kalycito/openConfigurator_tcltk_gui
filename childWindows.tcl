@@ -523,6 +523,7 @@ proc ChildWindows::SaveProjectWindow {} {
 #  Description : Creates the child window for save as project
 #---------------------------------------------------------------------------------------------------
 proc ChildWindows::SaveProjectAsWindow {} {
+
     global projectName
     global projectDir
 
@@ -540,6 +541,8 @@ proc ChildWindows::SaveProjectAsWindow {} {
 	    catch {file mkdir [file join $saveProjectAs cdc_xap]}
 	    catch {file mkdir [file join $saveProjectAs octx]}
 	    catch {file mkdir [file join $saveProjectAs scripts]}
+	    
+	    ChildWindows::CopyScript $saveProjectAs
 	    
             thread::send -async [tsv::set application importProgress] "StartProgress"
 	    set catchErrCode [SaveProject $tempProjectDir [string range $tempProjectName 0 end-[string length [file extension $tempProjectName]]]]
@@ -952,7 +955,8 @@ proc ChildWindows::NewProjectMNText {t_desc} {
 #  Description : creates the new project 
 #---------------------------------------------------------------------------------------------------
 proc ChildWindows::NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf tempRa_proj tempRa_auto} {
-	
+    global tcl_platform
+    global rootDir
     global ra_proj
     global ra_auto
     global treePath
@@ -1013,7 +1017,9 @@ proc ChildWindows::NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf tempRa_
 	    file mkdir [file join $projectDir cdc_xap]
 	    file mkdir [file join $projectDir octx]
 	    file mkdir [file join $projectDir scripts]
-	
+
+	    ChildWindows::CopyScript $projectDir
+
 	    if { [$Operations::projMenu index 2] != "2" } {
 		    $Operations::projMenu insert 2 command -label "Close Project" -command "Operations::InitiateCloseProject"
 	    }
@@ -1790,4 +1796,24 @@ proc ChildWindows::PropertiesWindow {} {
     bind $winProp <KeyPress-Escape> "$winProp.bt_ok invoke"
     Operations::centerW $winProp
     focus $winProp
+}
+
+proc ChildWindows::CopyScript { pjtFldr } {
+    global tcl_platform
+    global rootDir
+    
+    if {"$tcl_platform(platform)" == "windows"} {
+	set sptFile Transfer.bat
+    } elseif {"$tcl_platform(platform)" == "unix"} {
+	set sptFile Transfer.sh
+    }
+    set scriptFile [file join $rootDir $sptFile]
+    if { [file exists $scriptFile] && [file isfile $scriptFile] } {
+	#file exists
+	catch {file copy -force $scriptFile [file join $pjtFldr scripts]}
+	return pass
+    } else {
+	tk_messageBox -parent . -icon info -message "file $sptFile at location $rootDir is missing\nTransfer feature will not work"
+	return fail
+    }
 }

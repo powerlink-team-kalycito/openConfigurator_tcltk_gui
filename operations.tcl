@@ -638,9 +638,11 @@ proc Operations::BasicFrames { } {
                 {command "E&xit" {}  "Exit openCONFIGURATOR" {Alt x} -command Operations::exit_app}
         	}
         	"&Project" {} {} 0 {
-        		{command "Build Project    F7" {noFile} "Generate CDC and XML" {} -command Operations::BuildProject }
+        		{command "Build Project    F7" {noFile} "Generate CDC and XAP" {} -command Operations::BuildProject }
         		{command "Clean Project" {noFile} "Clean" {} -command Operations::CleanProject }
         		{separator}
+                        {command "Transfer         F6" {noFile} "Transfer CDC and XAP" {} -command Operations::Transfer }
+                        {separator}
         		{command "Project Settings..." {}  "Project Settings" {} -command ChildWindows::ProjectSettingWindow }
         	}
         	"&View" all options 0 {
@@ -669,6 +671,7 @@ proc Operations::BasicFrames { } {
     # to select the required check button in View menu
     set Operations::options(showTree) 1
     set Operations::options(DisplayConsole) 1
+    bind . <Key-F6> "Operations::Transfer"
     #shortcut keys for project
     bind . <Key-F7> "Operations::BuildProject"
      #to prevent BuildProject called
@@ -775,7 +778,18 @@ proc Operations::BasicFrames { } {
 
     set bbox [ButtonBox::create $toolbar.bbox4 -spacing 1 -padx 1 -pady 1]
     pack $bbox -side left -anchor w
-
+    set bb_build [ButtonBox::add $bbox -image [Bitmap::get transfer]\
+            -height 21\
+            -width 21\
+            -helptype balloon\
+            -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
+            -helptext "Transfer cdc and xap"\
+	    -command "Operations::Transfer"]
+    pack $bb_build -side left -padx 4
+    
+    set sep3 [Separator::create $toolbar.sep3 -orient vertical]
+    pack $sep3 -side left -fill y -padx 4 -anchor w
+    
     set bbox [ButtonBox::create $toolbar.bbox7 -spacing 1 -padx 1 -pady 1]
     pack $bbox -side right
     set bb_kaly [ButtonBox::add $bbox -image [Bitmap::get kalycito_icon]\
@@ -1273,7 +1287,7 @@ proc Operations::SingleClickNode {node} {
 
 				    set IndexActualValue [lindex $tempIndexProp 1]
 				    if {[string match -nocase "0x*" $IndexActualValue] } {
-					    #remove appende 0x
+					    #remove appended 0x
 					    set IndexActualValue [string range $IndexActualValue 2 end]
 				    } else {
 					    # no 0x no need to do anything
@@ -2400,6 +2414,44 @@ proc Operations::CleanProject {} {
     if { $cleanMsg != "" } {
         Console::DisplayInfo "files$cleanMsg at [file join $projectDir cdc_xap] are deleted"
     }
+}
+
+#---------------------------------------------------------------------------------------------------
+#  Operations::Transfer
+# 
+#  Arguments : -
+#
+#  Results : -
+#
+#  Description : Executes the script for transfer
+#---------------------------------------------------------------------------------------------------
+proc Operations::Transfer {} {
+    global tcl_platform
+    global rootDir
+    global projectDir
+    global projectName 
+
+    if { $projectDir == "" || $projectName == "" } {
+        Console::DisplayInfo "No project present"
+        return
+    }
+    if {"$tcl_platform(platform)" == "windows"} {
+	set sptFile Transfer.bat
+    } elseif {"$tcl_platform(platform)" == "unix"} {
+	set sptFile Transfer.sh
+    }
+    set scriptFile [file join $projectDir scripts $sptFile]
+    if { [file exists $scriptFile] && [file isfile $scriptFile] } {
+        #file exists    
+    } else {
+        set result [ChildWindows::CopyScript $projectDir]
+        if { $result == "fail" } {
+            #msg will be displayed in ChildWindows::CopyScript procedure
+            return
+        }
+    }
+    exec $scriptFile [file join $projectDir cdc_xap] &
+    Console::DisplayInfo "cdc and xap are transferred"
 }
 
 #---------------------------------------------------------------------------------------------------

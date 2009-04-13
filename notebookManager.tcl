@@ -577,7 +577,8 @@ proc NoteBookManager::InsertHex {entryPath dataType} {
         $entryPath insert 0 $entryValue
     } else {
         $entryPath delete 0 end
-        set entryValue 0x
+        #commented to remove insertion of 0x
+        #set entryValue 0x
         $entryPath insert 0 $entryValue
     }
 }
@@ -695,9 +696,9 @@ proc NoteBookManager::SaveValue {frame0 frame1} {
         }
         set default [$frame1.en_default1 get]
     } else {
-        set radioSel [$frame1.frame1.ra_dec cget -variable]
-        global $radioSel
-        set radioSel [subst $[subst $radioSel]]
+        #set radioSel [$frame1.frame1.ra_dec cget -variable]
+        #global $radioSel
+        #set radioSel [subst $[subst $radioSel]]
         $frame1.en_data1 configure -state normal
         set dataType [$frame1.en_data1 get]
         $frame1.en_data1 configure -state disabled
@@ -1009,7 +1010,12 @@ proc NoteBookManager::EndEdit {tablePath rowIndex columnIndex text} {
                 }
             }
     }
-    return 0x$text
+    if { $text == "" } {
+        return $text
+    } else {
+        return 0x$text
+    }
+    
 }
 
 #---------------------------------------------------------------------------------------------------

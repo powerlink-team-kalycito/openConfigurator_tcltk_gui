@@ -671,6 +671,7 @@ proc Validation::IsTableHex {input preinput mode idx reqLen tablePath rowIndex c
 		    return 0
 	    } else {
 		    set input $input
+		    set idx [expr $idx+2]
 	    }
     }
 
@@ -730,7 +731,7 @@ proc Validation::InputToHex {input dataType} {
 	    #if value empty or not an int return back same value
 	    return [list $input fail]
     } elseif { $input == "-" } {
-	    return [list 0x pass]
+	    return [list "" pass]
     }
  
     if { $input < 0 } {

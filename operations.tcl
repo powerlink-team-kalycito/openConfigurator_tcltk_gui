@@ -754,6 +754,19 @@ proc Operations::BasicFrames { } {
     set sep0 [Separator::create $toolbar.sep0 -orient vertical]
     pack $sep0 -side left -fill y -padx 4 -anchor w
 
+    set bbox [ButtonBox::create $toolbar.bbox2 -spacing 1 -padx 1 -pady 1]
+    pack $bbox -side left -anchor w
+    set bb_find [ButtonBox::add $bbox -image [Bitmap::get find]\
+            -height 21\
+            -width 21\
+            -helptype balloon\
+            -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
+            -helptext "Search Tree Browser for text"\
+	    -command "FindSpace::ToggleFindWin"]
+    pack $bb_find -side left -padx 4
+    set sep4 [Separator::create $toolbar.sep4 -orient vertical]
+    pack $sep4 -side left -fill y -padx 4 -anchor w
+
     set bbox [ButtonBox::create $toolbar.bbox5 -spacing 1 -padx 1 -pady 1]
     pack $bbox -side left -anchor w
     set bb_build [ButtonBox::add $bbox -image [Bitmap::get build]\
@@ -1251,6 +1264,9 @@ proc Operations::SingleClickNode {node} {
 				    }
 			    }
 		    }
+                    if { $commParamValue != ""} {
+                        set commParamValue 0x$commParamValue
+                    }
 		    set tempIdx [lindex $finalMappList $count+1]
 		    set indexId [string range [$treePath itemcget $tempIdx -text] end-4 end-1 ]
 		    set sidx [$treePath nodes $tempIdx]
@@ -1275,7 +1291,7 @@ proc Operations::SingleClickNode {node} {
 				    set accessType [lindex $tempIndexProp 1]
 				    # 5 is passed to get the actual value
 				    set tempIndexProp [GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos 5 ] 
-				    set ErrCode [ocfmRetCode_code_get [lindex $tempIndexProp 0] ]		
+				    set ErrCode [ocfmRetCode_code_get [lindex $tempIndexProp 0] ]
 				    if {$ErrCode != 0} {
 					    [lindex $f2 1] insert $popCount [list "" "" "" "" "" ""]
 					    foreach col [list 2 3 4 5 ] {
@@ -1298,7 +1314,13 @@ proc Operations::SingleClickNode {node} {
 				    set reserved [string range $IndexActualValue 8 9]
 				    set listSubIndex [string range $IndexActualValue 10 11]
 				    set listIndex [string range $IndexActualValue 12 15]
-				    [lindex $f2 1] insert $popCount [list $popCount 0x$commParamValue 0x$offset 0x$length 0x$listIndex 0x$listSubIndex ]
+                                    foreach tempPdo [list offset length listIndex listSubIndex] {
+                                        if {[subst $[subst $tempPdo]] != ""} {
+                                            set $tempPdo 0x[subst $[subst $tempPdo]]
+                                        }
+                                    }
+                                    #puts -nonewline "$commParamValue $offset $length $listIndex $listSubIndex"
+				    [lindex $f2 1] insert $popCount [list $popCount $commParamValue $offset $length $listIndex $listSubIndex ]
 				    if { $accessType == "ro" || $accessType == "const" } {
 					    foreach col [list 2 3 4 5 ] {
 						    [lindex $f2 1] cellconfigure $popCount,$col -editable no
@@ -2005,6 +2027,26 @@ namespace eval FindSpace {
     variable searchString
     variable searchCount
     variable txtFindDym
+    variable findWinStatus
+}
+
+#---------------------------------------------------------------------------------------------------
+#  FindSpace::ToggleFindWin
+# 
+#  Arguments : -
+#
+#  Results : -
+#
+#  Description : Toggles the display of Find window 
+#---------------------------------------------------------------------------------------------------
+proc FindSpace::ToggleFindWin {} {
+    if { $FindSpace::findWinStatus == 1 } {
+        #find window visible hide it
+        FindSpace::EscapeTree
+    } else {
+        #find window not visible display it
+        FindSpace::FindDynWindow
+    }
 }
 
 #---------------------------------------------------------------------------------------------------
@@ -2023,6 +2065,7 @@ proc FindSpace::FindDynWindow {} {
 	    focus $treeFrame.en_find
 	    bind $treeFrame.en_find <KeyPress-Return> "FindSpace::Next"
 	    set FindSpace::txtFindDym ""
+            set FindSpace::findWinStatus 1
     }
 }
 
@@ -2040,6 +2083,7 @@ proc FindSpace::EscapeTree {} {
 	    global treeFrame
 	    pack forget $treeFrame
 	    bind $treeFrame.en_find <KeyPress-Return> ""
+            set FindSpace::findWinStatus 0
     }
 }
 

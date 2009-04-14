@@ -1586,10 +1586,28 @@ proc Operations::SingleClickNode {node} {
         grid remove $tmpInnerf1.frame1.ra_hex
         $tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::IsValidStr %P" -bg $savedBg
     } elseif { [ string match -nocase "BIT" [lindex $IndexProp 2] ] == 1 } {
+        puts "for bit [lindex $IndexProp 5]"
+        set state [$tmpInnerf1.en_value1 cget -state]
+        if { [Validation::CheckBitNumber[lindex $IndexProp 5]] == 1 } {
+            # it is a bit of 8 character
+        } else {
+            $tmpInnerf1.en_value1 configure -state normal
+            $tmpInnerf1.en_value1 delete 0 end
+    
+            if { [string match -nocase "0x* [lindex $IndexProp 5]] } {
+                #check whether it is hex
+                set bitInput [string range [lindex $IndexProp 5] 2 end]
+                if { [Validation::CheckHexaNumber $bitInput ] == 1 && [string length $bitInput] <= 8  && $bitInput != "" } {
+                    #it is a hex number of required length covert to bit
+                    set bitInput [Validation::HextoBin $bitInput]
+                    $tmpInnerf1.en_value1 insert 0 $bitInput
+                }
+            }
+        }
         set lastConv ""
         grid remove $tmpInnerf1.frame1.ra_dec
         grid remove $tmpInnerf1.frame1.ra_hex
-        $tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::CheckBitNumber %P" -bg $savedBg
+        $tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::CheckBitNumber %P" -bg $savedBg -state $state
     } elseif { [string match -nocase "REAL*" [lindex $IndexProp 2]] } {
         set lastConv hex
         grid remove $tmpInnerf1.frame1.ra_dec
@@ -2063,7 +2081,6 @@ proc FindSpace::FindDynWindow {} {
 	    global treeFrame
 	    pack $treeFrame -side bottom -pady 5
 	    focus $treeFrame.en_find
-	    bind $treeFrame.en_find <KeyPress-Return> "FindSpace::Next"
 	    set FindSpace::txtFindDym ""
             set FindSpace::findWinStatus 1
     }
@@ -2082,7 +2099,6 @@ proc FindSpace::EscapeTree {} {
     catch {
 	    global treeFrame
 	    pack forget $treeFrame
-	    bind $treeFrame.en_find <KeyPress-Return> ""
             set FindSpace::findWinStatus 0
     }
 }
@@ -2277,6 +2293,12 @@ proc FindSpace::Find { searchStr {node ""} {mode 0} } {
 #  Description : Node is made visible 
 #---------------------------------------------------------------------------------------------------
 proc FindSpace::OpenParent { treePath node } {
+    if { [$treePath exists $node ] == 1 } {
+        # the node exist in tree continue
+    } else {
+        return    
+    }
+    
     $treePath selection clear
     set tempNode $node
     while {[$treePath parent $tempNode] != "ProjectNode"} {
@@ -2307,9 +2329,11 @@ proc FindSpace::Prev {} {
 	    FindSpace::Find $FindSpace::searchString
     } else {
 	    set prev [FindSpace::Find $FindSpace::searchString $node prev]
-	    if { $prev != "" } {
+	    if { [$treePath exists $prev] == 1 } {
 		    FindSpace::OpenParent $treePath $prev
-	    }
+	    } else {
+                #value returned is not a tree node 
+            }
 	    return
     }
 }
@@ -2334,8 +2358,10 @@ proc FindSpace::Next {} {
         FindSpace::Find $FindSpace::searchString
     } else {	
         set next [FindSpace::Find $FindSpace::searchString $node next]
-        if { $next != "" } {
+        if { [$treePath exists $next] == 1 } {
 	        FindSpace::OpenParent $treePath $next
+        } else {
+            #value returned is not a tree node
         }
         return
     }
@@ -2480,9 +2506,11 @@ proc Operations::Transfer {} {
         return
     }
     if {"$tcl_platform(platform)" == "windows"} {
-	set sptFile Transfer.bat
+		set sptFile Transfer.bat		
     } elseif {"$tcl_platform(platform)" == "unix"} {
-	set sptFile Transfer.sh
+		set sptFile Transfer.sh
+		#Console::DisplayInfo "Yet To be Implemented"
+		
     }
     set scriptFile [file join $projectDir scripts $sptFile]
     if { [file exists $scriptFile] && [file isfile $scriptFile] } {
@@ -2494,8 +2522,20 @@ proc Operations::Transfer {} {
             return
         }
     }
-    exec $scriptFile [file join $projectDir cdc_xap] &
-    Console::DisplayInfo "cdc and xap are transferred"
+	
+	if {"$tcl_platform(platform)" == "windows"} {
+		set runcmd [list exec $scriptFile >& temp.log]	
+		catch $runcmd res
+
+		set fid [open "temp.log" r]
+			while {[gets $fid line] != -1} {
+				Console::DisplayInfo $line
+			}
+		close $fid
+	} elseif {"$tcl_platform(platform)" == "unix"} {
+		Console::DisplayInfo "Yet To be Implemented"
+	}
+	
 }
 
 #---------------------------------------------------------------------------------------------------
@@ -2698,7 +2738,7 @@ proc Operations::DeleteTreeNode {} {
 		    #gets SubIndexId of selected node
 		    set sidx [string range [$treePath itemcget $node -text] end-2 end-1 ]
 		    if { $sidx == "00" } {
-			    tk_messageBox -message "SubIndex 00 cannot be deleted" -parent .
+			    tk_messageBox -message "SubIndex 00 cannot be deleted" -parent . -icon error
 			    return
 		    }
 

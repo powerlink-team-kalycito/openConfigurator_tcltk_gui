@@ -788,6 +788,11 @@ proc NoteBookManager::SaveValue {frame0 frame1} {
             }
         }
     } elseif { [string match -nocase "BIT" $dataType] } {
+        if {$value != ""} {
+            #convert value to hex and save
+            set value 0x[Validation::BintoHex $value]
+            puts "for BIT value->$value"
+        }
         #continue
     } elseif { [string match -nocase "REAL*" $dataType] } {
         if { [string match -nocase "0x" $value] } {

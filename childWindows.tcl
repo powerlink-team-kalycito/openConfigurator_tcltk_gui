@@ -183,10 +183,9 @@ proc ChildWindows::ProjectSettingWindow {} {
     global ra_proj
     global ra_auto
 
-	if {$projectDir == "" || $projectName == "" } {
-
-		return
-	}
+    if {$projectDir == "" || $projectName == "" } {
+	return
+    }
 	
     set ra_autop [new_EAutoGeneratep]
     set ra_projp [new_EAutoSavep]
@@ -215,21 +214,32 @@ proc ChildWindows::ProjectSettingWindow {} {
     wm deiconify $winProjSett
     grab $winProjSett
 
-    set frame1 [frame $winProjSett.frame1]
-    set frame2 [frame $winProjSett.frame2]
+    set framea [frame $winProjSett.framea]
+    set frameb [frame $winProjSett.frameb]
+    #set framec [frame $winProjSett.framec]
+    set frame1 [frame $framea.frame1]
+    set frame2 [frame $frameb.frame2]
     set frame3 [frame $winProjSett.frame3]
 
-    label $winProjSett.la_save -text "Project Settings"
-    label $winProjSett.la_auto -text "Auto Generate"
+    #label $winProjSett.la_save -text "Project Settings"
+    #label $winProjSett.la_auto -text "Auto Generate"
+    label $framea.la_save -text "Project Settings"
+    label $frameb.la_auto -text "Auto Generate"
     label $winProjSett.la_empty1 -text ""
     label $winProjSett.la_empty2 -text ""
+    label $winProjSett.la_empty3 -text ""
+    
+     
+    text $winProjSett.t_desc -height 4 -width 40 -state disabled -background white	
 
-    radiobutton $frame1.ra_autoSave -variable ra_proj -value 0 -text "Auto Save"
-    radiobutton $frame1.ra_prompt -variable ra_proj -value 1 -text "Prompt"
-    radiobutton $frame1.ra_discard -variable ra_proj -value 2 -text "Discard"
+    radiobutton $frame1.ra_autoSave -variable ra_proj -value 0 -text "Auto Save" -command "ChildWindows::ProjectSettText $winProjSett.t_desc"
+    radiobutton $frame1.ra_prompt -variable ra_proj -value 1 -text "Prompt" -command "ChildWindows::ProjectSettText $winProjSett.t_desc"
+    radiobutton $frame1.ra_discard -variable ra_proj -value 2 -text "Discard" -command "ChildWindows::ProjectSettText $winProjSett.t_desc"
 
-    radiobutton $frame2.ra_genYes -variable ra_auto -value 1 -text Yes
-    radiobutton $frame2.ra_genNo -variable ra_auto -value 0 -text No
+    radiobutton $frame2.ra_genYes -variable ra_auto -value 1 -text Yes -command "ChildWindows::ProjectSettText $winProjSett.t_desc"
+    radiobutton $frame2.ra_genNo -variable ra_auto -value 0 -text No -command "ChildWindows::ProjectSettText $winProjSett.t_desc"
+
+    ChildWindows::ProjectSettText $winProjSett.t_desc
 
     button $frame3.bt_ok -width 8 -text "Ok" -command {
         set catchErrCode [SetProjectSettings $ra_auto $ra_proj]
@@ -240,41 +250,107 @@ proc ChildWindows::ProjectSettingWindow {} {
             } else {
 	            tk_messageBox -message "Unknown Error" -title Error -icon error -parent .projSett
             }
-	    }
-		
+	}
         destroy .projSett
     }
 	
     button $frame3.bt_cancel -width 8 -text "Cancel" -command {
-	    destroy .projSett
+	#if cancel is called project settings for existing project is called
+	global ra_proj
+	global ra_auto
+	set ra_autop [new_EAutoGeneratep]
+        set ra_projp [new_EAutoSavep]
+        set catchErrCode [GetProjectSettings $ra_autop $ra_projp]
+        set ErrCode [ocfmRetCode_code_get $catchErrCode]
+        if { $ErrCode != 0 } {
+            set ra_auto 1
+            set ra_proj 1
+        } else {
+            set ra_auto [EAutoGeneratep_value $ra_autop]
+            set ra_proj [EAutoSavep_value $ra_projp]
+        }
+	destroy .projSett
     }
 	
-    grid config $winProjSett.la_empty1 -row 0 -column 0
+    #grid config $winProjSett.la_empty1 -row 0 -column 0
 
-    grid config $winProjSett.la_save -row 1 -column 0 -sticky w
+    #grid config $winProjSett.la_save -row 1 -column 0 -sticky w
+    
+grid config $framea -row 0 -column 0 -sticky w -padx 10 -pady 10
+grid config $framea.la_save -row 0 -column 0 -sticky w
+    #grid config $frame1 -row 2 -column 0 -padx 10 -sticky w
+    #grid config $frame1.ra_autoSave -row 0 -column 0
+    #grid config $frame1.ra_prompt -row 0 -column 1 -padx 5
+    #grid config $frame1.ra_discard -row 0 -column 2
+grid config $frame1 -row 1 -column 0 -padx 10 -sticky w
+grid config $frame1.ra_autoSave -row 0 -column 0
+grid config $frame1.ra_prompt -row 0 -column 1 -padx 5
+grid config $frame1.ra_discard -row 0 -column 2
 
-    grid config $frame1 -row 2 -column 0 -padx 10 -sticky w
-    grid config $frame1.ra_autoSave -row 0 -column 0
-    grid config $frame1.ra_prompt -row 0 -column 1 -padx 5
-    grid config $frame1.ra_discard -row 0 -column 2
+    #grid config $winProjSett.la_empty2 -row 3 -column 0
 
-    grid config $winProjSett.la_empty2 -row 3 -column 0
+    #grid config $winProjSett.la_auto -row 4 -column 0 -sticky w
+grid config $frameb -row 1 -column 0 -sticky w -padx 10 -pady 10
+grid config $frameb.la_auto -row 0 -column 0 -sticky w
+    #grid config $frame2 -row 5 -column 0 -padx 10 -sticky w
+    #grid config $frame2.ra_genYes -row 0 -column 0 -padx 2
+    #grid config $frame2.ra_genNo -row 0 -column 1 -padx 2
+grid config $frame2 -row 1 -column 0 -padx 10 -sticky w
+grid config $frame2.ra_genYes -row 0 -column 0 -padx 2
+grid config $frame2.ra_genNo -row 0 -column 1 -padx 2
 
-    grid config $winProjSett.la_auto -row 4 -column 0 -sticky w
-
-    grid config $frame2 -row 5 -column 0 -padx 10 -sticky w
-    grid config $frame2.ra_genYes -row 0 -column 0 -padx 2
-    grid config $frame2.ra_genNo -row 0 -column 1 -padx 2
-
-    grid config $frame3 -row 6 -column 0 -pady 10 
-    grid config $frame3.bt_ok -row 0 -column 0
-    grid config $frame3.bt_cancel -row 0 -column 1
-
+    #grid config $winProjSett.la_empty3 -row 6 -column 0 
+    #grid config $winProjSett.t_desc -row 7 -column 0 -padx 10 -pady 10 -sticky news
+grid config $winProjSett.t_desc -row 2 -column 0 -padx 10 -pady 10 -sticky news    
+    #grid config $frame3 -row 8 -column 0 -pady 10 
+    #grid config $frame3.bt_ok -row 0 -column 0
+    #grid config $frame3.bt_cancel -row 0 -column 1
+grid config $frame3 -row 8 -column 0 -pady 10 
+grid config $frame3.bt_ok -row 0 -column 0
+grid config $frame3.bt_cancel -row 0 -column 1
+    
     wm protocol .projSett WM_DELETE_WINDOW "$frame3.bt_cancel invoke"
     bind $winProjSett <KeyPress-Return> "$frame3.bt_ok invoke"
     bind $winProjSett <KeyPress-Escape> "$frame3.bt_cancel invoke"
     Operations::centerW $winProjSett
 
+}
+
+#---------------------------------------------------------------------------------------------------
+#  ChildWindows::ProjectSettText
+# 
+#  Arguments : t_desc - path of the text widget
+#
+#  Results : -
+#
+#  Description : Displays description message for project settings
+#---------------------------------------------------------------------------------------------------
+proc ChildWindows::ProjectSettText {t_desc} {
+    global ra_proj
+    global ra_auto
+
+    switch -- $ra_proj {
+	0 {
+	    set msg1 "Edited data are saved automatically"
+	}
+	1 {
+	    set msg1 "Prompts the user for saving the edited data"
+	}
+	2 {
+	    set msg1 "Edited data is discarded unless user saves it"
+	}
+    }
+
+    if { $ra_auto == 1 } {
+	    set msg2 "Autogenerates MN object dictionary during build"
+    } else {
+	    set msg2 "User imported xdd or xdc file will be build"
+    }
+
+    $t_desc configure -state normal
+    $t_desc delete 1.0 end
+    $t_desc insert 1.0 "$msg1\n\n$msg2"
+    $t_desc configure -state disabled
 }
 
 #---------------------------------------------------------------------------------------------------
@@ -1798,6 +1874,15 @@ proc ChildWindows::PropertiesWindow {} {
     focus $winProp
 }
 
+#---------------------------------------------------------------------------------------------------
+#  ChildWindows::CopyScript
+# 
+#  Arguments : -
+#
+#  Results : -
+#
+#  Description : Copies the transfer script file
+#---------------------------------------------------------------------------------------------------
 proc ChildWindows::CopyScript { pjtFldr } {
     global tcl_platform
     global rootDir

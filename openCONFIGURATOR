@@ -76,7 +76,8 @@ if { $argc == 1 && ( $argv == "--version" || $argv == "-V" ) } {
 }
 
 if { [ catch { package require Tk 8.5 } ] } {
-    puts "\nPackage TK 8.5 not found \nplease install Tk 8.5 and uninstall older version to run the tool\n"
+    puts "\nPackage TK 8.5 not found \nplease install Tk 8.5 and uninstall older version to run the tool\n\npress Enter key to exit"
+	gets stdin
     exit
 }
 
@@ -156,6 +157,7 @@ proc InitOpenConfigurator {argc argv} {
             set homeVar [file join $::env(HOME) Documents]
         } else {
             set homeVar [registry get {HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders} {Personal}]
+			set homeVar [file join $::env(HOME) [file tail $homeVar]]
         }
     } else {
         set homeVar [file join $::env(HOME) Documents]
@@ -163,16 +165,12 @@ proc InitOpenConfigurator {argc argv} {
     if {[file exists $homeVar] && ![file isfile $homeVar]} {
 	    #folder exists
     } else {
-	    set homeVar [file join $::env(HOME) "My Documents"]
-	    if { [file exists $homeVar] && ![file isfile $homeVar] } {
-		    #folder exists
-	    } else {
-		    set homeVar [file join $::env(HOME) Documents]
-			if {[file exists $homeVar] && ![file isfile $homeVar]} {
-				#folder exists
-			} else {
-				file mkdir $homeVar
-			}
+	    set homeVar [file join $::env(HOME) Documents]
+		if {[file exists $homeVar] && ![file isfile $homeVar]} {
+			#folder exists
+		} else {
+			file mkdir $homeVar
+			tk_messageBox -message "Folder $homeVar is created" -title Info -icon info
 	    }
     }
 

@@ -52,32 +52,35 @@
 ::
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::Syntax:
+:: xcopy "Source" "Destination" <Switch(s)>
+::
+::Example:
+:: set CdcSrc="C:\Documents and Settings\UserName\My Documents\openCONFIGURATOR_Projects\Project1\cdc_xap\mnobd.cdc"
+:: set CdcDest="C:\Documents and Settings\UserName\Desktop\openPOWERLINK\"
+:: 
+:: set XapSrc="C:\Documents and Settings\UserName\My Documents\openCONFIGURATOR_Projects\Project1\cdc_xap\xap.h"
+:: set XapDest="C:\Documents and Settings\UserName\Desktop\openPOWERLINK\"
+::
+:: Consult the user manual for Trouble shooting and for more explanation
+::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+
 @echo off
 
 :: Set the Source file
-set Src= ..\cdc_xap\mnobd.cdc
-::echo The variable is "%Src%"
+set CdcSrc=""
+set XapSrc=""
+::echo The cdc Source is "%CdcSrcSrc%"
+::echo The xap.h Source is "%XapSrcSrc%"
 
 :: Set the Destination folder file
-set Dest=Dump
-::echo The variable is "%Dest%"
+set CdcDest=""
+set XapDest=""
+::echo The cdc Destination is "%CdcDest%"
+::echo The xap.h Destination is "%XapDest%"
 
-if "%Src%" == "" goto error1
-if "%Dest%" == "" goto error2
-
-:: xcopy "%1" "%2" /S /E /H
-
-xcopy "%Src%" "%Dest%"
-goto endofprogram
-:error1
-echo You must provide source
-echo Syntax:
-echo %0 source destination
-goto endofprogram
-:error2
-echo You must provide destination
-echo Syntax:
-echo %0 source destination
-goto endofprogram
-:endofprogram
-PAUSE
+xcopy %CdcSrc% %CdcDest% /Y
+xcopy %XapSrc% %XapDest% /Y

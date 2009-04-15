@@ -848,6 +848,7 @@ www.kalycito.com
 
 	
           <Object index="1C02" name="DLL_MNCycTimeExceed_REC" objectType="9" dataType="0424">
+            <SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="const" defaultValue="3" PDOmapping="no"/>
             <SubObject subIndex="01" name="CumulativeCnt_U32" objectType="7" dataType="0007" accessType="rw" defaultValue="0"  />
             <SubObject subIndex="02" name="ThresholdCnt_U32" objectType="7" dataType="0007" accessType="ro" defaultValue="0" />
             <SubObject subIndex="03" name="Threshold_U32" objectType="7" dataType="0007" accessType="rw" defaultValue="15"  />

@@ -1319,7 +1319,6 @@ proc Operations::SingleClickNode {node} {
                                             set $tempPdo 0x[subst $[subst $tempPdo]]
                                         }
                                     }
-                                    #puts -nonewline "$commParamValue $offset $length $listIndex $listSubIndex"
 				    [lindex $f2 1] insert $popCount [list $popCount $commParamValue $offset $length $listIndex $listSubIndex ]
 				    if { $accessType == "ro" || $accessType == "const" } {
 					    foreach col [list 2 3 4 5 ] {
@@ -1586,7 +1585,6 @@ proc Operations::SingleClickNode {node} {
         grid remove $tmpInnerf1.frame1.ra_hex
         $tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::IsValidStr %P" -bg $savedBg
     } elseif { [ string match -nocase "BIT" [lindex $IndexProp 2] ] == 1 } {
-        puts "for bit [lindex $IndexProp 5]"
         set state [$tmpInnerf1.en_value1 cget -state]
         if { [Validation::CheckBitNumber[lindex $IndexProp 5]] == 1 } {
             # it is a bit of 8 character
@@ -2532,8 +2530,16 @@ proc Operations::Transfer {} {
 				Console::DisplayInfo $line
 			}
 		close $fid
+                catch { file delete -force temp.log }
 	} elseif {"$tcl_platform(platform)" == "unix"} {
-		Console::DisplayInfo "Yet To be Implemented"
+                set runcmd [list exec $scriptFile >& /tmp/temp.log]
+                catch $runcmd res
+		set fid [open "/tmp/temp.log" r]
+			while {[gets $fid line] != -1} {
+				Console::DisplayInfo $line
+			}
+		close $fid
+                catch { file delete -force /tmp/temp.log }
 	}
 	
 }

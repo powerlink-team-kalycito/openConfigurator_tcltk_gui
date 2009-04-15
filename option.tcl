@@ -1,13 +1,8 @@
-################################################################################
-#									
-# Script:	option.tcl						
-#									
-# Author:	Kalycito Infotech Pvt Ltd		
-#									
-# Description:	obtaining window system and setting the option for widgets
+#==============================================================================
+# Contains some Tk option database settings.
 #
-#
-################################################################################
+# Copyright (c) 2004-2008  Csaba Nemethi (E-mail: csaba.nemethi@t-online.de)
+#==============================================================================
 
 
 #

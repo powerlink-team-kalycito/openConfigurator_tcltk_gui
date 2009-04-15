@@ -65,6 +65,7 @@
 #\
 exec wish "$0" ${1+"$@"}
 
+global version
 set version 0.9.1
 
 if { $argc == 1 && ( $argv == "--version" || $argv == "-V" ) } {
@@ -77,7 +78,7 @@ if { $argc == 1 && ( $argv == "--version" || $argv == "-V" ) } {
 
 if { [ catch { package require Tk 8.5 } ] } {
     puts "\nPackage TK 8.5 not found \nplease install Tk 8.5 and uninstall older version to run the tool\n\npress Enter key to exit"
-	gets stdin
+    gets stdin
     exit
 }
 
@@ -157,28 +158,28 @@ proc InitOpenConfigurator {argc argv} {
             set homeVar [file join $::env(HOME) Documents]
         } else {
             set homeVar [registry get {HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders} {Personal}]
-			set homeVar [file join $::env(HOME) [file tail $homeVar]]
+            set homeVar [file join $::env(HOME) [file tail $homeVar]]
         }
     } else {
         set homeVar [file join $::env(HOME) Documents]
     }
     if {[file exists $homeVar] && ![file isfile $homeVar]} {
-	    #folder exists
+	#folder exists
     } else {
-	    set homeVar [file join $::env(HOME) Documents]
-		if {[file exists $homeVar] && ![file isfile $homeVar]} {
-			#folder exists
-		} else {
-			file mkdir $homeVar
-			tk_messageBox -message "Folder $homeVar is created" -title Info -icon info
-	    }
+        set homeVar [file join $::env(HOME) Documents]
+        if {[file exists $homeVar] && ![file isfile $homeVar]} {
+            #folder exists
+        } else {
+            file mkdir $homeVar
+            tk_messageBox -message "Folder $homeVar is created" -title Info -icon info
+	}
     }
 
     set defaultProjectDir [file join $homeVar openCONFIGURATOR_Projects]
     if { [file exists $defaultProjectDir] && ![file isfile $defaultProjectDir] } {
-	    #directory already exists
+        #directory already exists
     } else {
-	    file mkdir $defaultProjectDir
+        file mkdir $defaultProjectDir
     }
 
     # Draw the Main window
@@ -196,18 +197,18 @@ proc InitOpenConfigurator {argc argv} {
 
     # Loading shared libraries
     if {"$tcl_platform(platform)" == "windows"} {
-	    if {[catch {load openCONFIGURATORwrapper.dll openCONFIGURATORwrapper}]} {
-		    tk_messageBox -message "Error loading Shared Library\nCannot proceed\nTry reinstalling the tool" -title Info -icon error
-		    exit
-	    }
+	if {[catch {load openCONFIGURATORwrapper.dll openCONFIGURATORwrapper}]} {
+	    tk_messageBox -message "Error loading Shared Library\nCannot proceed\nTry reinstalling the tool" -title Info -icon error
+	    exit
+	}
     } elseif { "$tcl_platform(platform)" == "unix"} {
-	    if { [catch {load $rootDir/Tcl_WrapperMain.so}] } {
-		    tk_messageBox -message "Error loading Shared Library\nCannot proceed\nTry reinstalling the tool" -title Info -icon error
-		    exit
-	    }
+	if { [catch {load $rootDir/Tcl_WrapperMain.so}] } {
+	    tk_messageBox -message "Error loading Shared Library\nCannot proceed\nTry reinstalling the tool" -title Info -icon error
+	    exit
+	}
     } else {
-		    tk_messageBox -message "Shared Library not created for $tcl_platform(platform) platform\nCannot proceed" -title Info -icon error
-		    exit
+	tk_messageBox -message "Shared Library not created for $tcl_platform(platform) platform\nCannot proceed" -title Info -icon error
+	exit
     }	 
 
     $treePath delete end root ProjectNode

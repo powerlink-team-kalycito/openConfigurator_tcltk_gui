@@ -791,7 +791,6 @@ proc NoteBookManager::SaveValue {frame0 frame1} {
         if {$value != ""} {
             #convert value to hex and save
             set value 0x[Validation::BintoHex $value]
-            puts "for BIT value->$value"
         }
         #continue
     } elseif { [string match -nocase "REAL*" $dataType] } {
@@ -1056,7 +1055,6 @@ proc NoteBookManager::SaveTable {tableWid} {
     set nodePos [intp_value $nodePos]
     set ExistfFlag [boolp_value $ExistfFlag]
     set ErrCode [ocfmRetCode_code_get $catchErrCode]
-    #puts "SaveTable : ErrCode->$ErrCode ExistfFlag->$ExistfFlag"
     if { $ErrCode == 0 && $ExistfFlag == 1 } {
 	    #the node exist continue 
     } else {
@@ -1100,14 +1098,11 @@ proc NoteBookManager::SaveTable {tableWid} {
 		    if {$ErrCode == 0} {	
 			    set incFlag [lindex $tempIndexProp 1]
 		    } else {
-                            #puts "error in getatt ErrCode->$ErrCode [ocfmRetCode_errorString_get [lindex $tempIndexProp 1]]"
 			    set incFlag 0
 		    }
                 } else {
-                    #puts "error in ifsubindexexist [ocfmRetCode_errorString_get $catchErrCode]"
                     set incFlag 0
                 }
-                #puts "SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $name $incFlag"
                 SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $name $incFlag
                 incr rowCount
             }

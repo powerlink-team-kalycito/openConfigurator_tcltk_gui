@@ -198,12 +198,12 @@ proc InitOpenConfigurator {argc argv} {
     # Loading shared libraries
     if {"$tcl_platform(platform)" == "windows"} {
 	if {[catch {load openCONFIGURATORwrapper.dll openCONFIGURATORwrapper}]} {
-	    tk_messageBox -message "Error loading Shared Library\nCannot proceed\nTry reinstalling the tool" -title Info -icon error
+	    tk_messageBox -message "Error loading Shared Library\nCannot proceed\nConsult the user manual to troubleshoot" -title Info -icon error
 	    exit
 	}
     } elseif { "$tcl_platform(platform)" == "unix"} {
 	if { [catch {load $rootDir/Tcl_WrapperMain.so}] } {
-	    tk_messageBox -message "Error loading Shared Library\nCannot proceed\nTry reinstalling the tool" -title Info -icon error
+	    tk_messageBox -message "Error loading Shared Library\nCannot proceed\nConsult the user manual to troubleshoot" -title Info -icon error
 	    exit
 	}
     } else {
@@ -211,13 +211,24 @@ proc InitOpenConfigurator {argc argv} {
 	exit
     }	 
 
+    
+
     $treePath delete end root ProjectNode
     set projectDir ""
     set projectName ""
 
     # Draw the Initial tree window  
     Operations::InsertTree
+    
     # Childwindow for startup project window
-    ChildWindows::StartUp
+    global rootDir
+    set odXML [file join $rootDir od.xml]
+    if {![file isfile $odXML] } {
+	tk_messageBox -message "The file od.xml is missing\nCannot proceed\nConsult the user manual to troubleshoot" -title Info -icon error
+	return
+    } else {
+        #od.xml is present continue
+        ChildWindows::StartUp
+    }
 }
 InitOpenConfigurator $argc $argv

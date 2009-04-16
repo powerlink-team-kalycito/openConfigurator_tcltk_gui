@@ -380,6 +380,15 @@ proc Operations::OpenProjectWindow { } {
     global lastOpenPjt
     global defaultProjectDir
 
+    global rootDir
+    set odXML [file join $rootDir od.xml]
+    if {![file isfile $odXML] } {
+	tk_messageBox -message "The file od.xml is missing cannot proceed\nConsult the user manual to troubleshoot" -title Info -icon error
+	return
+    } else {
+        #od.xml is present continue
+    }
+    
     if { $projectDir != "" && $projectName != "" } {
 	    #check whether project has changed
 	    if {$status_save} {
@@ -1779,10 +1788,20 @@ proc Operations::Saveproject {} {
 #  Description : Save the current project and creates new project
 #---------------------------------------------------------------------------------------------------
 proc Operations::InitiateNewProject {} {
+    global rootDir
+    set odXML [file join $rootDir od.xml]
+    if {![file isfile $odXML] } {
+	tk_messageBox -message "The file od.xml is missing cannot proceed\nConsult the user manual to troubleshoot" -title Info -icon error
+	return
+    } else {
+        #od.xml is present continue
+    }
+
     set result [ChildWindows::SaveProjectWindow] 
     if { $result != "cancel"} {
-	    ChildWindows::NewProjectWindow
+       ChildWindows::NewProjectWindow
     }
+    
 }
 
 #---------------------------------------------------------------------------------------------------

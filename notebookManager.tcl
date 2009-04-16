@@ -234,7 +234,7 @@ proc NoteBookManager::create_tab { nbpath choice } {
         grid config $tabInnerf0_1.la_generate -row 0 -column 0 -sticky w 
         grid config $tabInnerf0_1.ch_gen -row 0 -column 1 -sticky e -padx 5
         grid config $tabInnerf0.la_empty3 -row 5 -column 0 -columnspan 2
-        bind $tabInnerf0_1.la_generate <1> "$tabInnerf0_1.ch_gen toggle"
+        bind $tabInnerf0_1.la_generate <1> "$tabInnerf0_1.ch_gen toggle ; Validation::SetPromptFlag"
         $tabInnerf0_1.la_generate configure -text "Include Index in CDC generation"
     } elseif { $choice == "subindex" } {
         $tabTitlef0 configure -text "Sub Index" 
@@ -252,7 +252,7 @@ proc NoteBookManager::create_tab { nbpath choice } {
         grid config $tabInnerf0_1.la_generate -row 0 -column 0 -sticky w 
         grid config $tabInnerf0_1.ch_gen -row 0 -column 1 -sticky e -padx 5
         grid config $tabInnerf0.la_empty3 -row 5 -column 0 -columnspan 2
-        bind $tabInnerf0_1.la_generate <1> "$tabInnerf0_1.ch_gen toggle"
+        bind $tabInnerf0_1.la_generate <1> "$tabInnerf0_1.ch_gen toggle ; Validation::SetPromptFlag"
         $tabInnerf0_1.la_generate configure -text "Include Subindex in CDC generation"
     }
 
@@ -696,9 +696,6 @@ proc NoteBookManager::SaveValue {frame0 frame1} {
         }
         set default [$frame1.en_default1 get]
     } else {
-        #set radioSel [$frame1.frame1.ra_dec cget -variable]
-        #global $radioSel
-        #set radioSel [subst $[subst $radioSel]]
         $frame1.en_data1 configure -state normal
         set dataType [$frame1.en_data1 get]
         $frame1.en_data1 configure -state disabled
@@ -706,53 +703,6 @@ proc NoteBookManager::SaveValue {frame0 frame1} {
         $frame1.en_access1 configure -state normal
         set accessType [$frame1.en_access1 get]
         $frame1.en_access1 configure -state disabled
-        
-        #if {$value != ""} {
-        #    if { $dataType == "IP_ADDRESS" } {
-        #        set result [$frame1.en_value1 validate]
-        #        if {$result == 0} {
-        #            tk_messageBox -message "IP address not complete\nValues not saved" -title Warning -icon warning -parent .
-        #            Validation::ResetPromptFlag
-        #            return
-        #        }
-        #    } elseif { $dataType == "MAC_ADDRESS" } {
-        #        set result [$frame1.en_value1 validate]
-        #        if {$result == 0} {
-        #            tk_messageBox -message "MAC address not complete\nValues not saved" -title Warning -icon warning -parent .
-        #            Validation::ResetPromptFlag
-        #            return
-        #        }
-        #    } elseif { $dataType ==  "Visible_String" } {
-        #        #continue
-        #    } elseif {[string match -nocase "BIT" $dataType] == 1} {
-        #        #continue
-        #    } elseif { $radioSel == "hex" } {
-        #        #it is hex value trim leading 0x
-        #        set value [string range $value 2 end]
-        #        set value [string toupper $value]
-        #        if { $value == "" } {
-        #            set value []
-        #        } else {
-        #            set value 0x$value
-        #        }
-        #    } elseif { $radioSel == "dec" } {
-        #        #is is dec value convert to hex
-        #        set value [Validation::InputToHex $value]
-        #        if { $value == "" } {
-        #            set value []
-        #        } else {
-        #            #0x is appended to represent it as hex
-        #            set value [string range $value 2 end]
-        #            set value [string toupper $value]
-        #            set value 0x$value
-        #        }
-        #    } else {
-        #        #invalid condition
-        #    }
-        #} else {
-        #    #no value has been inputed by user
-        #    set value []
-        #}
     }
     
     if { [string match -nocase "INTEGER*" $dataType] || [string match -nocase "UNSIGNED*" $dataType] || [string match -nocase "BOOLEAN" $dataType ] } {
@@ -821,18 +771,9 @@ proc NoteBookManager::SaveValue {frame0 frame1} {
         #no need to check
         if { $dataType == "" && [expr 0x$indexId > 0x1fff] } {
             #for objects in spec, datatype is not editable so alow user to save
-            tk_messageBox -message "Select a datatype\nValues not saved" -title Warning -icon warning -parent .
+            tk_messageBox -message "Datatype not selected\nValues not saved" -title Warning -icon warning -parent .
             Validation::ResetPromptFlag
             return
-        }
-        if { $value == "" } {
-            if { ([expr 0x$indexId <= 0x1fff]) && ( $accessType == "const" || $accessType == "ro" || $accessType == "" ) } {
-                #since the entry box of value is disabled in this condition user cannot change value so allow user to save
-            } else {
-                tk_messageBox -message "Value field is empty\nValues not saved" -title Warning -icon warning -parent .
-                Validation::ResetPromptFlag
-                return
-            }
         }
     } else {
         #value and datatype is not empty continue
@@ -1039,6 +980,7 @@ proc NoteBookManager::SaveTable {tableWid} {
 
     set result [$tableWid finishediting]
     if {$result == 0} {
+        Validation::ResetPromptFlag
         return 
     } else {
     }
@@ -1063,6 +1005,7 @@ proc NoteBookManager::SaveTable {tableWid} {
         } else {
 	    tk_messageBox -message "Unknown Error\nValues not saved" -parent . -title Error -icon error
         }
+        Validation::ResetPromptFlag
         return
     }
 	foreach childIndex $populatedPDOList {
@@ -1276,12 +1219,12 @@ proc NoteBookManager::ChangeValidation {framePath comboPath} {
             REAL32 {
 		grid remove $framePath.frame1.ra_dec
                 grid remove $framePath.frame1.ra_hex
-                tk_messageBox -message "Floating point not supported for $dataType\nPlease refer IEEE 754 standard to represent" -parent .
+                tk_messageBox -message "Floating point not supported for $dataType.\nPlease refer IEEE 754 standard to represent the floating point number as a hexadecimal value." -parent .
             }
             REAL64 {
 		grid remove $framePath.frame1.ra_dec
                 grid remove $framePath.frame1.ra_hex
-                tk_messageBox -message "Floating point not supported for $dataType\nPlease refer IEEE 754 standard to represent" -parent .
+                tk_messageBox -message "Floating point not supported for $dataType.\nPlease refer IEEE 754 standard to represent the floating point number as a hexadecimal value." -parent .
             }
             MAC_ADDRESS {
                 set lastConv ""

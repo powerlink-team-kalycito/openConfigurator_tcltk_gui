@@ -77,7 +77,7 @@ if { $argc == 1 && ( $argv == "--version" || $argv == "-V" ) } {
 }
 
 if { [ catch { package require Tk 8.5 } ] } {
-    puts "\nPackage TK 8.5 not found \nplease install Tk 8.5 and uninstall older version to run the tool\n\npress Enter key to exit"
+    puts "\nPackage TK 8.5 not found \nPlease install Tk 8.5 and uninstall older version to run the tool\n\npress Enter key to exit"
     gets stdin
     exit
 }
@@ -105,7 +105,7 @@ global errWindow
 if {"$tcl_platform(platform)" == "windows"} {
     set rootDir [pwd]
 } elseif {"$tcl_platform(platform)" == "unix"} {
-    set rootDir /usr/share/openCONFIGURATOR-0.9.1
+    set rootDir /usr/share/openCONFIGURATOR-$version
 }
 tsv::set application rootDir $rootDir
 source [file join $rootDir console.tcl]

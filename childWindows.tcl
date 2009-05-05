@@ -603,6 +603,8 @@ proc ChildWindows::SaveProjectAsWindow {} {
     global projectName
     global projectDir
 
+	set tempPreviousProjectName $projectName
+	
     if {$projectDir == "" || $projectName == "" } {
 	    Console::DisplayInfo "No Project present to save" info
 	    return
@@ -613,6 +615,7 @@ proc ChildWindows::SaveProjectAsWindow {} {
 	    }
 	    set tempProjectDir [file dirname $saveProjectAs]
 	    set tempProjectName [file tail $saveProjectAs]
+		set tempProjectNameNoExtn [string range $tempProjectName 0 end-[string length [file extension $tempProjectName]]]
 	    catch {file mkdir $saveProjectAs}
 	    catch {file mkdir [file join $saveProjectAs cdc_xap]}
 	    catch {file mkdir [file join $saveProjectAs octx]}
@@ -620,12 +623,12 @@ proc ChildWindows::SaveProjectAsWindow {} {
 	    
 	    ChildWindows::CopyScript $saveProjectAs
 	    
-            thread::send -async [tsv::set application importProgress] "StartProgress"
-	    set catchErrCode [SaveProject $tempProjectDir [string range $tempProjectName 0 end-[string length [file extension $tempProjectName]]]]
-	    thread::send -async [tsv::set application importProgress] "StopProgress"
+        thread::send -async [tsv::set application importProgress] "StartProgress"
+	    set catchErrCode [SaveProject $tempProjectDir $tempProjectNameNoExtn]
 
 	    set ErrCode [ocfmRetCode_code_get $catchErrCode]
 	    if { $ErrCode != 0 } {
+			thread::send -async [tsv::set application importProgress] "StopProgress"
 		    if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
 			    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
 		    } else {
@@ -633,8 +636,16 @@ proc ChildWindows::SaveProjectAsWindow {} {
 		    }
 		    Console::DisplayErrMsg "Error in saving project $saveProjectAs"
 		    return
-	    }
-	    Console::DisplayInfo "project $saveProjectAs is saved"
+	    } else {
+			#since the .oct file will be saved with same name as folder variable 'tempProjectNameNoExtn' is used twice
+			set openResult [Operations::openProject [file join $tempProjectDir $tempProjectNameNoExtn $tempProjectNameNoExtn].oct]
+			if {$openResult == 1} {
+				Console::ClearMsgs
+				Console::DisplayInfo "project $tempPreviousProjectName is saved as $saveProjectAs and opened"
+			}
+			thread::send -async [tsv::set application importProgress] "StopProgress"
+		}
+	    
     }
 }
 
@@ -1176,7 +1187,7 @@ proc ImportProgress {stat} {
 		    grid config $prog -row 0 -column 0 -padx 10 -pady 10
 	    }
 	    catch { .prog start 10 }
-	    BWidget::place $winImpoProg 0 0 center
+	    catch { BWidget::place $winImpoProg 0 0 center }
 	    update idletasks
 	    return  
     } elseif {$stat == "stop" } { 

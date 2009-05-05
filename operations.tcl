@@ -93,7 +93,7 @@ package require Tablelist
 package require Thread
 tsv::set application main [thread::id]
 tsv::set application importProgress [thread::create -joinable {
-    package require Tk 8.5
+    package require Tk
     set rootDir [tsv::get application rootDir]
     set path_to_BWidget [file join $rootDir BWidget-1.2.1]
     lappend auto_path $path_to_BWidget
@@ -208,6 +208,26 @@ proc Operations::LocateUrl {webAddress} {
 		
 	} elseif {$tcl_platform(platform)=="windows"} {
 		eval exec [auto_execok start] $webAddress &
+	}
+}
+
+#---------------------------------------------------------------------------------------------------
+#  Operations::OpenPdfDocu
+# 
+#  Arguments : -
+#
+#  Results : -
+#
+#  Description : opens the document in evince
+#---------------------------------------------------------------------------------------------------
+proc Operations::OpenPdfDocu {} {
+	global tcl_platform
+	global rootDir
+	
+	if {$tcl_platform(platform)=="unix"} {
+		exec [file join $rootDir LaunchUserManual.sh] &
+	} elseif {$tcl_platform(platform)=="windows"} {
+		exec ./LaunchUserManual.bat &
 	}
 }
 
@@ -479,7 +499,7 @@ proc Operations::openProject {projectfilename} {
 		    tk_messageBox -message "Unknown Error" -parent . -title Error -icon error
 	    }
 	    thread::send -async [tsv::set application importProgress] "StopProgress"
-	    return
+	    return 0
     } 
     set projectDir $tempPjtDir 
     set projectName [string range $tempPjtName 0 end-[string length [file extension $tempPjtName]]]
@@ -512,6 +532,7 @@ proc Operations::openProject {projectfilename} {
 	    Console::DisplayErrMsg "Error in opening project $tempPjtName at $tempPjtDir"
     }
 	
+	return 1
 }
 
 #---------------------------------------------------------------------------------------------------
@@ -671,7 +692,7 @@ proc Operations::BasicFrames { } {
                 }
         	}
         	"&Help" {} {} 0 {
-                {command "How to" {noFile} "How to Manual" {} -command "Operations::LocateUrl www.kalycito.com/downloads.html" }
+                {command "How to" {noFile} "How to Manual" {} -command "Operations::OpenPdfDocu" }
                 {separator}
                 {command "About" {} "About" {F1} -command Operations::about }
         	}
@@ -1850,8 +1871,17 @@ proc Operations::InitiateCloseProject {} {
 #---------------------------------------------------------------------------------------------------
 proc Operations::CloseProject {} {
     global treePath
-
+	global projectDir
+	global projectName
+	
     Operations::DeleteAllNode
+
+	if { $projectDir != "" && $projectName != "" } {
+		if { ![file exists [file join $projectDir $projectName].oct ] } {
+			catch { file delete -force -- $projectDir }
+		}
+	}
+
 
     Operations::ResetGlobalData
 

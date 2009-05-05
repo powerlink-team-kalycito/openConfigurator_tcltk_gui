@@ -66,7 +66,7 @@
 exec wish "$0" ${1+"$@"}
 
 global version
-set version 1.0.0
+set version 1.0.1
 
 if { $argc == 1 && ( $argv == "--version" || $argv == "-V" ) } {
     puts "\nDeveloped by Kalycito Powerlink Team\nopenCONFIGURATOR version $version\n"
@@ -76,8 +76,8 @@ if { $argc == 1 && ( $argv == "--version" || $argv == "-V" ) } {
     exit
 }
 
-if { [ catch { package require Tk 8.5 } ] } {
-    puts "\nPackage TK 8.5 not found \nPlease install Tk 8.5 and uninstall older version to run the tool\n\npress Enter key to exit"
+if { [ catch { package require Tk } ] } {
+    puts "\nPackage TK not found \nPlease install Tk to run the tool\n\npress Enter key to exit"
     gets stdin
     exit
 }

@@ -275,6 +275,100 @@ proc NoteBookManager::create_tab { nbpath choice } {
 }
 
 #---------------------------------------------------------------------------------------------------
+#  NoteBookManager::create_nodeFrame
+# 
+#  Arguments : nbpath  - frame path to create
+#              choice  - choice for pdo to create frame
+#
+#  Results : basic frame on which all widgets are created
+#	         tablelist widget path
+#
+#  Description : Creates the tablelist for TPDO and RPDO
+#---------------------------------------------------------------------------------------------------
+proc NoteBookManager::create_nodeFrame {nbpath choice} {
+    variable _pageCounter
+    incr _pageCounter
+    
+    set nbname "page$_pageCounter"
+
+    set outerFrame [frame $nbpath.$nbname -relief raised -borderwidth 1 ]
+    set frame [frame $outerFrame.frame -relief flat -borderwidth 10  ] 
+    pack $frame -expand yes -fill both
+
+    set scrollWin [ScrolledWindow $frame.scrollWin]
+    pack $scrollWin -fill both -expand true
+
+    set sf [ScrollableFrame $scrollWin.sf]
+    $scrollWin setwidget $sf
+
+    set uf [$sf getframe]
+    $uf configure -height 20
+    set tabTitlef0 [TitleFrame $uf.tabTitlef0 -text "General" ]
+    set tabInnerf0 [$tabTitlef0 getframe]
+    set tabTitlef1 [TitleFrame $uf.tabTitlef1 -text "Advanced" ]
+    set tabInnerf1 [$tabTitlef1 getframe]
+    set tabInnerf0_1 [frame $tabInnerf0.frame1 ]
+    
+    label $tabInnerf0.la_nodeName     -text "Name"
+    label $tabInnerf0.la_empty1       -text ""
+    label $tabInnerf0.la_nodeNo       -text "Node Number"
+    label $tabInnerf0.la_empty2       -text ""
+    label $tabInnerf0.la_cycleTime    -text "Cycle Time"
+    label $tabInnerf0.la_empty3       -text ""
+    label $tabInnerf1.la_advOption1   -text ""
+    label $tabInnerf1.la_empty4       -text ""
+    label $tabInnerf1.la_advOption2   -text ""
+    label $tabInnerf1.la_empty5       -text ""
+    label $tabInnerf1.la_advOption3   -text ""
+    label $tabInnerf1.la_empty6       -text ""
+    
+    entry $tabInnerf0.en_nodeName -state disabled -width 20
+    entry $tabInnerf0.en_nodeNo -width 20 -textvariable tmpNam$_pageCounter -relief ridge -justify center -bg white -validate key -vcmd "Validation::IsValidStr %P"
+    entry $tabInnerf0.en_cycleTime -state disabled -width 20  
+    entry $tabInnerf1.en_advOption1 -state disabled -width 20
+    entry $tabInnerf1.en_advOption2 -state disabled -width 20
+    entry $tabInnerf1.en_advOption3 -state disabled -width 20
+
+    grid config $tabTitlef0 -row 0 -column 0 -sticky ew
+    label $uf.la_empty -text ""
+    grid config $uf.la_empty -row 1 -column 0
+    grid config $tabTitlef1 -row 2 -column 0 -sticky ew
+
+    grid config $tabInnerf0.la_nodeName  -row 0 -column 0 -sticky w
+    grid config $tabInnerf0.en_nodeName  -row 0 -column 1 -padx 5
+    grid config $tabInnerf0.la_empty1    -row 1 -column 0
+    grid config $tabInnerf0.la_nodeNo -row 2 -column 0
+    grid config $tabInnerf0.en_nodeNo -row 2 -column 1 -padx 5
+    grid config $tabInnerf0.la_empty2    -row 3 -column 0
+    
+    grid config $tabInnerf1.la_advOption1 -row 0 -column 0 -sticky w
+    grid config $tabInnerf1.en_advOption1 -row 0 -column 1 -padx 5
+    grid config $tabInnerf1.la_empty4     -row 1 -column 0
+    grid config $tabInnerf1.la_advOption2 -row 2 -column 0 -sticky w
+    grid config $tabInnerf1.en_advOption2 -row 2 -column 1 -padx 5
+    grid config $tabInnerf1.la_empty5     -row 3 -column 0
+    grid config $tabInnerf1.la_advOption3 -row 4 -column 0 -sticky w
+    grid config $tabInnerf1.en_advOption3 -row 4 -column 1 -padx 5
+    grid config $tabInnerf1.la_empty6     -row 5 -column 0
+    
+    if { $choice == "mn" } {
+        $tabInnerf1.la_advOption1 configure -text "Asynchronous MTU size"
+	$tabInnerf1.la_advOption2 configure -text "Asynchronous Timeout"
+	$tabInnerf1.la_advOption3 configure -text "Multiplexing prescaler"
+	
+	grid config $tabInnerf0.la_cycleTime    -row 4 -column 0 -sticky w
+	grid config $tabInnerf0.en_cycleTime    -row 4 -column 1 -padx 5
+	grid config $tabInnerf0.la_empty3       -row 5 -column 0
+    } elseif { $choice == "cn" } {
+        $tabInnerf1.la_advOption1 configure -text "Response Timeout"
+	$tabInnerf1.la_advOption2 configure -text "Multiplexed Station"
+	$tabInnerf1.la_advOption3 configure -text "Chained Station"
+	
+    }
+    return [list $outerFrame $tabInnerf0 $tabInnerf1 $sf]
+}
+
+#---------------------------------------------------------------------------------------------------
 #  NoteBookManager::create_table
 # 
 #  Arguments : nbpath  - frame path to create

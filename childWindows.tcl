@@ -623,12 +623,12 @@ proc ChildWindows::SaveProjectAsWindow {} {
 	    
 	    ChildWindows::CopyScript $saveProjectAs
 	    
-        thread::send -async [tsv::set application importProgress] "StartProgress"
+	    thread::send [tsv::set application importProgress] "StartProgress"
 	    set catchErrCode [SaveProject $tempProjectDir $tempProjectNameNoExtn]
 
 	    set ErrCode [ocfmRetCode_code_get $catchErrCode]
 	    if { $ErrCode != 0 } {
-			thread::send -async [tsv::set application importProgress] "StopProgress"
+			thread::send [tsv::set application importProgress] "StopProgress"
 		    if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
 			    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
 		    } else {
@@ -643,7 +643,7 @@ proc ChildWindows::SaveProjectAsWindow {} {
 				Console::ClearMsgs
 				Console::DisplayInfo "project $tempPreviousProjectName is saved as $saveProjectAs and opened"
 			}
-			thread::send -async [tsv::set application importProgress] "StopProgress"
+			thread::send  [tsv::set application importProgress] "StopProgress"
 		}
 	    
     }
@@ -1094,7 +1094,7 @@ proc ChildWindows::NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf tempRa_
 	    }
 	    $treePath insert end MN-$mnCount OBD-$mnCount-1 -text "OBD" -open 0 -image [Bitmap::get pdo]
 	    set result [WrapperInteractions::Import OBD-$mnCount-1 0 240]
-	    thread::send -async [tsv::set application importProgress] "StopProgress"
+	    thread::send  [tsv::set application importProgress] "StopProgress"
 	    if { $result == "fail" } {
 		    return
 	    }

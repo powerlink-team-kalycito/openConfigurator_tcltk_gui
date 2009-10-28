@@ -203,6 +203,10 @@ proc WrapperInteractions::Import {parentNode nodeType nodeID } {
     set LocvarProgbar 0
     set errorString []
 
+    #check for view if simple exit else advanced continue
+    if { [string match "SIMPLE" $Operations::viewType ] == 1 } {
+        return pass
+    }
     set nodePos [new_intp]
 
     #TODO waiting for new so then implement it

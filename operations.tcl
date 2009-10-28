@@ -82,6 +82,7 @@ namespace eval Operations {
     variable progressmsg
     variable prgressindicator
     variable showtoolbar  1
+    variable viewType
 }
 
 # For including Tablelist Package
@@ -498,7 +499,7 @@ proc Operations::openProject {projectfilename} {
 	    } else {
 		    tk_messageBox -message "Unknown Error" -parent . -title Error -icon error
 	    }
-	    thread::send -async [tsv::set application importProgress] "StopProgress"
+	    thread::send  [tsv::set application importProgress] "StopProgress"
 	    return 0
     } 
     set projectDir $tempPjtDir 
@@ -627,6 +628,8 @@ proc Operations::BasicFrames { } {
     global f0
     global f1
     global f2
+    global f3
+    global f4    
     global LastTableFocus
 
     variable bb_connect
@@ -676,13 +679,26 @@ proc Operations::BasicFrames { } {
         		{command "Project Settings..." {}  "Project Settings" {} -command ChildWindows::ProjectSettingWindow }
         	}
         	"&View" all options 0 {
+		{radiobutton "Simple View" {all option} "Simple View Mode" {}
+                    -variable Operations::viewType -value "SIMPLE"
+		    -command {
+			Operations::ViewModeChanged
+		    }
+           	}
+		{radiobutton "Advanced View" {all option} "Advanced View Mode" {}
+                    -variable Operations::viewType -value "ADVANCED"
+		    -command {
+			Operations::ViewModeChanged 
+		    }
+           	}
+		{separator}
                 {checkbutton "Show Output Console" {all option} "Show Console Window" {}
                     -variable Operations::options(DisplayConsole)
                     -command  {
                         Operations::DisplayConsole $Operations::options(DisplayConsole)
                         update idletasks
                     }
-           		}
+           	}
                 {checkbutton "Show Test Tree Browser" {all option} "Show Code Browser" {}
                     -variable Operations::options(showTree)
                     -command  {
@@ -701,6 +717,7 @@ proc Operations::BasicFrames { } {
     # to select the required check button in View menu
     set Operations::options(showTree) 1
     set Operations::options(DisplayConsole) 1
+    set Operations::viewType "SIMPLE"
     bind . <Key-F6> "Operations::Transfer"
     #shortcut keys for project
     bind . <Key-F7> "Operations::BuildProject"
@@ -1001,6 +1018,9 @@ proc Operations::BasicFrames { } {
 	    set LastTableFocus [focus]
     }
 
+    set f3 [NoteBookManager::create_nodeFrame $alignFrame  "mn"]
+    set f4 [NoteBookManager::create_nodeFrame $alignFrame  "cn"]
+
     pack $pannedwindow2 -fill both -expand yes
 
     $tree_notebook raise objectTree
@@ -1121,6 +1141,8 @@ proc Operations::SingleClickNode {node} {
     global f0
     global f1
     global f2
+    global f3
+    global f4
     global nodeSelect
     global nodeIdList
     global savedValueList
@@ -1183,10 +1205,12 @@ proc Operations::SingleClickNode {node} {
     $treePath selection set $node
     set nodeSelect $node
 
-    if {[string match "root" $node] || [string match "ProjectNode" $node] || [string match "MN-*" $node] || [string match "OBD-*" $node] || [string match "CN-*" $node] || [string match "PDO-*" $node]} {
+    if {[string match "root" $node] || [string match "ProjectNode" $node] || [string match "OBD-*" $node] || [string match "PDO-*" $node]} {
 	    pack forget [lindex $f0 0]
 	    pack forget [lindex $f1 0]
 	    pack forget [lindex $f2 0]
+	    pack forget [lindex $f3 0]
+	    pack forget [lindex $f4 0]
 	    [lindex $f2 1] cancelediting
 	    [lindex $f2 1] configure -state disabled
 	    return
@@ -1218,6 +1242,32 @@ proc Operations::SingleClickNode {node} {
 		    tk_messageBox -message "Unknown Error" -parent . -title Error -icon error
 	    }
 	    return
+    }
+
+    if {[string match "MN-*" $node]} {
+	pack forget [lindex $f0 0]
+	pack forget [lindex $f1 0]
+	pack forget [lindex $f2 0]
+	[lindex $f2 1] cancelediting
+	[lindex $f2 1] configure -state disabled
+	pack [lindex $f3 0] -expand yes -fill both -padx 2 -pady 4
+	pack forget [lindex $f4 0]
+	
+	Operations::MNProperties $node $nodePos $nodeId $nodeType
+
+	return
+    } elseif {[string match "CN-*" $node]} {
+	pack forget [lindex $f0 0]
+	pack forget [lindex $f1 0]
+	pack forget [lindex $f2 0]
+	[lindex $f2 1] cancelediting
+	[lindex $f2 1] configure -state disabled
+	pack forget [lindex $f3 0]
+	pack [lindex $f4 0] -expand yes -fill both -padx 2 -pady 4
+	
+	set tmpInnerf0 [lindex $f4 1]
+	set tmpInnerf1 [lindex $f4 2]
+	return
     }
 
     if {[string match "TPDO-*" $node] || [string match "RPDO-*" $node]} {
@@ -1366,6 +1416,8 @@ proc Operations::SingleClickNode {node} {
 	    pack forget [lindex $f0 0]
 	    pack forget [lindex $f1 0]
 	    pack [lindex $f2 0] -expand yes -fill both -padx 2 -pady 4
+	    pack forget [lindex $f3 0]
+	    pack forget [lindex $f4 0]
 	    return 
     } 
 
@@ -1428,6 +1480,8 @@ proc Operations::SingleClickNode {node} {
 	    pack forget [lindex $f2 0]
 	    [lindex $f2 1] cancelediting
 	    [lindex $f2 1] configure -state disabled
+	    pack forget [lindex $f3 0]
+	    pack forget [lindex $f4 0]
     } elseif {[string match "*Index*" $node]} {
 	    set tmpInnerf0 [lindex $f0 1]
 	    set tmpInnerf1 [lindex $f0 2]
@@ -1471,6 +1525,8 @@ proc Operations::SingleClickNode {node} {
 	    pack forget [lindex $f2 0]
 	    [lindex $f2 1] cancelediting
 	    [lindex $f2 1] configure -state disabled
+	    pack forget [lindex $f3 0]
+	    pack forget [lindex $f4 0]
             
     }
     if { [string match -nocase "A???" $indexId] } {
@@ -1726,6 +1782,66 @@ proc Operations::SingleClickNode {node} {
     return
 }
 
+proc Operations::MNProperties {node nodePos nodeId nodeType} {
+    global f3
+    set tmpInnerf0 [lindex $f3 1]
+    set tmpInnerf1 [lindex $f3 2]
+    # value from 1006      for Cycle time
+    set catchErrCode [GetIndexAttributes $nodeId $nodeType 1006 5]
+    if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
+        if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+	    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
+        } else {
+	    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
+        }
+        return
+    }
+    set cycleTime [lindex $catchErrCode 1]
+    puts "Operations::MNProperties cycleTime->$cycleTime \n"
+    
+    # value from 0x1F98/08 for Asynchronous MTU size
+    set catchErrCode [GetIndexAttributes $nodeId $nodeType 1006 5]
+    if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
+        if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+	    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
+        } else {
+	    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
+        }
+        return
+    }
+    set cycleTime [lindex $catchErrCode 1]
+    puts "Operations::MNProperties cycleTime->$cycleTime \n"
+    
+    # value from 0x1F9A/02 for Asynchronous Timeout
+    #if the index doesnot exist the application crashes
+    set catchErrCode [GetSubIndexAttributes $nodeId $nodeType 1F9A 02 5]
+    puts "Asynchronous Timeout catchErrCode->$catchErrCode"
+    if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
+        if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+	    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
+        } else {
+	    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
+        }
+        return
+    }
+    set AsynTimeout [lindex $catchErrCode 1]
+    puts "Operations::MNProperties AsynTimeout->$AsynTimeout \n"
+    
+    # value from 0x1F98/07 for Multiplexing prescaler
+    set catchErrCode [GetSubIndexAttributes $nodeId $nodeType 1F98 07 5]
+    if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
+        if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+	    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
+        } else {
+	    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
+        }
+        return
+    }
+    set MultiPrescale [lindex $catchErrCode 1]
+    puts "Operations::MNProperties MultiPrescale->$MultiPrescale \n"
+
+}
+
 #---------------------------------------------------------------------------------------------------
 #  Operations::DoubleClickNode
 # 
@@ -1776,9 +1892,9 @@ proc Operations::Saveproject {} {
             }
 	    set savePjtName [string range $projectName 0 end-[ string length [file extension $projectName] ]]
 	    set savePjtDir [string range $projectDir 0 end-[string length $savePjtName] ]
-            thread::send -async [tsv::set application importProgress] "StartProgress"
+            thread::send  [tsv::set application importProgress] "StartProgress"
 	    set catchErrCode [SaveProject $savePjtDir $savePjtName]
-	    thread::send -async [tsv::set application importProgress] "StopProgress"
+	    thread::send  [tsv::set application importProgress] "StopProgress"
 	    set ErrCode [ocfmRetCode_code_get $catchErrCode]
 	    if { $ErrCode != 0 } {
 
@@ -2052,9 +2168,9 @@ proc Operations::AddCN {cnName tmpImpDir nodeId} {
 	    } else {
 		    Console::DisplayInfo "Imported $tmpImpDir for Node ID: $nodeId"
 	    }
-            thread::send -async [tsv::set application importProgress] "StartProgress"
+            thread::send  [tsv::set application importProgress] "StartProgress"
 	    set result [WrapperInteractions::Import $treeNodeCN 1 $nodeId]
-	    thread::send -async [tsv::set application importProgress] "StopProgress"
+	    thread::send  [tsv::set application importProgress] "StopProgress"
 	    if { $result == "fail" } {
 		    return
 	    }
@@ -2493,11 +2609,11 @@ proc Operations::BuildProject {} {
 			    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
 		    }
 		    Console::DisplayErrMsg "Error in generating xap"
-		    thread::send -async [tsv::set application importProgress] "StopProgress"			
+		    thread::send  [tsv::set application importProgress] "StopProgress"			
 		    return
 	    } else {
 		    Console::DisplayInfo "files mnobd.txt, mnobd.cdc, xap.xml, xap.h are generated at location [file join $projectDir cdc_xap]"
-		    thread::send -async [tsv::set application importProgress] "StopProgress"
+		    thread::send  [tsv::set application importProgress] "StopProgress"
 	    }
 	    #project is built need to save
 	    set status_save 1
@@ -2695,9 +2811,9 @@ proc Operations::ReImport {} {
 	    catch {$treePath delete [$treePath nodes $node]}
 	    $treePath itemconfigure $node -open 0
 	
-	    thread::send -async [tsv::set application importProgress] "StartProgress"
+	    thread::send  [tsv::set application importProgress] "StartProgress"
 	    set result [WrapperInteractions::Import $node $nodeType $nodeId]
-	    thread::send -async [tsv::set application importProgress] "StopProgress"
+	    thread::send  [tsv::set application importProgress] "StopProgress"
 	
     }
 } 
@@ -3046,6 +3162,9 @@ proc Operations::GetNodeIdType {node} {
 	    set parent [$treePath parent $node]	
     } elseif {[string match "OBD-*" $node] || [string match "CN-*" $node]} {
 	    set parent $node
+    } elseif {[string match "MN-*" $node]} {
+	    set reqNode [lsearch -regexp [$treePath nodes $node] "OBD-*" ]
+	    set parent [lindex [$treePath nodes $node] $reqNode]
     } else {
 	    #it is root or ProjectNode
 	    return
@@ -3295,9 +3414,9 @@ proc Operations::AutoGenerateMNOBD {} {
 		catch {$treePath delete [$treePath nodes OBD$tmpNode-1]}
 		$treePath itemconfigure $node -open 0
 		
-		thread::send -async [tsv::set application importProgress] "StartProgress"
+		thread::send  [tsv::set application importProgress] "StartProgress"
 		set result [WrapperInteractions::Import $node $nodeType $nodeId]
-		thread::send -async [tsv::set application importProgress] "StopProgress"
+		thread::send  [tsv::set application importProgress] "StopProgress"
 		if { $result == "fail" } {
 			return
 		}
@@ -3363,3 +3482,21 @@ proc Operations::Sleep { ms } {
      unset ::__sleep__tmp__$uniq
  }
 
+#---------------------------------------------------------------------------------------------------
+#  Operations::ViewModeChanged 
+# 
+#  Arguments : -
+#
+#  Results : -
+#
+#  Description : Rebuilds the tree when view is changed
+#---------------------------------------------------------------------------------------------------
+proc Operations::ViewModeChanged {} {
+    global projectDir
+    global projectName
+    
+    if { $projectDir == "" || $projectName == "" } {
+	return
+    }
+    Operations::RePopulate $projectDir [string range $projectName 0 end-[string length [file extension $projectName] ] ]
+}

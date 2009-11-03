@@ -160,7 +160,7 @@ proc NoteBookManager::create_tab { nbpath choice } {
     ComboBox $tabInnerf1.co_data1 -values $dataCoList -editable no -textvariable co_data -modifycmd "NoteBookManager::ChangeValidation $tabInnerf1 $tabInnerf1.co_data1" -width $comboWidth
     set objCoList [list DEFTYPE DEFSTRUCT VAR ARRAY RECORD]
     ComboBox $tabInnerf1.co_obj1 -values $objCoList -editable no -textvariable co_obj -modifycmd "NoteBookManager::ChangeValidation $tabInnerf1 $tabInnerf1.co_obj1" -width $comboWidth 
-    set accessCoList [list const ro wr rw readWriteInput readWriteOutput noAccess]
+    set accessCoList [list const ro wo rw readWriteInput readWriteOutput noAccess]
     ComboBox $tabInnerf1.co_access1 -values $accessCoList -editable no -textvariable co_access -modifycmd "NoteBookManager::ChangeValidation $tabInnerf1 $tabInnerf1.co_access1" -width $comboWidth
     set pdoColist [list NO DEFAULT OPTIONAL RPDO TPDO]
     ComboBox $tabInnerf1.co_pdo1 -values $pdoColist -editable no -textvariable co_pdo -modifycmd "NoteBookManager::ChangeValidation $tabInnerf1 $tabInnerf1.co_pdo1" -width $comboWidth
@@ -289,6 +289,14 @@ proc NoteBookManager::create_nodeFrame {nbpath choice} {
     variable _pageCounter
     incr _pageCounter
     
+    global ra_statType
+    global ra_nodeDataType
+    global tmpNodeName$_pageCounter
+    global tmpNodeNo$_pageCounter
+    global tmpNodeTime$_pageCounter
+    global mnPropSaveBtn
+    global cnPropSaveBtn
+    
     set nbname "page$_pageCounter"
 
     set outerFrame [frame $nbpath.$nbname -relief raised -borderwidth 1 ]
@@ -303,17 +311,21 @@ proc NoteBookManager::create_nodeFrame {nbpath choice} {
 
     set uf [$sf getframe]
     $uf configure -height 20
-    set tabTitlef0 [TitleFrame $uf.tabTitlef0 -text "General" ]
+    set tabTitlef0 [TitleFrame $uf.tabTitlef0 -text "Properties" ]
     set tabInnerf0 [$tabTitlef0 getframe]
-    set tabTitlef1 [TitleFrame $uf.tabTitlef1 -text "Advanced" ]
+    #$tabInnerf0 configure -width 150
+    set tabTitlef1 [TitleFrame $tabInnerf0.tabTitlef1 -text "" ]
     set tabInnerf1 [$tabTitlef1 getframe]
     set tabInnerf0_1 [frame $tabInnerf0.frame1 ]
     
     label $tabInnerf0.la_nodeName     -text "Name"
     label $tabInnerf0.la_empty1       -text ""
+    label $tabInnerf0.la_align1	      -text ""
+    label $tabInnerf0.la_align2	      -text ""
     label $tabInnerf0.la_nodeNo       -text "Node Number"
     label $tabInnerf0.la_empty2       -text ""
-    label $tabInnerf0.la_cycleTime    -text "Cycle Time"
+    label $tabInnerf0.la_time         -text ""
+    label $tabInnerf0.la_ms           -text "us"
     label $tabInnerf0.la_empty3       -text ""
     label $tabInnerf1.la_advOption1   -text ""
     label $tabInnerf1.la_empty4       -text ""
@@ -321,50 +333,98 @@ proc NoteBookManager::create_nodeFrame {nbpath choice} {
     label $tabInnerf1.la_empty5       -text ""
     label $tabInnerf1.la_advOption3   -text ""
     label $tabInnerf1.la_empty6       -text ""
+    label $tabInnerf1.la_seperat1     -text ""
     
-    entry $tabInnerf0.en_nodeName -state disabled -width 20
-    entry $tabInnerf0.en_nodeNo -width 20 -textvariable tmpNam$_pageCounter -relief ridge -justify center -bg white -validate key -vcmd "Validation::IsValidStr %P"
-    entry $tabInnerf0.en_cycleTime -state disabled -width 20  
+    entry $tabInnerf0.en_nodeName -width 20 -textvariable tmpNodeName$_pageCounter -relief ridge -justify center -bg white -validate key -vcmd "Validation::IsValidStr %P"
+    entry $tabInnerf0.en_nodeNo   -width 20 -textvariable tmpNodeNo$_pageCounter -relief ridge -justify center -bg white 
+    entry $tabInnerf0.en_time     -width 20 -textvariable tmpNodeTime$_pageCounter -relief ridge -justify center -bg white  
     entry $tabInnerf1.en_advOption1 -state disabled -width 20
     entry $tabInnerf1.en_advOption2 -state disabled -width 20
     entry $tabInnerf1.en_advOption3 -state disabled -width 20
 
-    grid config $tabTitlef0 -row 0 -column 0 -sticky ew
-    label $uf.la_empty -text ""
-    grid config $uf.la_empty -row 1 -column 0
-    grid config $tabTitlef1 -row 2 -column 0 -sticky ew
+    set frame1 [frame $tabInnerf0.formatframe1]
+    set ra_dec [radiobutton $frame1.ra_dec -text "Dec" -variable ra_nodeDataType -value "dec" -command ""]
+    set ra_hex [radiobutton $frame1.ra_hex -text "Hex" -variable ra_nodeDataType -value "hex" -command ""]
+    set ra_StNormal [radiobutton $tabInnerf1.ra_StNormal -text "Normal station"      -variable ra_statType -value "StNormal" -command ""]
+    set ra_StMulti  [radiobutton $tabInnerf1.ra_StMulti  -text "Multiplexed station" -variable ra_statType -value "StMulti"  -command ""]
+    set ra_StChain  [radiobutton $tabInnerf1.ra_StChain  -text "Chained station"     -variable ra_statType -value "StChain"  -command ""]
 
-    grid config $tabInnerf0.la_nodeName  -row 0 -column 0 -sticky w
-    grid config $tabInnerf0.en_nodeName  -row 0 -column 1 -padx 5
-    grid config $tabInnerf0.la_empty1    -row 1 -column 0
-    grid config $tabInnerf0.la_nodeNo -row 2 -column 0
-    grid config $tabInnerf0.en_nodeNo -row 2 -column 1 -padx 5
-    grid config $tabInnerf0.la_empty2    -row 3 -column 0
+
+    grid config $tabTitlef0 -row 0 -column 0 -sticky ew -ipady 7 ;# -ipadx 10
+    #label $uf.la_empty -text ""
+    #grid config $uf.la_empty -row 1 -column 0
+    #grid config $tabTitlef1 -row 2 -column 0 -sticky ew
+
+    grid config $tabInnerf0.la_align1    -row 0 -column 0 -padx 5
+    grid config $tabInnerf0.la_nodeNo    -row 2 -column 1 -sticky w
+    grid config $tabInnerf0.en_nodeNo    -row 2 -column 2 -padx 5
+    grid config $tabInnerf0.la_align2    -row 0 -column 3 -padx 170
+    grid config $tabInnerf0.la_empty1    -row 1 -column 1
+    grid config $tabInnerf0.la_nodeName  -row 0 -column 1 -sticky w
+    grid config $tabInnerf0.en_nodeName  -row 0 -column 2 -padx 5
+    grid config $tabInnerf0.la_empty2    -row 3 -column 1
+    grid config $tabInnerf0.la_time      -row 4 -column 1 -sticky w
+    grid config $tabInnerf0.en_time      -row 4 -column 2 -padx 5
+    grid config $tabInnerf0.la_empty3    -row 5 -column 1
+    grid config $frame1                  -row 6 -column 2 -padx 5 
     
-    grid config $tabInnerf1.la_advOption1 -row 0 -column 0 -sticky w
-    grid config $tabInnerf1.en_advOption1 -row 0 -column 1 -padx 5
-    grid config $tabInnerf1.la_empty4     -row 1 -column 0
-    grid config $tabInnerf1.la_advOption2 -row 2 -column 0 -sticky w
-    grid config $tabInnerf1.en_advOption2 -row 2 -column 1 -padx 5
-    grid config $tabInnerf1.la_empty5     -row 3 -column 0
-    grid config $tabInnerf1.la_advOption3 -row 4 -column 0 -sticky w
-    grid config $tabInnerf1.en_advOption3 -row 4 -column 1 -padx 5
-    grid config $tabInnerf1.la_empty6     -row 5 -column 0
+    grid config $ra_dec -row 0 -column 0 -sticky w
+    grid config $ra_hex -row 0 -column 1 -sticky w
+
     
     if { $choice == "mn" } {
-        $tabInnerf1.la_advOption1 configure -text "Asynchronous MTU size"
-	$tabInnerf1.la_advOption2 configure -text "Asynchronous Timeout"
-	$tabInnerf1.la_advOption3 configure -text "Multiplexing prescaler"
+        $tabInnerf0.la_time  configure -text "Cycle Time"
 	
-	grid config $tabInnerf0.la_cycleTime    -row 4 -column 0 -sticky w
-	grid config $tabInnerf0.en_cycleTime    -row 4 -column 1 -padx 5
-	grid config $tabInnerf0.la_empty3       -row 5 -column 0
+        $tabInnerf0.tabTitlef1 configure -text "Advanced" 
+        $tabInnerf0.en_nodeNo configure -state disabled
+        $tabInnerf1.la_advOption1 configure -text "Asynchronous MTU size"
+        $tabInnerf1.la_advOption2 configure -text "Asynchronous Timeout"
+        $tabInnerf1.la_advOption3 configure -text "Multiplexing prescaler"
+	
+        grid config $tabInnerf1.la_advOption1 -row 0 -column 1 -sticky w
+        grid config $tabInnerf1.en_advOption1 -row 0 -column 2 -padx 5
+        grid config $tabInnerf1.la_empty4     -row 1 -column 1
+        grid config $tabInnerf1.la_advOption2 -row 2 -column 1 -sticky w
+        grid config $tabInnerf1.en_advOption2 -row 2 -column 2 -padx 5
+        grid config $tabInnerf1.la_empty5     -row 3 -column 1
+        grid config $tabInnerf1.la_advOption3 -row 4 -column 1 -sticky w
+        grid config $tabInnerf1.en_advOption3 -row 4 -column 2 -padx 5
+        grid config $tabInnerf1.la_empty6     -row 5 -column 1
+	
+        $ra_dec configure -command "NoteBookManager::ConvertMNDec $tabInnerf0 $tabInnerf1"
+        $ra_hex configure -command "NoteBookManager::ConvertMNHex $tabInnerf0 $tabInnerf1"
     } elseif { $choice == "cn" } {
-        $tabInnerf1.la_advOption1 configure -text "Response Timeout"
-	$tabInnerf1.la_advOption2 configure -text "Multiplexed Station"
-	$tabInnerf1.la_advOption3 configure -text "Chained Station"
+        $tabInnerf0.la_time  configure -text "PollResponse Timeout"
+        grid config $tabInnerf0.la_ms      -row 4 -column 3 -sticky w
+        
+        $tabInnerf0.tabTitlef1 configure -text "Type of station" 
+	
+	
+        grid config $ra_StNormal          -row 0 -column 0 -sticky w -padx 5
+        grid config $tabInnerf1.la_empty4 -row 1 -column 0
+        grid config $ra_StMulti           -row 2 -column 0 -sticky w -padx 5
+        grid config $tabInnerf1.la_empty5 -row 3 -column 0
+        grid config $ra_StChain           -row 4 -column 0 -sticky w -padx 5
+        grid config $tabInnerf1.la_empty6 -row 5 -column 0
 	
     }
+    grid config $tabTitlef1 -row 8 -column 1 -columnspan 2 -sticky ew
+    
+    set fram [frame $frame.f1]  
+    label $fram.la_empty -text "  " -height 1
+    if { $choice == "mn" } {
+        set mnPropSaveBtn [ button $fram.bt_sav -text " Save " -width 8 -command ""]
+    } elseif { $choice == "cn" } {
+        set cnPropSaveBtn [ button $fram.bt_sav -text " Save " -width 8 -command ""]
+    }
+    label $fram.la_empty1 -text "  "
+    button $fram.bt_dis -text "Discard" -width 8 -command "NoteBookManager::DiscardValue $tabInnerf0 $tabInnerf1"
+    grid config $fram.la_empty -row 0 -column 0 -columnspan 2
+    grid config $fram.bt_sav -row 1 -column 0 -sticky s
+    grid config $fram.la_empty1 -row 1 -column 1 -sticky s
+    grid config $fram.bt_dis -row 1 -column 2 -sticky s
+    pack $fram -side bottom
+    
     return [list $outerFrame $tabInnerf0 $tabInnerf1 $sf]
 }
 
@@ -508,7 +568,7 @@ proc NoteBookManager::create_treeBrowserWindow {nbpath } {
     global treePath
 
     set nbname objectTree
-    set frmPath [$nbpath insert end $nbname -text "Tree Browser"]
+    set frmPath [$nbpath insert end $nbname -text "Network Browser"]
 
     set scrollWin [ScrolledWindow::create $frmPath.scrollWin -auto both]
     set treeBrowser [Tree $frmPath.scrollWin.treeBrowser \
@@ -674,6 +734,134 @@ proc NoteBookManager::InsertHex {entryPath dataType} {
         #commented to remove insertion of 0x
         #set entryValue 0x
         $entryPath insert 0 $entryValue
+    }
+}
+
+#---------------------------------------------------------------------------------------------------
+#  NoteBookManager::ConvertMNDec
+# 
+#  Arguments : framePath0 - path of the frame containing value and default entry widget 
+#
+#  Results : -
+#
+#  Description : converts value into decimal and changes validation for entry
+#---------------------------------------------------------------------------------------------------
+proc NoteBookManager::ConvertMNDec {framePath0 framePath1} {
+    global lastConv
+    global userPrefList
+    global nodeSelect
+    global MNDatalist
+
+    if { $lastConv != "dec"} {
+        set lastConv dec
+        set schRes [lsearch $userPrefList [list $nodeSelect *]]
+        if {$schRes  == -1} {
+            lappend userPrefList [list $nodeSelect dec]
+        } else {
+            set userPrefList [lreplace $userPrefList $schRes $schRes [list $nodeSelect dec] ]
+        }
+        
+        set schDataRes [lsearch $MNDatalist [list cycleTimeDatatype *]]
+        if {$schDataRes  != -1 } {
+            set dataType [lindex [lindex $MNDatalist $schDataRes] 1]
+            set state [$framePath0.en_time cget -state]
+            $framePath0.en_time configure -validate none -state normal
+            NoteBookManager::InsertDecimal $framePath0.en_time $dataType
+            $framePath0.en_time configure -validate key -vcmd "Validation::IsDec %P $framePath0.en_time %d %i $dataType" -state $state
+        }
+
+        set schDataRes [lsearch $MNDatalist [list asynMTUSizeDatatype *]]
+        if {$schDataRes  != -1 } {
+            set dataType [lindex [lindex $MNDatalist $schDataRes] 1]
+            set state [$framePath1.en_advOption1 cget -state]
+            $framePath1.en_advOption1 configure -validate none -state normal
+            NoteBookManager::InsertDecimal $framePath1.en_advOption1 $dataType
+            $framePath1.en_advOption1 configure -validate key -vcmd "Validation::IsDec %P $framePath1.en_advOption1 %d %i $dataType" -state $state
+        }
+        
+        set schDataRes [lsearch $MNDatalist [list asynTimeoutDatatype *]]
+        if {$schDataRes  != -1 } {
+            set dataType [lindex [lindex $MNDatalist $schDataRes] 1]
+            set state [$framePath1.en_advOption2 cget -state]
+            $framePath1.en_advOption2 configure -validate none -state normal
+            NoteBookManager::InsertDecimal $framePath1.en_advOption2 $dataType
+            $framePath1.en_advOption2 configure -validate key -vcmd "Validation::IsDec %P $framePath1.en_advOption2 %d %i $dataType" -state $state
+        }
+
+        set schDataRes [lsearch $MNDatalist [list multiPrescalerDatatype *]]
+        if {$schDataRes  != -1 } {
+            set dataType [lindex [lindex $MNDatalist $schDataRes] 1]
+            set state [$framePath1.en_advOption3 cget -state]
+            $framePath1.en_advOption3 configure -validate none -state normal
+            NoteBookManager::InsertDecimal $framePath1.en_advOption3 $dataType
+            $framePath1.en_advOption3 configure -validate key -vcmd "Validation::IsDec %P $framePath1.en_advOption3 %d %i $dataType" -state $state
+        }
+    } else {
+        #already dec is selected
+    }
+}
+
+#---------------------------------------------------------------------------------------------------
+#  NoteBookManager::ConvertMNHex
+# 
+#  Arguments : framePath - path containing the value and default entry widget 
+#
+#  Results : -
+#
+#  Description : converts the value to hexadecimal and changes validation for entry
+#---------------------------------------------------------------------------------------------------
+proc NoteBookManager::ConvertMNHex {framePath0 framePath1} {
+    global lastConv
+    global userPrefList
+    global nodeSelect
+    global MNDatalist
+
+    if { $lastConv != "hex"} {
+        set lastConv hex
+        set schRes [lsearch $userPrefList [list $nodeSelect *]]
+        if {$schRes  == -1} {
+            lappend userPrefList [list $nodeSelect hex]
+        } else {
+           set userPrefList [lreplace $userPrefList $schRes $schRes [list $nodeSelect hex] ]
+        }
+
+        set schDataRes [lsearch $MNDatalist [list cycleTimeDatatype *]]
+        if {$schDataRes  != -1 } {
+            set dataType [lindex [lindex $MNDatalist $schDataRes] 1]
+            set state [$framePath0.en_time cget -state]
+            $framePath0.en_time configure -validate none -state normal
+            NoteBookManager::InsertHex $framePath0.en_time $dataType
+            $framePath0.en_time configure -validate key -vcmd "Validation::IsHex %P %s $framePath0.en_time %d %i $dataType" -state $state
+        }
+
+        set schDataRes [lsearch $MNDatalist [list asynMTUSizeDatatype *]]
+        if {$schDataRes  != -1 } {
+            set dataType [lindex [lindex $MNDatalist $schDataRes] 1]
+            set state [$framePath1.en_advOption1 cget -state]
+            $framePath1.en_advOption1 configure -validate none -state normal
+            NoteBookManager::InsertHex $framePath1.en_advOption1 $dataType
+            $framePath1.en_advOption1 configure -validate key -vcmd "Validation::IsHex %P %s $framePath1.en_advOption1 %d %i $dataType" -state $state
+        }
+        
+        set schDataRes [lsearch $MNDatalist [list asynTimeoutDatatype *]]
+        if {$schDataRes  != -1 } {
+            set dataType [lindex [lindex $MNDatalist $schDataRes] 1]
+            set state [$framePath1.en_advOption2 cget -state]
+            $framePath1.en_advOption2 configure -validate none -state normal
+            NoteBookManager::InsertHex $framePath1.en_advOption2 $dataType
+            $framePath1.en_advOption2 configure -validate key -vcmd "Validation::IsHex %P %s $framePath1.en_advOption2 %d %i $dataType" -state $state
+        }
+
+        set schDataRes [lsearch $MNDatalist [list multiPrescalerDatatype *]]
+        if {$schDataRes  != -1 } {
+            set dataType [lindex [lindex $MNDatalist $schDataRes] 1]
+            set state [$framePath1.en_advOption3 cget -state]
+            $framePath1.en_advOption3 configure -validate none -state normal
+            NoteBookManager::InsertHex $framePath1.en_advOption3 $dataType
+            $framePath1.en_advOption3 configure -validate key -vcmd "Validation::IsHex %P %s $framePath1.en_advOption3 %d %i $dataType" -state $state
+        }
+    } else {
+        #already hex is selected
     }
 }
 
@@ -962,6 +1150,125 @@ proc NoteBookManager::DiscardValue {frame0 frame1} {
         set indexId [string range $oldName end-4 end-1 ]
         set parent [$treePath parent $nodeSelect]
     }
+
+    set userPrefList [Operations::DeleteList $userPrefList $nodeSelect 1]
+    Validation::ResetPromptFlag
+    Operations::SingleClickNode $nodeSelect
+    return
+}
+
+#---------------------------------------------------------------------------------------------------
+#  NoteBookManager::SaveMNValue
+# 
+#  Arguments : frame0 - frame containing the widgets describing the object (index id, Object name, subindex id )
+#              frame1 - frame containing the widgets describing properties of object	
+#	   
+#  Results :  - 
+#
+#  Description : save the entered value for MN property window
+#---------------------------------------------------------------------------------------------------
+proc NoteBookManager::SaveMNValue {nodePos frame0 frame1} {
+    global nodeSelect
+    global nodeIdList
+    global treePath
+    global savedValueList 
+    global userPrefList
+    global lastConv
+    global status_save
+    global MNDatalist
+    
+
+    #gets the nodeId and Type of selected node
+    set result [Operations::GetNodeIdType $nodeSelect]
+    if {$result != "" } {
+        set nodeId [lindex $result 0]
+        set nodeType [lindex $result 1]
+    } else {
+            #must be some other node this condition should never reach
+            return
+    }
+	
+    set radioSel [$frame0.formatframe1.ra_dec cget -variable]
+    global $radioSel
+    set radioSel [subst $[subst $radioSel]]
+    
+    set MNDatatypeObjectPathList [list \
+        [list cycleTimeDatatype $Operations::CYCLE_TIME_OBJ $frame0.en_time] \
+        [list asynMTUSizeDatatype $Operations::ASYNC_MTU_SIZE_OBJ $frame1.en_advOption1] \
+        [list asynTimeoutDatatype $Operations::ASYNC_TIMEOUT_OBJ $frame1.en_advOption2] \
+        [list multiPrescalerDatatype $Operations::MULTI_PRESCAL_OBJ $frame1.en_advOption3] ]
+   
+    foreach tempDatatype $MNDatalist {
+        set schDataRes [lsearch $MNDatatypeObjectPathList [list [lindex $tempDatatype 0] * *]]
+        if {$schDataRes  != -1 } {
+            set dataType [lindex $tempDatatype 1]
+            set entryPath [lindex [lindex $MNDatatypeObjectPathList $schDataRes] 2]
+            
+            # if entry is disabled no need to save it
+            set entryState [$entryPath cget -state]
+            if { $entryState != "normal" } {
+                continue
+            }
+            
+            set objectList [lindex [lindex $MNDatatypeObjectPathList $schDataRes] 1]
+            set value [$entryPath get]
+            set result [Validation::CheckDatatypeValue $entryPath $dataType $radioSel $value]
+            if { [lindex $result 0] == "pass" } {
+                #get the flag and name of the object
+                set validValue [lindex $result 1]
+                set reqFieldResult [Operations::GetObjectValueData $nodePos $nodeId $nodeType [list 0 9] [lindex $objectList 0] [lindex $objectList 1] ]
+                if { [lindex $reqFieldResult 0] == "pass" } {
+                    set objName [lindex $reqFieldResult 1]
+                    set objFlag [lindex $reqFieldResult 2]
+                    #check whether the object is index or subindex
+                    if { [lindex $objectList 1] == "" } {
+                        # it is an index
+                        set saveCmd "SetIndexAttributes $nodeId $nodeType [lindex $objectList 0] $validValue $objName $objFlag"
+                    } else {
+                        #it is a subindex
+                        set saveCmd "SetSubIndexAttributes $nodeId $nodeType [lindex $objectList 0] [lindex $objectList 1] $validValue $objName $objFlag"
+                    }
+                    #save the value
+                    set catchErrCode [eval $saveCmd]
+                    set ErrCode [ocfmRetCode_code_get $catchErrCode]
+                    if { $ErrCode != 0 } {
+                        if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+                            tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
+                        } else {
+                            tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
+                        }
+                        Validation::ResetPromptFlag
+                        return
+                    }
+                    #value for Index or SubIndex is edited need to change
+                    set status_save 1
+                    Validation::ResetPromptFlag	
+                } else {
+                    continue
+                }
+            } else {
+                continue
+            }
+        }
+    }
+}
+
+#---------------------------------------------------------------------------------------------------
+#  NoteBookManager::DiscardMNValue
+# 
+#  Arguments : frame0 - frame containing widgets describing the object (index id, Object name, subindex id )
+#	           frame1 - frame containing widgets describing properties of object	
+#	   
+#  Results : -
+#
+#  Description : Discards the entered values and displays last saved values
+#---------------------------------------------------------------------------------------------------
+proc NoteBookManager::DiscardMNValue {frame0 frame1} {
+    global nodeSelect
+    global nodeIdList
+    global treePath
+    global userPrefList
+    global lastConv
 
     set userPrefList [Operations::DeleteList $userPrefList $nodeSelect 1]
     Validation::ResetPromptFlag

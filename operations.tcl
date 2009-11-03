@@ -83,7 +83,13 @@ namespace eval Operations {
     variable prgressindicator
     variable showtoolbar  1
     variable viewType
+    variable CYCLE_TIME_OBJ
+    variable ASYNC_MTU_SIZE_OBJ
+    variable ASYNC_TIMEOUT_OBJ
+    variable MULTI_PRESCAL_OBJ
+    variable PRES_TIMEOUT_OBJ
 }
+
 
 # For including Tablelist Package
 set path_to_Tablelist [file join $rootDir tablelist4.10]
@@ -144,7 +150,12 @@ set lastXD ""
 set lastOpenPjt ""
 set LastTableFocus ""
 set status_save 0 
-Validation::ResetPromptFlag 
+Validation::ResetPromptFlag
+set Operations::CYCLE_TIME_OBJ 1006
+set Operations::ASYNC_MTU_SIZE_OBJ [list 1F98 08]
+set Operations::ASYNC_TIMEOUT_OBJ [list 1F8A 02]
+set Operations::MULTI_PRESCAL_OBJ [list 1F98 07]
+set Operations::PRES_TIMEOUT_OBJ [list 1F98 03]
 
 #---------------------------------------------------------------------------------------------------
 #  Operations::about
@@ -551,6 +562,9 @@ proc Operations::RePopulate { projectDir projectName } {
     global nodeIdList
     global mnCount
     global cnCount	
+
+    #reset the nodeIdList
+    set nodeIdList ""
 
     set mnCount 1
     set cnCount 1
@@ -1019,8 +1033,59 @@ proc Operations::BasicFrames { } {
     }
 
     set f3 [NoteBookManager::create_nodeFrame $alignFrame  "mn"]
+    bind [lindex $f3 0] <Enter> {
+        bind . <KeyPress-Return> {
+            #TODOglobal indexSaveBtn
+            #$indexSaveBtn invoke
+        }
+    }
+    bind [lindex $f3 0] <Leave> {
+        bind . <KeyPress-Return> ""
+    }
+    bind [lindex $f3 3] <Enter> {
+	global f3
+        if {"$tcl_platform(platform)" == "unix"} {
+	    bind . <Button-4> "[lindex $f3 3] yview scroll -5 units"
+            bind . <Button-5> "[lindex $f3 3] yview scroll 5 units"
+        } elseif {"$tcl_platform(platform)" == "windows"} {
+            #bind . <MouseWheel> "[lindex $f3 3] yview scroll [expr -%D/24] units"
+        }
+    }
+    bind [lindex $f3 3] <Leave> {
+        if {"$tcl_platform(platform)" == "unix"} {
+	    bind . <Button-4> ""
+            bind . <Button-5> ""
+        } elseif {"$tcl_platform(platform)" == "windows"} {
+            bind . <MouseWheel> ""
+        }
+    }
     set f4 [NoteBookManager::create_nodeFrame $alignFrame  "cn"]
-
+    bind [lindex $f4 0] <Enter> {
+        bind . <KeyPress-Return> {
+            #TODOglobal indexSaveBtn
+            #$indexSaveBtn invoke
+        }
+    }
+    bind [lindex $f4 0] <Leave> {
+        bind . <KeyPress-Return> ""
+    }
+    bind [lindex $f4 3] <Enter> {
+	global f4
+        if {"$tcl_platform(platform)" == "unix"} {
+	    bind . <Button-4> "[lindex $f4 3] yview scroll -5 units"
+            bind . <Button-5> "[lindex $f4 3] yview scroll 5 units"
+        } elseif {"$tcl_platform(platform)" == "windows"} {
+            #bind . <MouseWheel> "[lindex $f4 3] yview scroll [expr -%D/24] units"
+        }
+    }
+    bind [lindex $f4 3] <Leave> {
+        if {"$tcl_platform(platform)" == "unix"} {
+	    bind . <Button-4> ""
+            bind . <Button-5> ""
+        } elseif {"$tcl_platform(platform)" == "windows"} {
+            bind . <MouseWheel> ""
+        }
+    }
     pack $pannedwindow2 -fill both -expand yes
 
     $tree_notebook raise objectTree
@@ -1784,10 +1849,20 @@ proc Operations::SingleClickNode {node} {
 
 proc Operations::MNProperties {node nodePos nodeId nodeType} {
     global f3
+    global savedValueList
+    global lastConv
+    global populatedPDOList
+    global userPrefList
+    global nodeSelect
+    global MNDatalist
+    global mnPropSaveBtn
+    
     set tmpInnerf0 [lindex $f3 1]
     set tmpInnerf1 [lindex $f3 2]
-    # value from 1006      for Cycle time
-    set catchErrCode [GetIndexAttributes $nodeId $nodeType 1006 5]
+    
+    #get node name and display it
+    set dummyNodeId [new_intp]
+    set catchErrCode [GetNodeAttributesbyNodePos $nodePos $dummyNodeId]
     if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
 	    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
@@ -1796,50 +1871,231 @@ proc Operations::MNProperties {node nodePos nodeId nodeType} {
         }
         return
     }
-    set cycleTime [lindex $catchErrCode 1]
-    puts "Operations::MNProperties cycleTime->$cycleTime \n"
+    
+    #configure the save button
+    $mnPropSaveBtn configure -command "NoteBookManager::SaveMNValue $nodePos $tmpInnerf0 $tmpInnerf1"
+    
+    set nodeName [lindex $catchErrCode 1]
+    $tmpInnerf0.en_nodeName delete 0 end
+    $tmpInnerf0.en_nodeName insert 0 $nodeName
+    
+    #insert nodenumber
+    $tmpInnerf0.en_nodeNo configure -state normal -validate none
+    $tmpInnerf0.en_nodeNo delete 0 end
+    $tmpInnerf0.en_nodeNo insert 0 $nodeId
+    $tmpInnerf0.en_nodeNo configure -state disabled
+    
+    # value from 1006 for Cycle time
+    set MNDatalist ""
+    set cycleTimeresult [GetObjectValueData $nodePos $nodeId $nodeType [list 2 4 5] $Operations::CYCLE_TIME_OBJ]
+    if {[string equal "pass" [lindex $cycleTimeresult 0]] == 1} {
+        if {[lindex $cycleTimeresult 3] == "" } {
+            set cycleTimeValue [lindex $cycleTimeresult 2]
+        } else {
+            set cycleTimeValue [lindex $cycleTimeresult 3]
+        }
+        set cycleTimeDatatype [lindex $cycleTimeresult 1]
+        $tmpInnerf0.en_time configure -state normal -validate none -bg white
+        $tmpInnerf0.en_time delete 0 end
+        $tmpInnerf0.en_time insert 0 $cycleTimeValue
+        set schRes [lsearch $userPrefList [list $nodeSelect *]]
+        if { $schRes != -1 } {
+            Operations::CheckConvertValue $tmpInnerf0.en_time $cycleTimeDatatype [lindex [lindex $userPrefList $schRes] 1]
+            if { [lindex [lindex $userPrefList $schRes] 1] == "dec" } {
+                set lastConv dec
+                $tmpInnerf0.formatframe1.ra_dec select
+            } elseif { [lindex [lindex $userPrefList $schRes] 1] == "hex" } {
+                set lastConv hex
+                $tmpInnerf0.formatframe1.ra_hex select
+            } else {
+                return 
+            }
+        } else {
+            if {[string match -nocase "0x*" $cycleTimeValue]} {
+                set lastConv hex
+                $tmpInnerf0.formatframe1.ra_hex select
+                $tmpInnerf0.en_time configure -validate key -vcmd "Validation::IsHex %P %s $tmpInnerf0.en_time %d %i $cycleTimeDatatype"
+            } else {
+                set lastConv dec
+                $tmpInnerf0.formatframe1.ra_dec select
+                $tmpInnerf0.en_time configure -validate key -vcmd "Validation::IsDec %P $tmpInnerf0.en_time %d %i $cycleTimeDatatype"
+            }    
+		    
+        }
+        lappend MNDatalist [list cycleTimeDatatype $cycleTimeDatatype]
+    } else {
+        #fail occured
+        $tmpInnerf0.en_time configure -state normal -validate none
+        $tmpInnerf0.en_time delete 0 end
+        $tmpInnerf0.en_time configure -state disabled
+    }
     
     # value from 0x1F98/08 for Asynchronous MTU size
-    set catchErrCode [GetIndexAttributes $nodeId $nodeType 1006 5]
-    if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
-        if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
-	    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
+    set asynMTUSizeResult [GetObjectValueData $nodePos $nodeId $nodeType  [list 2 4 5] [lindex $Operations::ASYNC_MTU_SIZE_OBJ 0] [lindex $Operations::ASYNC_MTU_SIZE_OBJ 1] ]
+    if {[string equal "pass" [lindex $asynMTUSizeResult 0]] == 1} {
+        if {[lindex $cycleTimeresult 3] == "" } {
+            set asynMTUSizeValue [lindex $asynMTUSizeResult 2]
         } else {
-	    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
+            set asynMTUSizeValue [lindex $asynMTUSizeResult 3]
         }
-        return
+        set asynMTUSizeDatatype [lindex $asynMTUSizeResult 1]
+        
+        $tmpInnerf1.en_advOption1 configure -state normal -validate none -bg white
+        $tmpInnerf1.en_advOption1 delete 0 end
+        $tmpInnerf1.en_advOption1 insert 0 $asynMTUSizeValue
+        Operations::CheckConvertValue $tmpInnerf1.en_advOption1 $asynMTUSizeDatatype $lastConv
+        lappend MNDatalist [list asynMTUSizeDatatype $asynMTUSizeDatatype]
+    } else {
+        #fail occured
+        $tmpInnerf1.en_advOption1 configure -state normal -validate none
+        $tmpInnerf1.en_advOption1 delete 0 end
+        $tmpInnerf1.en_advOption1 configure -state disabled
     }
-    set cycleTime [lindex $catchErrCode 1]
-    puts "Operations::MNProperties cycleTime->$cycleTime \n"
     
-    # value from 0x1F9A/02 for Asynchronous Timeout
-    #if the index doesnot exist the application crashes
-    set catchErrCode [GetSubIndexAttributes $nodeId $nodeType 1F9A 02 5]
-    puts "Asynchronous Timeout catchErrCode->$catchErrCode"
-    if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
-        if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
-	    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
+    # value from 0x1F8A/07 for Asynchronous Timeout
+    set asynTimeoutResult [GetObjectValueData $nodePos $nodeId $nodeType [list 2 4 5] [lindex $Operations::ASYNC_TIMEOUT_OBJ 0] [lindex $Operations::ASYNC_TIMEOUT_OBJ 1] ]
+    if {[string equal "pass" [lindex $asynTimeoutResult 0]] == 1} {
+        if {[lindex $cycleTimeresult 3] == "" } {
+            set asynTimeoutValue [lindex $asynTimeoutResult 2]
         } else {
-	    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
+            set asynTimeoutValue [lindex $asynTimeoutResult 3]
         }
-        return
+        set asynTimeoutDatatype [lindex $asynTimeoutResult 1]
+        
+        $tmpInnerf1.en_advOption2 configure -state normal -validate none -bg white
+        $tmpInnerf1.en_advOption2 delete 0 end
+        $tmpInnerf1.en_advOption2 insert 0 $asynTimeoutValue
+        Operations::CheckConvertValue $tmpInnerf1.en_advOption2 $asynTimeoutDatatype $lastConv
+        lappend MNDatalist [list asynTimeoutDatatype $asynTimeoutDatatype]
+    } else {
+        #fail occured
+        $tmpInnerf1.en_advOption2 configure -state normal -validate none
+        $tmpInnerf1.en_advOption2 delete 0 end
+        $tmpInnerf1.en_advOption2 configure -state disabled
     }
-    set AsynTimeout [lindex $catchErrCode 1]
-    puts "Operations::MNProperties AsynTimeout->$AsynTimeout \n"
-    
-    # value from 0x1F98/07 for Multiplexing prescaler
-    set catchErrCode [GetSubIndexAttributes $nodeId $nodeType 1F98 07 5]
-    if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
-        if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
-	    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
-        } else {
-	    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
-        }
-        return
-    }
-    set MultiPrescale [lindex $catchErrCode 1]
-    puts "Operations::MNProperties MultiPrescale->$MultiPrescale \n"
 
+    # value from 0x1F98/07 for Multiplexing prescaler
+    #* Multiplexing Prescaler (MN parameter)
+    #* Option is only enabled, if DLLMNFeatureMultiplex="true" in XDD
+    # TODO : call API to check whether DLLMNFeatureMultiplex is "true"
+    set multiPrescaler [GetObjectValueData $nodePos $nodeId $nodeType [list 2 4 5] [lindex $Operations::MULTI_PRESCAL_OBJ 0] [lindex $Operations::MULTI_PRESCAL_OBJ 1] ]
+    if {[string equal "pass" [lindex $multiPrescaler 0]] == 1} {
+        if {[lindex $cycleTimeresult 3] == "" } {
+            set multiPrescalerValue [lindex $multiPrescaler 2]
+        } else {
+            set multiPrescalerValue [lindex $multiPrescaler 3]
+        }
+        set multiPrescalerDatatype [lindex $multiPrescaler 1]
+        
+        $tmpInnerf1.en_advOption3 configure -state normal -validate none -bg white
+        $tmpInnerf1.en_advOption3 delete 0 end
+        $tmpInnerf1.en_advOption3 insert 0 $multiPrescalerValue
+        Operations::CheckConvertValue $tmpInnerf1.en_advOption3 $multiPrescalerDatatype $lastConv
+        lappend MNDatalist [list multiPrescalerDatatype $multiPrescalerDatatype]
+    } else {
+        #fail occured
+        $tmpInnerf1.en_advOption3 configure -state normal -validate none
+        $tmpInnerf1.en_advOption3 delete 0 end
+        $tmpInnerf1.en_advOption3 configure -state disabled
+    }
+
+
+
+}
+
+#---------------------------------------------------------------------------------------------------
+#  Operations::GetObjectValueData
+# 
+#  Arguments : nodePos    - positoion of node in collection
+#              nodeId     - id of the node
+#              nodeType   - indicates the type as MN or CN
+#              indexId    - id of index object
+#              subIndexId - id of subindex object (optional)
+#
+#  Results :  pass and actual, default and datatype value or fail
+#
+#  Description : Gets the actual, default and datatype value for index or subindex
+#---------------------------------------------------------------------------------------------------
+proc Operations::GetObjectValueData {nodePos nodeId nodeType attributeList indexId {subIndexId ""} } {
+    set indexPos [new_intp]
+    if { $subIndexId == "" } {
+    	#no subindex get the index
+        set existCmd "IfIndexExists $nodeId $nodeType $indexId $indexPos"
+    } else {
+    	#get the subindex property
+    	set subIndexPos [new_intp] 
+    	set existCmd "IfSubIndexExists $nodeId $nodeType $indexId $subIndexId $subIndexPos $indexPos"
+    }
+    
+    set catchErrCode [eval $existCmd]
+    if { [ocfmRetCode_code_get $catchErrCode] != 0 } {
+        #if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+        #    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
+        #} else {
+        #    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
+        #}
+        return fail
+    }
+    set indexPos [intp_value $indexPos]
+    if { $subIndexId == "" } {
+        set attributeCmd   "GetIndexAttributesbyPositions $nodePos $indexPos "
+    } else {
+        set subIndexPos [intp_value $subIndexPos]
+        set attributeCmd   "GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos "
+    }
+    set resultList "pass"
+    foreach listAttrib $attributeList {
+        set catchErr [eval "$attributeCmd $listAttrib" ]
+        if { [ocfmRetCode_code_get [lindex $catchErr 0]] != 0 } {
+        #    if { [ string is ascii [ocfmRetCode_errorString_get [lindex $catchErr 0]] ] } {
+        #	tk_messageBox -message "[ocfmRetCode_errorString_get [lindex $catchErr 0]]" -title Error -icon error -parent .
+        #    } else {
+        #	tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
+        #    }
+        return fail
+        }
+        set result [lindex $catchErr 1]
+        lappend resultList $result
+    }
+    return  $resultList
+}
+
+#---------------------------------------------------------------------------------------------------
+#  Operations::CheckConvertValue
+# 
+#  Arguments : entryPath    - positoion of node in collection
+#              dataType     - id of the node
+#              valueFormat   - indicates the type as MN or CN
+#              indexId    - id of index object
+#              subIndexId - id of subindex object (optional)
+#
+#  Results :  pass and actual, default and datatype value or fail
+#
+#  Description : Gets the actual, default and datatype value for index or subindex
+#---------------------------------------------------------------------------------------------------
+proc Operations::CheckConvertValue { entryPath dataType valueFormat } {
+    set entryState [$entryPath cget -state]
+    set reqValue [$entryPath get]
+    $entryPath configure -state normal -validate none
+    if { $valueFormat == "dec" } {
+        if {[string match -nocase "0x*" $reqValue]} {
+            NoteBookManager::InsertDecimal $entryPath $dataType
+        } else {
+            # value already in decimal 
+        }
+        $entryPath configure -validate key -vcmd "Validation::IsDec %P $entryPath %d %i $dataType"
+    } elseif { $valueFormat == "hex" } {
+        if {[string match -nocase "0x*" $reqValue]} {
+            # value already in hexadecimal 
+        } else {
+            NoteBookManager::InsertHex $entryPath $dataType
+        }
+        $entryPath configure -validate key -vcmd "Validation::IsHex %P %s $entryPath %d %i $dataType"
+    } else {
+        $entryPath configure -state $entryState
+        return 
+    }
+    $entryPath configure -state $entryState
 }
 
 #---------------------------------------------------------------------------------------------------
@@ -2038,6 +2294,8 @@ proc Operations::ResetGlobalData {} {
     global f0
     global f1
     global f2
+    global f3
+    global f4
     global lastConv
     global LastTableFocus
     global chkPrompt
@@ -2068,6 +2326,8 @@ proc Operations::ResetGlobalData {} {
     pack forget [lindex $f2 0]
     [lindex $f2 1] cancelediting
     [lindex $f2 1] configure -state disabled
+    pack forget [lindex $f3 0]
+    pack forget [lindex $f4 0]
 
     update
 }
@@ -2555,6 +2815,8 @@ proc Operations::BuildProject {} {
     global f0
     global f1
     global f2
+    global f3
+    global f4
     global status_save
 
     if {$projectDir == "" || $projectName == "" } {
@@ -2726,7 +2988,9 @@ proc Operations::ReImport {} {
     global f0
     global f1
     global f2
-
+    global f3
+    global f4
+    
     set node [$treePath selection get]
     if {[string match "MN*" $node]} {
 	    set child [$treePath nodes $node]
@@ -2790,6 +3054,8 @@ proc Operations::ReImport {} {
 	    pack forget [lindex $f2 0]
 	    [lindex $f2 1] cancelediting
 	    [lindex $f2 1] configure -state disabled
+            pack forget [lindex $f3 0]
+            pack forget [lindex $f4 0]
 
 	    #xdc/xdd is reimported need to save
 	    set status_save 1
@@ -2805,6 +3071,8 @@ proc Operations::ReImport {} {
 	    pack forget [lindex $f2 0]
 	    [lindex $f2 1] cancelediting
 	    [lindex $f2 1] configure -state disabled
+            pack forget [lindex $f3 0]
+            pack forget [lindex $f4 0]
 
 	    Operations::CleanList $node 0
 	    Operations::CleanList $node 1
@@ -3139,7 +3407,6 @@ proc Operations::GetNodeList {} {
 proc Operations::GetNodeIdType {node} {
     global treePath
     global nodeIdList
-
     if {[string match "*SubIndex*" $node]} {
 	    set parent [$treePath parent [$treePath parent $node]]
 	    if {[string match "?Pdo*" $node]} {
@@ -3169,7 +3436,6 @@ proc Operations::GetNodeIdType {node} {
 	    #it is root or ProjectNode
 	    return
     }
-
     set nodeList []
     set nodeList [Operations::GetNodeList]
     set searchCount [lsearch -exact $nodeList $parent ]

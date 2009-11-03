@@ -929,3 +929,77 @@ proc Validation::ResetPromptFlag {} {
     global chkPrompt
     set chkPrompt 0
 }
+
+
+#---------------------------------------------------------------------------------------------------
+# Validation::CheckDatatypeValue
+# 
+#  Arguments : dataType - datatype against which value to be checked
+#              radioSel - radiobutton selection
+#              value    - vlaue to be checked
+#	      
+#  Results : fail and error message or pass with value
+#
+#  Description : reset the flag checked during prompt 
+#---------------------------------------------------------------------------------------------------
+proc Validation::CheckDatatypeValue {entryPath dataType radioSel value} {
+    if { [string match -nocase "INTEGER*" $dataType] || [string match -nocase "UNSIGNED*" $dataType] || [string match -nocase "BOOLEAN" $dataType ] } {
+        #need to convert
+         if {$value != ""} {
+            if { $radioSel == "hex" } {
+                #it is hex value trim leading 0x
+                if {[string match -nocase "0x*" $value]} {
+                    set value [string range $value 2 end]
+                }
+                set value [string toupper $value]
+                if { $value == "" } {
+                    set value ""
+                } else {
+                    set value 0x$value
+                }
+            } elseif { $radioSel == "dec" } {
+                #is is dec value convert to hex
+                set value [lindex [Validation::InputToHex $value $dataType] 0]
+                if { $value == "" } {
+                    set value ""
+                } else {
+                    #0x is appended to represent it as hex
+                    set value [string range $value 2 end]
+                    set value [string toupper $value]
+                    set value 0x$value
+                }
+            } else {
+                #invalid condition
+            }
+        }
+    } elseif { [string match -nocase "BIT" $dataType] } {
+        if {$value != ""} {
+            #convert value to hex and save
+            set value 0x[Validation::BintoHex $value]
+        }
+        #continue
+    } elseif { [string match -nocase "REAL*" $dataType] } {
+        if { [string match -nocase "0x" $value] } {
+            set value ""
+        } else {
+            #continue    
+        }
+    } elseif { $dataType == "IP_ADDRESS" } {
+        set result [$entryPath validate]
+        if {$result == 0} {
+            #tk_messageBox -message "IP address not complete\nValues not saved" -title Warning -icon warning -parent .
+            Validation::ResetPromptFlag
+            return [list fail "IP address not complete\nValues not saved"]
+        }
+    } elseif { $dataType == "MAC_ADDRESS" } {
+        set result [$entryPath validate]
+        if {$result == 0} {
+            #tk_messageBox -message "MAC address not complete\nValues not saved" -title Warning -icon warning -parent .
+            Validation::ResetPromptFlag
+            return [list fail "MAC address not complete\nValues not saved"]
+        }
+    } elseif { $dataType ==  "Visible_String" } {
+        #continue
+    }
+    return [list pass $value]
+}

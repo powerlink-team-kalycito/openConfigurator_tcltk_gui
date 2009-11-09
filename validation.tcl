@@ -1003,3 +1003,25 @@ proc Validation::CheckDatatypeValue {entryPath dataType radioSel value} {
     }
     return [list pass $value]
 }
+
+#---------------------------------------------------------------------------------------------------
+#  Validation::CheckCnNodeNumber
+# 
+#  Arguments : input - string to be validated
+#
+#  Results : 0 or 1
+#
+#  Description : Validates string is containing only numbers 1 to 254 excluding 240
+#---------------------------------------------------------------------------------------------------
+proc Validation::CheckCnNodeNumber {input} {
+    
+    #
+    #if { (([string is int $input] == 1) && ($input >= 1) && ($input <= 254) && ($input != 240)) || ($input == "") } { }
+    #
+    if { ( ([string is int $input] == 1) && ($input >= 1) && ($input <= 239) ) || ($input == "") } {
+        return 1    
+    } else {
+        bell
+        return 0
+    }
+}

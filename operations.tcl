@@ -1310,29 +1310,27 @@ proc Operations::SingleClickNode {node} {
     }
 
     if {[string match "MN-*" $node]} {
-	pack forget [lindex $f0 0]
-	pack forget [lindex $f1 0]
-	pack forget [lindex $f2 0]
-	[lindex $f2 1] cancelediting
-	[lindex $f2 1] configure -state disabled
-	pack [lindex $f3 0] -expand yes -fill both -padx 2 -pady 4
-	pack forget [lindex $f4 0]
+    	pack forget [lindex $f0 0]
+        pack forget [lindex $f1 0]
+    	pack forget [lindex $f2 0]
+    	[lindex $f2 1] cancelediting
+    	[lindex $f2 1] configure -state disabled
+    	pack [lindex $f3 0] -expand yes -fill both -padx 2 -pady 4
+    	pack forget [lindex $f4 0]
 	
-	Operations::MNProperties $node $nodePos $nodeId $nodeType
-
-	return
+    	Operations::MNProperties $node $nodePos $nodeId $nodeType
+        return
     } elseif {[string match "CN-*" $node]} {
-	pack forget [lindex $f0 0]
-	pack forget [lindex $f1 0]
-	pack forget [lindex $f2 0]
-	[lindex $f2 1] cancelediting
-	[lindex $f2 1] configure -state disabled
-	pack forget [lindex $f3 0]
-	pack [lindex $f4 0] -expand yes -fill both -padx 2 -pady 4
+    	pack forget [lindex $f0 0]
+    	pack forget [lindex $f1 0]
+    	pack forget [lindex $f2 0]
+    	[lindex $f2 1] cancelediting
+    	[lindex $f2 1] configure -state disabled
+    	pack forget [lindex $f3 0]
+    	pack [lindex $f4 0] -expand yes -fill both -padx 2 -pady 4
 	
-	set tmpInnerf0 [lindex $f4 1]
-	set tmpInnerf1 [lindex $f4 2]
-	return
+        Operations::CNProperties $node $nodePos $nodeId $nodeType
+    	return
     }
 
     if {[string match "TPDO-*" $node] || [string match "RPDO-*" $node]} {
@@ -1851,7 +1849,6 @@ proc Operations::MNProperties {node nodePos nodeId nodeType} {
     global f3
     global savedValueList
     global lastConv
-    global populatedPDOList
     global userPrefList
     global nodeSelect
     global MNDatalist
@@ -2001,6 +1998,98 @@ proc Operations::MNProperties {node nodePos nodeId nodeType} {
 
 
 
+}
+
+#---------------------------------------------------------------------------------------------------
+#  Operations::CNProperties
+# 
+#  Arguments : node       - select tree node path
+#              nodePos    - positoion of node in collection
+#              nodeId     - id of the node
+#              nodeType   - indicates the type as MN or CN
+#
+#  Results :  -
+#
+#  Description : displays the properties of selected CN
+#---------------------------------------------------------------------------------------------------
+proc Operations::CNProperties {node nodePos nodeId nodeType} {
+    global f4
+    global savedValueList
+    global lastConv
+    global userPrefList
+    global nodeSelect
+    global CNDatalist
+    global cnPropSaveBtn
+    
+    set tmpInnerf0 [lindex $f4 1]
+    set tmpInnerf1 [lindex $f4 2]
+    
+    #get node name and display it
+    set dummyNodeId [new_intp]
+    set catchErrCode [GetNodeAttributesbyNodePos $nodePos $dummyNodeId]
+    if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
+        if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+    	    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
+        } else {
+    	    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
+        }
+        return
+    }
+    set nodeName [lindex $catchErrCode 1]
+    $tmpInnerf0.en_nodeName delete 0 end
+    $tmpInnerf0.en_nodeName insert 0 $nodeName
+    
+    #configure the save button
+    $cnPropSaveBtn configure -command "NoteBookManager::SaveCNValue $nodePos $tmpInnerf0 $tmpInnerf1"
+    
+    #insert nodenumber
+    $tmpInnerf0.sp_nodeNo set $nodeId
+    
+    # value from 1F98 03 for PResponse Cycle time
+    set CNDatalist ""
+    set presponseCycleTimeResult [GetObjectValueData $nodePos $nodeId $nodeType [list 2 4 5] [lindex $Operations::PRES_TIMEOUT_OBJ 0] [lindex $Operations::PRES_TIMEOUT_OBJ 1] ]
+    if {[string equal "pass" [lindex $presponseCycleTimeResult 0]] == 1} {
+        if {[lindex $presponseCycleTimeResult 3] == "" } {
+            set presponseCycleTimeValue [lindex $presponseCycleTimeResult 2]
+        } else {
+            set presponseCycleTimeValue [lindex $presponseCycleTimeResult 3]
+        }
+        set presponseCycleTimeDatatype [lindex $presponseCycleTimeResult 1]
+        $tmpInnerf0.en_time configure -state normal -validate none -bg white
+        $tmpInnerf0.en_time delete 0 end
+        $tmpInnerf0.en_time insert 0 $presponseCycleTimeValue
+        set schRes [lsearch $userPrefList [list $nodeSelect *]]
+        if { $schRes != -1 } {
+            Operations::CheckConvertValue $tmpInnerf0.en_time $presponseCycleTimeDatatype [lindex [lindex $userPrefList $schRes] 1]
+            if { [lindex [lindex $userPrefList $schRes] 1] == "dec" } {
+                set lastConv dec
+                $tmpInnerf0.formatframe1.ra_dec select
+            } elseif { [lindex [lindex $userPrefList $schRes] 1] == "hex" } {
+                set lastConv hex
+                $tmpInnerf0.formatframe1.ra_hex select
+            } else {
+                return 
+            }
+        } else {
+            if {[string match -nocase "0x*" $presponseCycleTimeValue]} {
+                set lastConv hex
+                $tmpInnerf0.formatframe1.ra_hex select
+                $tmpInnerf0.en_time configure -validate key -vcmd "Validation::IsHex %P %s $tmpInnerf0.en_time %d %i $presponseCycleTimeDatatype"
+            } else {
+                set lastConv dec
+                $tmpInnerf0.formatframe1.ra_dec select
+                $tmpInnerf0.en_time configure -validate key -vcmd "Validation::IsDec %P $tmpInnerf0.en_time %d %i $presponseCycleTimeDatatype"
+            }    
+		    
+        }
+        lappend CNDatalist [list presponseCycleTimeDatatype $presponseCycleTimeDatatype]
+    } else {
+        #fail occured
+        $tmpInnerf0.en_time configure -state normal -validate none
+        $tmpInnerf0.en_time delete 0 end
+        $tmpInnerf0.en_time configure -state disabled
+    }
+    
 }
 
 #---------------------------------------------------------------------------------------------------

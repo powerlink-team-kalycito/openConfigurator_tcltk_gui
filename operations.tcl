@@ -300,22 +300,22 @@ proc Operations::tselectright {x y node} {
 #  Description : Displays or hide Console window according to option
 #---------------------------------------------------------------------------------------------------
 proc Operations::DisplayConsole {option} {
-    variable infotabs_notebook
-
-    set window [winfo parent $infotabs_notebook]
-    set window [winfo parent $window]
-    set pannedWindow [winfo parent $window]
-    update idletasks
-    if {$option} {
-        grid configure $pannedWindow.f0 -rowspan 1
-        grid $pannedWindow.sash1
-        grid $window
-        grid rowconfigure $pannedWindow 2 -minsize 100
-    } else  {
-        grid remove $window
-        grid remove $pannedWindow.sash1
-        grid configure $pannedWindow.f0 -rowspan 3
-    }
+    #variable infotabs_notebook
+    #
+    #set window [winfo parent $infotabs_notebook]
+    #set window [winfo parent $window]
+    #set pannedWindow [winfo parent $window]
+    #update idletasks
+    #if {$option} {
+    #    grid configure $pannedWindow.f0 -rowspan 1
+    #    grid $pannedWindow.sash1
+    #    grid $window
+    #    grid rowconfigure $pannedWindow 2 -minsize 100
+    #} else  {
+    #    grid remove $window
+    #    grid remove $pannedWindow.sash1
+    #    grid configure $pannedWindow.f0 -rowspan 3
+    #}
 }
 
 #---------------------------------------------------------------------------------------------------
@@ -522,7 +522,8 @@ proc Operations::openProject {projectfilename} {
     # API to get project settings
     set ra_autop [new_EAutoGeneratep]
     set ra_projp [new_EAutoSavep]
-    set catchErrCode [GetProjectSettings $ra_autop $ra_projp]
+    set videoMode [new_EViewModep]
+    set catchErrCode [GetProjectSettings $ra_autop $ra_projp $videoMode]
     set ErrCode [ocfmRetCode_code_get $catchErrCode]
     if { $ErrCode != 0 } {
 	    if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
@@ -532,10 +533,13 @@ proc Operations::openProject {projectfilename} {
 	    }
 	    set ra_auto 1
 	    set ra_proj 1
+        set videoMode 0
     } else {
 	    set ra_auto [EAutoGeneratep_value $ra_autop]
 	    set ra_proj [EAutoSavep_value $ra_projp]
+        set videoMode [EViewModep_value $videoMode]
     }
+    puts "Operations::openProject videoMode->$videoMode"
 
     Console::ClearMsgs
     if { $result == 1 } {
@@ -579,8 +583,9 @@ proc Operations::RePopulate { projectDir projectName } {
 	    set nodeCount [intp_value $count]
 	    for {set inc 0} {$inc < $nodeCount} {incr inc} {
 		    #API for getting node attributes based on node position
-		    set tmp_nodeId [new_intp]			
-		    set catchErrCode [GetNodeAttributesbyNodePos $inc $tmp_nodeId]
+		    set tmp_nodeId [new_intp]
+            set tmp_stationType [new_EStationTypep]
+		    set catchErrCode [GetNodeAttributesbyNodePos $inc $tmp_nodeId $tmp_stationType]
 		    set ErrCode [ocfmRetCode_code_get [lindex $catchErrCode 0]]
 		    if { $ErrCode == 0 } {
 			    set nodeId [intp_value $tmp_nodeId]
@@ -700,19 +705,12 @@ proc Operations::BasicFrames { } {
 		    }
            	}
 		{radiobutton "Advanced View" {all option} "Advanced View Mode" {}
-                    -variable Operations::viewType -value "ADVANCED"
+                    -variable Operations::viewType -value "EXPERT"
 		    -command {
 			Operations::ViewModeChanged 
 		    }
            	}
 		{separator}
-                {checkbutton "Show Output Console" {all option} "Show Console Window" {}
-                    -variable Operations::options(DisplayConsole)
-                    -command  {
-                        Operations::DisplayConsole $Operations::options(DisplayConsole)
-                        update idletasks
-                    }
-           	}
                 {checkbutton "Show Test Tree Browser" {all option} "Show Code Browser" {}
                     -variable Operations::options(showTree)
                     -command  {
@@ -886,11 +884,11 @@ proc Operations::BasicFrames { } {
     set pannedwindow2 [PanedWindow::create $pane.pannedwindow2 -side top]
     set pane1 [PanedWindow::add $pannedwindow2 -minsize 250]
     set pane2 [PanedWindow::add $pannedwindow2 -minsize 100]
-    set pane3 [PanedWindow::add $pannedwindow1 -minsize 100]
+    #set pane3 [PanedWindow::add $pannedwindow1 -minsize 100]
 
     set tree_notebook [NoteBook::create $pane1.nb]
     set notebook [NoteBook::create $pane2.nb]	
-    set infotabs_notebook [NoteBook::create $pane3.nb]
+    #set infotabs_notebook [NoteBook::create $pane3.nb]
 
     set pf1 [NoteBookManager::create_treeBrowserWindow $tree_notebook]
     set treeWindow [lindex $pf1 1]
@@ -911,13 +909,13 @@ proc Operations::BasicFrames { } {
     bind $treeWindow <Enter> { Operations::BindTree }
     bind $treeWindow <Leave> { Operations::UnbindTree }
 
-    set cf0 [NoteBookManager::create_infoWindow $infotabs_notebook "Info" 1]
-    set cf1 [NoteBookManager::create_infoWindow $infotabs_notebook "Error" 2]
-    set cf2 [NoteBookManager::create_infoWindow $infotabs_notebook "Warning" 3]
+    #set cf0 [NoteBookManager::create_infoWindow $infotabs_notebook "Info" 1]
+    #set cf1 [NoteBookManager::create_infoWindow $infotabs_notebook "Error" 2]
+    #set cf2 [NoteBookManager::create_infoWindow $infotabs_notebook "Warning" 3]
 
-    NoteBook::compute_size $infotabs_notebook
-    $infotabs_notebook configure -height 80
-    pack $infotabs_notebook -side bottom -fill both -expand yes -padx 4 -pady 4
+    #NoteBook::compute_size $infotabs_notebook
+    #$infotabs_notebook configure -height 80
+    #pack $infotabs_notebook -side bottom -fill both -expand yes -padx 4 -pady 4
 
     pack $pannedwindow1 -fill both -expand yes
     NoteBook::compute_size $tree_notebook
@@ -1089,7 +1087,7 @@ proc Operations::BasicFrames { } {
     pack $pannedwindow2 -fill both -expand yes
 
     $tree_notebook raise objectTree
-    $infotabs_notebook raise Console1
+    #$infotabs_notebook raise Console1
     pack $mainframe -fill both -expand yes
     set prgressindicator 0
     destroy .intro
@@ -1260,10 +1258,11 @@ proc Operations::SingleClickNode {node} {
 	    } elseif { $ra_proj == "2" } {
 		
 	    } else {
+            Validation::ResetPromptFlag
 		    return
 	    }
     }
-
+    Validation::ResetPromptFlag
     $indexSaveBtn configure -state normal
     $subindexSaveBtn configure -state normal
 
@@ -1545,6 +1544,8 @@ proc Operations::SingleClickNode {node} {
 	    [lindex $f2 1] configure -state disabled
 	    pack forget [lindex $f3 0]
 	    pack forget [lindex $f4 0]
+        
+        set saveButton $subindexSaveBtn
     } elseif {[string match "*Index*" $node]} {
 	    set tmpInnerf0 [lindex $f0 1]
 	    set tmpInnerf1 [lindex $f0 2]
@@ -1576,6 +1577,7 @@ proc Operations::SingleClickNode {node} {
 		    } else {
 			    lappend IndexProp []
 		    }
+            puts "Index properties ErrCode->$ErrCode"
 
 	    }
 	    $tmpInnerf0.en_idx1 configure -state normal
@@ -1591,7 +1593,12 @@ proc Operations::SingleClickNode {node} {
 	    pack forget [lindex $f3 0]
 	    pack forget [lindex $f4 0]
             
+        set saveButton $indexSaveBtn
     }
+    puts "node->$node datatype->[lindex $IndexProp 2] \n"
+    #configuring the index and subindex save buttons with object type
+    $saveButton configure -command "NoteBookManager::SaveValue [lindex $IndexProp 1] $tmpInnerf0 $tmpInnerf1"
+    
     if { [string match -nocase "A???" $indexId] } {
         $tmpInnerf0.frame1.ch_gen configure -state disabled
     } else {
@@ -1608,6 +1615,7 @@ proc Operations::SingleClickNode {node} {
     $tmpInnerf0.en_nam1 insert 0 [lindex $IndexProp 0]
     $tmpInnerf0.en_nam1 configure -bg $savedBg -validate key
 
+    # default value should only be enabled for index above 1FFF
     $tmpInnerf1.en_default1 configure -state normal -validate none
     $tmpInnerf1.en_default1 delete 0 end
     $tmpInnerf1.en_default1 insert 0 [lindex $IndexProp 4]
@@ -1627,21 +1635,35 @@ proc Operations::SingleClickNode {node} {
     $tmpInnerf1.en_upper1 insert 0 [lindex $IndexProp 8]
     $tmpInnerf1.en_upper1 configure -state $entryState -bg white -validate key
 
-    if { [expr 0x$indexId <= 0x1fff] } {
+#
+    if { [expr 0x$indexId > 0x1fff] || ([lindex $IndexProp 1] == "ARRAY") || ([lindex $IndexProp 1] == "VAR") } {
+        #call the api to get the data list
+        set catchErrCode [GetNodeDataTypes $nodeId $nodeType]
+        puts "GetNodeDataTypes nodeId->$nodeId errcode->[ocfmRetCode_code_get [lindex $catchErrCode 0]] catchErrCode----->$catchErrCode"
+        #TODO : populate the obtained datatype into the datatype combo box
+        #$tmpInnerf1.co_data1 configure -values
+    }
+    if { ( [expr 0x$indexId <= 0x1fff] ) && ( [lindex $IndexProp 1] != "VAR" ) } {
 
-	    grid remove $tmpInnerf1.co_obj1
-	    grid $tmpInnerf1.en_obj1
-	    $tmpInnerf1.en_obj1 configure -state normal
-	    $tmpInnerf1.en_obj1 delete 0 end
-	    $tmpInnerf1.en_obj1 insert 0 [lindex $IndexProp 1]
-	    $tmpInnerf1.en_obj1 configure -state disabled
-
-	    grid remove $tmpInnerf1.co_data1
-	    grid $tmpInnerf1.en_data1        
+        grid remove $tmpInnerf1.co_obj1
+        grid $tmpInnerf1.en_obj1
+        $tmpInnerf1.en_obj1 configure -state normal
+        $tmpInnerf1.en_obj1 delete 0 end
+        $tmpInnerf1.en_obj1 insert 0 [lindex $IndexProp 1]
+        $tmpInnerf1.en_obj1 configure -state disabled
+        
+	    if { [lindex $IndexProp 1] == "ARRAY" } {
+            grid remove $tmpInnerf1.en_data1
+    	    NoteBookManager::SetComboValue $tmpInnerf1.co_data1 [ string toupper [lindex $IndexProp 2]]
+    	    grid $tmpInnerf1.co_data1
+        } else {
+            grid remove $tmpInnerf1.co_data1
+            grid $tmpInnerf1.en_data1        
             $tmpInnerf1.en_data1 configure -state normal
             $tmpInnerf1.en_data1 delete 0 end
             $tmpInnerf1.en_data1 insert 0 [lindex $IndexProp 2]
             $tmpInnerf1.en_data1 configure -state $entryState -bg white
+        }
 
 	    grid remove $tmpInnerf1.co_access1
 	    grid $tmpInnerf1.en_access1
@@ -1670,12 +1692,21 @@ proc Operations::SingleClickNode {node} {
             grid $tmpInnerf1.frame1.ra_dec
 	    grid $tmpInnerf1.frame1.ra_hex
             
+        # if the index id is less than 1FFF and i object type is VAR then the object type cannot be changed
+        if { ( [expr 0x$indexId <= 0x1fff] ) && ( [lindex $IndexProp 1] == "VAR" ) } {
+            grid remove $tmpInnerf1.co_obj1
+            grid $tmpInnerf1.en_obj1
+            $tmpInnerf1.en_obj1 configure -state normal
+            $tmpInnerf1.en_obj1 delete 0 end
+            $tmpInnerf1.en_obj1 insert 0 [lindex $IndexProp 1]
+            $tmpInnerf1.en_obj1 configure -state disabled
+        } else {
+            grid remove $tmpInnerf1.en_obj1
+            NoteBookManager::SetComboValue $tmpInnerf1.co_obj1  [lindex $IndexProp 1]
+            grid $tmpInnerf1.co_obj1
+        }
 
-	    grid remove $tmpInnerf1.en_obj1
-	    NoteBookManager::SetComboValue $tmpInnerf1.co_obj1  [lindex $IndexProp 1]
-	    grid $tmpInnerf1.co_obj1
-
-            grid remove $tmpInnerf1.en_data1
+        grid remove $tmpInnerf1.en_data1
 	    NoteBookManager::SetComboValue $tmpInnerf1.co_data1 [ string toupper [lindex $IndexProp 2]]
 	    grid $tmpInnerf1.co_data1
         
@@ -1761,29 +1792,29 @@ proc Operations::SingleClickNode {node} {
         grid remove $tmpInnerf1.frame1.ra_hex
         $tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::IsHex %P %s $tmpInnerf1.en_value1 %d %i [lindex $IndexProp 2]" -bg $savedBg
     } elseif { [string match -nocase "INTEGER*" [lindex $IndexProp 2]] || [string match -nocase "UNSIGNED*" [lindex $IndexProp 2]] || [string match -nocase "BOOLEAN" [lindex $IndexProp 2]] } {
-	grid $tmpInnerf1.frame1.ra_dec
-	grid $tmpInnerf1.frame1.ra_hex
+        grid $tmpInnerf1.frame1.ra_dec
+        grid $tmpInnerf1.frame1.ra_hex
         set schRes [lsearch $userPrefList [list $nodeSelect *]]
         if { $schRes != -1 } {
-	    if { [lindex [lindex $userPrefList $schRes] 1] == "dec" } {
+            if { [lindex [lindex $userPrefList $schRes] 1] == "dec" } {
                 if {[string match -nocase "0x*" [lindex $IndexProp 5]]} {
                     set valueState [$tmpInnerf1.en_value1 cget -state]
-		    $tmpInnerf1.en_value1 configure -state normal -validate none
-		    NoteBookManager::InsertDecimal $tmpInnerf1.en_value1 [lindex $IndexProp 2]
-		    $tmpInnerf1.en_value1 configure -state $valueState -validate key -vcmd "Validation::IsDec %P $tmpInnerf1.en_value1 %d %i [lindex $IndexProp 2]" -bg $savedBg	
+                    $tmpInnerf1.en_value1 configure -state normal -validate none
+                    NoteBookManager::InsertDecimal $tmpInnerf1.en_value1 [lindex $IndexProp 2]
+                    $tmpInnerf1.en_value1 configure -state $valueState -validate key -vcmd "Validation::IsDec %P $tmpInnerf1.en_value1 %d %i [lindex $IndexProp 2]" -bg $savedBg	
                 } else {
-		    # actual value already in decimal 
-		}
-        	if {[string match -nocase "0x*" [lindex $IndexProp 4]]} {
-		    set defaultState [$tmpInnerf1.en_default1 cget -state]
-		    $tmpInnerf1.en_default1 configure -state normal 
-		    NoteBookManager::InsertDecimal $tmpInnerf1.en_default1 [lindex $IndexProp 2]
+                # actual value already in decimal 
+                }
+            	if {[string match -nocase "0x*" [lindex $IndexProp 4]]} {
+                    set defaultState [$tmpInnerf1.en_default1 cget -state]
+                    $tmpInnerf1.en_default1 configure -state normal 
+                    NoteBookManager::InsertDecimal $tmpInnerf1.en_default1 [lindex $IndexProp 2]
                     $tmpInnerf1.en_default1 configure -state $defaultState
-		} else {
-		    # default value already in decimal
-		}
-		set lastConv dec
-		$tmpInnerf1.frame1.ra_dec select
+            	} else {
+                    # default value already in decimal
+                }
+                set lastConv dec
+                $tmpInnerf1.frame1.ra_dec select
 	    } elseif { [lindex [lindex $userPrefList $schRes] 1] == "hex" } {
 		if {[string match -nocase "0x*" [lindex $IndexProp 5]]} {
 		    # actual already in hexadecimal 
@@ -1799,41 +1830,41 @@ proc Operations::SingleClickNode {node} {
 		    set defaultState [$tmpInnerf1.en_default1 cget -state]
 		    $tmpInnerf1.en_default1 configure -state normal
 		    NoteBookManager::InsertHex $tmpInnerf1.en_default1 [lindex $IndexProp 2]
-                    $tmpInnerf1.en_default1 configure -state $defaultState
+            $tmpInnerf1.en_default1 configure -state $defaultState
 		}
         	set lastConv hex
-		$tmpInnerf1.frame1.ra_hex select
+            $tmpInnerf1.frame1.ra_hex select
 	    } else {
-		return 
+            return 
 	    }
 	} else {
 	    if {[string match -nocase "0x*" [lindex $IndexProp 5]]} {
-		set lastConv hex
-		if {[string match -nocase "0x*" [lindex $IndexProp 4]]} {
-		    #default value is in hexadecimal
-		} else {
-		    set defaultState [$tmpInnerf1.en_default1 cget -state]
-		    $tmpInnerf1.en_default1 configure -state normal
-		    NoteBookManager::InsertHex $tmpInnerf1.en_default1 [lindex $IndexProp 2]
-		    $tmpInnerf1.en_default1 configure -state $defaultState
-		}
-		$tmpInnerf1.frame1.ra_hex select
-		$tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::IsHex %P %s $tmpInnerf1.en_value1 %d %i [lindex $IndexProp 2]" -bg $savedBg
+    		set lastConv hex
+    		if {[string match -nocase "0x*" [lindex $IndexProp 4]]} {
+    		    #default value is in hexadecimal
+    		} else {
+    		    set defaultState [$tmpInnerf1.en_default1 cget -state]
+    		    $tmpInnerf1.en_default1 configure -state normal
+    		    NoteBookManager::InsertHex $tmpInnerf1.en_default1 [lindex $IndexProp 2]
+    		    $tmpInnerf1.en_default1 configure -state $defaultState
+    		}
+    		$tmpInnerf1.frame1.ra_hex select
+    		$tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::IsHex %P %s $tmpInnerf1.en_value1 %d %i [lindex $IndexProp 2]" -bg $savedBg
 	    } else {
-		set lastConv dec
+    		set lastConv dec
 		    if {[string match -nocase "0x*" [lindex $IndexProp 4]]} {
-                        #convert default hexadecimal to decimal"
-			set defaultState [$tmpInnerf1.en_default1 cget -state]
-			$tmpInnerf1.en_default1 configure -state normal
-			NoteBookManager::InsertDecimal $tmpInnerf1.en_default1 [lindex $IndexProp 2]
-			$tmpInnerf1.en_default1 configure -state $defaultState
+                #convert default hexadecimal to decimal"
+        		set defaultState [$tmpInnerf1.en_default1 cget -state]
+        		$tmpInnerf1.en_default1 configure -state normal
+        		NoteBookManager::InsertDecimal $tmpInnerf1.en_default1 [lindex $IndexProp 2]
+        		$tmpInnerf1.en_default1 configure -state $defaultState
 		    } else {
-			#default value is in decimal
+        		#default value is in decimal
 		    }
 		    $tmpInnerf1.frame1.ra_dec select
 		    $tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::IsDec %P $tmpInnerf1.en_value1 %d %i [lindex $IndexProp 2]" -bg $savedBg
-	    }
-	}
+            }
+        }
     } else {
         set lastConv ""
         grid remove $tmpInnerf1.frame1.ra_dec
@@ -1859,12 +1890,13 @@ proc Operations::MNProperties {node nodePos nodeId nodeType} {
     
     #get node name and display it
     set dummyNodeId [new_intp]
-    set catchErrCode [GetNodeAttributesbyNodePos $nodePos $dummyNodeId]
+    set tmp_stationType [new_EStationTypep]
+    set catchErrCode [GetNodeAttributesbyNodePos $nodePos $dummyNodeId $tmp_stationType]
     if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
-	    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
+            tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
         } else {
-	    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
+            tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
         }
         return
     }
@@ -1975,6 +2007,16 @@ proc Operations::MNProperties {node nodePos nodeId nodeType} {
     #* Multiplexing Prescaler (MN parameter)
     #* Option is only enabled, if DLLMNFeatureMultiplex="true" in XDD
     # TODO : call API to check whether DLLMNFeatureMultiplex is "true"
+    #set catchErrCode [GetFeatureValue $nodeId $nodeType MN_FEATURES "DLLMNFeatureMultiplex" ]
+    #puts "GetFeatureValue $nodeId $nodeType MN_FEATURES DLLMNFeatureMultiplex -----catchErrCode---->$catchErrCode"
+    #if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
+    #    if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+    #        tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
+    #    } else {
+    #        tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
+    #    }
+    #}
+    
     set multiPrescaler [GetObjectValueData $nodePos $nodeId $nodeType [list 2 4 5] [lindex $Operations::MULTI_PRESCAL_OBJ 0] [lindex $Operations::MULTI_PRESCAL_OBJ 1] ]
     if {[string equal "pass" [lindex $multiPrescaler 0]] == 1} {
         if {[lindex $cycleTimeresult 3] == "" } {
@@ -1984,11 +2026,19 @@ proc Operations::MNProperties {node nodePos nodeId nodeType} {
         }
         set multiPrescalerDatatype [lindex $multiPrescaler 1]
         
-        $tmpInnerf1.en_advOption3 configure -state normal -validate none -bg white
-        $tmpInnerf1.en_advOption3 delete 0 end
-        $tmpInnerf1.en_advOption3 insert 0 $multiPrescalerValue
-        Operations::CheckConvertValue $tmpInnerf1.en_advOption3 $multiPrescalerDatatype $lastConv
-        lappend MNDatalist [list multiPrescalerDatatype $multiPrescalerDatatype]
+        if { ($multiPrescalerValue != "") && ( [string is int $multiPrescalerValue] == 1 ) && ([expr $multiPrescalerValue > 0]) } {
+        	$tmpInnerf1.en_advOption3 configure -state normal -validate none -bg white
+        	$tmpInnerf1.en_advOption3 delete 0 end
+        	$tmpInnerf1.en_advOption3 insert 0 $multiPrescalerValue
+        	Operations::CheckConvertValue $tmpInnerf1.en_advOption3 $multiPrescalerDatatype $lastConv
+        	lappend MNDatalist [list multiPrescalerDatatype $multiPrescalerDatatype]
+        } else {
+        	# if it is zero should be disabled
+        	$tmpInnerf1.en_advOption3 configure -state normal -validate none
+	        $tmpInnerf1.en_advOption3 delete 0 end
+	        $tmpInnerf1.en_advOption3 insert 0 $multiPrescalerValue
+        	$tmpInnerf1.en_advOption3 configure -state disabled
+        }
     } else {
         #fail occured
         $tmpInnerf1.en_advOption3 configure -state normal -validate none
@@ -2023,10 +2073,12 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
     
     set tmpInnerf0 [lindex $f4 1]
     set tmpInnerf1 [lindex $f4 2]
+    set tmpInnerf2 [lindex $f4 4]
     
     #get node name and display it
     set dummyNodeId [new_intp]
-    set catchErrCode [GetNodeAttributesbyNodePos $nodePos $dummyNodeId]
+    set tmp_stationType [new_EStationTypep]
+    set catchErrCode [GetNodeAttributesbyNodePos $nodePos $dummyNodeId $tmp_stationType]
     if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
     	    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
@@ -2040,7 +2092,7 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
     $tmpInnerf0.en_nodeName insert 0 $nodeName
     
     #configure the save button
-    $cnPropSaveBtn configure -command "NoteBookManager::SaveCNValue $nodePos $tmpInnerf0 $tmpInnerf1"
+    $cnPropSaveBtn configure -command "NoteBookManager::SaveCNValue $nodePos $nodeId $nodeType $tmpInnerf0 $tmpInnerf1"
     
     #insert nodenumber
     $tmpInnerf0.sp_nodeNo set $nodeId
@@ -2089,7 +2141,75 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
         $tmpInnerf0.en_time delete 0 end
         $tmpInnerf0.en_time configure -state disabled
     }
-    
+   
+   $tmpInnerf2.ch_adv deselect
+   $tmpInnerf2.ch_adv configure -state disabled
+   set spinVar [$tmpInnerf2.sp_cycleNo cget -textvariable]
+   global $spinVar
+   set $spinVar ""
+   $tmpInnerf2.sp_cycleNo configure -state disabled
+   
+   set stationType [EStationTypep_value $tmp_stationType]
+   puts " Operations::CNProperties node->$node $nodeId $nodeType stationType->$stationType $tmp_stationType catchErrCode->$catchErrCode"
+   $tmpInnerf1.ra_StNormal configure -state disabled
+   $tmpInnerf1.ra_StMulti configure -state disabled
+   $tmpInnerf1.ra_StChain configure -state disabled
+   if {$stationType == 0} {
+   	# it is normal operation
+   	$tmpInnerf1.ra_StNormal select
+   } elseif { $stationType == 1} {
+   	# it is multiplexed operation
+   	$tmpInnerf1.ra_StMulti select
+   } elseif { $stationType == 2 } {
+   	# it is chained operation
+   	$tmpInnerf1.ra_StChain select
+   	$tmpInnerf2.ch_adv configure -state normal
+   	$tmpInnerf2.sp_cycleNo configure -state normal -validate key
+   } else {
+   	#should not reach this condition
+   }
+   
+    set MN_FEATURES 1
+    set CN_FEATURES 2
+    set catchErrCode [GetFeatureValue $nodeId $nodeType $MN_FEATURES "DLLMNFeatureMultiplex" ]
+    puts "GetFeatureValue $nodeId $nodeType $MN_FEATURES DLLMNFeatureMultiplex successcode->[ocfmRetCode_code_get [lindex $catchErrCode 0]] -----catchErrCode---->$catchErrCode"
+    if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
+        if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+            tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
+        } else {
+            tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
+        }
+    }
+
+    set catchErrCode [GetFeatureValue $nodeId $nodeType $CN_FEATURES "DLLCNFeatureMultiplex" ]
+    puts "GetFeatureValue $nodeId $nodeType $CN_FEATURES DLLCNFeatureMultiplex successcode->[ocfmRetCode_code_get [lindex $catchErrCode 0]] -----catchErrCode---->$catchErrCode"
+    if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
+        if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+            tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
+        } else {
+            tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
+        }
+    }
+
+    set catchErrCode [GetFeatureValue $nodeId $nodeType $MN_FEATURES "DLLMNFeatureChaining" ]
+    puts "GetFeatureValue $nodeId $nodeType $MN_FEATURES DLLMNFeatureChaining successcode->[ocfmRetCode_code_get [lindex $catchErrCode 0]] -----catchErrCode---->$catchErrCode"
+    if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
+        if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+            tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
+        } else {
+            tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
+        }
+    }
+
+    set catchErrCode [GetFeatureValue $nodeId $nodeType $CN_FEATURES "DLLCNFeatureChaining" ]
+    puts "GetFeatureValue $nodeId $nodeType $CN_FEATURES DLLCNFeatureChaining successcode->[ocfmRetCode_code_get [lindex $catchErrCode 0]] -----catchErrCode---->$catchErrCode"
+    if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
+        if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+            tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
+        } else {
+            tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
+        }
+    }
 }
 
 #---------------------------------------------------------------------------------------------------

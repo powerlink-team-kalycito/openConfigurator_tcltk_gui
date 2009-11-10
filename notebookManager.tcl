@@ -160,7 +160,7 @@ proc NoteBookManager::create_tab { nbpath choice } {
     ComboBox $tabInnerf1.co_data1 -values $dataCoList -editable no -textvariable co_data -modifycmd "NoteBookManager::ChangeValidation $tabInnerf1 $tabInnerf1.co_data1" -width $comboWidth
     set objCoList [list DEFTYPE DEFSTRUCT VAR ARRAY RECORD]
     ComboBox $tabInnerf1.co_obj1 -values $objCoList -editable no -textvariable co_obj -modifycmd "NoteBookManager::ChangeValidation $tabInnerf1 $tabInnerf1.co_obj1" -width $comboWidth 
-    set accessCoList [list const ro wo rw readWriteInput readWriteOutput noAccess]
+    set accessCoList [list const ro wo rw]
     ComboBox $tabInnerf1.co_access1 -values $accessCoList -editable no -textvariable co_access -modifycmd "NoteBookManager::ChangeValidation $tabInnerf1 $tabInnerf1.co_access1" -width $comboWidth
     set pdoColist [list NO DEFAULT OPTIONAL RPDO TPDO]
     ComboBox $tabInnerf1.co_pdo1 -values $pdoColist -editable no -textvariable co_pdo -modifycmd "NoteBookManager::ChangeValidation $tabInnerf1 $tabInnerf1.co_pdo1" -width $comboWidth
@@ -259,9 +259,9 @@ proc NoteBookManager::create_tab { nbpath choice } {
     set fram [frame $frame.f1]  
     label $fram.la_empty -text "  " -height 1
     if { $choice == "index" } {
-        set indexSaveBtn [ button $fram.bt_sav -text " Save " -width 8 -command "NoteBookManager::SaveValue $tabInnerf0 $tabInnerf1"]
+        set indexSaveBtn [ button $fram.bt_sav -text " Save " -width 8 ]
     } elseif { $choice == "subindex" } {
-        set subindexSaveBtn [ button $fram.bt_sav -text " Save " -width 8 -command "NoteBookManager::SaveValue $tabInnerf0 $tabInnerf1"]
+        set subindexSaveBtn [ button $fram.bt_sav -text " Save " -width 8 ]
     }
     label $fram.la_empty1 -text "  "
     button $fram.bt_dis -text "Discard" -width 8 -command "NoteBookManager::DiscardValue $tabInnerf0 $tabInnerf1"
@@ -289,7 +289,7 @@ proc NoteBookManager::create_nodeFrame {nbpath choice} {
     variable _pageCounter
     incr _pageCounter
     
-    global ra_statType
+    global ra_statType$_pageCounter
     global ra_nodeDataType
     global tmpNodeName$_pageCounter
     global tmpNodeNo$_pageCounter
@@ -350,10 +350,9 @@ proc NoteBookManager::create_nodeFrame {nbpath choice} {
     set frame1 [frame $tabInnerf0.formatframe1]
     set ra_dec [radiobutton $frame1.ra_dec -text "Dec" -variable ra_nodeDataType -value "dec" -command ""]
     set ra_hex [radiobutton $frame1.ra_hex -text "Hex" -variable ra_nodeDataType -value "hex" -command ""]
-    set ra_StNormal [radiobutton $tabInnerf1.ra_StNormal -text "Normal station"      -variable ra_statType -value "StNormal" -command ""]
-    set ra_StMulti  [radiobutton $tabInnerf1.ra_StMulti  -text "Multiplexed station" -variable ra_statType -value "StMulti"  -command ""]
-    set ra_StChain  [radiobutton $tabInnerf1.ra_StChain  -text "Chained station"     -variable ra_statType -value "StChain"  -command ""]
-
+    set ra_StNormal [radiobutton $tabInnerf1.ra_StNormal -text "Normal station"      -variable ra_statType$_pageCounter -value "StNormal" ]
+    set ra_StMulti  [radiobutton $tabInnerf1.ra_StMulti  -text "Multiplexed station" -variable ra_statType$_pageCounter -value "StMulti" ]
+    set ra_StChain  [radiobutton $tabInnerf1.ra_StChain  -text "Chained station"     -variable ra_statType$_pageCounter -value "StChain" ]
 
     grid config $tabTitlef0 -row 0 -column 0 -sticky ew -ipady 7 ;# -ipadx 10
     #label $uf.la_empty -text ""
@@ -408,6 +407,8 @@ proc NoteBookManager::create_nodeFrame {nbpath choice} {
         spinbox $tabInnerf0.sp_nodeNo -state normal -textvariable co_cnNodeList$_pageCounter \
             -validate key -vcmd "Validation::CheckCnNodeNumber %P" -bg white -width $comboWidth \
             -from 1 -to 239 -increment 1 -justify center
+        
+        grid forget $tabInnerf0.en_nodeNo
         grid config $tabInnerf0.sp_nodeNo    -row 2 -column 2 -padx 5
         $tabInnerf0.la_time  configure -text "PollResponse Timeout"
         grid config $tabInnerf0.la_ms      -row 4 -column 3 -sticky w
@@ -427,14 +428,17 @@ proc NoteBookManager::create_nodeFrame {nbpath choice} {
         grid config $tabInnerf1.la_empty5 -row 3 -column 0
         grid config $ra_StChain           -row 4 -column 0 -sticky w -padx 5
         grid config $tabInnerf1.la_empty6 -row 5 -column 0
-        grid config $tabTitlef2           -row 6 -column 0 -sticky ew -columnspan 2;# -ipadx 10
+        grid config $tabTitlef2           -row 6 -column 0 -sticky ew -columnspan 2 -padx 7;# -ipadx 10
         grid config $tabInnerf1.la_empty7 -row 7 -column 0
         
         grid config $ch_adv                -row 0 -column 0
-        grid config $tabInnerf2.sp_cycleNo -row 0 -column 1
+        grid config $tabInnerf2.sp_cycleNo -row 0 -column 1 
         
-	    $ra_dec configure -command "NoteBookManager::ConvertCNDec $tabInnerf0 $tabInnerf1"
+	$ra_dec configure -command "NoteBookManager::ConvertCNDec $tabInnerf0 $tabInnerf1"
         $ra_hex configure -command "NoteBookManager::ConvertCNHex $tabInnerf0 $tabInnerf1"
+        $ra_StNormal configure -command "NoteBookManager::StationRadioChanged $tabInnerf2 StNormal"
+        $ra_StMulti configure -command "NoteBookManager::StationRadioChanged $tabInnerf2 StMulti"
+        $ra_StChain configure -command "NoteBookManager::StationRadioChanged $tabInnerf2 StChain"
     }
     grid config $tabTitlef1 -row 8 -column 1 -columnspan 2 -sticky ew
     
@@ -442,10 +446,10 @@ proc NoteBookManager::create_nodeFrame {nbpath choice} {
     label $fram.la_empty -text "  " -height 1
     if { $choice == "mn" } {
         set mnPropSaveBtn [ button $fram.bt_sav -text " Save " -width 8 -command ""]
-        set resultList [list $outerFrame $tabInnerf0 $tabInnerf1 $sf]
+        set resultList [list $outerFrame $tabInnerf0 $tabInnerf1 $sf ]
     } elseif { $choice == "cn" } {
         set cnPropSaveBtn [ button $fram.bt_sav -text " Save " -width 8 -command ""]
-        set resultList [list $outerFrame $tabInnerf0 $tabInnerf1 $sf]
+        set resultList [list $outerFrame $tabInnerf0 $tabInnerf1 $sf $tabInnerf2]
     }
     label $fram.la_empty1 -text "  "
     button $fram.bt_dis -text "Discard" -width 8 -command "NoteBookManager::DiscardValue $tabInnerf0 $tabInnerf1"
@@ -575,10 +579,10 @@ proc NoteBookManager::create_infoWindow {nbpath tabname choice} {
 
     $window configure -wrap word
     ScrolledWindow::setwidget $scrollWin $window
-    pack $scrollWin -fill both -expand yes
+    #pack $scrollWin -fill both -expand yes
 
     #raised the window after creating it 
-    $nbpath raise $nbname
+    #$nbpath raise $nbname
 
     return $frmPath
 }
@@ -1016,7 +1020,7 @@ proc NoteBookManager::CountLeadZero {input} {
 #
 #  Description : save the entered value for index and subindex
 #---------------------------------------------------------------------------------------------------
-proc NoteBookManager::SaveValue {frame0 frame1} {
+proc NoteBookManager::SaveValue { objectType frame0 frame1} {
     global nodeSelect
     global nodeIdList
     global treePath
@@ -1065,10 +1069,10 @@ proc NoteBookManager::SaveValue {frame0 frame1} {
     global $tmpVar1	
     set value [string toupper [subst $[subst $tmpVar1]] ]
 	
-    if { [expr 0x$indexId > 0x1fff] } {
+    if { [expr 0x$indexId > 0x1fff] || ( $objectType == "VAR" ) } {
         set dataType [NoteBookManager::GetComboValue $frame1.co_data1]
         set accessType [NoteBookManager::GetComboValue $frame1.co_access1]
-        set objectType [NoteBookManager::GetComboValue $frame1.co_obj1]
+        #set objectType [NoteBookManager::GetComboValue $frame1.co_obj1]
         set pdoType [NoteBookManager::GetComboValue $frame1.co_pdo1]
         set upperLimit [$frame1.en_upper1 get]
         set lowerLimit [$frame1.en_lower1 get]
@@ -1080,11 +1084,26 @@ proc NoteBookManager::SaveValue {frame0 frame1} {
                 set lowerLimit []
             }
         }
-        set default [$frame1.en_default1 get]
+        set default [NoteBookManager::GetEntryValue $frame1.en_default1]
     } else {
-        $frame1.en_data1 configure -state normal
-        set dataType [$frame1.en_data1 get]
-        $frame1.en_data1 configure -state disabled
+        if { $objectType == "ARRAY" } {
+            set dataType [NoteBookManager::GetComboValue $frame1.co_data1]
+            set pdoType [NoteBookManager::GetEntryValue $frame1.en_pdo1]
+            set upperLimit [NoteBookManager::GetEntryValue $frame1.en_upper1]
+            set lowerLimit [NoteBookManager::GetEntryValue $frame1.en_lower1]
+            if {[string match -nocase "INTEGER*" $dataType] || [string match -nocase "UNSIGNED*" $dataType] || [string match -nocase "BOOLEAN" $dataType] || [string match -nocase "REAL*" $dataType]} {
+                if {[string match -nocase "0x" $upperLimit]} {
+                    set upperLimit [] 
+                }
+                if {[string match -nocase "0x" $lowerLimit]} {
+                    set lowerLimit []
+                }
+            }
+        } else {
+            $frame1.en_data1 configure -state normal
+            set dataType [$frame1.en_data1 get]
+            $frame1.en_data1 configure -state disabled
+        }
         
         $frame1.en_access1 configure -state normal
         set accessType [$frame1.en_access1 get]
@@ -1192,11 +1211,15 @@ proc NoteBookManager::SaveValue {frame0 frame1} {
                     }
                 }
             }
-            set catchErrCode [SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName [subst $[subst $chkGen]] ]
+            if { ($objectType == "ARRAY") || ($objectType == "VAR") } {
+                set catchErrCode [SetAllSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName $accessType $dataType $pdoType $default $upperLimit $lowerLimit $objectType [subst $[subst $chkGen]] ]
+            } else {
+                set catchErrCode [SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName [subst $[subst $chkGen]] ]
+            }
         }
     } elseif {[string match "*IndexValue*" $nodeSelect]} {
         
-        if { [expr 0x$indexId > 0x1fff] } {
+        if { [expr 0x$indexId > 0x1fff] || ($objectType == "ARRAY") || ($objectType == "VAR") } {
             set catchErrCode [SetAllIndexAttributes $nodeId $nodeType $indexId $value $newName $accessType $dataType $pdoType $default $upperLimit $lowerLimit $objectType [subst $[subst $chkGen]] ]
         } else {
             set catchErrCode [SetIndexAttributes $nodeId $nodeType $indexId $value $newName [subst $[subst $chkGen]] ]
@@ -1357,7 +1380,7 @@ proc NoteBookManager::SaveMNValue {nodePos frame0 frame1} {
 #
 #  Description : save the entered value for MN property window
 #---------------------------------------------------------------------------------------------------
-proc NoteBookManager::SaveCNValue {nodePos frame0 frame1 } {
+proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 } {
     global nodeSelect
     global nodeIdList
     global treePath
@@ -1366,19 +1389,82 @@ proc NoteBookManager::SaveCNValue {nodePos frame0 frame1 } {
     global lastConv
     global status_save
     global CNDatalist
-    
+    global cnPropSaveBtn
 
-    #gets the nodeId and Type of selected node
-    set result [Operations::GetNodeIdType $nodeSelect]
-    if {$result != "" } {
-        set nodeId [lindex $result 0]
-        set nodeType [lindex $result 1]
-    } else {
-            #must be some other node this condition should never reach
-            return
-    }
+    ##gets the nodeId and Type of selected node
+    #set result [Operations::GetNodeIdType $nodeSelect]
+    #if {$result != "" } {
+    #    set nodeId [lindex $result 0]
+    #    set nodeType [lindex $result 1]
+    #} else {
+    #        #must be some other node this condition should never reach
+    #    Validation::ResetPromptFlag
+    #    return
+    #}
 	
     #save node name and node number
+    set newNodeId [$frame0.sp_nodeNo get]
+    set newNodeId [string trim $newNodeId]
+    if {  ( $newNodeId == "" ) || ( ( [string is int $newNodeId] == 1 ) && ( [expr $newNodeId <= 0] ) && ( [expr $newNodeId <= 239] ) ) } {
+        tk_messageBox -message "CN node should be in range 1 to 239" -title Warning -icon warning -parent .
+        Validation::ResetPromptFlag
+        return
+    }
+    # check whether the node is changed or not
+    if { $nodeId != $newNodeId } {
+    #    set tempNodePos [new_intp]
+    #    set ExistfFlag [new_boolp]
+    #    set catchErrCode [IfNodeExists $newNodeId $nodeType $tempNodePos $ExistfFlag]
+    #    set tempNodePos [intp_value $tempNodePos]
+    #    set ExistfFlag [boolp_value $ExistfFlag]
+    #    set ErrCode [ocfmRetCode_code_get $catchErrCode]
+    #    if { $ErrCode == 0  } {
+    #        if { $ExistfFlag == 0 } {
+    #            #the node does not exist continue    
+    #        } else {
+    #            tk_messageBox -message "The node number \"$newNodeId\" already exists" -title Warning -icon warning -parent .
+    #            Validation::ResetPromptFlag
+    #            return
+    #        }
+    #    } else {
+    #        if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+    #		    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -parent . -title Error -icon error
+    #	    } else {
+    #		    tk_messageBox -message "Unknown Error" -parent . -title Error -icon error
+    #	    }
+    #        Validation::ResetPromptFlag
+    #	    return
+    #    }
+    #chec k that the node id is not an existing node id
+        set schDataRes [lsearch $nodeIdList $newNodeId]
+        if { $schDataRes != -1 } {
+            tk_messageBox -message "The node number \"$newNodeId\" already exists" -title Warning -icon warning -parent .
+            Validation::ResetPromptFlag
+            return
+        }
+    }
+    set newNodeName [$frame0.en_nodeName get]
+    puts "newNodeId->$newNodeId newNodeName->$newNodeName"
+    #set catchErrCode [UpdateNodeParams $nodeId $newNodeId $newNodeName]
+    #set ErrCode [ocfmRetCode_code_get $catchErrCode]
+    #if { $ErrCode != 0 } {
+    #    if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+    #        tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
+    #    } else {
+    #        tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
+    #    }
+    #    Validation::ResetPromptFlag
+    #    return
+    #}
+    
+    #TODO:save is success reonfigure cnSaveButton and nodeIdlist
+    set schDataRes [lsearch $nodeIdList $nodeId]
+    puts "oldlist $nodeIdList"
+    set nodeIdList [lreplace $nodeIdList $schDataRes $schDataRes $newNodeId]
+    puts "newlist $nodeIdList"
+    #set nodeId $newNodeId
+    #$cnPropSaveBtn configure -command "NoteBookManager::SaveCNValue $nodePos $nodeId $nodeType $tmpInnerf0 $tmpInnerf1"
+    
     
     set radioSel [$frame0.formatframe1.ra_dec cget -variable]
     global $radioSel
@@ -1657,12 +1743,15 @@ proc NoteBookManager::DiscardTable {tableWid} {
 #  Description : gets the selected index and returns the corresponding value
 #---------------------------------------------------------------------------------------------------
 proc NoteBookManager::GetComboValue {comboPath} {
+    set comboState [$comboPath cget -state]
     set value [$comboPath getvalue]
     if { $value == -1 } {
         #nothing was selected
+        $comboPath configure -state $comboState
         return []
     }
     set valueList [$comboPath cget -values]
+    $comboPath configure -state $comboState
     return [lindex $valueList $value]
     
 }
@@ -1828,6 +1917,23 @@ proc NoteBookManager::ChangeValidation {framePath comboPath} {
 }
 
 #---------------------------------------------------------------------------------------------------
+#  NoteBookManager::GetEntryValue
+# 
+#  Arguments : entryPath - path of the entry box widget
+#	   
+#  Results : selected value
+#
+#  Description : gets the value entered in entry widget
+#---------------------------------------------------------------------------------------------------
+proc NoteBookManager::GetEntryValue {entryPath} {
+    set entryState [$entryPath cget -state]
+    set entryValue [$entryPath get]
+    $entryPath cget -state $entryState
+    return $entryValue
+    
+}
+
+#---------------------------------------------------------------------------------------------------
 #  NoteBookManager::GenerateCnNodeList
 # 
 #  Arguments : comboPath  - path of the Combobox widget
@@ -1843,6 +1949,29 @@ proc NoteBookManager::GenerateCnNodeList {} {
         lappend cnNodeList $inc
     }
     return $cnNodeList
+}
+
+#---------------------------------------------------------------------------------------------------
+#  NoteBookManager::StationRadioChanged
+# 
+#  Arguments : framePath   - path of frame containing the check button
+#              radioVal   - varaible of the radio buttons
+#	   
+#  Results : -
+#
+#  Description : enables or disasbles the spinbox based on the check button selection
+#---------------------------------------------------------------------------------------------------
+proc NoteBookManager::StationRadioChanged {framePath radioVal } {
+    if { $radioVal == "StNormal" } {
+    
+    } elseif { $radioVal == "StMulti" } {
+    
+    } elseif { $radioVal == "StChain" } {
+    	$tmpInnerf2.ch_adv configure -state normal
+    	$tmpInnerf2.sp_cycleNo configure  -state normal -validate key
+    } else {
+    
+    }
 }
 
 #---------------------------------------------------------------------------------------------------

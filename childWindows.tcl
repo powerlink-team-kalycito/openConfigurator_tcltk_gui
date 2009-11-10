@@ -189,8 +189,9 @@ proc ChildWindows::ProjectSettingWindow {} {
 	
     set ra_autop [new_EAutoGeneratep]
     set ra_projp [new_EAutoSavep]
+    set videoMode [new_EViewModep]
 
-    set catchErrCode [GetProjectSettings $ra_autop $ra_projp]
+    set catchErrCode [GetProjectSettings $ra_autop $ra_projp $videoMode]
     set ErrCode [ocfmRetCode_code_get $catchErrCode]
     if { $ErrCode != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
@@ -200,9 +201,12 @@ proc ChildWindows::ProjectSettingWindow {} {
         }
         set ra_auto 1
         set ra_proj 1
+        set videoMode 0
     } else {
         set ra_auto [EAutoGeneratep_value $ra_autop]
         set ra_proj [EAutoSavep_value $ra_projp]
+        set videoMode [EViewModep_value $videoMode]
+         puts "ChildWindows::ProjectSettingWindow videoMode->$videoMode"
     }
 	
     set winProjSett .projSett
@@ -242,7 +246,12 @@ proc ChildWindows::ProjectSettingWindow {} {
     ChildWindows::ProjectSettText $winProjSett.t_desc
 
     button $frame3.bt_ok -width 8 -text "Ok" -command {
-        set catchErrCode [SetProjectSettings $ra_auto $ra_proj]
+        if { $Operations::viewType == "EXPERT" } {
+            set viewType 1
+        } else {
+            set viewType 0
+        }
+        set catchErrCode [SetProjectSettings $ra_auto $ra_proj $viewType]
         set ErrCode [ocfmRetCode_code_get $catchErrCode]
         if { $ErrCode != 0 } {
             if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
@@ -260,15 +269,19 @@ proc ChildWindows::ProjectSettingWindow {} {
 	global ra_auto
 	set ra_autop [new_EAutoGeneratep]
         set ra_projp [new_EAutoSavep]
-        set catchErrCode [GetProjectSettings $ra_autop $ra_projp]
+            set videoMode [new_EViewModep]
+        set catchErrCode [GetProjectSettings $ra_autop $ra_projp $videoMode]
         set ErrCode [ocfmRetCode_code_get $catchErrCode]
         if { $ErrCode != 0 } {
             set ra_auto 1
             set ra_proj 1
+            set videoMode 0
         } else {
             set ra_auto [EAutoGeneratep_value $ra_autop]
             set ra_proj [EAutoSavep_value $ra_projp]
+            set videoMode [EViewModep_value $videoMode]
         }
+        puts "ChildWindows::ProjectSettingWindow videoMode->$videoMode"
 	destroy .projSett
     }
 	
@@ -914,18 +927,21 @@ proc ChildWindows::NewProjectWindow {} {
 		if { $projectDir != "" && $projectName != "" } {
 		    set ra_autop [new_EAutoGeneratep]
 		    set ra_projp [new_EAutoSavep]
-		    set catchErrCode [GetProjectSettings $ra_autop $ra_projp]
+                set videoMode [new_EViewModep]
+		    set catchErrCode [GetProjectSettings $ra_autop $ra_projp $videoMode]
 		    set ErrCode [ocfmRetCode_code_get $catchErrCode]
-		    if { $ErrCode != 0 } {
+		    if { $ErrCode == 0 } {
 		        set ra_auto [EAutoGeneratep_value $ra_autop]
 		        set ra_proj [EAutoSavep_value $ra_projp]
+                        set videoMode [EViewModep_value $videoMode]
 		    } else {
 		        set ra_auto 1
 		        set ra_proj 1
 		    }
-		}	
+		}
+            puts "ChildWindows::NewProjectWindow videoMode->$videoMode"
 	    }
-    
+
 	    catch {
 		    unset tmpPjtName
 		    unset tmpPjtDir
@@ -1115,7 +1131,12 @@ proc ChildWindows::NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf tempRa_
 	    }
     }
 
-    set catchErrCode [SetProjectSettings $tempRa_auto $tempRa_proj]
+    if { $Operations::viewType == "EXPERT" } {
+        set viewType 1
+    } else {
+        set viewType 0
+    }
+    set catchErrCode [SetProjectSettings $tempRa_auto $tempRa_proj $viewType]
     set ErrCode [ocfmRetCode_code_get $catchErrCode]
     if { $ErrCode != 0 } {
 	    if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {

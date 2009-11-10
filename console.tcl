@@ -120,27 +120,27 @@ proc Console::InitInfoWindow {win {width 60} {height 5}} {
 #---------------------------------------------------------------------------------------------------	
 proc Console::DisplayInfo {var {tag output} {win {}} {see 1}} {
 	
-    global infoWindow
-        
-    set promptChar $
-        
-    if {$win == {}} {
-	    set win [lindex $infoWindow 0]
-    }
-    $win configure -state normal
-    $win mark gravity promptChar right
-    $win insert end $var $tag
-    if {[string index $var [expr [string length $var]-1]] != "\n"} {
-	    $win insert end "\n"
-    }
-
-    $win insert end "$promptChar " promptChar
-    $win mark gravity promptChar left
-    if $see {$win see insert}
-    update
-    $win configure -state disabled
-    [lindex $infoWindow 1] raise [lindex $infoWindow 2]
-    return
+#    global infoWindow
+#        
+#    set promptChar $
+#        
+#    if {$win == {}} {
+#	    set win [lindex $infoWindow 0]
+#    }
+#    $win configure -state normal
+#    $win mark gravity promptChar right
+#    $win insert end $var $tag
+#    if {[string index $var [expr [string length $var]-1]] != "\n"} {
+#	    $win insert end "\n"
+#    }
+#
+#    $win insert end "$promptChar " promptChar
+#    $win mark gravity promptChar left
+#    if $see {$win see insert}
+#    update
+#    $win configure -state disabled
+#    [lindex $infoWindow 1] raise [lindex $infoWindow 2]
+#    return
 }
 
 #---------------------------------------------------------------------------------------------------
@@ -189,27 +189,27 @@ proc Console::InitErrorWindow {win {width 60} {height 5}} {
 #  Description :  Display the error message
 #---------------------------------------------------------------------------------------------------
 proc Console::DisplayErrMsg {var {tag output} {win {}} {see 1}} {
-    global errWindow
-
-    set promptChar $
-        
-    if {$win == {}} {
-	    set win [lindex $errWindow 0]
-    }
-    $win configure -state normal
-    $win mark gravity promptChar right
-    $win insert end $var $tag
-    if {[string index $var [expr [string length $var]-1]] != "\n"} {
-	    $win insert end "\n"
-    }
-
-    $win insert end "$promptChar " promptChar
-    $win mark gravity promptChar left
-    if $see {$win see insert}
-    update
-    $win configure -state disabled
-    [lindex $errWindow 1] raise [lindex $errWindow 2]
-    return
+#    global errWindow
+#
+#    set promptChar $
+#        
+#    if {$win == {}} {
+#	    set win [lindex $errWindow 0]
+#    }
+#    $win configure -state normal
+#    $win mark gravity promptChar right
+#    $win insert end $var $tag
+#    if {[string index $var [expr [string length $var]-1]] != "\n"} {
+#	    $win insert end "\n"
+#    }
+#
+#    $win insert end "$promptChar " promptChar
+#    $win mark gravity promptChar left
+#    if $see {$win see insert}
+#    update
+#    $win configure -state disabled
+#    [lindex $errWindow 1] raise [lindex $errWindow 2]
+#    return
 }
 
 #---------------------------------------------------------------------------------------------------
@@ -259,26 +259,26 @@ proc Console::InitWarnWindow {win {width 60} {height 5}} {
 #---------------------------------------------------------------------------------------------------
 proc Console::DisplayWarning {var {tag output} {win {}} {see 1}} {
 
-    global warWindow
-
-    set promptChar $
-    if {$win == {}} {
-	    set win [lindex $warWindow 0]
-    }
-    $win configure -state normal
-    $win mark gravity promptChar right
-    $win insert end $var $tag
-    if {[string index $var [expr [string length $var]-1]] != "\n"} {
-	    $win insert end "\n"
-    }
-
-    $win insert end "$promptChar " promptChar
-    $win mark gravity promptChar left
-    if $see {$win see insert}
-    update
-    $win configure -state disabled
-    [lindex $warWindow 1] raise [lindex $warWindow 2]
-    return
+#    global warWindow
+#
+#    set promptChar $
+#    if {$win == {}} {
+#	    set win [lindex $warWindow 0]
+#    }
+#    $win configure -state normal
+#    $win mark gravity promptChar right
+#    $win insert end $var $tag
+#    if {[string index $var [expr [string length $var]-1]] != "\n"} {
+#	    $win insert end "\n"
+#    }
+#
+#    $win insert end "$promptChar " promptChar
+#    $win mark gravity promptChar left
+#    if $see {$win see insert}
+#    update
+#    $win configure -state disabled
+#    [lindex $warWindow 1] raise [lindex $warWindow 2]
+#    return
 }
 
 #---------------------------------------------------------------------------------------------------
@@ -292,16 +292,16 @@ proc Console::DisplayWarning {var {tag output} {win {}} {see 1}} {
 #---------------------------------------------------------------------------------------------------
 proc Console::ClearMsgs {} {
 
-    global infoWindow
-    global warWindow
-    global errWindow
-
-    set promptChar $
-    foreach windowPath [list [lindex $infoWindow 0] [lindex $warWindow 0]  [lindex $errWindow 0] ] {
-	    $windowPath configure -state normal
-	    $windowPath delete 1.0 end
-	    $windowPath insert end "$promptChar " promptChar
-	    $windowPath configure -state disabled
-    }
+#    global infoWindow
+#    global warWindow
+#    global errWindow
+#
+#    set promptChar $
+#    foreach windowPath [list [lindex $infoWindow 0] [lindex $warWindow 0]  [lindex $errWindow 0] ] {
+#	    $windowPath configure -state normal
+#	    $windowPath delete 1.0 end
+#	    $windowPath insert end "$promptChar " promptChar
+#	    $windowPath configure -state disabled
+#    }
 	
 }

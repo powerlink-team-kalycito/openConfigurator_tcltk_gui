@@ -68,9 +68,11 @@
 namespace eval Operations {
     variable mnMenu
     variable cnMenu
+    variable cnMenuIndex
     variable projMenu    
     variable obdMenu    
-    variable idxMenu    
+    variable idxMenu
+    variable idxMenuDel
     variable mnCount
     variable cnCount
     variable notebook
@@ -275,19 +277,24 @@ proc Operations::tselectright {x y node} {
 	    tk_popup $Operations::projMenu $x $y 
     } elseif { [string match "MN-*" $node] == 1 } {
 	    tk_popup $Operations::mnMenu $x $y	
-    } elseif { [string match "CN-*" $node] == 1 } { 
-	    tk_popup $Operations::cnMenu $x $y 
-    } elseif { [string match "OBD-*" $node] == 1 } { 
+    } elseif { [string match "CN-*" $node] == 1 } {
+        if { $Operations::viewType == "SIMPLE"} {
+            tk_popup $Operations::cnMenu $x $y
+        } else {
+            tk_popup $Operations::cnMenuIndex $x $y
+        }
+    } elseif { ([string match "OBD-*" $node] == 1) && ( $Operations::viewType == "EXPERT" )} { 
 	    tk_popup $Operations::obdMenu $x $y	
     } elseif { [string match "PDO-*" $node] == 1 } { 
 	    tk_popup $Operations::pdoMenu $x $y	
-    } elseif {[string match "IndexValue-*" $node] == 1 || [string match "*PdoIndexValue-*" $node] == 1} { 
-	    tk_popup $Operations::idxMenu $x $y		
+    } elseif {[string match "IndexValue-*" $node] == 1 || [string match "*PdoIndexValue-*" $node] == 1} {
+        Operations::PopupIndexMenu $node $x $y
+        return
     } elseif {[string match "SubIndexValue-*" $node] == 1 || [string match "*PdoSubIndexValue-*" $node] == 1} { 
 	    tk_popup $Operations::sidxMenu $x $y	
     } else {
 	    return 
-    }   
+    }
 }
 
 #---------------------------------------------------------------------------------------------------
@@ -733,12 +740,16 @@ proc Operations::BasicFrames { } {
 
     # Menu for the Controlled Nodes
     set Operations::cnMenu [menu  .cnMenu -tearoff 0]
-    set Operations::IndexaddMenu .cnMenu.indexaddMenu
-    $Operations::cnMenu add command -label "Add Index..." -command "ChildWindows::AddIndexWindow"
     $Operations::cnMenu add command -label "Replace with XDC/XDD..." -command {Operations::ReImport}
     $Operations::cnMenu add separator
     $Operations::cnMenu add command -label "Delete" -command {Operations::DeleteTreeNode}
-    $Operations::cnMenu add command -label "Properties..." -command {ChildWindows::PropertiesWindow} 
+
+    # Menu for the Controlled Nodes with add index option
+    set Operations::cnMenuIndex [menu  .cnMenuIndex -tearoff 0]
+    $Operations::cnMenuIndex add command -label "Add Index..." -command "ChildWindows::AddIndexWindow"
+    $Operations::cnMenuIndex add command -label "Replace with XDC/XDD..." -command {Operations::ReImport}
+    $Operations::cnMenuIndex add separator
+    $Operations::cnMenuIndex add command -label "Delete" -command {Operations::DeleteTreeNode}
 
     # Menu for the Managing Nodes
     set Operations::mnMenu [menu  .mnMenu -tearoff 0]
@@ -747,8 +758,6 @@ proc Operations::BasicFrames { } {
     $Operations::mnMenu add separator
     $Operations::mnMenu add command -label "Auto Generate" -command {Operations::AutoGenerateMNOBD} 
     $Operations::mnMenu add command -label "Delete OBD" -command {Operations::DeleteTreeNode}
-    $Operations::mnMenu add separator
-    $Operations::mnMenu add command -label "Properties..." -command {ChildWindows::PropertiesWindow}
 
     # Menu for the Project
     set Operations::projMenu [menu  .projMenu -tearoff 0]
@@ -772,7 +781,13 @@ proc Operations::BasicFrames { } {
     $Operations::idxMenu add command -label "Add SubIndex..." -command "ChildWindows::AddSubIndexWindow"   
     $Operations::idxMenu add separator
     $Operations::idxMenu add command -label "Delete Index" -command {Operations::DeleteTreeNode}
-
+    
+    # Menu for the index with only delete option
+    set Operations::idxMenuDel [menu .idxMenuDel -tearoff 0]
+    $Operations::idxMenuDel add separator
+    $Operations::idxMenuDel add command -label "Delete Index" -command {Operations::DeleteTreeNode}
+    $Operations::idxMenuDel add separator
+    
     # Menu for the subindex
     set Operations::sidxMenu [menu .sidxMenu -tearoff 0]
     $Operations::sidxMenu add separator
@@ -4028,4 +4043,73 @@ proc Operations::SetVideoType {videoMode} {
     } else {
         set Operations::viewType "SIMPLE"
     }
+}
+
+#---------------------------------------------------------------------------------------------------
+#  Operations::CheckIndexObjecttype
+# 
+#  Arguments : node - node of selected index
+#
+#  Results : -
+#
+#  Description : returns the object type of index
+#---------------------------------------------------------------------------------------------------
+proc Operations::PopupIndexMenu {node x y} {
+    global treePath
+    #getting Id and Type of node
+    set result [Operations::GetNodeIdType $node]
+    if {$result == ""} {
+	    #the node is not an index, subindex, TPDO or RPDO do nothing
+	    return
+    } else {
+	    # it is index or subindex
+	    set nodeId [lindex $result 0]
+	    set nodeType [lindex $result 1]
+    }
+    
+    set nodePos [new_intp]
+    set ExistfFlag [new_boolp]
+    set catchErrCode [IfNodeExists $nodeId $nodeType $nodePos $ExistfFlag]
+    set nodePos [intp_value $nodePos]
+    set ExistfFlag [boolp_value $ExistfFlag]
+    set ErrCode [ocfmRetCode_code_get $catchErrCode]
+    if { $ErrCode == 0 && $ExistfFlag == 1 } {
+	    #the node exist continue 
+    } else {
+	    if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+		    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -parent . -title Error -icon error
+	    } else {
+		    tk_messageBox -message "Unknown Error" -parent . -title Error -icon error
+	    }
+	    return 
+    }
+    set indexId [string range [$treePath itemcget $node -text] end-4 end-1]
+    set indexPos [new_intp] 
+	set catchErrCode [IfIndexExists $nodeId $nodeType $indexId $indexPos]
+    if { [ocfmRetCode_code_get $catchErrCode] != 0 } {
+        if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+            tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
+        } else {
+            tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
+        }
+        return 
+    }
+	set indexPos [intp_value $indexPos]
+    #get the object type of index
+    set tempIndexProp [GetIndexAttributesbyPositions $nodePos $indexPos 1 ]
+    set ErrCode [ocfmRetCode_code_get [lindex $tempIndexProp 0]]
+    if {$ErrCode == 0} {
+        set objectType [lindex $tempIndexProp 1]
+    } else {
+        return
+    }
+    
+    if { ([string match -nocase "ARRAY" $objectType] == 1) || ([string match -nocase "RECORD" $objectType] == 1) } {
+        #it has subindex
+        tk_popup $Operations::idxMenu $x $y
+    } else {
+        #it has no subindex
+        tk_popup $Operations::idxMenuDel $x $y
+    }
+    
 }

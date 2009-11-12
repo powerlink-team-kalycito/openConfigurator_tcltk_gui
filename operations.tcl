@@ -328,22 +328,22 @@ proc Operations::DisplayConsole {option} {
 #  Description : Displays or hide Tree window according to option
 #---------------------------------------------------------------------------------------------------
 proc Operations::DisplayTreeWin {option} {
-    variable tree_notebook
-
-    set window [winfo parent $tree_notebook]
-    set window [winfo parent $window]
-    set pannedWindow [winfo parent $window]
-    update idletasks
-    if {$option} {
-        grid configure $pannedWindow.f1 -column 2 -columnspan 1
-        grid $pannedWindow.sash1
-        grid $window
-        grid columnconfigure $pannedWindow 0 -minsize 250
-    } else  {
-        grid remove $window
-        grid remove $pannedWindow.sash1
-        grid configure $pannedWindow.f1 -column 0 -columnspan 3
-    }
+    #variable tree_notebook
+    #
+    #set window [winfo parent $tree_notebook]
+    #set window [winfo parent $window]
+    #set pannedWindow [winfo parent $window]
+    #update idletasks
+    #if {$option} {
+    #    grid configure $pannedWindow.f1 -column 2 -columnspan 1
+    #    grid $pannedWindow.sash1
+    #    grid $window
+    #    grid columnconfigure $pannedWindow 0 -minsize 250
+    #} else  {
+    #    grid remove $window
+    #    grid remove $pannedWindow.sash1
+    #    grid configure $pannedWindow.f1 -column 0 -columnspan 3
+    #}
 }
 
 #---------------------------------------------------------------------------------------------------
@@ -516,9 +516,6 @@ proc Operations::openProject {projectfilename} {
     set projectDir $tempPjtDir 
     set projectName [string range $tempPjtName 0 end-[string length [file extension $tempPjtName]]]
 
-    set result [ Operations::RePopulate $projectDir $projectName ]
-    thread::send [tsv::set application importProgress] "StopProgress"
-
     # API to get project settings
     set ra_autop [new_EAutoGeneratep]
     set ra_projp [new_EAutoSavep]
@@ -533,13 +530,16 @@ proc Operations::openProject {projectfilename} {
 	    }
 	    set ra_auto 1
 	    set ra_proj 1
-        set videoMode 0
+        set Operations::viewType "SIMPLE"
     } else {
 	    set ra_auto [EAutoGeneratep_value $ra_autop]
 	    set ra_proj [EAutoSavep_value $ra_projp]
-        set videoMode [EViewModep_value $videoMode]
+        Operations::SetVideoType [EViewModep_value $videoMode]
     }
-    puts "Operations::openProject videoMode->$videoMode"
+    puts "Operations::openProject videoMode->$videoMode Operations::viewType->$Operations::viewType"
+
+    set result [ Operations::RePopulate $projectDir $projectName ]
+    thread::send [tsv::set application importProgress] "StopProgress"
 
     Console::ClearMsgs
     if { $result == 1 } {
@@ -681,50 +681,42 @@ proc Operations::BasicFrames { } {
     # Menu description
     set descmenu {
 	    "&File" {} {} 0 {           
-                {command "New &Project..." {} "New Project" {Ctrl n}  -command { Operations::InitiateNewProject } }
-                {command "Open Project..." {}  "Open Project" {Ctrl o} -command { Operations::OpenProjectWindow } }
-                {command "Save Project" {noFile}  "Save Project" {Ctrl s} -command Operations::Saveproject}
-                {command "Save Project as..." {noFile}  "Save Project as" {} -command ChildWindows::SaveProjectAsWindow }
-                {command "Close Project" {}  "Close Project" {} -command Operations::InitiateCloseProject }
-                {separator}
-                {command "E&xit" {}  "Exit openCONFIGURATOR" {Alt x} -command Operations::exit_app}
-        	}
-        	"&Project" {} {} 0 {
-        		{command "Build Project    F7" {noFile} "Generate CDC and XAP" {} -command Operations::BuildProject }
-        		{command "Clean Project" {noFile} "Clean" {} -command Operations::CleanProject }
-        		{separator}
-                        {command "Transfer         F6" {noFile} "Transfer CDC and XAP" {} -command Operations::Transfer }
-                        {separator}
-        		{command "Project Settings..." {}  "Project Settings" {} -command ChildWindows::ProjectSettingWindow }
-        	}
-        	"&View" all options 0 {
-		{radiobutton "Simple View" {all option} "Simple View Mode" {}
-                    -variable Operations::viewType -value "SIMPLE"
-		    -command {
-			Operations::ViewModeChanged
-		    }
-           	}
-		{radiobutton "Advanced View" {all option} "Advanced View Mode" {}
-                    -variable Operations::viewType -value "EXPERT"
-		    -command {
-			Operations::ViewModeChanged 
-		    }
-           	}
-		{separator}
-                {checkbutton "Show Test Tree Browser" {all option} "Show Code Browser" {}
-                    -variable Operations::options(showTree)
-                    -command  {
-                    Operations::DisplayTreeWin $Operations::options(showTree)
-                        update idletasks
-                    }
+            {command "New &Project..." {} "New Project" {Ctrl n}  -command { Operations::InitiateNewProject } }
+            {command "Open Project..." {}  "Open Project" {Ctrl o} -command { Operations::OpenProjectWindow } }
+            {command "Save Project" {noFile}  "Save Project" {Ctrl s} -command Operations::Saveproject}
+            {command "Save Project as..." {noFile}  "Save Project as" {} -command ChildWindows::SaveProjectAsWindow }
+            {command "Close Project" {}  "Close Project" {} -command Operations::InitiateCloseProject }
+            {separator}
+            {command "E&xit" {}  "Exit openCONFIGURATOR" {Alt x} -command Operations::exit_app}
+        }
+        "&Project" {} {} 0 {
+            {command "Build Project    F7" {noFile} "Generate CDC and XAP" {} -command Operations::BuildProject }
+            {command "Clean Project" {noFile} "Clean" {} -command Operations::CleanProject }
+            {separator}
+                    {command "Transfer         F6" {noFile} "Transfer CDC and XAP" {} -command Operations::Transfer }
+                    {separator}
+            {command "Project Settings..." {}  "Project Settings" {} -command ChildWindows::ProjectSettingWindow }
+        }
+        "&View" all options 0 {
+            {radiobutton "Simple View" {all option} "Simple View Mode" {}
+                -variable Operations::viewType -value "SIMPLE"
+                -command {
+                    Operations::ViewModeChanged
                 }
-        	}
-        	"&Help" {} {} 0 {
-                {command "How to" {noFile} "How to Manual" {} -command "Operations::OpenPdfDocu" }
-                {separator}
-                {command "About" {} "About" {F1} -command Operations::about }
-        	}
-	    }
+            }
+            {radiobutton "Advanced View" {all option} "Advanced View Mode" {}
+                -variable Operations::viewType -value "EXPERT"
+                -command {
+                    Operations::ViewModeChanged 
+                }
+            }
+        }
+        "&Help" {} {} 0 {
+            {command "How to" {noFile} "How to Manual" {} -command "Operations::OpenPdfDocu" }
+            {separator}
+            {command "About" {} "About" {F1} -command Operations::about }
+        }
+    }
 
     # to select the required check button in View menu
     set Operations::options(showTree) 1
@@ -920,7 +912,7 @@ proc Operations::BasicFrames { } {
     pack $pannedwindow1 -fill both -expand yes
     NoteBook::compute_size $tree_notebook
     $tree_notebook configure -width 350
-    $tree_notebook configure -height 390
+    $tree_notebook configure -height 490
     pack $tree_notebook -side left -fill both -expand yes -padx 2 -pady 4
     catch {font create TkFixedFont -family Courier -size -12 -weight bold}
 
@@ -1904,9 +1896,16 @@ proc Operations::MNProperties {node nodePos nodeId nodeType} {
     #configure the save button
     $mnPropSaveBtn configure -command "NoteBookManager::SaveMNValue $nodePos $tmpInnerf0 $tmpInnerf1"
     
+    if {[lsearch $savedValueList $node] != -1} {
+	    set savedBg #fdfdd4
+    } else {
+	    set savedBg white
+    }
+    
     set nodeName [lindex $catchErrCode 1]
     $tmpInnerf0.en_nodeName delete 0 end
     $tmpInnerf0.en_nodeName insert 0 $nodeName
+    $tmpInnerf0.en_nodeName configure -bg $savedBg
     
     #insert nodenumber
     $tmpInnerf0.en_nodeNo configure -state normal -validate none
@@ -1924,7 +1923,7 @@ proc Operations::MNProperties {node nodePos nodeId nodeType} {
             set cycleTimeValue [lindex $cycleTimeresult 3]
         }
         set cycleTimeDatatype [lindex $cycleTimeresult 1]
-        $tmpInnerf0.en_time configure -state normal -validate none -bg white
+        $tmpInnerf0.en_time configure -state normal -validate none -bg $savedBg
         $tmpInnerf0.en_time delete 0 end
         $tmpInnerf0.en_time insert 0 $cycleTimeValue
         set schRes [lsearch $userPrefList [list $nodeSelect *]]
@@ -1969,7 +1968,7 @@ proc Operations::MNProperties {node nodePos nodeId nodeType} {
         }
         set asynMTUSizeDatatype [lindex $asynMTUSizeResult 1]
         
-        $tmpInnerf1.en_advOption1 configure -state normal -validate none -bg white
+        $tmpInnerf1.en_advOption1 configure -state normal -validate none -bg $savedBg
         $tmpInnerf1.en_advOption1 delete 0 end
         $tmpInnerf1.en_advOption1 insert 0 $asynMTUSizeValue
         Operations::CheckConvertValue $tmpInnerf1.en_advOption1 $asynMTUSizeDatatype $lastConv
@@ -1991,7 +1990,7 @@ proc Operations::MNProperties {node nodePos nodeId nodeType} {
         }
         set asynTimeoutDatatype [lindex $asynTimeoutResult 1]
         
-        $tmpInnerf1.en_advOption2 configure -state normal -validate none -bg white
+        $tmpInnerf1.en_advOption2 configure -state normal -validate none -bg $savedBg
         $tmpInnerf1.en_advOption2 delete 0 end
         $tmpInnerf1.en_advOption2 insert 0 $asynTimeoutValue
         Operations::CheckConvertValue $tmpInnerf1.en_advOption2 $asynTimeoutDatatype $lastConv
@@ -2005,17 +2004,15 @@ proc Operations::MNProperties {node nodePos nodeId nodeType} {
 
     # value from 0x1F98/07 for Multiplexing prescaler
     #* Multiplexing Prescaler (MN parameter)
-    #* Option is only enabled, if DLLMNFeatureMultiplex="true" in XDD
-    # TODO : call API to check whether DLLMNFeatureMultiplex is "true"
-    #set catchErrCode [GetFeatureValue $nodeId $nodeType MN_FEATURES "DLLMNFeatureMultiplex" ]
-    #puts "GetFeatureValue $nodeId $nodeType MN_FEATURES DLLMNFeatureMultiplex -----catchErrCode---->$catchErrCode"
-    #if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
-    #    if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
-    #        tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
-    #    } else {
-    #        tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
-    #    }
-    #}
+    set catchErrCode [GetFeatureValue $nodeId $nodeType 1 "DLLMNFeatureMultiplex" ]
+    if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
+        if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+            tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
+        } else {
+            tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
+        }
+    }
+    set MNFeatureMultiplexFlag [lindex $catchErrCode 1]
     
     set multiPrescaler [GetObjectValueData $nodePos $nodeId $nodeType [list 2 4 5] [lindex $Operations::MULTI_PRESCAL_OBJ 0] [lindex $Operations::MULTI_PRESCAL_OBJ 1] ]
     if {[string equal "pass" [lindex $multiPrescaler 0]] == 1} {
@@ -2026,14 +2023,14 @@ proc Operations::MNProperties {node nodePos nodeId nodeType} {
         }
         set multiPrescalerDatatype [lindex $multiPrescaler 1]
         
-        if { ($multiPrescalerValue != "") && ( [string is int $multiPrescalerValue] == 1 ) && ([expr $multiPrescalerValue > 0]) } {
-        	$tmpInnerf1.en_advOption3 configure -state normal -validate none -bg white
+        if { ( [string match -nocase "TRUE" $MNFeatureMultiplexFlag] == 1 )  } {
+            #&& ($multiPrescalerValue != "") && ( [string is int $multiPrescalerValue] == 1 ) && ([expr $multiPrescalerValue > 0])
+        	$tmpInnerf1.en_advOption3 configure -state normal -validate none -bg $savedBg
         	$tmpInnerf1.en_advOption3 delete 0 end
         	$tmpInnerf1.en_advOption3 insert 0 $multiPrescalerValue
         	Operations::CheckConvertValue $tmpInnerf1.en_advOption3 $multiPrescalerDatatype $lastConv
         	lappend MNDatalist [list multiPrescalerDatatype $multiPrescalerDatatype]
         } else {
-        	# if it is zero should be disabled
         	$tmpInnerf1.en_advOption3 configure -state normal -validate none
 	        $tmpInnerf1.en_advOption3 delete 0 end
 	        $tmpInnerf1.en_advOption3 insert 0 $multiPrescalerValue
@@ -2087,9 +2084,17 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
         }
         return
     }
+    
+    if {[lsearch $savedValueList $node] != -1} {
+	    set savedBg #fdfdd4
+    } else {
+	    set savedBg white
+    }
+    
     set nodeName [lindex $catchErrCode 1]
     $tmpInnerf0.en_nodeName delete 0 end
     $tmpInnerf0.en_nodeName insert 0 $nodeName
+    $tmpInnerf0.en_nodeName configure -bg $savedBg
     
     #configure the save button
     $cnPropSaveBtn configure -command "NoteBookManager::SaveCNValue $nodePos $nodeId $nodeType $tmpInnerf0 $tmpInnerf1"
@@ -2107,7 +2112,7 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
             set presponseCycleTimeValue [lindex $presponseCycleTimeResult 3]
         }
         set presponseCycleTimeDatatype [lindex $presponseCycleTimeResult 1]
-        $tmpInnerf0.en_time configure -state normal -validate none -bg white
+        $tmpInnerf0.en_time configure -state normal -validate none -bg $savedBg
         $tmpInnerf0.en_time delete 0 end
         $tmpInnerf0.en_time insert 0 $presponseCycleTimeValue
         set schRes [lsearch $userPrefList [list $nodeSelect *]]
@@ -2151,28 +2156,18 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
    
    set stationType [EStationTypep_value $tmp_stationType]
    puts " Operations::CNProperties node->$node $nodeId $nodeType stationType->$stationType $tmp_stationType catchErrCode->$catchErrCode"
-   $tmpInnerf1.ra_StNormal configure -state disabled
+   
+   $tmpInnerf1.ra_StMulti deselect
    $tmpInnerf1.ra_StMulti configure -state disabled
+   $tmpInnerf1.ra_StChain deselect
    $tmpInnerf1.ra_StChain configure -state disabled
-   if {$stationType == 0} {
-   	# it is normal operation
-   	$tmpInnerf1.ra_StNormal select
-   } elseif { $stationType == 1} {
-   	# it is multiplexed operation
-   	$tmpInnerf1.ra_StMulti select
-   } elseif { $stationType == 2 } {
-   	# it is chained operation
-   	$tmpInnerf1.ra_StChain select
-   	$tmpInnerf2.ch_adv configure -state normal
-   	$tmpInnerf2.sp_cycleNo configure -state normal -validate key
-   } else {
-   	#should not reach this condition
-   }
+   $tmpInnerf1.ra_StNormal select
+   #Normal operation always enabled
    
     set MN_FEATURES 1
     set CN_FEATURES 2
-    set catchErrCode [GetFeatureValue $nodeId $nodeType $MN_FEATURES "DLLMNFeatureMultiplex" ]
-    puts "GetFeatureValue $nodeId $nodeType $MN_FEATURES DLLMNFeatureMultiplex successcode->[ocfmRetCode_code_get [lindex $catchErrCode 0]] -----catchErrCode---->$catchErrCode"
+    set catchErrCode [GetFeatureValue 240 0 $MN_FEATURES "DLLMNFeatureMultiplex" ]
+    puts "GetFeatureValue 240 0 $MN_FEATURES DLLMNFeatureMultiplex successcode->[ocfmRetCode_code_get [lindex $catchErrCode 0]] -----catchErrCode---->$catchErrCode"
     if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
             tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
@@ -2180,6 +2175,7 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
             tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
         }
     }
+    set MNFeatureMultiplexFlag [lindex $catchErrCode 1]
 
     set catchErrCode [GetFeatureValue $nodeId $nodeType $CN_FEATURES "DLLCNFeatureMultiplex" ]
     puts "GetFeatureValue $nodeId $nodeType $CN_FEATURES DLLCNFeatureMultiplex successcode->[ocfmRetCode_code_get [lindex $catchErrCode 0]] -----catchErrCode---->$catchErrCode"
@@ -2190,9 +2186,10 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
             tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
         }
     }
+    set CNFeatureMultiplexFlag [lindex $catchErrCode 1]
 
-    set catchErrCode [GetFeatureValue $nodeId $nodeType $MN_FEATURES "DLLMNFeatureChaining" ]
-    puts "GetFeatureValue $nodeId $nodeType $MN_FEATURES DLLMNFeatureChaining successcode->[ocfmRetCode_code_get [lindex $catchErrCode 0]] -----catchErrCode---->$catchErrCode"
+    set catchErrCode [GetFeatureValue 240 0 $MN_FEATURES "DLLMNFeatureChaining" ]
+    puts "GetFeatureValue 240 0 $MN_FEATURES DLLMNFeatureChaining successcode->[ocfmRetCode_code_get [lindex $catchErrCode 0]] -----catchErrCode---->$catchErrCode"
     if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
             tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
@@ -2200,6 +2197,7 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
             tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
         }
     }
+    set MNFeatureChainFlag [lindex $catchErrCode 1]
 
     set catchErrCode [GetFeatureValue $nodeId $nodeType $CN_FEATURES "DLLCNFeatureChaining" ]
     puts "GetFeatureValue $nodeId $nodeType $CN_FEATURES DLLCNFeatureChaining successcode->[ocfmRetCode_code_get [lindex $catchErrCode 0]] -----catchErrCode---->$catchErrCode"
@@ -2210,6 +2208,24 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
             tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
         }
     }
+    set CNFeatureChainFlag [lindex $catchErrCode 1]
+    
+    if { ( [string match -nocase "TRUE" $MNFeatureMultiplexFlag] == 1 ) && ( [string match -nocase "TRUE" $CNFeatureMultiplexFlag] == 1 ) } {
+        $tmpInnerf1.ra_StMulti configure -state normal
+        if {$stationType == 1} {
+           	# it is multiplexed operation
+           	$tmpInnerf1.ra_StMulti select
+        }
+    } elseif { ( [string match -nocase "TRUE" $MNFeatureChainFlag] == 1 ) && ( [string match -nocase "TRUE" $CNFeatureChainFlag] == 1 ) } {
+        $tmpInnerf1.ra_StChain configure -state normal
+        if {$stationType == 2} {
+           	# it is chained operation
+           	$tmpInnerf1.ra_StChain select
+            $tmpInnerf2.ch_adv configure -state normal
+            $tmpInnerf2.sp_cycleNo configure -state normal -validate key
+        }
+    }
+    
 }
 
 #---------------------------------------------------------------------------------------------------
@@ -3969,9 +3985,47 @@ proc Operations::Sleep { ms } {
 proc Operations::ViewModeChanged {} {
     global projectDir
     global projectName
+    global ra_proj
+    global ra_auto
     
     if { $projectDir == "" || $projectName == "" } {
-	return
+        return
     }
+    #save the project setting
+    if { $Operations::viewType == "EXPERT" } {
+        set viewType 1
+    } else {
+        set viewType 0
+    }
+    set catchErrCode [SetProjectSettings $ra_auto $ra_proj $viewType]
+    set ErrCode [ocfmRetCode_code_get $catchErrCode]
+    if { $ErrCode != 0 } {
+	    if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+		    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
+	    } else {
+		    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
+	    }
+    }
+    
+    #rebuild the tree
     Operations::RePopulate $projectDir [string range $projectName 0 end-[string length [file extension $projectName] ] ]
+}
+
+
+#---------------------------------------------------------------------------------------------------
+#  Operations::SetVideoType
+# 
+#  Arguments : videoMode - pointer of enum ViewMode
+#
+#  Results : -
+#
+#  Description : sets the view radio buttons based on the viewmode value from API
+#---------------------------------------------------------------------------------------------------
+proc Operations::SetVideoType {videoMode} {
+    puts "Operations::SetVideoType videoMode->$videoMode"
+    if { $videoMode == 1} {
+        set Operations::viewType "EXPERT"
+    } else {
+        set Operations::viewType "SIMPLE"
+    }
 }

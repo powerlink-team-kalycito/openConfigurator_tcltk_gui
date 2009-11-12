@@ -264,12 +264,12 @@ proc ChildWindows::ProjectSettingWindow {} {
     }
 	
     button $frame3.bt_cancel -width 8 -text "Cancel" -command {
-	#if cancel is called project settings for existing project is called
-	global ra_proj
-	global ra_auto
-	set ra_autop [new_EAutoGeneratep]
+        #if cancel is called project settings for existing project is called
+        global ra_proj
+        global ra_auto
+        set ra_autop [new_EAutoGeneratep]
         set ra_projp [new_EAutoSavep]
-            set videoMode [new_EViewModep]
+        set videoMode [new_EViewModep]
         set catchErrCode [GetProjectSettings $ra_autop $ra_projp $videoMode]
         set ErrCode [ocfmRetCode_code_get $catchErrCode]
         if { $ErrCode != 0 } {
@@ -282,45 +282,45 @@ proc ChildWindows::ProjectSettingWindow {} {
             set videoMode [EViewModep_value $videoMode]
         }
         puts "ChildWindows::ProjectSettingWindow videoMode->$videoMode"
-	destroy .projSett
+    	destroy .projSett
     }
 	
     #grid config $winProjSett.la_empty1 -row 0 -column 0
 
     #grid config $winProjSett.la_save -row 1 -column 0 -sticky w
     
-grid config $framea -row 0 -column 0 -sticky w -padx 10 -pady 10
-grid config $framea.la_save -row 0 -column 0 -sticky w
+    grid config $framea -row 0 -column 0 -sticky w -padx 10 -pady 10
+    grid config $framea.la_save -row 0 -column 0 -sticky w
     #grid config $frame1 -row 2 -column 0 -padx 10 -sticky w
     #grid config $frame1.ra_autoSave -row 0 -column 0
     #grid config $frame1.ra_prompt -row 0 -column 1 -padx 5
     #grid config $frame1.ra_discard -row 0 -column 2
-grid config $frame1 -row 1 -column 0 -padx 10 -sticky w
-grid config $frame1.ra_autoSave -row 0 -column 0
-grid config $frame1.ra_prompt -row 0 -column 1 -padx 5
-grid config $frame1.ra_discard -row 0 -column 2
+    grid config $frame1 -row 1 -column 0 -padx 10 -sticky w
+    grid config $frame1.ra_autoSave -row 0 -column 0
+    grid config $frame1.ra_prompt -row 0 -column 1 -padx 5
+    grid config $frame1.ra_discard -row 0 -column 2
 
     #grid config $winProjSett.la_empty2 -row 3 -column 0
 
     #grid config $winProjSett.la_auto -row 4 -column 0 -sticky w
-grid config $frameb -row 1 -column 0 -sticky w -padx 10 -pady 10
-grid config $frameb.la_auto -row 0 -column 0 -sticky w
+    grid config $frameb -row 1 -column 0 -sticky w -padx 10 -pady 10
+    grid config $frameb.la_auto -row 0 -column 0 -sticky w
     #grid config $frame2 -row 5 -column 0 -padx 10 -sticky w
     #grid config $frame2.ra_genYes -row 0 -column 0 -padx 2
     #grid config $frame2.ra_genNo -row 0 -column 1 -padx 2
-grid config $frame2 -row 1 -column 0 -padx 10 -sticky w
-grid config $frame2.ra_genYes -row 0 -column 0 -padx 2
-grid config $frame2.ra_genNo -row 0 -column 1 -padx 2
+    grid config $frame2 -row 1 -column 0 -padx 10 -sticky w
+    grid config $frame2.ra_genYes -row 0 -column 0 -padx 2
+    grid config $frame2.ra_genNo -row 0 -column 1 -padx 2
 
     #grid config $winProjSett.la_empty3 -row 6 -column 0 
     #grid config $winProjSett.t_desc -row 7 -column 0 -padx 10 -pady 10 -sticky news
-grid config $winProjSett.t_desc -row 2 -column 0 -padx 10 -pady 10 -sticky news    
+    grid config $winProjSett.t_desc -row 2 -column 0 -padx 10 -pady 10 -sticky news    
     #grid config $frame3 -row 8 -column 0 -pady 10 
     #grid config $frame3.bt_ok -row 0 -column 0
     #grid config $frame3.bt_cancel -row 0 -column 1
-grid config $frame3 -row 8 -column 0 -pady 10 
-grid config $frame3.bt_ok -row 0 -column 0
-grid config $frame3.bt_cancel -row 0 -column 1
+    grid config $frame3 -row 8 -column 0 -pady 10 
+    grid config $frame3.bt_ok -row 0 -column 0
+    grid config $frame3.bt_cancel -row 0 -column 1
     
     wm protocol .projSett WM_DELETE_WINDOW "$frame3.bt_cancel invoke"
     bind $winProjSett <KeyPress-Return> "$frame3.bt_ok invoke"
@@ -802,6 +802,8 @@ proc ChildWindows::NewProjectWindow {} {
 	    }
 
 	    catch { destroy .newprj }
+        #all new projects have "SIMPLE" type
+        set Operations::viewType "SIMPLE"
 	    ChildWindows::NewProjectCreate $tmpPjtDir $tmpPjtName $tmpImpDir $conf $ra_proj $ra_auto
 	    catch {
 		    unset tmpPjtName
@@ -927,17 +929,18 @@ proc ChildWindows::NewProjectWindow {} {
 		if { $projectDir != "" && $projectName != "" } {
 		    set ra_autop [new_EAutoGeneratep]
 		    set ra_projp [new_EAutoSavep]
-                set videoMode [new_EViewModep]
+            set videoMode [new_EViewModep]
 		    set catchErrCode [GetProjectSettings $ra_autop $ra_projp $videoMode]
 		    set ErrCode [ocfmRetCode_code_get $catchErrCode]
 		    if { $ErrCode == 0 } {
 		        set ra_auto [EAutoGeneratep_value $ra_autop]
 		        set ra_proj [EAutoSavep_value $ra_projp]
-                        set videoMode [EViewModep_value $videoMode]
+                Operations::SetVideoType [EViewModep_value $videoMode]
 		    } else {
 		        set ra_auto 1
 		        set ra_proj 1
-		    }
+                Operations::SetVideoType 0
+            }
 		}
             puts "ChildWindows::NewProjectWindow videoMode->$videoMode"
 	    }

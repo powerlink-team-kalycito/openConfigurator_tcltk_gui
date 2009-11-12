@@ -399,36 +399,36 @@ proc NoteBookManager::create_nodeFrame {nbpath choice} {
         $ra_hex configure -command "NoteBookManager::ConvertMNHex $tabInnerf0 $tabInnerf1"
     } elseif { $choice == "cn" } {
         if {"$tcl_platform(platform)" == "windows"} {
-            set comboWidth 17
+            set spinWidth 19
         } else {
-            set comboWidth 18
+            set spinWidth 19
         }
         set cnNodeList [NoteBookManager::GenerateCnNodeList]
         spinbox $tabInnerf0.sp_nodeNo -state normal -textvariable co_cnNodeList$_pageCounter \
-            -validate key -vcmd "Validation::CheckCnNodeNumber %P" -bg white -width $comboWidth \
-            -from 1 -to 239 -increment 1 -justify center
+            -validate key -vcmd "Validation::CheckCnNodeNumber %P" -bg white \
+            -from 1 -to 239 -increment 1 -justify center -width $spinWidth
         
         grid forget $tabInnerf0.en_nodeNo
         grid config $tabInnerf0.sp_nodeNo    -row 2 -column 2 -padx 5
         $tabInnerf0.la_time  configure -text "PollResponse Timeout"
         grid config $tabInnerf0.la_ms      -row 4 -column 3 -sticky w
-        
+        #grid config $tabInnerf0.en_time -in $tabInnerf0.la_ms 
         $tabInnerf0.tabTitlef1 configure -text "Type of station" 
 	
         set tabTitlef2 [TitleFrame $tabInnerf1.tabTitlef2 -text "Advanced" ]
         set tabInnerf2 [$tabTitlef2 getframe]
-        set ch_adv [checkbutton $tabInnerf2.ch_adv -onvalue 1 -offvalue 0 -command "NoteBookManager::forceCycleCheked $tabInnerf2 ch_advanced" -variable ch_advanced -text "Force Cycle"]
+        set ch_adv [checkbutton $tabInnerf2.ch_adv -onvalue 1 -offvalue 0 -command "NoteBookManager::forceCycleChecked $tabInnerf2 ch_advanced" -variable ch_advanced -text "Force Cycle"]
         spinbox $tabInnerf2.sp_cycleNo -state normal -textvariable spCycleNoList$_pageCounter \
-            -bg white -width $comboWidth \
+            -bg white -width $spinWidth \
             -from 1 -to 239 -increment 1 -justify center
-    
+        
         grid config $ra_StNormal          -row 0 -column 0 -sticky w -padx 5
         grid config $tabInnerf1.la_empty4 -row 1 -column 0
         grid config $ra_StMulti           -row 2 -column 0 -sticky w -padx 5
         grid config $tabInnerf1.la_empty5 -row 3 -column 0
         grid config $ra_StChain           -row 4 -column 0 -sticky w -padx 5
-        grid config $tabInnerf1.la_empty6 -row 5 -column 0
-        grid config $tabTitlef2           -row 6 -column 0 -sticky ew -columnspan 2 -padx 7;# -ipadx 10
+        #grid config $tabInnerf1.la_empty6 -row 5 -column 0 -columnspan 2
+        grid config $tabTitlef2           -row 5 -column 0 -sticky e -columnspan 2 -padx 20;# -ipadx 10
         grid config $tabInnerf1.la_empty7 -row 7 -column 0
         
         grid config $ch_adv                -row 0 -column 0
@@ -1244,7 +1244,9 @@ proc NoteBookManager::SaveValue { objectType frame0 frame1} {
     Validation::ResetPromptFlag	
     set newName [append newName $oldName]
     $treePath itemconfigure $nodeSelect -text $newName
-    lappend savedValueList $nodeSelect
+    if { [lsearch $savedValueList $nodeSelect] == -1 } {
+        lappend savedValueList $nodeSelect
+    }
     $frame0.en_nam1 configure -bg #fdfdd4
     $frame1.en_value1 configure -bg #fdfdd4
     $frame1.en_value1 configure -state $state
@@ -1305,6 +1307,22 @@ proc NoteBookManager::SaveMNValue {nodePos frame0 frame1} {
             return
     }
 	
+    set newNodeName [$frame0.en_nodeName get]
+    set stationType 0
+    set catchErrCode [UpdateNodeParams $nodeId $nodeId $nodeType $newNodeName $stationType ""]
+    set ErrCode [ocfmRetCode_code_get $catchErrCode]
+    if { $ErrCode != 0 } {
+        if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+            tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
+        } else {
+            tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
+        }
+        Validation::ResetPromptFlag
+        return
+    }
+    #reconfiguring the tree
+    $treePath itemconfigure $nodeSelect -text "$newNodeName\($nodeId\)"
+    
     set radioSel [$frame0.formatframe1.ra_dec cget -variable]
     global $radioSel
     set radioSel [subst $[subst $radioSel]]
@@ -1357,9 +1375,10 @@ proc NoteBookManager::SaveMNValue {nodePos frame0 frame1} {
                         Validation::ResetPromptFlag
                         return
                     }
-                    #value for Index or SubIndex is edited need to change
+                    #value for MN porpety is edited need to change
                     set status_save 1
-                    Validation::ResetPromptFlag	
+                    Validation::ResetPromptFlag
+                    $entryPath configure -bg #fdfdd4
                 } else {
                     continue
                 }
@@ -1368,6 +1387,10 @@ proc NoteBookManager::SaveMNValue {nodePos frame0 frame1} {
             }
         }
     }
+    if { [lsearch $savedValueList $nodeSelect] == -1 } {
+        lappend savedValueList $nodeSelect
+    }
+    $frame0.en_nodeName configure -bg #fdfdd4
 }
 
 #---------------------------------------------------------------------------------------------------
@@ -1444,27 +1467,28 @@ proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 } {
         }
     }
     set newNodeName [$frame0.en_nodeName get]
-    puts "newNodeId->$newNodeId newNodeName->$newNodeName"
-    #set catchErrCode [UpdateNodeParams $nodeId $newNodeId $newNodeName]
-    #set ErrCode [ocfmRetCode_code_get $catchErrCode]
-    #if { $ErrCode != 0 } {
-    #    if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
-    #        tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
-    #    } else {
-    #        tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
-    #    }
-    #    Validation::ResetPromptFlag
-    #    return
-    #}
+    set stationType [NoteBookManager::RetStationEnumValue]
+    puts "newNodeId->$newNodeId newNodeName->$newNodeName stationType->$stationType"
+    set catchErrCode [UpdateNodeParams $nodeId $newNodeId $nodeType $newNodeName $stationType ""]
+    set ErrCode [ocfmRetCode_code_get $catchErrCode]
+    if { $ErrCode != 0 } {
+        if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+            tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
+        } else {
+            tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
+        }
+        Validation::ResetPromptFlag
+        return
+    }
     
-    #TODO:save is success reonfigure cnSaveButton and nodeIdlist
+    #TODO:save is success reconfigure tree, cnSaveButton and nodeIdlist
     set schDataRes [lsearch $nodeIdList $nodeId]
     puts "oldlist $nodeIdList"
     set nodeIdList [lreplace $nodeIdList $schDataRes $schDataRes $newNodeId]
     puts "newlist $nodeIdList"
-    #set nodeId $newNodeId
-    #$cnPropSaveBtn configure -command "NoteBookManager::SaveCNValue $nodePos $nodeId $nodeType $tmpInnerf0 $tmpInnerf1"
-    
+    set nodeId $newNodeId
+    $cnPropSaveBtn configure -command "NoteBookManager::SaveCNValue $nodePos $nodeId $nodeType $frame0 $frame1"
+    $treePath itemconfigure $nodeSelect -text "$newNodeName\($nodeId\)"
     
     set radioSel [$frame0.formatframe1.ra_dec cget -variable]
     global $radioSel
@@ -1517,7 +1541,8 @@ proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 } {
                     }
                     #value for Index or SubIndex is edited need to change
                     set status_save 1
-                    Validation::ResetPromptFlag	
+                    Validation::ResetPromptFlag
+                    $entryPath configure -bg #fdfdd4
                 } else {
                     continue
                 }
@@ -1525,6 +1550,9 @@ proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 } {
                 continue
             }
         }
+    }
+    if { [lsearch $savedValueList $nodeSelect] == -1 } {
+        lappend savedValueList $nodeSelect
     }
 }
 
@@ -1928,7 +1956,7 @@ proc NoteBookManager::ChangeValidation {framePath comboPath} {
 proc NoteBookManager::GetEntryValue {entryPath} {
     set entryState [$entryPath cget -state]
     set entryValue [$entryPath get]
-    $entryPath cget -state $entryState
+    $entryPath configure -state $entryState
     return $entryValue
     
 }
@@ -1975,7 +2003,7 @@ proc NoteBookManager::StationRadioChanged {framePath radioVal } {
 }
 
 #---------------------------------------------------------------------------------------------------
-#  NoteBookManager::forceCycleCheked
+#  NoteBookManager::forceCycleChecked
 # 
 #  Arguments : framePath   - path of frame containing the check button
 #              check_var   - varaible of the check box
@@ -1984,7 +2012,7 @@ proc NoteBookManager::StationRadioChanged {framePath radioVal } {
 #
 #  Description : enables or disasbles the spinbox based on the check button selection
 #---------------------------------------------------------------------------------------------------
-proc NoteBookManager::forceCycleCheked { framePath check_var } {
+proc NoteBookManager::forceCycleChecked { framePath check_var } {
     global $check_var
     set check_value [subst $[subst $check_var]]
     if { $check_value == 1 } {
@@ -1992,4 +2020,37 @@ proc NoteBookManager::forceCycleCheked { framePath check_var } {
     } else {
         $framePath.sp_cycleNo configure -state disabled
     }
+}
+
+#---------------------------------------------------------------------------------------------------
+#  NoteBookManager::RetStationEnumValue
+# 
+#  Arguments : -
+#	   
+#  Results : -
+#
+#  Description : enables or disasbles the spinbox based on the check button selection
+#---------------------------------------------------------------------------------------------------
+proc NoteBookManager::RetStationEnumValue {  } {
+    global f4
+    set radioButtonFrame [lindex $f4 2]
+    set ra_StNormal $radioButtonFrame.ra_StNormal
+    set radioVar [$ra_StNormal cget -variable]
+    
+    global $radioVar
+    set radioVal [subst $[subst $radioVar]]
+    
+    switch -- $radioVal {
+        StNormal {			 
+            set returnVal 0
+        }
+        StMulti {
+            set returnVal 1
+        }
+        StChain {
+            set returnVal 2
+        }
+    }
+        
+    return $returnVal
 }

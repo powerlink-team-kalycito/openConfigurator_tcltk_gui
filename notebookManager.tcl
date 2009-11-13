@@ -1020,7 +1020,7 @@ proc NoteBookManager::CountLeadZero {input} {
 #
 #  Description : save the entered value for index and subindex
 #---------------------------------------------------------------------------------------------------
-proc NoteBookManager::SaveValue { objectType frame0 frame1} {
+proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
     global nodeSelect
     global nodeIdList
     global treePath
@@ -1068,6 +1068,11 @@ proc NoteBookManager::SaveValue { objectType frame0 frame1} {
     set tmpVar1 [$frame1.en_value1 cget -textvariable]
     global $tmpVar1	
     set value [string toupper [subst $[subst $tmpVar1]] ]
+    
+    if { [expr 0x$indexId > 0x1fff] } {
+        # for objects above 1fff object type can be changed
+        set objectType [NoteBookManager::GetComboValue $frame1.co_obj1]
+    }
 	
     if { [expr 0x$indexId > 0x1fff] || ( $objectType == "VAR" ) } {
         set dataType [NoteBookManager::GetComboValue $frame1.co_data1]

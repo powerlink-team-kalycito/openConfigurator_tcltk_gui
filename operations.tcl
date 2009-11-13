@@ -1602,9 +1602,9 @@ proc Operations::SingleClickNode {node} {
             
         set saveButton $indexSaveBtn
     }
-    puts "node->$node datatype->[lindex $IndexProp 2] \n"
+    puts "node->$node datatype->[lindex $IndexProp 2] objecttype->[lindex $IndexProp 1] \n"
     #configuring the index and subindex save buttons with object type
-    $saveButton configure -command "NoteBookManager::SaveValue [lindex $IndexProp 1] $tmpInnerf0 $tmpInnerf1"
+    $saveButton configure -command "NoteBookManager::SaveValue $tmpInnerf0 $tmpInnerf1 [lindex $IndexProp 1]"
     
     if { [string match -nocase "A???" $indexId] } {
         $tmpInnerf0.frame1.ch_gen configure -state disabled
@@ -4112,4 +4112,29 @@ proc Operations::PopupIndexMenu {node x y} {
         tk_popup $Operations::idxMenuDel $x $y
     }
     
+}
+
+#---------------------------------------------------------------------------------------------------
+#  Operations::RemoveAllFrames
+# 
+#  Arguments : -
+#
+#  Results : -
+#
+#  Description : Removes all the property frames
+#---------------------------------------------------------------------------------------------------
+proc Operations::RemoveAllFrames {} {
+    global f0
+    global f1
+    global f2
+    global f3
+    global f4
+    
+    pack forget [lindex $f0 0]
+    pack forget [lindex $f1 0]
+    pack forget [lindex $f2 0]
+    [lindex $f2 1] cancelediting
+    [lindex $f2 1] configure -state disabled
+    pack forget [lindex $f3 0]
+    pack forget [lindex $f4 0]
 }

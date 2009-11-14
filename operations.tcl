@@ -133,6 +133,57 @@ tsv::set application importProgress [thread::create -joinable {
     thread::wait
 }]
 
+#initiate helpStatus variable
+tsv::set application helpStatus 0
+tsv::set application helpHtml [thread::create -joinable {
+    proc launchHelpTool {} {
+        #package require Tk
+        global masterRootDir
+        global tcl_platform
+        global widgetColor
+        #global auto_path
+        set masterRootDir [tsv::get application rootDir]
+        #lappend auto_path [file join $masterRootDir lib]
+        #lappend auto_path [file join $masterRootDir lib bwidget1.7]
+        #puts "Help auto_path->$auto_path"
+        #wm protocol . WM_DELETE_WINDOW dont_exit
+        #wm title . "openCONFIGURATOR-Help"
+        #BWidget::place . 0 0 center
+        #update idletasks
+       
+        source [file join $masterRootDir lib helpviewer helpviewer.tcl]
+        wm withdraw .
+        if {"$tcl_platform(platform)" == "unix"} {
+            catch {
+                set element [image create photo -file [file join $masterRootDir openConfig.gif] ]
+                wm iconphoto .help -default $element
+            }
+        }
+        wm protocol .help WM_DELETE_WINDOW dont_exit
+        wm title .help "Help-openCONFIGURATOR"
+        BWidget::place .help 0 0 center
+        update idletasks
+        tsv::set application helpStatus 1
+        #puts "HELP:::$masterRootDir/lib/helpviewer/helpviewer.tcl"
+        #eval exec "$masterRootDir/lib/helpviewer/helpviewer.tcl" &
+    }
+
+    proc dont_exit {} {
+        tsv::set application helpStatus 0
+        catch { destroy .help }
+        puts "dont_exit called"
+    }
+    
+    proc ForceBgColor {widget} {
+        global tcl_platform
+        
+        if {"$tcl_platform(platform)" != "windows"} {
+            $widget configure -bg \#d7d5d3
+        }
+    }
+    
+    thread::wait
+}]
 
 set dir [file dirname [info script]]
 source [file join $dir option.tcl]
@@ -238,11 +289,19 @@ proc Operations::OpenPdfDocu {} {
 	global tcl_platform
 	global rootDir
 	
-	if {$tcl_platform(platform)=="unix"} {
-		exec [file join $rootDir LaunchUserManual.sh] &
-	} elseif {$tcl_platform(platform)=="windows"} {
-		exec ./LaunchUserManual.bat &
-	}
+	#if {$tcl_platform(platform)=="unix"} {
+	#	exec [file join $rootDir LaunchUserManual.sh] &
+	#} elseif {$tcl_platform(platform)=="windows"} {
+	#	exec ./LaunchUserManual.bat &
+	#}
+    
+    set helpStatus [tsv::get application helpStatus]
+    if {$helpStatus == 1} {
+        #already displayed
+    } else {
+        #launch the help
+        thread::send [tsv::get application helpHtml] "launchHelpTool"
+    }
 }
 
 #---------------------------------------------------------------------------------------------------

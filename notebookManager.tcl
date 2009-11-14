@@ -1559,6 +1559,7 @@ proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 } {
     if { [lsearch $savedValueList $nodeSelect] == -1 } {
         lappend savedValueList $nodeSelect
     }
+    $frame0.en_nodeName configure -bg #fdfdd4
 }
 
 #---------------------------------------------------------------------------------------------------

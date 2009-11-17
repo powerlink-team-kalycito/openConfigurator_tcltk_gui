@@ -1025,3 +1025,11 @@ proc Validation::CheckCnNodeNumber {input} {
         return 0
     }
 }
+
+proc Validation::CheckForceCycleNumber {input prescalerLimit} {
+    if { ( ([string is int $input] == 1) && ($input >= 1) && ($input <= $prescalerLimit) ) || ($input == "") } {
+        return 1    
+    } else {
+        return 0
+    }
+}

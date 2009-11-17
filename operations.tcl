@@ -2284,15 +2284,79 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
     }
     set CNFeatureChainFlag [lindex $catchErrCode 1]
     
+    set errMultiFlag 0
     if { ( [string match -nocase "TRUE" $MNFeatureMultiplexFlag] == 1 ) && ( [string match -nocase "TRUE" $CNFeatureMultiplexFlag] == 1 ) } {
-        $tmpInnerf1.ra_StMulti configure -state normal
-        if {$stationType == 1} {
-           	# it is multiplexed operation
-           	$tmpInnerf1.ra_StMulti select
-            $tmpInnerf2.ch_adv configure -state normal
-            $tmpInnerf2.sp_cycleNo configure -state normal -validate key
+        #check the value of MN multiplex prescaler if it is zero disable the multiplex radiobutton
+        #even if the features are available. The value of force cycle list starts from 1 and lists
+        #upto the multiplex prescaler value
+        set mnNodeId 240
+        set mnNodeType 0
+        set mnNodePos [new_intp]
+        set mnExistfFlag [new_boolp]
+        set catchErrCode [IfNodeExists $mnNodeId $mnNodeType $mnNodePos $mnExistfFlag]
+        set mnNodePos [intp_value $mnNodePos]
+        set mnExistfFlag [boolp_value $mnExistfFlag]
+        set ErrCode [ocfmRetCode_code_get $catchErrCode]
+        if { $ErrCode == 0 && $mnExistfFlag == 1 } {
+            #the node exist continue 
+        
+            puts "GetObjectValueData $nodePos $nodeId $nodeType [list 2 5] [lindex $Operations::MULTI_PRESCAL_OBJ 0] [lindex $Operations::MULTI_PRESCAL_OBJ 1]"
+            set multiPrescaler [GetObjectValueData $mnNodePos $mnNodeId $mnNodeType [list 2 5] [lindex $Operations::MULTI_PRESCAL_OBJ 0] [lindex $Operations::MULTI_PRESCAL_OBJ 1] ]
+            puts "multiPrescaler ->$multiPrescaler \n\n"
+            if {[string equal "pass" [lindex $multiPrescaler 0]] == 1} {
+                if {[lindex $multiPrescaler 2] == "" } {
+                    #value is empty disable the muliplex radio button
+                    set errMultiFlag 1
+                } else {
+                    set multiPrescalerValue [lindex $multiPrescaler 2]
+                    #check whether it is Hex or Dec and get the decimal value
+                    if { [string match -nocase "0X*" $multiPrescalerValue] == 1 } {
+                        #it must be hex convert it to dec
+                        set multiPrescalerValue [string range $multiPrescalerValue 2 end]
+                        set convResult [Validation::InputToDec $multiPrescalerValue [lindex $multiPrescaler 1] ]
+                        puts "convResult->$convResult"
+                        #check the result of conversion
+                        if { [string match -nocase "pass" [lindex $convResult 1]] == 0 } {
+                            #error in conversion
+                            set errMultiFlag 1
+                        } else {
+                            #set the converted decimal no
+                            set multiPrescalerDecValue [lindex $convResult 0]
+                        }
+                    } else {
+                        #check whether it is a decimal value
+                        if { [Validation::CheckDecimalNumber $multiPrescalerValue] == 0 } {
+                            set errMultiFlag 1
+                        } else {
+                            #value is a decimal no
+                            set multiPrescalerDecValue $multiPrescalerValue
+                        }
+                    }
+                }
+                # enable the radio button if no error flag is set and the
+                #value of multiplex prescaler is greater than zero
+                if { ($errMultiFlag == 0) && ($multiPrescalerDecValue > 0) } {
+                    #passed all validation enable the radio button
+                    $tmpInnerf1.ra_StMulti configure -state normal
+                    #configure the cycle no list
+                    $tmpInnerf2.sp_cycleNo configure -from 1 -to $multiPrescalerDecValue -increment 1 \
+                        -vcmd "Validation::CheckForceCycleNumber %P $multiPrescalerDecValue"
+                
+                    if {$stationType == 1} {
+                        # it is multiplexed operation
+                        $tmpInnerf1.ra_StMulti select
+                        $tmpInnerf2.ch_adv configure -state normal
+                        $tmpInnerf2.sp_cycleNo configure -state normal -validate key
+                        set $spinVar 1
+                    }
+                }
+            } ; # checking the result of GetObjectValueData function for multiplex Prescaler
+        } else {
+            #error in ifnodeexist API
         }
-    } elseif { ( [string match -nocase "TRUE" $MNFeatureChainFlag] == 1 ) && ( [string match -nocase "TRUE" $CNFeatureChainFlag] == 1 ) } {
+
+    } ; #end of the condition checking multiplex feature flag of mn and cn
+    if { ( [string match -nocase "TRUE" $MNFeatureChainFlag] == 1 ) && ( [string match -nocase "TRUE" $CNFeatureChainFlag] == 1 ) } {
         $tmpInnerf1.ra_StChain configure -state normal
         if {$stationType == 2} {
            	# it is chained operation
@@ -4082,7 +4146,9 @@ proc Operations::ViewModeChanged {} {
     }
     
     #rebuild the tree
+    thread::send [tsv::set application importProgress] "StartProgress"
     Operations::RePopulate $projectDir [string range $projectName 0 end-[string length [file extension $projectName] ] ]
+    thread::send  [tsv::set application importProgress] "StopProgress"
 }
 
 

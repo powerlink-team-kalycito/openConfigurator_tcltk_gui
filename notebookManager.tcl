@@ -2031,14 +2031,19 @@ proc NoteBookManager::GenerateCnNodeList {} {
 #  Description : enables or disasbles the spinbox based on the check button selection
 #---------------------------------------------------------------------------------------------------
 proc NoteBookManager::StationRadioChanged {framePath radioVal } {
+    set spinVar [$framePath.sp_cycleNo cget -textvariable]
+    global $spinVar
     if { $radioVal == "StNormal" } {
+        set $spinVar ""
         $framePath.ch_adv deselect
         $framePath.ch_adv configure -state disabled
     	$framePath.sp_cycleNo configure  -state disabled
     } elseif { $radioVal == "StMulti" } {
+        set $spinVar 1
         $framePath.ch_adv configure -state normal
     	$framePath.sp_cycleNo configure  -state normal -validate key
     } elseif { $radioVal == "StChain" } {
+        set $spinVar ""
         $framePath.ch_adv deselect
     	$framePath.ch_adv configure -state disabled
     	$framePath.sp_cycleNo configure  -state disabled

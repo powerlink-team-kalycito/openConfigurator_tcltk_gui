@@ -2049,6 +2049,10 @@ www.kalycito.com
 
 	<Object index="1F99" name="NMT_CNBasicEthernetTimeout_U32" objectType="7" dataType="0007" accessType="rw" defaultValue="5000000" PDOmapping="no">
           </Object>
+        
+        <Object index="1F9B" name="NMT_MultipleCycleAssign_AU8" objectType="8" dataType="0005" accessType="rw">
+          <SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="rw" defaultValue="0" PDOmapping="no"/>
+          </Object>
 
 	<Object index="1F9E" name="NMT_ResetCmd_U8" objectType="7" dataType="0005" accessType="rw" defaultValue="255" PDOmapping="no">
           </Object>

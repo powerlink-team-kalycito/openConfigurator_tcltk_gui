@@ -2034,16 +2034,15 @@ proc NoteBookManager::StationRadioChanged {framePath radioVal } {
     set spinVar [$framePath.sp_cycleNo cget -textvariable]
     global $spinVar
     if { $radioVal == "StNormal" } {
-        set $spinVar ""
+        #set $spinVar ""
         $framePath.ch_adv deselect
         $framePath.ch_adv configure -state disabled
     	$framePath.sp_cycleNo configure  -state disabled
     } elseif { $radioVal == "StMulti" } {
-        set $spinVar 1
         $framePath.ch_adv configure -state normal
-    	$framePath.sp_cycleNo configure  -state normal -validate key
+    	#$framePath.sp_cycleNo configure  -state normal -validate key
     } elseif { $radioVal == "StChain" } {
-        set $spinVar ""
+        #set $spinVar ""
         $framePath.ch_adv deselect
     	$framePath.ch_adv configure -state disabled
     	$framePath.sp_cycleNo configure  -state disabled

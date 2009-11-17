@@ -2341,13 +2341,12 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
                     #configure the cycle no list
                     $tmpInnerf2.sp_cycleNo configure -from 1 -to $multiPrescalerDecValue -increment 1 \
                         -vcmd "Validation::CheckForceCycleNumber %P $multiPrescalerDecValue"
-                
+                    #set $spinVar ""
+                    #set $spinVar 1
                     if {$stationType == 1} {
                         # it is multiplexed operation
                         $tmpInnerf1.ra_StMulti select
                         $tmpInnerf2.ch_adv configure -state normal
-                        $tmpInnerf2.sp_cycleNo configure -state normal -validate key
-                        set $spinVar 1
                     }
                 }
             } ; # checking the result of GetObjectValueData function for multiplex Prescaler
@@ -3185,6 +3184,50 @@ proc Operations::BuildProject {} {
     if {$projectDir == "" || $projectName == "" } {
 	    Console::DisplayErrMsg "No project to Build"
 	    return	
+    }
+    # check that 1006 object of MN actual value is greater than zero
+    set mnNodeId 240
+    set mnNodeType 0
+    set mnNodePos [new_intp]
+    set mnExistfFlag [new_boolp]
+    set catchErrCode [IfNodeExists $mnNodeId $mnNodeType $mnNodePos $mnExistfFlag]
+    set mnNodePos [intp_value $mnNodePos]
+    set mnExistfFlag [boolp_value $mnExistfFlag]
+    set ErrCode [ocfmRetCode_code_get $catchErrCode]
+    set errCycleTimeFlag 0
+    if { $ErrCode == 0 && $mnExistfFlag == 1 } {
+        #the node exist continue
+        #get the actual value of 1006
+        set cycleTimeresult [GetObjectValueData $mnNodePos $mnNodeId $mnNodeType [list 5] $Operations::CYCLE_TIME_OBJ]
+        if {[string equal "pass" [lindex $cycleTimeresult 0]] == 1} {
+            if {[lindex $cycleTimeresult 1] != "" } {
+                set cycleTimeValue [lindex $cycleTimeresult 1]
+                if { ( [expr $cycleTimeValue > 0] == 1)  } {
+                    #value is greater than zero proceed in building project
+                } else {
+                    #value is zero
+                    set errCycleTimeFlag 1
+                    set msg "Value of Index 1006 is 0.\nEnter a value greater than zero"
+                }
+            } else {
+                #value is empty
+                set errCycleTimeFlag 1
+                set msg "Value of Index 1006 is empty.\nEnter a value greater than zero"
+            }
+        } else {
+            #some error in getting the actual value
+            set errCycleTimeFlag 1
+            set msg "Error in getting value of Index 1006."
+        }
+    } else {
+        #mn node doesnot exist
+        set errCycleTimeFlag 1
+        set msg "MN node doesnot exist"
+    }
+    
+    if { $errCycleTimeFlag == 1 } {   
+        tk_messageBox -message "$msg" -icon warning -title "Warning" -parent .
+        return
     }
 
     if { $ra_auto == 1 } {

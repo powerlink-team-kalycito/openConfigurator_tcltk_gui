@@ -424,9 +424,9 @@ proc NoteBookManager::create_nodeFrame {nbpath choice} {
         
         grid config $ra_StNormal          -row 0 -column 0 -sticky w -padx 5
         grid config $tabInnerf1.la_empty4 -row 1 -column 0
-        grid config $ra_StMulti           -row 2 -column 0 -sticky w -padx 5
+        grid config $ra_StChain           -row 2 -column 0 -sticky w -padx 5
         grid config $tabInnerf1.la_empty5 -row 3 -column 0
-        grid config $ra_StChain           -row 4 -column 0 -sticky w -padx 5
+        grid config $ra_StMulti           -row 4 -column 0 -sticky w -padx 5
         #grid config $tabInnerf1.la_empty6 -row 5 -column 0 -columnspan 2
         grid config $tabTitlef2           -row 5 -column 0 -sticky e -columnspan 2 -padx 20;# -ipadx 10
         grid config $tabInnerf1.la_empty7 -row 7 -column 0
@@ -1096,6 +1096,7 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
             set pdoType [NoteBookManager::GetEntryValue $frame1.en_pdo1]
             set upperLimit [NoteBookManager::GetEntryValue $frame1.en_upper1]
             set lowerLimit [NoteBookManager::GetEntryValue $frame1.en_lower1]
+            set default [NoteBookManager::GetEntryValue $frame1.en_default1]
             if {[string match -nocase "INTEGER*" $dataType] || [string match -nocase "UNSIGNED*" $dataType] || [string match -nocase "BOOLEAN" $dataType] || [string match -nocase "REAL*" $dataType]} {
                 if {[string match -nocase "0x" $upperLimit]} {
                     set upperLimit [] 
@@ -1225,6 +1226,39 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
     } elseif {[string match "*IndexValue*" $nodeSelect]} {
         
         if { [expr 0x$indexId > 0x1fff] || ($objectType == "ARRAY") || ($objectType == "VAR") } {
+            # if the index is greater than 1fff and the object type is not ARRAY or RECORD the delete all subobjects if present
+            puts "llength $treePath nodes $nodeSelect ------>[llength [$treePath nodes $nodeSelect] ]" 
+            if { [expr 0x$indexId > 0x1fff] && (($objectType != "ARRAY") && ($objectType != "RECORD")) && ([llength [$treePath nodes $nodeSelect] ] > 0) } {
+                puts "entered index save checking indexId->$indexId objectType->$objectType nodeSelect->$nodeSelect"
+                set result [tk_messageBox -message "Only the Object Type ARRAY or RECORD can have subindexes.\nThe subindexes of [string toupper $indexId] will be deleted.\nDo you want to continue?" -type okcancel -icon question -title "Question" -parent .]
+                switch -- $result {
+        		    ok {
+                        #continue
+        		    }
+        		    cancel {
+        			    return
+        		    }
+        	    }
+                #delete the subindex
+                foreach sidxTreeNode [$treePath nodes $nodeSelect] {
+                    puts "sidxTreeNode->$sidxTreeNode"
+                    set sidx [string range [$treePath itemcget $sidxTreeNode -text] end-2 end-1 ]
+                    set catchErrCode [DeleteSubIndex $nodeId $nodeType $indexId $sidx]
+                    #need to check the result
+                    set ErrCode [ocfmRetCode_code_get $catchErrCode]
+                    if { $ErrCode != 0 } {
+                        if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+                            set msg "[ocfmRetCode_errorString_get $catchErrCode]"
+                        } else {
+                            set msg "Unknown Error"
+                        }
+                        append msg "\nIndex $indexId not saved"
+                        tk_messageBox -message "$msg" -title Error -icon error -parent .
+                        return
+                    }
+                    catch {$treePath delete $sidxTreeNode}
+                }
+            }
             set catchErrCode [SetAllIndexAttributes $nodeId $nodeType $indexId $value $newName $accessType $dataType $pdoType $default $upperLimit $lowerLimit $objectType [subst $[subst $chkGen]] ]
         } else {
             set catchErrCode [SetIndexAttributes $nodeId $nodeType $indexId $value $newName [subst $[subst $chkGen]] ]
@@ -1556,6 +1590,7 @@ proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 } {
             }
         }
     }
+    #operations based on station type
     if { [lsearch $savedValueList $nodeSelect] == -1 } {
         lappend savedValueList $nodeSelect
     }
@@ -1997,12 +2032,16 @@ proc NoteBookManager::GenerateCnNodeList {} {
 #---------------------------------------------------------------------------------------------------
 proc NoteBookManager::StationRadioChanged {framePath radioVal } {
     if { $radioVal == "StNormal" } {
-    
+        $framePath.ch_adv deselect
+        $framePath.ch_adv configure -state disabled
+    	$framePath.sp_cycleNo configure  -state disabled
     } elseif { $radioVal == "StMulti" } {
-    
+        $framePath.ch_adv configure -state normal
+    	$framePath.sp_cycleNo configure  -state normal -validate key
     } elseif { $radioVal == "StChain" } {
-    	$tmpInnerf2.ch_adv configure -state normal
-    	$tmpInnerf2.sp_cycleNo configure  -state normal -validate key
+        $framePath.ch_adv deselect
+    	$framePath.ch_adv configure -state disabled
+    	$framePath.sp_cycleNo configure  -state disabled
     } else {
     
     }

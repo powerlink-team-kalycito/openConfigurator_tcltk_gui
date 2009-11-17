@@ -886,7 +886,7 @@ proc Operations::BasicFrames { } {
             -width 21\
             -helptype balloon\
             -highlightthickness 0 -takefocus 0 -relief link -borderwidth 1 -padx 1 -pady 1 \
-            -helptext "Search Tree Browser for text"\
+            -helptext "Search Network Browser for text"\
 	    -command "FindSpace::ToggleFindWin"]
     pack $bb_find -side left -padx 4
     set sep4 [Separator::create $toolbar.sep4 -orient vertical]
@@ -1099,8 +1099,8 @@ proc Operations::BasicFrames { } {
     set f3 [NoteBookManager::create_nodeFrame $alignFrame  "mn"]
     bind [lindex $f3 0] <Enter> {
         bind . <KeyPress-Return> {
-            #TODOglobal indexSaveBtn
-            #$indexSaveBtn invoke
+            global mnPropSaveBtn
+            $mnPropSaveBtn invoke
         }
     }
     bind [lindex $f3 0] <Leave> {
@@ -1126,8 +1126,8 @@ proc Operations::BasicFrames { } {
     set f4 [NoteBookManager::create_nodeFrame $alignFrame  "cn"]
     bind [lindex $f4 0] <Enter> {
         bind . <KeyPress-Return> {
-            #TODOglobal indexSaveBtn
-            #$indexSaveBtn invoke
+            global cnPropSaveBtn
+            $cnPropSaveBtn invoke
         }
     }
     bind [lindex $f4 0] <Leave> {
@@ -1661,7 +1661,7 @@ proc Operations::SingleClickNode {node} {
             
         set saveButton $indexSaveBtn
     }
-    puts "node->$node datatype->[lindex $IndexProp 2] objecttype->[lindex $IndexProp 1] \n"
+    
     #configuring the index and subindex save buttons with object type
     $saveButton configure -command "NoteBookManager::SaveValue $tmpInnerf0 $tmpInnerf1 [lindex $IndexProp 1]"
     
@@ -1938,7 +1938,7 @@ proc Operations::SingleClickNode {node} {
         $tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::IsValidStr %P" -bg $savedBg
     }
 #newly added#
-    
+    puts "node->$node datatype->[lindex $IndexProp 2] objecttype->[lindex $IndexProp 1] \n"
     return
 }
 
@@ -2289,14 +2289,14 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
         if {$stationType == 1} {
            	# it is multiplexed operation
            	$tmpInnerf1.ra_StMulti select
+            $tmpInnerf2.ch_adv configure -state normal
+            $tmpInnerf2.sp_cycleNo configure -state normal -validate key
         }
     } elseif { ( [string match -nocase "TRUE" $MNFeatureChainFlag] == 1 ) && ( [string match -nocase "TRUE" $CNFeatureChainFlag] == 1 ) } {
         $tmpInnerf1.ra_StChain configure -state normal
         if {$stationType == 2} {
            	# it is chained operation
            	$tmpInnerf1.ra_StChain select
-            $tmpInnerf2.ch_adv configure -state normal
-            $tmpInnerf2.sp_cycleNo configure -state normal -validate key
         }
     }
     

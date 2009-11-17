@@ -579,10 +579,10 @@ proc NoteBookManager::create_infoWindow {nbpath tabname choice} {
 
     $window configure -wrap word
     ScrolledWindow::setwidget $scrollWin $window
-    #pack $scrollWin -fill both -expand yes
+    pack $scrollWin -fill both -expand yes
 
     #raised the window after creating it 
-    #$nbpath raise $nbname
+    $nbpath raise $nbname
 
     return $frmPath
 }

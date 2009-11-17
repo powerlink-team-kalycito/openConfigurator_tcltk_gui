@@ -366,22 +366,22 @@ proc Operations::tselectright {x y node} {
 #  Description : Displays or hide Console window according to option
 #---------------------------------------------------------------------------------------------------
 proc Operations::DisplayConsole {option} {
-    #variable infotabs_notebook
-    #
-    #set window [winfo parent $infotabs_notebook]
-    #set window [winfo parent $window]
-    #set pannedWindow [winfo parent $window]
-    #update idletasks
-    #if {$option} {
-    #    grid configure $pannedWindow.f0 -rowspan 1
-    #    grid $pannedWindow.sash1
-    #    grid $window
-    #    grid rowconfigure $pannedWindow 2 -minsize 100
-    #} else  {
-    #    grid remove $window
-    #    grid remove $pannedWindow.sash1
-    #    grid configure $pannedWindow.f0 -rowspan 3
-    #}
+    variable infotabs_notebook
+
+    set window [winfo parent $infotabs_notebook]
+    set window [winfo parent $window]
+    set pannedWindow [winfo parent $window]
+    update idletasks
+    if {$option} {
+        grid configure $pannedWindow.f0 -rowspan 1
+        grid $pannedWindow.sash1
+        grid $window
+        grid rowconfigure $pannedWindow 2 -minsize 100
+    } else  {
+        grid remove $window
+        grid remove $pannedWindow.sash1
+        grid configure $pannedWindow.f0 -rowspan 3
+    }
 }
 
 #---------------------------------------------------------------------------------------------------
@@ -394,22 +394,22 @@ proc Operations::DisplayConsole {option} {
 #  Description : Displays or hide Tree window according to option
 #---------------------------------------------------------------------------------------------------
 proc Operations::DisplayTreeWin {option} {
-    #variable tree_notebook
-    #
-    #set window [winfo parent $tree_notebook]
-    #set window [winfo parent $window]
-    #set pannedWindow [winfo parent $window]
-    #update idletasks
-    #if {$option} {
-    #    grid configure $pannedWindow.f1 -column 2 -columnspan 1
-    #    grid $pannedWindow.sash1
-    #    grid $window
-    #    grid columnconfigure $pannedWindow 0 -minsize 250
-    #} else  {
-    #    grid remove $window
-    #    grid remove $pannedWindow.sash1
-    #    grid configure $pannedWindow.f1 -column 0 -columnspan 3
-    #}
+    variable tree_notebook
+
+    set window [winfo parent $tree_notebook]
+    set window [winfo parent $window]
+    set pannedWindow [winfo parent $window]
+    update idletasks
+    if {$option} {
+        grid configure $pannedWindow.f1 -column 2 -columnspan 1
+        grid $pannedWindow.sash1
+        grid $window
+        grid columnconfigure $pannedWindow 0 -minsize 250
+    } else  {
+        grid remove $window
+        grid remove $pannedWindow.sash1
+        grid configure $pannedWindow.f1 -column 0 -columnspan 3
+    }
 }
 
 #---------------------------------------------------------------------------------------------------
@@ -776,6 +776,21 @@ proc Operations::BasicFrames { } {
                     Operations::ViewModeChanged 
                 }
             }
+	    {separator}
+            {checkbutton "Show Output Console" {all option} "Show Console Window" {}
+                -variable Operations::options(DisplayConsole)
+                -command  {
+                    Operations::DisplayConsole $Operations::options(DisplayConsole)
+                    update idletasks
+                }
+            }
+            {checkbutton "Show Network Browser" {all option} "Show Code Browser" {}
+                -variable Operations::options(showTree)
+                -command  {
+                    Operations::DisplayTreeWin $Operations::options(showTree)
+                    update idletasks
+                }
+            }
         }
         "&Help" {} {} 0 {
             {command "How to" {noFile} "How to Manual" {} -command "Operations::OpenPdfDocu" }
@@ -950,11 +965,11 @@ proc Operations::BasicFrames { } {
     set pannedwindow2 [PanedWindow::create $pane.pannedwindow2 -side top]
     set pane1 [PanedWindow::add $pannedwindow2 -minsize 250]
     set pane2 [PanedWindow::add $pannedwindow2 -minsize 100]
-    #set pane3 [PanedWindow::add $pannedwindow1 -minsize 100]
+    set pane3 [PanedWindow::add $pannedwindow1 -minsize 100]
 
     set tree_notebook [NoteBook::create $pane1.nb]
     set notebook [NoteBook::create $pane2.nb]	
-    #set infotabs_notebook [NoteBook::create $pane3.nb]
+    set infotabs_notebook [NoteBook::create $pane3.nb]
 
     set pf1 [NoteBookManager::create_treeBrowserWindow $tree_notebook]
     set treeWindow [lindex $pf1 1]
@@ -975,18 +990,18 @@ proc Operations::BasicFrames { } {
     bind $treeWindow <Enter> { Operations::BindTree }
     bind $treeWindow <Leave> { Operations::UnbindTree }
 
-    #set cf0 [NoteBookManager::create_infoWindow $infotabs_notebook "Info" 1]
-    #set cf1 [NoteBookManager::create_infoWindow $infotabs_notebook "Error" 2]
-    #set cf2 [NoteBookManager::create_infoWindow $infotabs_notebook "Warning" 3]
+    set cf0 [NoteBookManager::create_infoWindow $infotabs_notebook "Info" 1]
+    set cf1 [NoteBookManager::create_infoWindow $infotabs_notebook "Error" 2]
+    set cf2 [NoteBookManager::create_infoWindow $infotabs_notebook "Warning" 3]
 
-    #NoteBook::compute_size $infotabs_notebook
-    #$infotabs_notebook configure -height 80
-    #pack $infotabs_notebook -side bottom -fill both -expand yes -padx 4 -pady 4
+    NoteBook::compute_size $infotabs_notebook
+    $infotabs_notebook configure -height 80
+    pack $infotabs_notebook -side bottom -fill both -expand yes -padx 4 -pady 4
 
     pack $pannedwindow1 -fill both -expand yes
     NoteBook::compute_size $tree_notebook
     $tree_notebook configure -width 350
-    $tree_notebook configure -height 490
+    $tree_notebook configure -height 390
     pack $tree_notebook -side left -fill both -expand yes -padx 2 -pady 4
     catch {font create TkFixedFont -family Courier -size -12 -weight bold}
 
@@ -1153,7 +1168,7 @@ proc Operations::BasicFrames { } {
     pack $pannedwindow2 -fill both -expand yes
 
     $tree_notebook raise objectTree
-    #$infotabs_notebook raise Console1
+    $infotabs_notebook raise Console1
     pack $mainframe -fill both -expand yes
     set prgressindicator 0
     destroy .intro

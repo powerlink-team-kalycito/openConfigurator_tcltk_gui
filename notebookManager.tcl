@@ -1227,9 +1227,9 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
         
         if { [expr 0x$indexId > 0x1fff] || ($objectType == "ARRAY") || ($objectType == "VAR") } {
             # if the index is greater than 1fff and the object type is not ARRAY or RECORD the delete all subobjects if present
-            puts "llength $treePath nodes $nodeSelect ------>[llength [$treePath nodes $nodeSelect] ]" 
+            #puts "llength $treePath nodes $nodeSelect ------>[llength [$treePath nodes $nodeSelect] ]" 
             if { [expr 0x$indexId > 0x1fff] && (($objectType != "ARRAY") && ($objectType != "RECORD")) && ([llength [$treePath nodes $nodeSelect] ] > 0) } {
-                puts "entered index save checking indexId->$indexId objectType->$objectType nodeSelect->$nodeSelect"
+                #puts "entered index save checking indexId->$indexId objectType->$objectType nodeSelect->$nodeSelect"
                 set result [tk_messageBox -message "Only the Object Type ARRAY or RECORD can have subindexes.\nThe subindexes of [string toupper $indexId] will be deleted.\nDo you want to continue?" -type okcancel -icon question -title "Question" -parent .]
                 switch -- $result {
         		    ok {
@@ -1241,7 +1241,7 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
         	    }
                 #delete the subindex
                 foreach sidxTreeNode [$treePath nodes $nodeSelect] {
-                    puts "sidxTreeNode->$sidxTreeNode"
+                    #puts "sidxTreeNode->$sidxTreeNode"
                     set sidx [string range [$treePath itemcget $sidxTreeNode -text] end-2 end-1 ]
                     set catchErrCode [DeleteSubIndex $nodeId $nodeType $indexId $sidx]
                     #need to check the result
@@ -1507,7 +1507,7 @@ proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 } {
     }
     set newNodeName [$frame0.en_nodeName get]
     set stationType [NoteBookManager::RetStationEnumValue]
-    puts "newNodeId->$newNodeId newNodeName->$newNodeName stationType->$stationType"
+    #puts "newNodeId->$newNodeId newNodeName->$newNodeName stationType->$stationType"
     set catchErrCode [UpdateNodeParams $nodeId $newNodeId $nodeType $newNodeName $stationType ""]
     set ErrCode [ocfmRetCode_code_get $catchErrCode]
     if { $ErrCode != 0 } {
@@ -1522,9 +1522,9 @@ proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 } {
     
     #TODO:save is success reconfigure tree, cnSaveButton and nodeIdlist
     set schDataRes [lsearch $nodeIdList $nodeId]
-    puts "oldlist $nodeIdList"
+    #puts "oldlist $nodeIdList"
     set nodeIdList [lreplace $nodeIdList $schDataRes $schDataRes $newNodeId]
-    puts "newlist $nodeIdList"
+    #puts "newlist $nodeIdList"
     set nodeId $newNodeId
     $cnPropSaveBtn configure -command "NoteBookManager::SaveCNValue $nodePos $nodeId $nodeType $frame0 $frame1"
     $treePath itemconfigure $nodeSelect -text "$newNodeName\($nodeId\)"

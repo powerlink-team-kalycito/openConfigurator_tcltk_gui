@@ -34,12 +34,12 @@ global masterRootDir
 global auto_path
 #puts "\n\n argv->$argv \n"
 #set masterRootDir [pwd]
-puts "\n\n masterRootDir->$masterRootDir"
+#puts "\n\n masterRootDir->$masterRootDir"
 #set masterRootDir "."
 
 set libDir [file join $masterRootDir lib]
 lappend auto_path $libDir
-puts "\n\n libDir->$libDir auto_path->$auto_path"
+#puts "\n\n libDir->$libDir auto_path->$auto_path"
 global uniformColor
 set uniformColor "\#d7d5d3"
 
@@ -1151,7 +1151,7 @@ proc HelpViewer::HelpWindow { file { base .} { geom "" } { title "" } } {
 	ForceBgColor $pw
     #set pane1 [eval $pw add -weight $weight1 $widgetColor]
 	set pane1 [$pw add -weight $weight1 ]
-	puts "pane1->$pane1"
+	#puts "pane1->$pane1"
     
 	ForceBgColor $pane1
     #NoteBook $pane1.nb -homogeneous 1 -bd 1 -internalborderwidth 3 \ #-bg $uniformColor \
@@ -1674,7 +1674,7 @@ proc HelpViewer::Search {} {
 proc HelpViewer::SearchWindow {} {
     variable html
 	global uniformColor
-    puts "html -> $html"
+    #puts "html -> $html"
     set f [DialogWin::Init $html "Search" separator]
 	ForceBgColor $f
     set w [winfo toplevel $f]

@@ -206,7 +206,7 @@ proc ChildWindows::ProjectSettingWindow {} {
         set ra_auto [EAutoGeneratep_value $ra_autop]
         set ra_proj [EAutoSavep_value $ra_projp]
         set videoMode [EViewModep_value $videoMode]
-         puts "ChildWindows::ProjectSettingWindow videoMode->$videoMode"
+        # puts "ChildWindows::ProjectSettingWindow videoMode->$videoMode"
     }
 	
     set winProjSett .projSett
@@ -281,7 +281,7 @@ proc ChildWindows::ProjectSettingWindow {} {
             set ra_proj [EAutoSavep_value $ra_projp]
             set videoMode [EViewModep_value $videoMode]
         }
-        puts "ChildWindows::ProjectSettingWindow videoMode->$videoMode"
+        #puts "ChildWindows::ProjectSettingWindow videoMode->$videoMode"
     	destroy .projSett
     }
 	
@@ -942,7 +942,7 @@ proc ChildWindows::NewProjectWindow {} {
                 Operations::SetVideoType 0
             }
 		}
-            puts "ChildWindows::NewProjectWindow videoMode->$videoMode"
+            #puts "ChildWindows::NewProjectWindow videoMode->$videoMode"
 	    }
 
 	    catch {

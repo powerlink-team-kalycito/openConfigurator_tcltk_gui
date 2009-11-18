@@ -171,7 +171,7 @@ tsv::set application helpHtml [thread::create -joinable {
     proc dont_exit {} {
         tsv::set application helpStatus 0
         catch { destroy .help }
-        puts "dont_exit called"
+        #puts "dont_exit called"
     }
     
     proc ForceBgColor {widget} {
@@ -602,7 +602,7 @@ proc Operations::openProject {projectfilename} {
 	    set ra_proj [EAutoSavep_value $ra_projp]
         Operations::SetVideoType [EViewModep_value $videoMode]
     }
-    puts "Operations::openProject videoMode->$videoMode Operations::viewType->$Operations::viewType"
+    #puts "Operations::openProject videoMode->$videoMode Operations::viewType->$Operations::viewType"
 
     set result [ Operations::RePopulate $projectDir $projectName ]
     thread::send [tsv::set application importProgress] "StopProgress"
@@ -1658,7 +1658,7 @@ proc Operations::SingleClickNode {node} {
 		    } else {
 			    lappend IndexProp []
 		    }
-            puts "Index properties ErrCode->$ErrCode"
+           # puts "Index properties ErrCode->$ErrCode"
 
 	    }
 	    $tmpInnerf0.en_idx1 configure -state normal
@@ -1720,7 +1720,7 @@ proc Operations::SingleClickNode {node} {
     if { [expr 0x$indexId > 0x1fff] || ([lindex $IndexProp 1] == "ARRAY") || ([lindex $IndexProp 1] == "VAR") } {
         #call the api to get the data list
         set catchErrCode [GetNodeDataTypes $nodeId $nodeType]
-        puts "GetNodeDataTypes nodeId->$nodeId errcode->[ocfmRetCode_code_get [lindex $catchErrCode 0]] catchErrCode----->$catchErrCode"
+        #puts "GetNodeDataTypes nodeId->$nodeId errcode->[ocfmRetCode_code_get [lindex $catchErrCode 0]] catchErrCode----->$catchErrCode"
         #TODO : populate the obtained datatype into the datatype combo box
         #$tmpInnerf1.co_data1 configure -values
     }
@@ -1953,7 +1953,7 @@ proc Operations::SingleClickNode {node} {
         $tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::IsValidStr %P" -bg $savedBg
     }
 #newly added#
-    puts "node->$node datatype->[lindex $IndexProp 2] objecttype->[lindex $IndexProp 1] \n"
+    #puts "node->$node datatype->[lindex $IndexProp 2] objecttype->[lindex $IndexProp 1] \n"
     return
 }
 
@@ -2244,7 +2244,7 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
    $tmpInnerf2.sp_cycleNo configure -state disabled
    
    set stationType [EStationTypep_value $tmp_stationType]
-   puts " Operations::CNProperties node->$node $nodeId $nodeType stationType->$stationType $tmp_stationType catchErrCode->$catchErrCode"
+   #puts " Operations::CNProperties node->$node $nodeId $nodeType stationType->$stationType $tmp_stationType catchErrCode->$catchErrCode"
    
    $tmpInnerf1.ra_StMulti deselect
    $tmpInnerf1.ra_StMulti configure -state disabled
@@ -2256,7 +2256,7 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
     set MN_FEATURES 1
     set CN_FEATURES 2
     set catchErrCode [GetFeatureValue 240 0 $MN_FEATURES "DLLMNFeatureMultiplex" ]
-    puts "GetFeatureValue 240 0 $MN_FEATURES DLLMNFeatureMultiplex successcode->[ocfmRetCode_code_get [lindex $catchErrCode 0]] -----catchErrCode---->$catchErrCode"
+   # puts "GetFeatureValue 240 0 $MN_FEATURES DLLMNFeatureMultiplex successcode->[ocfmRetCode_code_get [lindex $catchErrCode 0]] -----catchErrCode---->$catchErrCode"
     if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
             tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
@@ -2267,7 +2267,7 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
     set MNFeatureMultiplexFlag [lindex $catchErrCode 1]
 
     set catchErrCode [GetFeatureValue $nodeId $nodeType $CN_FEATURES "DLLCNFeatureMultiplex" ]
-    puts "GetFeatureValue $nodeId $nodeType $CN_FEATURES DLLCNFeatureMultiplex successcode->[ocfmRetCode_code_get [lindex $catchErrCode 0]] -----catchErrCode---->$catchErrCode"
+   # puts "GetFeatureValue $nodeId $nodeType $CN_FEATURES DLLCNFeatureMultiplex successcode->[ocfmRetCode_code_get [lindex $catchErrCode 0]] -----catchErrCode---->$catchErrCode"
     if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
             tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
@@ -2278,7 +2278,7 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
     set CNFeatureMultiplexFlag [lindex $catchErrCode 1]
 
     set catchErrCode [GetFeatureValue 240 0 $MN_FEATURES "DLLMNFeatureChaining" ]
-    puts "GetFeatureValue 240 0 $MN_FEATURES DLLMNFeatureChaining successcode->[ocfmRetCode_code_get [lindex $catchErrCode 0]] -----catchErrCode---->$catchErrCode"
+    #puts "GetFeatureValue 240 0 $MN_FEATURES DLLMNFeatureChaining successcode->[ocfmRetCode_code_get [lindex $catchErrCode 0]] -----catchErrCode---->$catchErrCode"
     if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
             tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
@@ -2289,7 +2289,7 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
     set MNFeatureChainFlag [lindex $catchErrCode 1]
 
     set catchErrCode [GetFeatureValue $nodeId $nodeType $CN_FEATURES "DLLCNFeatureChaining" ]
-    puts "GetFeatureValue $nodeId $nodeType $CN_FEATURES DLLCNFeatureChaining successcode->[ocfmRetCode_code_get [lindex $catchErrCode 0]] -----catchErrCode---->$catchErrCode"
+    #puts "GetFeatureValue $nodeId $nodeType $CN_FEATURES DLLCNFeatureChaining successcode->[ocfmRetCode_code_get [lindex $catchErrCode 0]] -----catchErrCode---->$catchErrCode"
     if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
             tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
@@ -2315,9 +2315,9 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
         if { $ErrCode == 0 && $mnExistfFlag == 1 } {
             #the node exist continue 
         
-            puts "GetObjectValueData $nodePos $nodeId $nodeType [list 2 5] [lindex $Operations::MULTI_PRESCAL_OBJ 0] [lindex $Operations::MULTI_PRESCAL_OBJ 1]"
+            #puts "GetObjectValueData $nodePos $nodeId $nodeType [list 2 5] [lindex $Operations::MULTI_PRESCAL_OBJ 0] [lindex $Operations::MULTI_PRESCAL_OBJ 1]"
             set multiPrescaler [GetObjectValueData $mnNodePos $mnNodeId $mnNodeType [list 2 5] [lindex $Operations::MULTI_PRESCAL_OBJ 0] [lindex $Operations::MULTI_PRESCAL_OBJ 1] ]
-            puts "multiPrescaler ->$multiPrescaler \n\n"
+            #puts "multiPrescaler ->$multiPrescaler \n\n"
             if {[string equal "pass" [lindex $multiPrescaler 0]] == 1} {
                 if {[lindex $multiPrescaler 2] == "" } {
                     #value is empty disable the muliplex radio button
@@ -2354,8 +2354,8 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
                     #passed all validation enable the radio button
                     $tmpInnerf1.ra_StMulti configure -state normal
                     #configure the cycle no list
-                    $tmpInnerf2.sp_cycleNo configure -from 1 -to $multiPrescalerDecValue -increment 1 \
-                        -vcmd "Validation::CheckForceCycleNumber %P $multiPrescalerDecValue"
+                    $tmpInnerf2.sp_cycleNo configure -values [Operations::GenerateCycleNo $multiPrescalerDecValue] \
+                        -validate key -vcmd "Validation::CheckForceCycleNumber %P $multiPrescalerDecValue"
                     #set $spinVar ""
                     #set $spinVar 1
                     if {$stationType == 1} {
@@ -4134,6 +4134,24 @@ proc Operations::GenerateAutoName {dir name ext} {
 	    }
     }
     return $name$loopCount
+}
+
+#---------------------------------------------------------------------------------------------------
+#  Operations::GenerateCycleNo
+# 
+#  Arguments : prescalLimit - upper limit of prescaler value
+#
+#  Results : auto generated file name
+#
+#  Description : Generates unique file name in the path
+#---------------------------------------------------------------------------------------------------
+proc Operations::GenerateCycleNo {prescalLimit} {
+    #should check for extension but should send back unique name without extension
+    set cycleNoList ""
+    for {set loopCount 1} {$loopCount <= $prescalLimit} {incr loopCount} {
+        lappend cycleNoList $loopCount
+    }
+    return $cycleNoList
 }
 
 #---------------------------------------------------------------------------------------------------

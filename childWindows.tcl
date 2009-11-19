@@ -1133,12 +1133,16 @@ proc ChildWindows::NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf tempRa_
 		    $Operations::projMenu insert 3 command -label "Properties..." -command "ChildWindows::PropertiesWindow"
 	    }
     }
-
-    if { $Operations::viewType == "EXPERT" } {
-        set viewType 1
-    } else {
-        set viewType 0
-    }
+    #set the view type as simple for all new project
+    set Operations::viewType "SIMPLE"
+    set viewType 0
+    global lastVideoModeSel
+    set lastVideoModeSel 0
+    #if { $Operations::viewType == "EXPERT" } {
+    #    set viewType 1
+    #} else {
+    #    set viewType 0
+    #}
     set catchErrCode [SetProjectSettings $tempRa_auto $tempRa_proj $viewType]
     set ErrCode [ocfmRetCode_code_get $catchErrCode]
     if { $ErrCode != 0 } {

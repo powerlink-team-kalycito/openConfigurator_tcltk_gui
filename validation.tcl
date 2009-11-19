@@ -1011,7 +1011,7 @@ proc Validation::CheckDatatypeValue {entryPath dataType radioSel value} {
 #
 #  Results : 0 or 1
 #
-#  Description : Validates string is containing only numbers 1 to 254 excluding 240
+#  Description : Validates string is containing only numbers 1 to 239
 #---------------------------------------------------------------------------------------------------
 proc Validation::CheckCnNodeNumber {input} {
     
@@ -1019,6 +1019,9 @@ proc Validation::CheckCnNodeNumber {input} {
     #if { (([string is int $input] == 1) && ($input >= 1) && ($input <= 254) && ($input != 240)) || ($input == "") } { }
     #
     if { ( ([string is int $input] == 1) && ($input >= 1) && ($input <= 239) ) || ($input == "") } {
+        if { $input != "" } {
+            Validation::SetPromptFlag
+        }
         return 1    
     } else {
         bell
@@ -1026,8 +1029,21 @@ proc Validation::CheckCnNodeNumber {input} {
     }
 }
 
+#---------------------------------------------------------------------------------------------------
+#  Validation::CheckForceCycleNumber
+# 
+#  Arguments : input - string to be validated
+#              prescalerLimit - the vale of multiplex prescaler value
+#
+#  Results : 0 or 1
+#
+#  Description : Validates string is containing only numbers 1 to prescalerLimit
+#---------------------------------------------------------------------------------------------------
 proc Validation::CheckForceCycleNumber {input prescalerLimit} {
     if { ( ([string is int $input] == 1) && ($input >= 1) && ($input <= $prescalerLimit) ) || ($input == "") } {
+        if { $input != "" } {
+            Validation::SetPromptFlag
+        }
         return 1    
     } else {
         return 0

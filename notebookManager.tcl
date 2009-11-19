@@ -329,7 +329,7 @@ proc NoteBookManager::create_nodeFrame {nbpath choice} {
     label $tabInnerf0.la_nodeNo       -text "Node number"
     label $tabInnerf0.la_empty2       -text ""
     label $tabInnerf0.la_time         -text ""
-    label $tabInnerf0.la_ms           -text "us"
+    label $tabInnerf0.la_ms           -text "µs"
     label $tabInnerf0.la_empty3       -text ""
     label $tabInnerf1.la_advOption1   -text ""
     label $tabInnerf1.la_empty4       -text ""
@@ -1348,7 +1348,7 @@ proc NoteBookManager::SaveMNValue {nodePos frame0 frame1} {
 	
     set newNodeName [$frame0.en_nodeName get]
     set stationType 0
-    set catchErrCode [UpdateNodeParams $nodeId $nodeId $nodeType $newNodeName $stationType ""]
+    set catchErrCode [UpdateNodeParams $nodeId $nodeId $nodeType $newNodeName $stationType "" ]
     set ErrCode [ocfmRetCode_code_get $catchErrCode]
     if { $ErrCode != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
@@ -1442,7 +1442,7 @@ proc NoteBookManager::SaveMNValue {nodePos frame0 frame1} {
 #
 #  Description : save the entered value for MN property window
 #---------------------------------------------------------------------------------------------------
-proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 } {
+proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 frame2 {multiPrescalDatatype ""}} {
     global nodeSelect
     global nodeIdList
     global treePath
@@ -1452,6 +1452,8 @@ proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 } {
     global status_save
     global CNDatalist
     global cnPropSaveBtn
+
+    puts "SaveCNValue nodeSelect->$nodeSelect multiPrescalDatatype->$multiPrescalDatatype"
 
     ##gets the nodeId and Type of selected node
     #set result [Operations::GetNodeIdType $nodeSelect]
@@ -1507,8 +1509,34 @@ proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 } {
     }
     set newNodeName [$frame0.en_nodeName get]
     set stationType [NoteBookManager::RetStationEnumValue]
-    #puts "newNodeId->$newNodeId newNodeName->$newNodeName stationType->$stationType"
-    set catchErrCode [UpdateNodeParams $nodeId $newNodeId $nodeType $newNodeName $stationType ""]
+    set saveSpinVal ""
+    #if the check button is enabled and a valid value is obtained from spin box call the API
+    set chkState [$frame2.ch_adv cget -state]
+    set chkVar [$frame2.ch_adv cget -variable]
+    global $chkVar
+    set chkVal [subst $[subst $chkVar] ]
+    #check the state and if it is selected.
+    #puts "chkState->$chkState chkVar->$chkVar chkVal->$chkVal multiPrescalDatatype->$multiPrescalDatatype"
+    if { ($chkState == "normal") && ($chkVal == 1) && ($multiPrescalDatatype != "") } {
+        #check wheteher a valid data is set or not
+        set spinVar [$frame2.sp_cycleNo cget -textvariable]
+        global $spinVar
+        set spinVal [subst $[subst $spinVar] ]
+        set spinVal [string trim $spinVal]
+        #puts "spinVal->$spinVal"
+        if { ($spinVal != "") && ([$frame2.sp_cycleNo validate] == 1) } {
+            # the entered spin box value is validated save it convert the value to hexadecimal
+            set saveSpinVal [lindex [Validation::InputToHex $spinVal $multiPrescalDatatype] 0]
+        } else {
+            #failed the validation
+            tk_messageBox -message "The entered cycle number is not valid" -title Warning -icon warning -parent .
+            Validation::ResetPromptFlag
+            return
+        }
+    }
+    
+    #puts "newNodeId->$newNodeId newNodeName->$newNodeName stationType->$stationType saveSpinVal->$saveSpinVal"
+    set catchErrCode [UpdateNodeParams $nodeId $newNodeId $nodeType $newNodeName $stationType $saveSpinVal]
     set ErrCode [ocfmRetCode_code_get $catchErrCode]
     if { $ErrCode != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
@@ -1520,13 +1548,29 @@ proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 } {
         return
     }
     
+    #if the forced cycle no is changed and saved subobjects will be added to MN
+    #based on the internal logic so need to rebuild the mn tree
+    
+    #delete the OBD node and rebuild the tree
+    set MnTreeNode [lindex [$treePath nodes ProjectNode] 0]
+    set ObdTreeNode [lindex [$treePath nodes $MnTreeNode] 0]
+    catch {$treePath delete $ObdTreeNode}
+    $treePath insert 0 $MnTreeNode $ObdTreeNode -text "OBD" -open 0 -image [Bitmap::get pdo]
+    set mnNodeType 0
+    set mnNodeId 240
+    if { [ catch { set result [WrapperInteractions::Import $ObdTreeNode $mnNodeType $mnNodeId] } ] } {   
+        # error has occured
+        Operations::CloseProject
+        return 0
+    }
+    
     #TODO:save is success reconfigure tree, cnSaveButton and nodeIdlist
     set schDataRes [lsearch $nodeIdList $nodeId]
     #puts "oldlist $nodeIdList"
     set nodeIdList [lreplace $nodeIdList $schDataRes $schDataRes $newNodeId]
     #puts "newlist $nodeIdList"
     set nodeId $newNodeId
-    $cnPropSaveBtn configure -command "NoteBookManager::SaveCNValue $nodePos $nodeId $nodeType $frame0 $frame1"
+    $cnPropSaveBtn configure -command "NoteBookManager::SaveCNValue $nodePos $nodeId $nodeType $frame0 $frame1 $frame2 $multiPrescalDatatype"
     $treePath itemconfigure $nodeSelect -text "$newNodeName\($nodeId\)"
     
     set radioSel [$frame0.formatframe1.ra_dec cget -variable]

@@ -558,6 +558,7 @@ proc Operations::openProject {projectfilename} {
     global projectName
     global ra_proj
     global ra_auto
+    global lastVideoModeSel
 
 
     #Operations::CloseProject is called to delete node and insert tree
@@ -597,10 +598,12 @@ proc Operations::openProject {projectfilename} {
 	    set ra_auto 1
 	    set ra_proj 1
         set Operations::viewType "SIMPLE"
+        set lastVideoModeSel 0
     } else {
 	    set ra_auto [EAutoGeneratep_value $ra_autop]
 	    set ra_proj [EAutoSavep_value $ra_projp]
         Operations::SetVideoType [EViewModep_value $videoMode]
+        set lastVideoModeSel $videoMode
     }
     #puts "Operations::openProject videoMode->$videoMode Operations::viewType->$Operations::viewType"
 
@@ -658,7 +661,7 @@ proc Operations::RePopulate { projectDir projectName } {
 			    set nodeName [lindex $catchErrCode 1]
 			    if {$nodeId == 240} {
 				    set nodeType 0
-				    $treePath insert end ProjectNode MN-$mnCount -text "openPOWERLINK_MN(240)" -open 1 -image [Bitmap::get mn]
+				    $treePath insert end ProjectNode MN-$mnCount -text "$nodeName\(240\)" -open 1 -image [Bitmap::get mn]
 				    set treeNode OBD-$mnCount-1
                                     $treePath insert end MN-$mnCount $treeNode -text "OBD" -open 0 -image [Bitmap::get pdo]	
 				    	
@@ -716,6 +719,7 @@ proc Operations::BasicFrames { } {
     global f3
     global f4    
     global LastTableFocus
+    global lastVideoModeSel
 
     variable bb_connect
     variable mainframe
@@ -803,6 +807,7 @@ proc Operations::BasicFrames { } {
     set Operations::options(showTree) 1
     set Operations::options(DisplayConsole) 1
     set Operations::viewType "SIMPLE"
+    set lastVideoModeSel 0
     bind . <Key-F6> "Operations::Transfer"
     #shortcut keys for project
     bind . <Key-F7> "Operations::BuildProject"
@@ -2165,6 +2170,7 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
     set dummyNodeId [new_intp]
     set tmp_stationType [new_EStationTypep]
     set catchErrCode [GetNodeAttributesbyNodePos $nodePos $dummyNodeId $tmp_stationType]
+    puts "GetNodeAttributesbyNodePos catchErrCode->$catchErrCode"
     if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
     	    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
@@ -2173,6 +2179,7 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
         }
         return
     }
+    set prevSelCycleNo [lindex $catchErrCode 2]
     
     if {[lsearch $savedValueList $node] != -1} {
 	    set savedBg #fdfdd4
@@ -2186,21 +2193,35 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
     $tmpInnerf0.en_nodeName configure -bg $savedBg
     
     #configure the save button
-    $cnPropSaveBtn configure -command "NoteBookManager::SaveCNValue $nodePos $nodeId $nodeType $tmpInnerf0 $tmpInnerf1"
+    $cnPropSaveBtn configure -command "NoteBookManager::SaveCNValue $nodePos $nodeId $nodeType $tmpInnerf0 $tmpInnerf1 $tmpInnerf2"
     
     #insert nodenumber
     $tmpInnerf0.sp_nodeNo set $nodeId
     
     # value from 1F98 03 for PResponse Cycle time
     set CNDatalist ""
-    set presponseCycleTimeResult [GetObjectValueData $nodePos $nodeId $nodeType [list 2 4 5] [lindex $Operations::PRES_TIMEOUT_OBJ 0] [lindex $Operations::PRES_TIMEOUT_OBJ 1] ]
+    set presponseCycleTimeResult [GetObjectValueData $nodePos $nodeId $nodeType [list 2 4 5 7] [lindex $Operations::PRES_TIMEOUT_OBJ 0] [lindex $Operations::PRES_TIMEOUT_OBJ 1] ]
     if {[string equal "pass" [lindex $presponseCycleTimeResult 0]] == 1} {
         if {[lindex $presponseCycleTimeResult 3] == "" } {
+            #if the actual is empty assign the default value
             set presponseCycleTimeValue [lindex $presponseCycleTimeResult 2]
         } else {
             set presponseCycleTimeValue [lindex $presponseCycleTimeResult 3]
         }
+        
+        #if both the actual and default value is empty the lower limit plus 25 micro seconds value
+        if { $presponseCycleTimeValue == "" } {
+            set presponseCycleTimeValue [expr [lindex $presponseCycleTimeResult 3] + 25000]
+        }
         set presponseCycleTimeDatatype [lindex $presponseCycleTimeResult 1]
+        
+        # the value of Presponse timeout is in nanoseconds divide it by 1000 to
+        #display it as microseconds
+        if {$presponseCycleTimeValue != ""} {
+            if { [ catch { set presponseCycleTimeValue [expr $presponseCycleTimeValue / 1000] } ] } {
+                set presponseCycleTimeValue 
+            }
+        }
         $tmpInnerf0.en_time configure -state normal -validate none -bg $savedBg
         $tmpInnerf0.en_time delete 0 end
         $tmpInnerf0.en_time insert 0 $presponseCycleTimeValue
@@ -2324,12 +2345,16 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
                     set errMultiFlag 1
                 } else {
                     set multiPrescalerValue [lindex $multiPrescaler 2]
+                    #configure the cn save button with multiplex prescalar datatype
+                    $cnPropSaveBtn configure -command "NoteBookManager::SaveCNValue $nodePos $nodeId \
+                        $nodeType $tmpInnerf0 $tmpInnerf1 $tmpInnerf2 [lindex $multiPrescaler 1]"
+                    
                     #check whether it is Hex or Dec and get the decimal value
                     if { [string match -nocase "0X*" $multiPrescalerValue] == 1 } {
                         #it must be hex convert it to dec
                         set multiPrescalerValue [string range $multiPrescalerValue 2 end]
                         set convResult [Validation::InputToDec $multiPrescalerValue [lindex $multiPrescaler 1] ]
-                        puts "convResult->$convResult"
+                        #puts "convResult->$convResult"
                         #check the result of conversion
                         if { [string match -nocase "pass" [lindex $convResult 1]] == 0 } {
                             #error in conversion
@@ -2356,8 +2381,18 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
                     #configure the cycle no list
                     $tmpInnerf2.sp_cycleNo configure -values [Operations::GenerateCycleNo $multiPrescalerDecValue] \
                         -validate key -vcmd "Validation::CheckForceCycleNumber %P $multiPrescalerDecValue"
-                    #set $spinVar ""
-                    #set $spinVar 1
+                    # the saved force cycle no will be in hexa decimal convert it to decimal
+                    set prevSelCycleNoDec [Validation::InputToDec $prevSelCycleNo [lindex $multiPrescaler 1] ]
+                    puts "prevSelCycleNoDec->$prevSelCycleNoDec"
+                    if { [string match -nocase "pass" [lindex $prevSelCycleNoDec 1]] == 0 } {
+                        #error in conversion
+                        set prevSelCycleNoDec ""
+                    } else {
+                        #set the converted decimal no
+                        set prevSelCycleNoDec [lindex $prevSelCycleNoDec 0]
+                    }
+                    #set the previously saved force cycle number
+                    set $spinVar $prevSelCycleNoDec
                     if {$stationType == 1} {
                         # it is multiplexed operation
                         $tmpInnerf1.ra_StMulti select
@@ -4201,16 +4236,25 @@ proc Operations::ViewModeChanged {} {
     global projectName
     global ra_proj
     global ra_auto
+    global lastVideoModeSel
     
     if { $projectDir == "" || $projectName == "" } {
         return
     }
-    #save the project setting
+
+    
     if { $Operations::viewType == "EXPERT" } {
         set viewType 1
     } else {
         set viewType 0
     }
+    #check if the view is toggled
+    if {$lastVideoModeSel == $viewType} {
+        return
+    }
+    set lastVideoModeSel $viewType 
+    
+    #save the project setting
     set catchErrCode [SetProjectSettings $ra_auto $ra_proj $viewType]
     set ErrCode [ocfmRetCode_code_get $catchErrCode]
     if { $ErrCode != 0 } {
@@ -4238,7 +4282,8 @@ proc Operations::ViewModeChanged {} {
 #  Description : sets the view radio buttons based on the viewmode value from API
 #---------------------------------------------------------------------------------------------------
 proc Operations::SetVideoType {videoMode} {
-    puts "Operations::SetVideoType videoMode->$videoMode"
+    
+    #puts "Operations::SetVideoType videoMode->$videoMode"
     if { $videoMode == 1} {
         set Operations::viewType "EXPERT"
     } else {

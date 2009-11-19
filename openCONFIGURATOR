@@ -101,11 +101,11 @@ global errWindow
 #-------------------------
 #	Source files 
 #-------------------------
-#set rootDir [pwd]
+set rootDir [pwd]
 if {"$tcl_platform(platform)" == "windows"} {
     set rootDir [pwd]
 } elseif {"$tcl_platform(platform)" == "unix"} {
-    set rootDir /usr/share/openCONFIGURATOR-$version
+#    set rootDir /usr/share/openCONFIGURATOR-$version
 }
 tsv::set application rootDir $rootDir
 source [file join $rootDir console.tcl]

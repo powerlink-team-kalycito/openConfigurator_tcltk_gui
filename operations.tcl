@@ -143,13 +143,6 @@ tsv::set application helpHtml [thread::create -joinable {
         global widgetColor
         #global auto_path
         set masterRootDir [tsv::get application rootDir]
-        #lappend auto_path [file join $masterRootDir lib]
-        #lappend auto_path [file join $masterRootDir lib bwidget1.7]
-        #puts "Help auto_path->$auto_path"
-        #wm protocol . WM_DELETE_WINDOW dont_exit
-        #wm title . "openCONFIGURATOR-Help"
-        #BWidget::place . 0 0 center
-        #update idletasks
        
         source [file join $masterRootDir lib helpviewer helpviewer.tcl]
         wm withdraw .
@@ -164,14 +157,11 @@ tsv::set application helpHtml [thread::create -joinable {
         BWidget::place .help 0 0 center
         update idletasks
         tsv::set application helpStatus 1
-        #puts "HELP:::$masterRootDir/lib/helpviewer/helpviewer.tcl"
-        #eval exec "$masterRootDir/lib/helpviewer/helpviewer.tcl" &
     }
 
     proc help_exit {} {
         tsv::set application helpStatus 0
         catch { destroy .help }
-        #puts "dont_exit called"
     }
     
     proc ForceBgColor {widget} {
@@ -289,12 +279,6 @@ proc Operations::OpenPdfDocu {} {
 	global tcl_platform
 	global rootDir
 	
-	#if {$tcl_platform(platform)=="unix"} {
-	#	exec [file join $rootDir LaunchUserManual.sh] &
-	#} elseif {$tcl_platform(platform)=="windows"} {
-	#	exec ./LaunchUserManual.bat &
-	#}
-    
     set helpStatus [tsv::get application helpStatus]
     if {$helpStatus == 1} {
         #already displayed
@@ -405,10 +389,17 @@ proc Operations::DisplayTreeWin {option} {
         grid $pannedWindow.sash1
         grid $window
         grid columnconfigure $pannedWindow 0 -minsize 250
+        #enable the view menu
+        $Operations::mainframe setmenustate tag_SimpleView normal
+        $Operations::mainframe setmenustate tag_AdvancedView normal
     } else  {
         grid remove $window
         grid remove $pannedWindow.sash1
         grid configure $pannedWindow.f1 -column 0 -columnspan 3
+        grid configure $pannedWindow.f0 -rowspan 3
+        #disable the view menu
+    	$Operations::mainframe setmenustate tag_SimpleView disable
+    	$Operations::mainframe setmenustate tag_AdvancedView disable
     }
 }
 
@@ -768,27 +759,27 @@ proc Operations::BasicFrames { } {
             {command "Project Settings..." {}  "Project Settings" {} -command ChildWindows::ProjectSettingWindow }
         }
         "&View" all options 0 {
-            {radiobutton "Simple View" {all option} "Simple View Mode" {}
+            {radiobutton "Simple View" {tag_SimpleView} "Simple View Mode" {}
                 -variable Operations::viewType -value "SIMPLE"
                 -command {
                     Operations::ViewModeChanged
                 }
             }
-            {radiobutton "Advanced View" {all option} "Advanced View Mode" {}
+            {radiobutton "Advanced View" {tag_AdvancedView} "Advanced View Mode" {}
                 -variable Operations::viewType -value "EXPERT"
                 -command {
                     Operations::ViewModeChanged 
                 }
             }
 	    {separator}
-            {checkbutton "Show Output Console" {all option} "Show Console Window" {}
+            {checkbutton "Show Output Console" {tag_OutputConsole} "Show Console Window" {}
                 -variable Operations::options(DisplayConsole)
                 -command  {
                     Operations::DisplayConsole $Operations::options(DisplayConsole)
                     update idletasks
                 }
             }
-            {checkbutton "Show Network Browser" {all option} "Show Code Browser" {}
+            {checkbutton "Show Network Browser" {tag_NetworkBrowser} "Show Code Browser" {}
                 -variable Operations::options(showTree)
                 -command  {
                     Operations::DisplayTreeWin $Operations::options(showTree)

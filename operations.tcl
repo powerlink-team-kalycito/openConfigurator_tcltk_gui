@@ -1357,14 +1357,10 @@ proc Operations::SingleClickNode {node} {
     $treePath selection set $node
     set nodeSelect $node
 
+    #remove all the frames
+    Operations::RemoveAllFrames
+
     if {[string match "root" $node] || [string match "ProjectNode" $node] || [string match "OBD-*" $node] || [string match "PDO-*" $node]} {
-	    pack forget [lindex $f0 0]
-	    pack forget [lindex $f1 0]
-	    pack forget [lindex $f2 0]
-	    pack forget [lindex $f3 0]
-	    pack forget [lindex $f4 0]
-	    [lindex $f2 1] cancelediting
-	    [lindex $f2 1] configure -state disabled
 	    return
     }
 
@@ -3302,7 +3298,7 @@ proc Operations::BuildProject {} {
             tk_messageBox -message "$msg" -icon warning -title "Warning" -parent .
             return
         } elseif {$errCycleTimeFlag == 1} { 
-            set result [tk_messageBox -message "$msg.\nDo you want to copy the default value 50000 µs" \
+            set result [tk_messageBox -message "$msg\nDo you want to copy the default value 50000 µs" \
                 -type yesno -icon info -title "Information" -parent .]
             switch -- $result {
 			    yes {
@@ -3710,11 +3706,11 @@ proc Operations::DeleteTreeNode {} {
 	    } else {
 		    return
 	    }
-	    #clear the savedValueList of the deleted node
-	    set savedValueList [Operations::DeleteList $savedValueList $node 0]
-	    set userPrefList [Operations::DeleteList $userPrefList $node 1]
-	
     }
+
+    #clear the savedValueList of the deleted node
+    catch { set savedValueList [Operations::DeleteList $savedValueList $node 0] }
+	catch { set userPrefList [Operations::DeleteList $userPrefList $node 1] }
 
     set ErrCode [ocfmRetCode_code_get $catchErrCode]
     if { $ErrCode != 0 } {
@@ -3833,6 +3829,7 @@ proc Operations::CleanList {node choice} {
 		    set tempMatchNode *-$matchNode-*
 	    } else {
 		    #other than IndexValue and SubIndexValue no node should occur
+            continue
 	    }
 	    if {[string match $tempMatchNode $testValue]} {
 		    #matched so dont copy it
@@ -3840,7 +3837,6 @@ proc Operations::CleanList {node choice} {
 		    lappend tempFinalList $tempValue
 	    }
     }
-
 
     if { $choice == 0 } {
 	    set savedValueList $tempFinalList
@@ -3950,6 +3946,9 @@ proc Operations::GetNodeIdType {node} {
     set nodeList [Operations::GetNodeList]
     set searchCount [lsearch -exact $nodeList $parent ]
     set nodeId [lindex $nodeIdList $searchCount]
+    if { $nodeId == "" } {
+        return ""
+    }
     if {[string match "OBD*" $parent]} {
 	    #it is a mn
 	    set nodeType 0

@@ -1453,7 +1453,7 @@ proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 frame2 
     global CNDatalist
     global cnPropSaveBtn
 
-    puts "SaveCNValue nodeSelect->$nodeSelect multiPrescalDatatype->$multiPrescalDatatype"
+    #puts "SaveCNValue nodeSelect->$nodeSelect multiPrescalDatatype->$multiPrescalDatatype"
 
     ##gets the nodeId and Type of selected node
     #set result [Operations::GetNodeIdType $nodeSelect]
@@ -1536,7 +1536,7 @@ proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 frame2 
         }
     }
     
-    puts "newNodeId->$newNodeId newNodeName->$newNodeName stationType->$stationType saveSpinVal->$saveSpinVal"
+    #puts "newNodeId->$newNodeId newNodeName->$newNodeName stationType->$stationType saveSpinVal->$saveSpinVal"
     set catchErrCode [UpdateNodeParams $nodeId $newNodeId $nodeType $newNodeName $stationType $saveSpinVal]
     set ErrCode [ocfmRetCode_code_get $catchErrCode]
     if { $ErrCode != 0 } {
@@ -1559,11 +1559,14 @@ proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 frame2 
     $treePath insert 0 $MnTreeNode $ObdTreeNode -text "OBD" -open 0 -image [Bitmap::get pdo]
     set mnNodeType 0
     set mnNodeId 240
+    thread::send [tsv::get application importProgress] "StartProgress"
     if { [ catch { set result [WrapperInteractions::Import $ObdTreeNode $mnNodeType $mnNodeId] } ] } {   
         # error has occured
+        thread::send  [tsv::set application importProgress] "StopProgress"
         Operations::CloseProject
         return 0
     }
+    thread::send  [tsv::set application importProgress] "StopProgress"
     
     #TODO:save is success reconfigure tree, cnSaveButton and nodeIdlist
     set schDataRes [lsearch $nodeIdList $nodeId]

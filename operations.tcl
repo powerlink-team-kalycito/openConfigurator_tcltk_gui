@@ -1978,7 +1978,7 @@ proc Operations::MNProperties {node nodePos nodeId nodeType} {
     set dummyNodeId [new_intp]
     set tmp_stationType [new_EStationTypep]
     set catchErrCode [GetNodeAttributesbyNodePos $nodePos $dummyNodeId $tmp_stationType]
-    puts "catchErrCode->$catchErrCode"
+    #puts "catchErrCode->$catchErrCode"
     if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
             tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
@@ -2171,7 +2171,7 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
     set dummyNodeId [new_intp]
     set tmp_stationType [new_EStationTypep]
     set catchErrCode [GetNodeAttributesbyNodePos $nodePos $dummyNodeId $tmp_stationType]
-    puts "GetNodeAttributesbyNodePos catchErrCode->$catchErrCode"
+    #puts "GetNodeAttributesbyNodePos catchErrCode->$catchErrCode"
     if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
     	    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
@@ -2384,7 +2384,7 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
                         -validate key -vcmd "Validation::CheckForceCycleNumber %P $multiPrescalerDecValue"
                     # the saved force cycle no will be in hexa decimal convert it to decimal
                     set prevSelCycleNoDec [Validation::InputToDec $prevSelCycleNo [lindex $multiPrescaler 1] ]
-                    puts "prevSelCycleNoDec->$prevSelCycleNoDec"
+                    #puts "prevSelCycleNoDec->$prevSelCycleNoDec"
                     if { [string match -nocase "pass" [lindex $prevSelCycleNoDec 1]] == 0 } {
                         #error in conversion
                         set prevSelCycleNoDec ""

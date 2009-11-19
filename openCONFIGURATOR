@@ -66,7 +66,7 @@
 exec wish "$0" ${1+"$@"}
 
 global version
-set version 1.1.0
+set version 1.2.0
 
 if { $argc == 1 && ( $argv == "--version" || $argv == "-V" ) } {
     puts "\nDeveloped by Kalycito Powerlink Team\nopenCONFIGURATOR version $version\n"
@@ -101,11 +101,11 @@ global errWindow
 #-------------------------
 #	Source files 
 #-------------------------
-set rootDir [pwd]
+#set rootDir [pwd]
 if {"$tcl_platform(platform)" == "windows"} {
     set rootDir [pwd]
 } elseif {"$tcl_platform(platform)" == "unix"} {
-    #set rootDir /usr/share/openCONFIGURATOR-$version
+    set rootDir /usr/share/openCONFIGURATOR-$version
 }
 tsv::set application rootDir $rootDir
 source [file join $rootDir console.tcl]
@@ -201,10 +201,10 @@ proc InitOpenConfigurator {argc argv} {
 
     # Loading shared libraries
     if {"$tcl_platform(platform)" == "windows"} {
-	if {[catch {load openCONFIGURATORwrapper.dll openCONFIGURATORwrapper}]} {
-	    tk_messageBox -message "Error loading Shared Library\nCannot proceed\nConsult the user manual to troubleshoot" -title Info -icon error
-	    exit
-	}
+        if {[catch {load openCONFIGURATORwrapper.dll openCONFIGURATORwrapper}]} {
+            tk_messageBox -message "Error loading Shared Library\nCannot proceed\nConsult the user manual to troubleshoot" -title Info -icon error
+            exit
+        }
     } elseif { "$tcl_platform(platform)" == "unix"} {
 load $rootDir/Tcl_WrapperMain.so
 #	if {  } {

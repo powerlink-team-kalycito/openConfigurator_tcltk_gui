@@ -1978,6 +1978,7 @@ proc Operations::MNProperties {node nodePos nodeId nodeType} {
     set dummyNodeId [new_intp]
     set tmp_stationType [new_EStationTypep]
     set catchErrCode [GetNodeAttributesbyNodePos $nodePos $dummyNodeId $tmp_stationType]
+    puts "catchErrCode->$catchErrCode"
     if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
             tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
@@ -2397,6 +2398,8 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
                         # it is multiplexed operation
                         $tmpInnerf1.ra_StMulti select
                         $tmpInnerf2.ch_adv configure -state normal
+                        $tmpInnerf2.ch_adv select
+                        $tmpInnerf2.sp_cycleNo configure -state normal
                     }
                 }
             } ; # checking the result of GetObjectValueData function for multiplex Prescaler

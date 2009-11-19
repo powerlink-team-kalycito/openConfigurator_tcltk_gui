@@ -1526,7 +1526,8 @@ proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 frame2 
         #puts "spinVal->$spinVal"
         if { ($spinVal != "") && ([$frame2.sp_cycleNo validate] == 1) } {
             # the entered spin box value is validated save it convert the value to hexadecimal
-            set saveSpinVal [lindex [Validation::InputToHex $spinVal $multiPrescalDatatype] 0]
+            # remove the 0x appended to the converted value
+            set saveSpinVal [string range [lindex [Validation::InputToHex $spinVal $multiPrescalDatatype] 0] 2 end]
         } else {
             #failed the validation
             tk_messageBox -message "The entered cycle number is not valid" -title Warning -icon warning -parent .
@@ -1535,7 +1536,7 @@ proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 frame2 
         }
     }
     
-    #puts "newNodeId->$newNodeId newNodeName->$newNodeName stationType->$stationType saveSpinVal->$saveSpinVal"
+    puts "newNodeId->$newNodeId newNodeName->$newNodeName stationType->$stationType saveSpinVal->$saveSpinVal"
     set catchErrCode [UpdateNodeParams $nodeId $newNodeId $nodeType $newNodeName $stationType $saveSpinVal]
     set ErrCode [ocfmRetCode_code_get $catchErrCode]
     if { $ErrCode != 0 } {

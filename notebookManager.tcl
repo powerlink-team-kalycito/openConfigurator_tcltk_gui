@@ -1069,15 +1069,11 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
     global $tmpVar1	
     set value [string toupper [subst $[subst $tmpVar1]] ]
     
-    if { [expr 0x$indexId > 0x1fff] } {
-        # for objects above 1fff object type can be changed
-        set objectType [NoteBookManager::GetComboValue $frame1.co_obj1]
-    }
-	
-    if { [expr 0x$indexId > 0x1fff] || ( $objectType == "VAR" ) } {
+    if { [expr 0x$indexId > 0x1fff] && ( $objectType == "VAR" ) } {
         set dataType [NoteBookManager::GetComboValue $frame1.co_data1]
         set accessType [NoteBookManager::GetComboValue $frame1.co_access1]
-        #set objectType [NoteBookManager::GetComboValue $frame1.co_obj1]
+        #the objecct type also can be changed
+        set objectType [NoteBookManager::GetComboValue $frame1.co_obj1]
         set pdoType [NoteBookManager::GetComboValue $frame1.co_pdo1]
         set upperLimit [$frame1.en_upper1 get]
         set lowerLimit [$frame1.en_lower1 get]
@@ -1091,7 +1087,7 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
         }
         set default [NoteBookManager::GetEntryValue $frame1.en_default1]
     } else {
-        if { $objectType == "ARRAY" } {
+        if { [expr 0x$indexId > 0x1fff] && ($objectType == "ARRAY") } {
             set dataType [NoteBookManager::GetComboValue $frame1.co_data1]
             set pdoType [NoteBookManager::GetEntryValue $frame1.en_pdo1]
             set upperLimit [NoteBookManager::GetEntryValue $frame1.en_upper1]
@@ -1174,14 +1170,14 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
             Validation::ResetPromptFlag
             return
         }
-    } elseif { $dataType ==  "Visible_String" } {
+    } elseif { [string match -nocase "Visible_String" $dataType] } {
         #continue
     }
-    
     if { $value == "" || $dataType == ""  } {
         #no need to check
-        if { $dataType == "" && [expr 0x$indexId > 0x1fff] } {
-            #for objects in spec, datatype is not editable so alow user to save
+        if { ($dataType == "") && ([expr 0x$indexId > 0x1fff]) && ( ($objectType == "ARRAY") || ($objectType == "VAR") ) } {
+            #for objects less than 1fff and objects greater than 1fff with object type other than
+            # ARRAY or VAR, datatype is not editable so allow user to save
             tk_messageBox -message "Datatype not selected\nValues not saved" -title Warning -icon warning -parent .
             Validation::ResetPromptFlag
             return
@@ -1195,7 +1191,7 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
     global $chkGen
     
     if {[string match "*SubIndexValue*" $nodeSelect]} {
-        if { [expr 0x$indexId > 0x1fff] } {
+        if { ([expr 0x$indexId > 0x1fff]) && ( ($objectType == "ARRAY") || ($objectType == "VAR") ) } {
             set catchErrCode [SetAllSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName $accessType $dataType $pdoType $default $upperLimit $lowerLimit $objectType [subst $[subst $chkGen]] ]
         } else {
             if { [string match -nocase "18??" $indexId] || [string match "14??" $indexId]} {
@@ -1217,15 +1213,15 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
                     }
                 }
             }
-            if { ($objectType == "ARRAY") || ($objectType == "VAR") } {
-                set catchErrCode [SetAllSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName $accessType $dataType $pdoType $default $upperLimit $lowerLimit $objectType [subst $[subst $chkGen]] ]
-            } else {
+            #if { ($objectType == "ARRAY") || ($objectType == "VAR") } {
+            #    set catchErrCode [SetAllSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName $accessType $dataType $pdoType $default $upperLimit $lowerLimit $objectType [subst $[subst $chkGen]] ]
+            #} else {
                 set catchErrCode [SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName [subst $[subst $chkGen]] ]
-            }
+            #}
         }
     } elseif {[string match "*IndexValue*" $nodeSelect]} {
         
-        if { [expr 0x$indexId > 0x1fff] || ($objectType == "ARRAY") || ($objectType == "VAR") } {
+        if { [expr 0x$indexId > 0x1fff] && (($objectType == "ARRAY") || ($objectType == "VAR")) } {
             # if the index is greater than 1fff and the object type is not ARRAY or RECORD the delete all subobjects if present
             #puts "llength $treePath nodes $nodeSelect ------>[llength [$treePath nodes $nodeSelect] ]" 
             if { [expr 0x$indexId > 0x1fff] && (($objectType != "ARRAY") && ($objectType != "RECORD")) && ([llength [$treePath nodes $nodeSelect] ] > 0) } {

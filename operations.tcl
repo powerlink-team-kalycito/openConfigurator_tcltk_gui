@@ -797,7 +797,7 @@ proc Operations::BasicFrames { } {
             }
         }
         "&Help" {} {} 0 {
-            {command "How to" {noFile} "How to Manual" {} -command "Operations::OpenPdfDocu" }
+            {command "How to" {noFile} "How to Manual    F1" {} -command "Operations::OpenPdfDocu" }
             {separator}
             {command "About" {} "About" {F1} -command Operations::about }
         }
@@ -811,6 +811,8 @@ proc Operations::BasicFrames { } {
     bind . <Key-F6> "Operations::Transfer"
     #shortcut keys for project
     bind . <Key-F7> "Operations::BuildProject"
+    # short cut key for help
+    bind . <Key-F1> "Operations::OpenPdfDocu"
      #to prevent BuildProject called
     bind . <Control-Key-F7> "" 
     bind . <Control-Key-f> { FindSpace::FindDynWindow }
@@ -1583,11 +1585,6 @@ proc Operations::SingleClickNode {node} {
 	    set parent [$treePath parent $node]
 	    set indexId [string range [$treePath itemcget $parent -text] end-4 end-1]
 
-	    if { [expr 0x$indexId > 0x1fff] } {
-		    set entryState normal
-	    } else {
-		    set entryState disabled
-	    }
 	    set indexPos [new_intp] 
 	    set subIndexPos [new_intp] 
 	    set catchErrCode [IfSubIndexExists $nodeId $nodeType $indexId $subIndexId $subIndexPos $indexPos]
@@ -1637,12 +1634,7 @@ proc Operations::SingleClickNode {node} {
 	    set tmpInnerf1 [lindex $f0 2]
 
 	    set indexId [string range [$treePath itemcget $node -text] end-4 end-1]
-	    if { [expr 0x$indexId > 0x1fff] } {
-		    set entryState normal
-	    } else {
-		    set entryState disabled
-	    }
-	
+	    	
 	    set indexPos [new_intp] 
 	    set catchErrCode [IfIndexExists $nodeId $nodeType $indexId $indexPos]
 	    if { [ocfmRetCode_code_get $catchErrCode] != 0 } {
@@ -1684,7 +1676,13 @@ proc Operations::SingleClickNode {node} {
     
     #configuring the index and subindex save buttons with object type
     $saveButton configure -command "NoteBookManager::SaveValue $tmpInnerf0 $tmpInnerf1 [lindex $IndexProp 1]"
+    if { ([expr 0x$indexId > 0x1fff]) && ([lindex $IndexProp 1] == "VAR") } {
+        set entryState normal
+    } else {
+	    set entryState disabled
+    }
     
+    #for index starting with A and their subobjects all the fileds cannot be edited
     if { [string match -nocase "A???" $indexId] } {
         $tmpInnerf0.frame1.ch_gen configure -state disabled
     } else {
@@ -1696,16 +1694,19 @@ proc Operations::SingleClickNode {node} {
         }
     }    
 
+    
+
+    #for index less than 2000 only name and value can be edited
     $tmpInnerf0.en_nam1 configure -validate none -state normal
     $tmpInnerf0.en_nam1 delete 0 end
     $tmpInnerf0.en_nam1 insert 0 [lindex $IndexProp 0]
     $tmpInnerf0.en_nam1 configure -bg $savedBg -validate key
 
-    # default value should only be enabled for index above 1FFF
+    # default value will always be disabled
     $tmpInnerf1.en_default1 configure -state normal -validate none
     $tmpInnerf1.en_default1 delete 0 end
     $tmpInnerf1.en_default1 insert 0 [lindex $IndexProp 4]
-    $tmpInnerf1.en_default1 configure -state $entryState -bg white
+    $tmpInnerf1.en_default1 configure -state disabled -bg white
 
     $tmpInnerf1.en_value1 configure -state normal -validate none -bg $savedBg
     $tmpInnerf1.en_value1 delete 0 end
@@ -1721,7 +1722,6 @@ proc Operations::SingleClickNode {node} {
     $tmpInnerf1.en_upper1 insert 0 [lindex $IndexProp 8]
     $tmpInnerf1.en_upper1 configure -state $entryState -bg white -validate key
 
-#
     if { [expr 0x$indexId > 0x1fff] || ([lindex $IndexProp 1] == "ARRAY") || ([lindex $IndexProp 1] == "VAR") } {
         #call the api to get the data list
         set catchErrCode [GetNodeDataTypes $nodeId $nodeType]
@@ -1729,7 +1729,22 @@ proc Operations::SingleClickNode {node} {
         #TODO : populate the obtained datatype into the datatype combo box
         #$tmpInnerf1.co_data1 configure -values
     }
-    if { ( [expr 0x$indexId <= 0x1fff] ) && ( [lindex $IndexProp 1] != "VAR" ) } {
+    #
+    ##for index greater than 1FFF
+    #    #for object type VAR all the fields except the default value are editable
+    #    #for object type ARRAY name of index, datatype and actual value can be edited
+    #    #for other object types only name and value alone can be edited
+    #    
+    
+    #The object less than 1FFF and object greater than 1FFF having object type
+    #other than VAR only name and values are editable
+    # The object types starting with A are validated in the else case those should be excluded
+    set exp1 [string match -nocase "A???" $indexId]
+    set exp2 [expr 0x$indexId <= 0x1fff]
+    set exp3 [expr 0x$indexId > 0x1fff]
+    set exp4 [lindex $IndexProp 1]
+    
+    if {  ( $exp1 != 1 ) && ( ( $exp2 == 1) || ( ($exp3 == 1) && ( $exp4 != "VAR" ) ) ) } {
 
         grid remove $tmpInnerf1.co_obj1
         grid $tmpInnerf1.en_obj1
@@ -1738,7 +1753,8 @@ proc Operations::SingleClickNode {node} {
         $tmpInnerf1.en_obj1 insert 0 [lindex $IndexProp 1]
         $tmpInnerf1.en_obj1 configure -state disabled
         
-	    if { [lindex $IndexProp 1] == "ARRAY" } {
+        #for objects greater than 1FFF with objecttype ARRAY datatype also can be edited
+	    if {( [expr 0x$indexId > 0x1fff] ) && ( [lindex $IndexProp 1] == "ARRAY") } {
             grid remove $tmpInnerf1.en_data1
     	    NoteBookManager::SetComboValue $tmpInnerf1.co_data1 [ string toupper [lindex $IndexProp 2]]
     	    grid $tmpInnerf1.co_data1
@@ -1775,22 +1791,23 @@ proc Operations::SingleClickNode {node} {
 	    }
     } else {
             
+            #these must be objects greater than 1FFF with object type VAR or objects starting with A
             grid $tmpInnerf1.frame1.ra_dec
 	    grid $tmpInnerf1.frame1.ra_hex
             
         # if the index id is less than 1FFF and i object type is VAR then the object type cannot be changed
-        if { ( [expr 0x$indexId <= 0x1fff] ) && ( [lindex $IndexProp 1] == "VAR" ) } {
-            grid remove $tmpInnerf1.co_obj1
-            grid $tmpInnerf1.en_obj1
-            $tmpInnerf1.en_obj1 configure -state normal
-            $tmpInnerf1.en_obj1 delete 0 end
-            $tmpInnerf1.en_obj1 insert 0 [lindex $IndexProp 1]
-            $tmpInnerf1.en_obj1 configure -state disabled
-        } else {
+        #if { ( [expr 0x$indexId <= 0x1fff] ) && ( [lindex $IndexProp 1] == "VAR" ) } {
+        #    grid remove $tmpInnerf1.co_obj1
+        #    grid $tmpInnerf1.en_obj1
+        #    $tmpInnerf1.en_obj1 configure -state normal
+        #    $tmpInnerf1.en_obj1 delete 0 end
+        #    $tmpInnerf1.en_obj1 insert 0 [lindex $IndexProp 1]
+        #    $tmpInnerf1.en_obj1 configure -state disabled
+        #} else {
             grid remove $tmpInnerf1.en_obj1
             NoteBookManager::SetComboValue $tmpInnerf1.co_obj1  [lindex $IndexProp 1]
             grid $tmpInnerf1.co_obj1
-        }
+        #}
 
         grid remove $tmpInnerf1.en_data1
 	    NoteBookManager::SetComboValue $tmpInnerf1.co_data1 [ string toupper [lindex $IndexProp 2]]
@@ -3251,36 +3268,69 @@ proc Operations::BuildProject {} {
     if { $ErrCode == 0 && $mnExistfFlag == 1 } {
         #the node exist continue
         #get the actual value of 1006
-        set cycleTimeresult [GetObjectValueData $mnNodePos $mnNodeId $mnNodeType [list 5] $Operations::CYCLE_TIME_OBJ]
+        set cycleTimeresult [GetObjectValueData $mnNodePos $mnNodeId $mnNodeType [list 5 0 9] $Operations::CYCLE_TIME_OBJ]
         if {[string equal "pass" [lindex $cycleTimeresult 0]] == 1} {
             if {[lindex $cycleTimeresult 1] != "" } {
                 set cycleTimeValue [lindex $cycleTimeresult 1]
+                set cycleTimeName [lindex $cycleTimeresult 2]
+                set cycleTimeCdcFlag [lindex $cycleTimeresult 3]
                 if { ( [expr $cycleTimeValue > 0] == 1)  } {
                     #value is greater than zero proceed in building project
                 } else {
                     #value is zero
                     set errCycleTimeFlag 1
-                    set msg "Value of Index 1006 is 0.\nEnter a value greater than zero"
+                    set msg "Value of Index 1006 in MN is 0."
                 }
             } else {
                 #value is empty
                 set errCycleTimeFlag 1
-                set msg "Value of Index 1006 is empty.\nEnter a value greater than zero"
+                set msg "Value of Index 1006 in MN is empty."
             }
         } else {
             #some error in getting the actual value
-            set errCycleTimeFlag 1
-            set msg "Error in getting value of Index 1006."
+            set errCycleTimeFlag 2
+            set msg "Error in getting value of Index 1006 in MN."
         }
     } else {
         #mn node doesnot exist
-        set errCycleTimeFlag 1
+        set errCycleTimeFlag 2
         set msg "MN node doesnot exist"
     }
     
-    if { $errCycleTimeFlag == 1 } {   
-        tk_messageBox -message "$msg" -icon warning -title "Warning" -parent .
-        return
+    if { $errCycleTimeFlag > 0 } {
+        if {$errCycleTimeFlag == 2} {
+            tk_messageBox -message "$msg" -icon warning -title "Warning" -parent .
+            return
+        } elseif {$errCycleTimeFlag == 1} { 
+            set result [tk_messageBox -message "$msg.\nDo you want to copy the default value 50000 µs" \
+                -type yesno -icon info -title "Information" -parent .]
+            switch -- $result {
+			    yes {
+                        #hard code the value 50000 for 1006 object in MN
+                        puts "SetIndexAttributes $mnNodeId $mnNodeType $Operations::CYCLE_TIME_OBJ 500000 $cycleTimeName $cycleTimeCdcFlag "
+                        set catchErrCode [SetIndexAttributes $mnNodeId $mnNodeType $Operations::CYCLE_TIME_OBJ 500000 $cycleTimeName $cycleTimeCdcFlag ]
+                        set ErrCode [ocfmRetCode_code_get $catchErrCode]
+                        if { $ErrCode != 0 } {
+                            if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+                                tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
+                            } else {
+                                tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
+                            }
+                            return
+                        }
+                    }
+                no  {
+                        #open the 1006 object of mn which would be the first node to obtain
+                        FindSpace::Find "(0x1006)"
+                        set node [$treePath selection get]
+                        if {[$treePath exists $node] == 1} {
+                            #calll single click node
+                            Operations::SingleClickNode $node
+                        } 
+                        return
+                    }
+            }
+        }
     }
 
     if { $ra_auto == 1 } {
@@ -3340,6 +3390,7 @@ proc Operations::BuildProject {} {
 	    set status_save 1
     }
 }
+
 
 #---------------------------------------------------------------------------------------------------
 #  Operations::CleanProject

@@ -159,7 +159,7 @@ tsv::set application helpHtml [thread::create -joinable {
                 wm iconphoto .help -default $element
             }
         }
-        wm protocol .help WM_DELETE_WINDOW dont_exit
+        wm protocol .help WM_DELETE_WINDOW help_exit
         wm title .help "Help-openCONFIGURATOR"
         BWidget::place .help 0 0 center
         update idletasks
@@ -168,7 +168,7 @@ tsv::set application helpHtml [thread::create -joinable {
         #eval exec "$masterRootDir/lib/helpviewer/helpviewer.tcl" &
     }
 
-    proc dont_exit {} {
+    proc help_exit {} {
         tsv::set application helpStatus 0
         catch { destroy .help }
         #puts "dont_exit called"

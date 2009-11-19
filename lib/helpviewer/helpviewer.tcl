@@ -1306,7 +1306,7 @@ proc HelpViewer::HelpWindow { file { base .} { geom "" } { title "" } } {
                 -command "destroy $base" -height 50 -grid "3 e" \
                 -highlightthickness 0
 		button $base.buts.b4 -image imatge_quit -relief flat \
-                -command "destroy $base" -height 50 -grid "3 e" \
+                -command "help_exit" -height 50 -grid "3 e" \
                 -highlightthickness 0
 		ForceBgColor $base.buts.b4
     }

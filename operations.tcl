@@ -1744,6 +1744,7 @@ proc Operations::SingleClickNode {node} {
 	    if {( [expr 0x$indexId > 0x1fff] ) && ( [lindex $IndexProp 1] == "ARRAY") } {
             grid remove $tmpInnerf1.en_data1
     	    NoteBookManager::SetComboValue $tmpInnerf1.co_data1 [ string toupper [lindex $IndexProp 2]]
+            $tmpInnerf1.co_data1 configure -modifycmd "NoteBookManager::ChangeValidation $tmpInnerf1 $tmpInnerf1.co_data1 [lindex $IndexProp 1]"
     	    grid $tmpInnerf1.co_data1
         } else {
             grid remove $tmpInnerf1.co_data1
@@ -1798,6 +1799,7 @@ proc Operations::SingleClickNode {node} {
 
         grid remove $tmpInnerf1.en_data1
 	    NoteBookManager::SetComboValue $tmpInnerf1.co_data1 [ string toupper [lindex $IndexProp 2]]
+        $tmpInnerf1.co_data1 configure -modifycmd "NoteBookManager::ChangeValidation $tmpInnerf1 $tmpInnerf1.co_data1 [lindex $IndexProp 1]"
 	    grid $tmpInnerf1.co_data1
         
 	

@@ -157,7 +157,7 @@ proc NoteBookManager::create_tab { nbpath choice } {
 	    	
     set dataCoList [list BIT BOOLEAN INTEGER8 INTEGER16 INTEGER24 INTEGER32 INTEGER40 INTEGER48 INTEGER56 INTEGER64 \
                     UNSIGNED8 UNSIGNED16 UNSIGNED24 UNSIGNED32 UNSIGNED40 UNSIGNED48 UNSIGNED56 UNSIGNED64 REAL32 REAL64 MAC_ADDRESS IP_ADDRESS]
-    ComboBox $tabInnerf1.co_data1 -values $dataCoList -editable no -textvariable co_data -modifycmd "NoteBookManager::ChangeValidation $tabInnerf1 $tabInnerf1.co_data1" -width $comboWidth
+    ComboBox $tabInnerf1.co_data1 -values $dataCoList -editable no -textvariable co_data -width $comboWidth
     set objCoList [list DEFTYPE DEFSTRUCT VAR ARRAY RECORD]
     ComboBox $tabInnerf1.co_obj1 -values $objCoList -editable no -textvariable co_obj -modifycmd "NoteBookManager::ChangeValidation $tabInnerf1 $tabInnerf1.co_obj1" -width $comboWidth 
     set accessCoList [list const ro wo rw]
@@ -1903,7 +1903,7 @@ proc NoteBookManager::SetComboValue {comboPath value} {
 #
 #  Description : gets the selected value and sets the value into the Combobox widget
 #---------------------------------------------------------------------------------------------------
-proc NoteBookManager::ChangeValidation {framePath comboPath} {
+proc NoteBookManager::ChangeValidation {framePath comboPath {objectType ""}} {
     global userPrefList
     global nodeSelect
     global lastConv
@@ -1927,15 +1927,20 @@ proc NoteBookManager::ChangeValidation {framePath comboPath} {
         $framePath.en_value1 configure -validate none
         $framePath.en_value1 delete 0 end
         $framePath.en_value1 insert 0 0x
-	$framePath.en_value1 configure -validate key -vcmd "Validation::IsHex %P %s $framePath.en_value1 %d %i $dataType"
-        $framePath.en_upper1 configure -validate none -state normal
-        $framePath.en_upper1 delete 0 end
-        #$framePath.en_upper1 insert 0 0x
-	$framePath.en_upper1 configure -validate key -vcmd "Validation::IsHex %P %s $framePath.en_upper1 %d %i $dataType"
-        $framePath.en_lower1 configure -validate none -state normal
-        $framePath.en_lower1 delete 0 end
-        #$framePath.en_lower1 insert 0 0x
-	$framePath.en_lower1 configure -validate key -vcmd "Validation::IsHex %P %s $framePath.en_lower1 %d %i $dataType"
+        $framePath.en_value1 configure -validate key -vcmd "Validation::IsHex %P %s $framePath.en_value1 %d %i $dataType"
+    
+        if { $objectType == "VAR" } {
+            #upper and lower limit are editable only when object type is VAR and if 
+            #index is greater than 1FFF. the combo box appears only for index greater than 1fff
+            $framePath.en_upper1 configure -validate none -state normal
+            $framePath.en_upper1 delete 0 end
+            #$framePath.en_upper1 insert 0 0x
+            $framePath.en_upper1 configure -validate key -vcmd "Validation::IsHex %P %s $framePath.en_upper1 %d %i $dataType"
+            $framePath.en_lower1 configure -validate none -state normal
+            $framePath.en_lower1 delete 0 end
+            #$framePath.en_lower1 insert 0 0x
+            $framePath.en_lower1 configure -validate key -vcmd "Validation::IsHex %P %s $framePath.en_lower1 %d %i $dataType"
+        }
         switch -- $stdDataType {
             BIT {
                 set lastConv ""

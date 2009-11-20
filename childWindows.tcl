@@ -182,6 +182,7 @@ proc ChildWindows::ProjectSettingWindow {} {
     global projectDir
     global ra_proj
     global ra_auto
+    global viewChgFlg
 
     if {$projectDir == "" || $projectName == "" } {
 	return
@@ -190,8 +191,9 @@ proc ChildWindows::ProjectSettingWindow {} {
     set ra_autop [new_EAutoGeneratep]
     set ra_projp [new_EAutoSavep]
     set videoMode [new_EViewModep]
+    set viewChgFlg [new_boolp]
 
-    set catchErrCode [GetProjectSettings $ra_autop $ra_projp $videoMode]
+    set catchErrCode [GetProjectSettings $ra_autop $ra_projp $videoMode $viewChgFlg]
     set ErrCode [ocfmRetCode_code_get $catchErrCode]
     if { $ErrCode != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
@@ -202,10 +204,12 @@ proc ChildWindows::ProjectSettingWindow {} {
         set ra_auto 1
         set ra_proj 1
         set videoMode 0
+        set viewChgFlg 0
     } else {
         set ra_auto [EAutoGeneratep_value $ra_autop]
         set ra_proj [EAutoSavep_value $ra_projp]
         set videoMode [EViewModep_value $videoMode]
+        set viewChgFlg [boolp_value $viewChgFlg]
         # puts "ChildWindows::ProjectSettingWindow videoMode->$videoMode"
     }
 	
@@ -251,7 +255,7 @@ proc ChildWindows::ProjectSettingWindow {} {
         } else {
             set viewType 0
         }
-        set catchErrCode [SetProjectSettings $ra_auto $ra_proj $viewType]
+        set catchErrCode [SetProjectSettings $ra_auto $ra_proj $viewType $viewChgFlg]
         set ErrCode [ocfmRetCode_code_get $catchErrCode]
         if { $ErrCode != 0 } {
             if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
@@ -267,19 +271,23 @@ proc ChildWindows::ProjectSettingWindow {} {
         #if cancel is called project settings for existing project is called
         global ra_proj
         global ra_auto
+        global viewChgFlg
         set ra_autop [new_EAutoGeneratep]
         set ra_projp [new_EAutoSavep]
         set videoMode [new_EViewModep]
-        set catchErrCode [GetProjectSettings $ra_autop $ra_projp $videoMode]
+        set viewChgFlg [new_boolp]
+        set catchErrCode [GetProjectSettings $ra_autop $ra_projp $videoMode $viewChgFlg]
         set ErrCode [ocfmRetCode_code_get $catchErrCode]
         if { $ErrCode != 0 } {
             set ra_auto 1
             set ra_proj 1
             set videoMode 0
+            set viewChgFlg 0
         } else {
             set ra_auto [EAutoGeneratep_value $ra_autop]
             set ra_proj [EAutoSavep_value $ra_projp]
             set videoMode [EViewModep_value $videoMode]
+            set viewChgFlg [boolp_value $viewChgFlg]
         }
         #puts "ChildWindows::ProjectSettingWindow videoMode->$videoMode"
     	destroy .projSett
@@ -925,21 +933,25 @@ proc ChildWindows::NewProjectWindow {} {
 	    global projectDir
 	    global ra_proj
 	    global ra_auto
+        global viewChgFlg
 	    catch {
 		if { $projectDir != "" && $projectName != "" } {
 		    set ra_autop [new_EAutoGeneratep]
 		    set ra_projp [new_EAutoSavep]
             set videoMode [new_EViewModep]
-		    set catchErrCode [GetProjectSettings $ra_autop $ra_projp $videoMode]
+            set viewChgFlg [new_boolp]
+		    set catchErrCode [GetProjectSettings $ra_autop $ra_projp $videoMode $viewChgFlg]
 		    set ErrCode [ocfmRetCode_code_get $catchErrCode]
 		    if { $ErrCode == 0 } {
 		        set ra_auto [EAutoGeneratep_value $ra_autop]
 		        set ra_proj [EAutoSavep_value $ra_projp]
                 Operations::SetVideoType [EViewModep_value $videoMode]
+                set viewChgFlg [boolp_value $viewChgFlg]
 		    } else {
 		        set ra_auto 1
 		        set ra_proj 1
                 Operations::SetVideoType 0
+                set viewChgFlg 0
             }
 		}
             #puts "ChildWindows::NewProjectWindow videoMode->$videoMode"
@@ -1071,6 +1083,7 @@ proc ChildWindows::NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf tempRa_
     global projectDir
     global nodeIdList
     global status_save
+    global viewChgFlg
 
     #CloseProject is called to delete node and insert tree
     Operations::CloseProject
@@ -1138,12 +1151,13 @@ proc ChildWindows::NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf tempRa_
     set viewType 0
     global lastVideoModeSel
     set lastVideoModeSel 0
+    set viewChgFlg 0
     #if { $Operations::viewType == "EXPERT" } {
     #    set viewType 1
     #} else {
     #    set viewType 0
     #}
-    set catchErrCode [SetProjectSettings $tempRa_auto $tempRa_proj $viewType]
+    set catchErrCode [SetProjectSettings $tempRa_auto $tempRa_proj $viewType $viewChgFlg]
     set ErrCode [ocfmRetCode_code_get $catchErrCode]
     if { $ErrCode != 0 } {
 	    if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {

@@ -2019,13 +2019,9 @@ proc Operations::MNProperties {node nodePos nodeId nodeType} {
     
     # value from 1006 for Cycle time
     set MNDatalist ""
-    set cycleTimeresult [GetObjectValueData $nodePos $nodeId $nodeType [list 2 4 5] $Operations::CYCLE_TIME_OBJ]
+    set cycleTimeresult [GetObjectValueData $nodePos $nodeId $nodeType [list 2 5] $Operations::CYCLE_TIME_OBJ]
     if {[string equal "pass" [lindex $cycleTimeresult 0]] == 1} {
-        if {[lindex $cycleTimeresult 3] == "" } {
-            set cycleTimeValue [lindex $cycleTimeresult 2]
-        } else {
-            set cycleTimeValue [lindex $cycleTimeresult 3]
-        }
+        set cycleTimeValue [lindex $cycleTimeresult 2]
         set cycleTimeDatatype [lindex $cycleTimeresult 1]
         $tmpInnerf0.en_time configure -state normal -validate none -bg $savedBg
         $tmpInnerf0.en_time delete 0 end
@@ -2063,13 +2059,9 @@ proc Operations::MNProperties {node nodePos nodeId nodeType} {
     }
     
     # value from 0x1F98/08 for Asynchronous MTU size
-    set asynMTUSizeResult [GetObjectValueData $nodePos $nodeId $nodeType  [list 2 4 5] [lindex $Operations::ASYNC_MTU_SIZE_OBJ 0] [lindex $Operations::ASYNC_MTU_SIZE_OBJ 1] ]
+    set asynMTUSizeResult [GetObjectValueData $nodePos $nodeId $nodeType  [list 2 5] [lindex $Operations::ASYNC_MTU_SIZE_OBJ 0] [lindex $Operations::ASYNC_MTU_SIZE_OBJ 1] ]
     if {[string equal "pass" [lindex $asynMTUSizeResult 0]] == 1} {
-        if {[lindex $cycleTimeresult 3] == "" } {
-            set asynMTUSizeValue [lindex $asynMTUSizeResult 2]
-        } else {
-            set asynMTUSizeValue [lindex $asynMTUSizeResult 3]
-        }
+        set asynMTUSizeValue [lindex $asynMTUSizeResult 2]
         set asynMTUSizeDatatype [lindex $asynMTUSizeResult 1]
         
         $tmpInnerf1.en_advOption1 configure -state normal -validate none -bg $savedBg
@@ -2085,13 +2077,9 @@ proc Operations::MNProperties {node nodePos nodeId nodeType} {
     }
     
     # value from 0x1F8A/07 for Asynchronous Timeout
-    set asynTimeoutResult [GetObjectValueData $nodePos $nodeId $nodeType [list 2 4 5] [lindex $Operations::ASYNC_TIMEOUT_OBJ 0] [lindex $Operations::ASYNC_TIMEOUT_OBJ 1] ]
+    set asynTimeoutResult [GetObjectValueData $nodePos $nodeId $nodeType [list 2 5] [lindex $Operations::ASYNC_TIMEOUT_OBJ 0] [lindex $Operations::ASYNC_TIMEOUT_OBJ 1] ]
     if {[string equal "pass" [lindex $asynTimeoutResult 0]] == 1} {
-        if {[lindex $cycleTimeresult 3] == "" } {
-            set asynTimeoutValue [lindex $asynTimeoutResult 2]
-        } else {
-            set asynTimeoutValue [lindex $asynTimeoutResult 3]
-        }
+        set asynTimeoutValue [lindex $asynTimeoutResult 2]
         set asynTimeoutDatatype [lindex $asynTimeoutResult 1]
         
         $tmpInnerf1.en_advOption2 configure -state normal -validate none -bg $savedBg
@@ -2118,13 +2106,9 @@ proc Operations::MNProperties {node nodePos nodeId nodeType} {
     }
     set MNFeatureMultiplexFlag [lindex $catchErrCode 1]
     
-    set multiPrescaler [GetObjectValueData $nodePos $nodeId $nodeType [list 2 4 5] [lindex $Operations::MULTI_PRESCAL_OBJ 0] [lindex $Operations::MULTI_PRESCAL_OBJ 1] ]
+    set multiPrescaler [GetObjectValueData $nodePos $nodeId $nodeType [list 2 5] [lindex $Operations::MULTI_PRESCAL_OBJ 0] [lindex $Operations::MULTI_PRESCAL_OBJ 1] ]
     if {[string equal "pass" [lindex $multiPrescaler 0]] == 1} {
-        if {[lindex $cycleTimeresult 3] == "" } {
-            set multiPrescalerValue [lindex $multiPrescaler 2]
-        } else {
-            set multiPrescalerValue [lindex $multiPrescaler 3]
-        }
+        set multiPrescalerValue [lindex $multiPrescaler 2]
         set multiPrescalerDatatype [lindex $multiPrescaler 1]
         
         if { ( [string match -nocase "TRUE" $MNFeatureMultiplexFlag] == 1 )  } {

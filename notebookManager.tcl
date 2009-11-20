@@ -1367,7 +1367,8 @@ proc NoteBookManager::SaveMNValue {nodePos frame0 frame1} {
         [list asynMTUSizeDatatype $Operations::ASYNC_MTU_SIZE_OBJ $frame1.en_advOption1] \
         [list asynTimeoutDatatype $Operations::ASYNC_TIMEOUT_OBJ $frame1.en_advOption2] \
         [list multiPrescalerDatatype $Operations::MULTI_PRESCAL_OBJ $frame1.en_advOption3] ]
-   
+    
+    set dispMsg 0
     foreach tempDatatype $MNDatalist {
         set schDataRes [lsearch $MNDatatypeObjectPathList [list [lindex $tempDatatype 0] * *]]
         if {$schDataRes  != -1 } {
@@ -1388,6 +1389,7 @@ proc NoteBookManager::SaveMNValue {nodePos frame0 frame1} {
                 set validValue [lindex $result 1]
                 if {$validValue == ""} {
                     #value is empty do not save it
+                    set dispMsg 1
                     continue
                 }
                 set reqFieldResult [Operations::GetObjectValueData $nodePos $nodeId $nodeType [list 0 9] [lindex $objectList 0] [lindex $objectList 1] ]
@@ -1425,6 +1427,9 @@ proc NoteBookManager::SaveMNValue {nodePos frame0 frame1} {
                 continue
             }
         }
+    }
+    if { $dispMsg == 1 } {
+        Console::DisplayWarning "Empty values in MN properties are not saved"
     }
     if { [lsearch $savedValueList $nodeSelect] == -1 } {
         lappend savedValueList $nodeSelect

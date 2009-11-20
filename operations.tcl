@@ -3299,8 +3299,7 @@ proc Operations::BuildProject {} {
             switch -- $result {
 			    yes {
                         #hard code the value 50000 for 1006 object in MN
-                        puts "SetIndexAttributes $mnNodeId $mnNodeType $Operations::CYCLE_TIME_OBJ 500000 $cycleTimeName $cycleTimeCdcFlag "
-                        set catchErrCode [SetIndexAttributes $mnNodeId $mnNodeType $Operations::CYCLE_TIME_OBJ 500000 $cycleTimeName $cycleTimeCdcFlag ]
+                        set catchErrCode [SetIndexAttributes $mnNodeId $mnNodeType $Operations::CYCLE_TIME_OBJ 50000 $cycleTimeName $cycleTimeCdcFlag ]
                         set ErrCode [ocfmRetCode_code_get $catchErrCode]
                         if { $ErrCode != 0 } {
                             if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {

@@ -1386,6 +1386,10 @@ proc NoteBookManager::SaveMNValue {nodePos frame0 frame1} {
             if { [lindex $result 0] == "pass" } {
                 #get the flag and name of the object
                 set validValue [lindex $result 1]
+                if {$validValue == ""} {
+                    #value is empty do not save it
+                    continue
+                }
                 set reqFieldResult [Operations::GetObjectValueData $nodePos $nodeId $nodeType [list 0 9] [lindex $objectList 0] [lindex $objectList 1] ]
                 if { [lindex $reqFieldResult 0] == "pass" } {
                     set objName [lindex $reqFieldResult 1]
@@ -1598,6 +1602,10 @@ proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 frame2 
             if { [lindex $result 0] == "pass" } {
                 #get the flag and name of the object
                 set validValue [lindex $result 1]
+                if {$validValue == ""} {
+                    #value is empty do not save it
+                    continue
+                }
                 set reqFieldResult [Operations::GetObjectValueData $nodePos $nodeId $nodeType [list 0 9] [lindex $objectList 0] [lindex $objectList 1] ]
                 if { [lindex $reqFieldResult 0] == "pass" } {
                     set objName [lindex $reqFieldResult 1]

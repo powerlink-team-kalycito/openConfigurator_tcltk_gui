@@ -26,32 +26,42 @@
 #  NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
 #  MODIFICATIONS.
 ################################################################################
+
+
 #!/bin/sh
 #\
 exec wish8.5 "$0" ${1+"$@"}
 
 global masterRootDir
 global auto_path
-#puts "\n\n argv->$argv \n"
-#set masterRootDir [pwd]
-#puts "\n\n masterRootDir->$masterRootDir"
-#set masterRootDir "."
 
 set libDir [file join $masterRootDir lib]
-lappend auto_path $libDir
-#puts "\n\n libDir->$libDir auto_path->$auto_path"
-global uniformColor
-set uniformColor "\#d7d5d3"
+set auto_path [linsert $auto_path 0 $libDir]
 
 namespace eval HelpViewer {
     
     variable HelpBaseDir
     variable LastFileList
     variable images
+	variable displayArrangeList
 }
-    set helpFile index.htm
+    set helpFile License.html
 	set HelpViewer::HelpBaseDir [file join $masterRootDir help]
-
+	set HelpViewer::displayArrangeList [list \
+		"License.html" \
+		"Introduction.html" \
+		"Features summary" \
+		"Product Features" \
+		"Editing Object dictionary entries" \
+		"Editing MN and CN properties" \
+		"Compiling and building the project" \
+		"Deleting the nodes" \
+		"Save project" \
+		"Launching the application" \
+		"Compiling from source.html" \
+		"KnownBugs" \
+		"troubleshooting.html" \
+	]
 
 #package provide helpviewer 1.0
 # requiring exactly 2.1 to avoid getting the one from Activestate
@@ -62,6 +72,12 @@ package require supergrid
 package require dialogwin
 package require fileutil
 package require htmlparse
+
+if {"$tcl_platform(platform)" != "windows"} {
+	    # Background color based on OS
+	    option add *background #d7d5d3 userDefault
+}
+
 
 proc filenormalize { file } {
     
@@ -144,7 +160,7 @@ namespace eval History {
             $menu entryconf Forward -state normal
         }
         # HelpViewer::LoadRef $w [lindex $list $pos] 0
-        HelpViewer::LoadRef $w [file join $HelpViewer::HelpBaseDir index.htm] 0
+        HelpViewer::LoadRef $w [file join $HelpViewer::HelpBaseDir License.html] 0
     }
     proc GoBackward { w } {
         variable list
@@ -314,7 +330,6 @@ proc HelpViewer::FrameCmd { base type arglist } {
 # This routine is called for each form element
 #
 proc HelpViewer::FormCmd {n cmd args} {
-    # puts "FormCmd: $n $cmd $args"
     switch $cmd {
         select -
         textarea -
@@ -380,7 +395,6 @@ proc HelpViewer::ScriptCmd {args} {
 # This routine is called for every <APPLET> markup
 #
 proc HelpViewer::AppletCmd {w arglist} {
-    # puts "AppletCmd: w=$w arglist=$arglist"
     label $w -text "The Applet $w" -bd 2 -relief raised
 }
 
@@ -730,7 +744,7 @@ proc HelpViewer::CopySelected { w { offset 0 } { maxBytes 0} } {
     
     regexp {([0-9]+)[.]([0-9]+)} $ini {} initoc inipos
     regexp {([0-9]+)[.]([0-9]+)} $end {} endtoc endpos
-    #puts [$w token list $initoc $endtoc]
+
     set rettext ""
     set iposlast [expr $endtoc-$initoc]
     set ipos 0
@@ -909,8 +923,6 @@ proc HelpViewer::HelpWindow { file { base .} { geom "" } { title "" } } {
     }
     
     global lastDir tcl_platform argv0
-    global uniformColor
-	global widgetColor
     set imagesdir [file join [file dirname [info script]] images]
     
     if { $tcl_platform(platform) != "windows" } {
@@ -959,8 +971,6 @@ proc HelpViewer::HelpWindow { file { base .} { geom "" } { title "" } } {
     }
 	wm withdraw .
     wm withdraw $base
-	ForceBgColor .
-	ForceBgColor $base
 	
 	
     # These images are used in place of GIFs or of form elements
@@ -1148,29 +1158,21 @@ proc HelpViewer::HelpWindow { file { base .} { geom "" } { title "" } } {
         set weight1 5
         set weight2 12
     }
-	ForceBgColor $pw
-    #set pane1 [eval $pw add -weight $weight1 $widgetColor]
+
 	set pane1 [$pw add -weight $weight1 ]
-	#puts "pane1->$pane1"
     
-	ForceBgColor $pane1
-    #NoteBook $pane1.nb -homogeneous 1 -bd 1 -internalborderwidth 3 \ #-bg $uniformColor \
-             -grid "0 py3"
     NoteBook $pane1.nb -homogeneous 1 -bd 1 -internalborderwidth 3 \
              -grid "0 py3"
-	ForceBgColor $pane1.nb
     set notebook $pane1.nb
     
     set f1 [$pane1.nb insert end tree -text "Contents" -image appbook16]
-    ForceBgColor $f1
     set sw [ScrolledWindow $f1.lf -relief sunken -borderwidth 1 -grid "0"]
-	ForceBgColor $sw
     set tree [Tree $sw.tree -bg white\
             -relief flat -borderwidth 2 -width 15 -highlightthickness 0\
             -redraw 1 -deltay 18 -bg white\
             -opencmd   "HelpViewer::moddir 1 $sw.tree" \
             -closecmd  "HelpViewer::moddir 0 $sw.tree" \
-            -width 5 \
+            -width 5  \
             ]
     $sw setwidget $tree
     
@@ -1184,11 +1186,8 @@ proc HelpViewer::HelpWindow { file { base .} { geom "" } { title "" } } {
     $pane1.nb itemconfigure tree -raisecmd "focus $tree"
     
     set f2 [$pane1.nb insert end search -text "Search" -image viewmag16]
-    ForceBgColor $f2
     label $f2.l1 -text "S:" -grid 0
-	ForceBgColor $f2.l1
-    entry $f2.e1 -textvariable HelpViewer::searchstring -grid "1 py3"
-    ForceBgColor $f2.e1
+    entry $f2.e1 -textvariable HelpViewer::searchstring -grid "1 py3" -bg white
 	
     $pane1.nb itemconfigure search -raisecmd "tkTabToWindow $f2.e1"
     bind $f2.e1 <Return> "focus $f2.lf1.lb; HelpViewer::SearchInAllHelp"
@@ -1220,9 +1219,7 @@ proc HelpViewer::HelpWindow { file { base .} { geom "" } { title "" } } {
     $pane1.nb raise tree
     
     set pane2 [$pw add -weight $weight2]
-    ForceBgColor $pane2
     set sw [ScrolledWindow $pane2.lf -relief sunken -borderwidth 0 -grid "0 2"]
-	ForceBgColor $sw
     set html [html $sw.h \
             -padx 5 \
             -pady 9 \
@@ -1247,22 +1244,18 @@ proc HelpViewer::HelpWindow { file { base .} { geom "" } { title "" } } {
     bind $base <Control-c> "HelpViewer::CopySelected $html"
     
     set buttFrame [frame $base.buts -grid "0 ew"]
-	ForceBgColor $buttFrame
     button $base.buts.b1 -image imatge_fletxa_e -relief flat \
             -command "History::GoBackward $html" -height 50 -grid "0 e" \
             -highlightthickness 0
-	ForceBgColor $base.buts.b1
     button $base.buts.b2 -image imatge_fletxa_d -relief flat \
             -command "History::GoForward $html" -height 50 -grid "1 w" \
             -highlightthickness 0
-    ForceBgColor $base.buts.b2
-    #menubutton $base.buts.b3 -text "More..." -bg $uniformColor -relief flat \
-            -menu $base.buts.b3.m -grid "2 e" -activebackground grey93
+
     menubutton $base.buts.b3 -text "More..." -relief flat \
             -menu $base.buts.b3.m -grid "2 e" -activebackground grey93
-	ForceBgColor $base.buts.b3
+
     menu $base.buts.b3.m
-	ForceBgColor $base.buts.b3.m
+
     $base.buts.b3.m add command -label "Home" -acc "" -command \
             "History::GoHome $html"
     $base.buts.b3.m add command -label "Previous" -acc "Alt-Left" -command \
@@ -1294,21 +1287,13 @@ proc HelpViewer::HelpWindow { file { base .} { geom "" } { title "" } } {
     #             "HelpViewer::HTMLToClipBoardCSV $base"
     
     if { $HelpPrefs::RunningAlone } {
-        #button $base.buts.b4 -image imatge_quit -bg $uniformColor -relief flat \
-                -command "exit" -height 50 -grid "3 e" \
-                -highlightthickness 0
 		button $base.buts.b4 -image imatge_quit -relief flat \
                 -command "exit" -height 50 -grid "3 e" \
                 -highlightthickness 0
-		ForceBgColor $base.buts.b4
     } else {
-        #button $base.buts.b4 -image imatge_quit -bg $uniformColor -relief flat \
-                -command "destroy $base" -height 50 -grid "3 e" \
-                -highlightthickness 0
 		button $base.buts.b4 -image imatge_quit -relief flat \
                 -command "help_exit" -height 50 -grid "3 e" \
                 -highlightthickness 0
-		ForceBgColor $base.buts.b4
     }
     
     supergrid::go $pane1
@@ -1447,31 +1432,43 @@ proc HelpViewer::HelpSearchWord { word } {
 
 proc HelpViewer::FillDir { tree node } {
     variable HelpBaseDir
-    
+    variable displayArrangeList
+	
+	set files ""
     if { $node == "root" } {
         set dir $HelpBaseDir
+		set files $displayArrangeList
     } else {
         set dir [lindex [$tree itemcget $node -data] 1]
+		foreach i [glob -nocomplain -dir $dir *] {
+		    lappend files [file tail $i]
+		}
+		set files [lsort -dictionary $files]
     }
     
     set idxfolder 0
-    set files ""
-    foreach i [glob -nocomplain -dir $dir *] {
-        lappend files [file tail $i]
-    }
-    foreach i [lsort -dictionary $files] {
+    
+	#hardcoding the list files and folders to be displayed
+    #foreach i [glob -nocomplain -dir $dir *] {
+    #    lappend files [file tail $i]
+    #}
+	
+    #foreach i [lsort -dictionary $files] { }
+	foreach i $files {
         set fullpath [file join $dir $i]
         regsub {^[0-9]+} $i {} name
         regsub -all {\s} $fullpath _ item
         if { [file isdir $fullpath] } {
             if { [string equal -nocase $i "images"] } { continue }
-            $tree insert $idxfolder $node $item -image appbook16 -text $name \
+            #$tree insert $idxfolder $node $item -image appbook16 -text $name \
                     -data [list folder $fullpath] -drawcross allways
+			$tree insert end $node $item -image appbook16 -text $name \
+                    -data [list folder $fullpath] -drawcross allways 
             incr idxfolder
         } elseif { [string match .htm* [file ext $i]] } {
             set name [file root $i]
             $tree insert end $node $item -image filedocument16 -text $name \
-                    -data [list file $fullpath]
+                    -data [list file $fullpath] 
         }
     }
 }
@@ -1481,7 +1478,7 @@ proc HelpViewer::moddir { idx tree node } {
     
     if { $idx && [$tree itemcget $node -drawcross] == "allways" } {
         FillDir $tree $node
-        $tree itemconfigure $node -drawcross auto
+        $tree itemconfigure $node -drawcross auto 
         
         if { [llength [$tree nodes $node]] } {
             $tree itemconfigure $node -image appbookopen16
@@ -1494,7 +1491,7 @@ proc HelpViewer::moddir { idx tree node } {
                 0 { set img appbook16 }
                 1 { set img appbookopen16 }
             }
-            $tree itemconfigure $node -image $img
+            $tree itemconfigure $node -image $img 
         }
     }
 }
@@ -1673,35 +1670,24 @@ proc HelpViewer::Search {} {
 
 proc HelpViewer::SearchWindow {} {
     variable html
-	global uniformColor
-    #puts "html -> $html"
+
     set f [DialogWin::Init $html "Search" separator]
-	ForceBgColor $f
     set w [winfo toplevel $f]
-	ForceBgColor $w
 
     label $f.l1 -text "Text:" -grid 0
-	ForceBgColor $f.l1
     entry $f.e1 -textvariable ::HelpViewer::searchstring -grid "1 px3 py3"
-	ForceBgColor $f.e1
     
     set f25 [frame $f.f25 -bd 1 -relief ridge -grid "0 2 w px3"]
-	ForceBgColor $f25
     radiobutton $f25.r1 -text Forward -variable ::HelpViewer::SearchType \
             -value -forwards -grid "0 w"
-	ForceBgColor $f25.r1
     radiobutton $f25.r2 -text Backward -variable ::HelpViewer::SearchType \
             -value -backwards -grid "0 w"
-	ForceBgColor $f25.r2
     
     set f3 [frame $f.f3 -grid "0 2 w"]
-	ForceBgColor $f3
     checkbutton $f3.cb1 -text "Consider case" -variable ::HelpViewer::searchcase \
             -grid 0
-	ForceBgColor $f3.cb1
     checkbutton $f3.cb2 -text "From beginning" -variable ::HelpViewer::searchFromBegin \
             -grid 1
-    ForceBgColor $f3.cb2
 	
     supergrid::go $f
     
@@ -1757,7 +1743,6 @@ proc HelpViewer::CreateIndex {} {
     ProgressDlg $html.prdg -textvariable HelpViewer::progressbarT -variable \
             HelpViewer::progressbar -title "Creating search index" \
             -troughcolor \#e0e8f0 -stop Stop -command "set HelpViewer::progressbarStop 1"
-    #ForceBgColor $html.prdg
     set progressbar 0
     set progressbarStop 0
     
@@ -2074,10 +2059,10 @@ proc HelpViewer::WaitState { what } {
 #        }
 #        
 #        
-#    }
+#    }F
 #    HelpViewer::HelpWindow $file
 #} else  {
 #    set HelpViewer::HelpBaseDir [file join [info script] help]
 #}
 
-HelpViewer::HelpWindow [file join $masterRootDir help UserManual.html] .help
+HelpViewer::HelpWindow [file join $masterRootDir help License.html] .help

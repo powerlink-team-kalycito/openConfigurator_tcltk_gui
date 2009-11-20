@@ -1,0 +1,111 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=utf-8">
+	<TITLE></TITLE>
+	<META NAME="GENERATOR" CONTENT="OpenOffice.org 3.1  (Linux)">
+	<META NAME="AUTHOR" CONTENT="vikram ">
+	<META NAME="CREATED" CONTENT="20091120;18345000">
+	<META NAME="CHANGEDBY" CONTENT="vikram ">
+	<META NAME="CHANGED" CONTENT="20091120;18445800">
+	<STYLE TYPE="text/css">
+	<!--
+		H2 { margin-top: 0cm; margin-bottom: 0cm; line-height: 100%; text-align: justify; page-break-inside: auto; page-break-before: auto }
+		H2.western { font-family: "Times New Roman", serif; font-size: 12pt }
+		H2.cjk { font-family: "DejaVu Sans"; font-size: 14pt }
+		H2.ctl { font-family: "DejaVu Sans"; font-size: 12pt; font-weight: normal }
+	-->
+	</STYLE>
+</HEAD>
+<BODY LANG="en-IN" DIR="LTR">
+<P STYLE="margin-bottom: 0cm; page-break-before: always"><FONT SIZE=4><FONT COLOR="#000000"><FONT FACE="Times New Roman, serif"><B><SPAN LANG="zxx">Compilation</SPAN></B></FONT></FONT></FONT></P>
+<P ALIGN=JUSTIFY STYLE="margin-bottom: 0cm; font-weight: normal"><FONT FACE="Times New Roman, serif"><FONT SIZE=3>For
+compiling the tool follow the below:</FONT></FONT></P>
+<P STYLE="margin-bottom: 0cm"><B><FONT COLOR="#000000"><SPAN LANG="zxx">Linux</SPAN></FONT></B></P>
+<UL>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-bottom: 0cm; font-weight: normal">
+	<FONT FACE="Times new roman, serif"><FONT SIZE=3>Unzip
+	openCONFIGURATORSoln.zip</FONT></FONT></P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-bottom: 0cm; font-weight: normal">
+	<FONT FACE="Times new roman, serif"><FONT SIZE=3>Goto
+	“openCONFIGURATORSoln.zip\openCONFIGURATORSoln\openCONFIGURATOR\src”</FONT></FONT></P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-bottom: 0cm; font-weight: normal">
+	<FONT FACE="Times new roman, serif"><FONT SIZE=3>Type </FONT></FONT>
+	</P>
+	<P ALIGN=JUSTIFY STYLE="margin-bottom: 0cm; font-weight: normal">   
+	<FONT FACE="Times new roman, serif"><FONT SIZE=3>make</FONT></FONT></P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-bottom: 0cm; font-weight: normal">
+	<FONT FACE="Times new roman, serif"><FONT SIZE=3>The above will
+	compile and create openCONFIGURATOR.so in the same directory</FONT></FONT></P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-bottom: 0cm; font-weight: normal">
+	<FONT FACE="Times new roman, serif"><FONT SIZE=3>Copy the 
+	openCONFIGURATOR.so into /usr/lib/openCONFIGURATOR.so</FONT></FONT></P>
+	<P ALIGN=JUSTIFY STYLE="margin-bottom: 0cm; font-weight: normal">   
+	<FONT FACE="Times new roman, serif"><FONT SIZE=3>sudo cp -rvf
+	./openCONFIGURATOR.so /usr/lib/</FONT></FONT></P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-bottom: 0cm; font-weight: normal">
+	<FONT FACE="Times new roman, serif"><FONT SIZE=3>Goto
+	“openCONFIGURATORSoln.zip\openCONFIGURATORSoln\openConfiguratorWrapper”</FONT></FONT></P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-bottom: 0cm; font-weight: normal">
+	<FONT FACE="Times new roman, serif"><FONT SIZE=3>Type</FONT></FONT></P>
+	<P ALIGN=JUSTIFY STYLE="margin-bottom: 0cm; font-weight: normal">   
+	<FONT FACE="Times new roman, serif"><FONT SIZE=3>make</FONT></FONT></P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-bottom: 0cm; font-weight: normal">
+	<FONT FACE="Times new roman, serif"><FONT SIZE=3>The above will
+	compile and create Tcl_WrapperMain.so in the same directory</FONT></FONT></P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-bottom: 0cm; font-weight: normal">
+	<FONT FACE="Times new roman, serif"><FONT SIZE=3>Copy the 
+	Tcl_WrapperMain.so into the installed directory of openCONFIGURATOR.</FONT></FONT></P>
+	<P ALIGN=JUSTIFY STYLE="margin-bottom: 0cm; font-weight: normal">   
+	<FONT FACE="Times new roman, serif"><FONT SIZE=3>sudo cp -rvf
+	./Tcl_WrapperMain.so /usr/share/openCONFIGURATOR-V-1.0.0/</FONT></FONT></P>
+</UL>
+<P ALIGN=JUSTIFY STYLE="margin-bottom: 0cm; font-weight: normal"><BR>
+</P>
+<P ALIGN=JUSTIFY STYLE="margin-bottom: 0cm; font-weight: normal"><FONT FACE="Times New Roman, serif"><FONT SIZE=2><I>Note:
+The compilation of wrapper needs the openCONFIGURATOR.so in /usr/lib
+location. If the location is changed, it should also be reflected in
+the Makefile for  Tcl_WrapperMain.so. An issue in any one of the
+above steps may lead to “Error loading shared library/ Please
+re-install the tool” error pop-up on the GUI.</I></FONT></FONT></P>
+<H2 CLASS="western" ALIGN=JUSTIFY STYLE="line-height: 0.42cm"><SPAN STYLE="font-style: normal"><SPAN LANG="zxx"><FONT FACE="Times New Roman, serif"><B><FONT SIZE=3><FONT COLOR="#000000">Windows</FONT></FONT></B></FONT></SPAN></SPAN></H2>
+<UL>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-bottom: 0cm; font-style: normal; font-weight: normal">
+	<FONT FACE="Times New Roman, serif"><FONT SIZE=3>Unzip and goto
+	“openCONFIGURATORSoln.zip\openCONFIGURATORSoln”</FONT></FONT></P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-bottom: 0cm; font-style: normal; font-weight: normal">
+	<FONT FACE="Times New Roman, serif"><FONT SIZE=3>open
+	“openCONFIGURATOR.sln” with MS Visual Studio Express Edition</FONT></FONT></P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-bottom: 0cm; font-style: normal; font-weight: normal">
+	<FONT FACE="Times New Roman, serif"><FONT SIZE=3>[The solution was
+	created and tested with MS – Visual C++ 2008 Express Edition]</FONT></FONT></P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-bottom: 0cm; font-style: normal; font-weight: normal">
+	<FONT FACE="Times New Roman, serif"><FONT SIZE=3>Install Active Tcl
+	mentioned in the pre-requisites and set the path of the installed
+	directory as environmental variable</FONT></FONT></P>
+	<UL>
+		<LI><P ALIGN=JUSTIFY STYLE="margin-bottom: 0cm; font-style: normal; font-weight: normal">
+		<FONT FACE="Times New Roman, serif"><FONT SIZE=3>$TCL_PATH = “Tcl
+		Installed Dir”</FONT></FONT></P>
+	</UL>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-bottom: 0cm; font-style: normal; font-weight: normal">
+	<FONT FACE="Times New Roman, serif"><FONT SIZE=3>Install Swigwin and
+	set the installed path of swig </FONT></FONT>
+	</P>
+	<UL>
+		<LI><P ALIGN=JUSTIFY STYLE="margin-bottom: 0cm; font-style: normal; font-weight: normal">
+		<FONT FACE="Times New Roman, serif"><FONT SIZE=3>$SWIG_PATH = “Swig
+		installed Dir”</FONT></FONT></P>
+	</UL>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-bottom: 0cm; font-style: normal; font-weight: normal">
+	<FONT FACE="Times New Roman, serif"><FONT SIZE=3>Build the solution</FONT></FONT></P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-bottom: 0cm; font-style: normal; font-weight: normal">
+	<FONT FACE="Times New Roman, serif"><FONT SIZE=3>Inside the Release
+	directory of the solution, two dlls will be created viz.,
+	openConfigurator.dll and openConfiguratorWrapper.dll</FONT></FONT></P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><FONT SIZE=3>Copy
+	the openConfigurator.dll and openConfiguratorWrapper.dll into the
+	installed directory</FONT></P>
+</UL>
+</BODY>
+</HTML>

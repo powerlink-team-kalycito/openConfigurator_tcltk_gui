@@ -1,0 +1,90 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=utf-8">
+	<TITLE></TITLE>
+	<META NAME="GENERATOR" CONTENT="OpenOffice.org 3.1  (Linux)">
+	<META NAME="AUTHOR" CONTENT="vikram ">
+	<META NAME="CREATED" CONTENT="20091120;18315200">
+	<META NAME="CHANGEDBY" CONTENT="vikram ">
+	<META NAME="CHANGED" CONTENT="20091120;18321100">
+</HEAD>
+<BODY LANG="en-IN" DIR="LTR">
+<P STYLE="margin-top: 0.21cm; margin-bottom: 0.21cm; font-style: normal; page-break-before: always">
+<FONT FACE="Times New Roman, serif"><FONT SIZE=4><B>Known bugs and
+Work around</B></FONT></FONT></P>
+<P ALIGN=JUSTIFY STYLE="margin-bottom: 0cm; font-weight: normal"><FONT FACE="Times New Roman, serif"><FONT SIZE=3>The
+following are the list of known bugs in the openCONFIGURATOR V 1.2.0</FONT></FONT></P>
+<P ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><IMG SRC="fig48.gif" NAME="graphics1" ALIGN=BOTTOM WIDTH=333 HEIGHT=182 BORDER=0></P>
+<P ALIGN=JUSTIFY STYLE="margin-bottom: 0cm; font-weight: normal"><FONT FACE="Times New Roman, serif"><FONT SIZE=2>Figure
+48</FONT></FONT></P>
+<P ALIGN=JUSTIFY STYLE="margin-bottom: 0cm"><BR>
+</P>
+<UL>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-bottom: 0cm">“<FONT FACE="Times New Roman, serif"><FONT SIZE=3><SPAN STYLE="font-weight: normal">Error
+	Loading Shared library \n Cannot proceed\n Consult the user manual
+	to troubleshoot” for binaries downloaded from SourceForge on some
+	machines.</SPAN></FONT></FONT></P>
+</UL>
+<OL>
+	<OL>
+		<LI><P ALIGN=JUSTIFY STYLE="margin-bottom: 0cm; font-weight: normal">
+		<FONT FACE="Times New Roman, serif"><FONT SIZE=3>Description:</FONT></FONT></P>
+	</OL>
+</OL>
+<P ALIGN=JUSTIFY STYLE="margin-left: 1.25cm; margin-bottom: 0cm; font-weight: normal">
+<FONT FACE="Times New Roman, serif"><FONT SIZE=3>The above error
+happens when the shared libraries are corrupted or when the shared
+libraries are missing. On some Windows machine, the error is
+happening in a undefined way. We are in the process of fixing it.
+Till we make a release for this issue, please follow the work around
+mentioned below.</FONT></FONT></P>
+<OL>
+	<OL START=2>
+		<LI><P ALIGN=JUSTIFY STYLE="margin-bottom: 0cm; font-weight: normal">
+		<FONT FACE="Times New Roman, serif"><FONT SIZE=3>Work Around 1:</FONT></FONT></P>
+	</OL>
+</OL>
+<P ALIGN=JUSTIFY STYLE="margin-left: 1.25cm; margin-bottom: 0cm; font-weight: normal">
+<FONT FACE="Times New Roman, serif"><FONT SIZE=3>Install the
+&quot;Microsoft Visual C++ Redistributable Package (x86)&quot; if
+Visual Studio is not installed. If this doesn't solve the issue, Work
+Around 2 will solve the issue.</FONT></FONT></P>
+<OL>
+	<OL START=3>
+		<LI><P ALIGN=JUSTIFY STYLE="margin-bottom: 0cm; font-weight: normal">
+		<FONT FACE="Times New Roman, serif"><FONT SIZE=3>Work Around 2:</FONT></FONT></P>
+	</OL>
+</OL>
+<P ALIGN=JUSTIFY STYLE="margin-left: 1.25cm; margin-bottom: 0cm; font-weight: normal">
+<FONT FACE="Times New Roman, serif"><FONT SIZE=3>Recompile the shared
+libraries on the machine in which the error happens. Follow section
+“Compilation” for recompilation.</FONT></FONT></P>
+<UL>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-bottom: 0cm; font-weight: normal">
+	<FONT FACE="Times New Roman, serif"><FONT SIZE=3>Issue with
+	Non-ASCII project names</FONT></FONT></P>
+</UL>
+<OL>
+	<OL>
+		<LI VALUE=1><P ALIGN=JUSTIFY STYLE="margin-bottom: 0cm; font-weight: normal">
+		<FONT FACE="Times New Roman, serif"><FONT SIZE=3>Description:</FONT></FONT></P>
+	</OL>
+</OL>
+<P ALIGN=JUSTIFY STYLE="margin-left: 1.25cm; margin-bottom: 0cm; font-weight: normal">
+<FONT FACE="Times New Roman, serif"><FONT SIZE=3>If non-ASCII project
+names are used, there may be issues in using the project. </FONT></FONT>
+</P>
+<OL>
+	<OL START=2>
+		<LI><P ALIGN=JUSTIFY STYLE="margin-bottom: 0cm; font-weight: normal">
+		<FONT FACE="Times New Roman, serif"><FONT SIZE=3>Work Around:</FONT></FONT></P>
+	</OL>
+</OL>
+<P ALIGN=JUSTIFY STYLE="margin-left: 1.25cm; margin-bottom: 0cm; font-weight: normal">
+<FONT FACE="Times New Roman, serif"><FONT SIZE=3>Use only ASCII
+project names.</FONT></FONT></P>
+<P ALIGN=JUSTIFY STYLE="margin-left: 1.25cm; margin-bottom: 0cm"><BR>
+</P>
+</BODY>
+</HTML>

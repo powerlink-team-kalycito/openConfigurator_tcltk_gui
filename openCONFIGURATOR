@@ -206,11 +206,10 @@ proc InitOpenConfigurator {argc argv} {
             exit
         }
     } elseif { "$tcl_platform(platform)" == "unix"} {
-load $rootDir/Tcl_WrapperMain.so
-#	if {  } {
-#	    tk_messageBox -message "Error loading Shared Library\nCannot proceed\nConsult the user manual to #troubleshoot" -title Info -icon error
-#	    exit
-#	}
+        if { [catch {load $rootDir/Tcl_WrapperMain.so}] } {
+            tk_messageBox -message "Error loading Shared Library\nCannot proceed\nConsult the user manual to troubleshoot" -title Info -icon error
+            exit
+        }
     } else {
 	tk_messageBox -message "Shared Library not created for $tcl_platform(platform) platform\nCannot proceed" -title Info -icon error
 	exit

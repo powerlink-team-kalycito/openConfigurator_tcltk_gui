@@ -3259,10 +3259,10 @@ proc Operations::BuildProject {} {
         #get the actual value of 1006
         set cycleTimeresult [GetObjectValueData $mnNodePos $mnNodeId $mnNodeType [list 5 0 9] $Operations::CYCLE_TIME_OBJ]
         if {[string equal "pass" [lindex $cycleTimeresult 0]] == 1} {
+            set cycleTimeValue [lindex $cycleTimeresult 1]
+            set cycleTimeName [lindex $cycleTimeresult 2]
+            set cycleTimeCdcFlag [lindex $cycleTimeresult 3]
             if {[lindex $cycleTimeresult 1] != "" } {
-                set cycleTimeValue [lindex $cycleTimeresult 1]
-                set cycleTimeName [lindex $cycleTimeresult 2]
-                set cycleTimeCdcFlag [lindex $cycleTimeresult 3]
                 if { ( [expr $cycleTimeValue > 0] == 1)  } {
                     #value is greater than zero proceed in building project
                 } else {

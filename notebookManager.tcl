@@ -1069,6 +1069,15 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
     global $tmpVar1	
     set value [string toupper [subst $[subst $tmpVar1]] ]
     
+    if { [expr 0x$indexId > 0x1fff] } {
+        set objectType [NoteBookManager::GetComboValue $frame1.co_obj1]
+        if { $objectType == "" } {
+            tk_messageBox -message "ObjectType not selected\nValues not saved" -title Warning -icon warning -parent .
+            Validation::ResetPromptFlag
+            return
+        }
+    }
+    
     if { [expr 0x$indexId > 0x1fff] && ( $objectType == "VAR" ) } {
         set dataType [NoteBookManager::GetComboValue $frame1.co_data1]
         set accessType [NoteBookManager::GetComboValue $frame1.co_access1]
@@ -1086,30 +1095,30 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
             }
         }
         set default [NoteBookManager::GetEntryValue $frame1.en_default1]
-    } else {
-        if { [expr 0x$indexId > 0x1fff] && ($objectType == "ARRAY") } {
+    } elseif {[expr 0x$indexId > 0x1fff] } {
+        if { $objectType == "ARRAY" } {
             set dataType [NoteBookManager::GetComboValue $frame1.co_data1]
-            set pdoType [NoteBookManager::GetEntryValue $frame1.en_pdo1]
-            set upperLimit [NoteBookManager::GetEntryValue $frame1.en_upper1]
-            set lowerLimit [NoteBookManager::GetEntryValue $frame1.en_lower1]
-            set default [NoteBookManager::GetEntryValue $frame1.en_default1]
-            if {[string match -nocase "INTEGER*" $dataType] || [string match -nocase "UNSIGNED*" $dataType] || [string match -nocase "BOOLEAN" $dataType] || [string match -nocase "REAL*" $dataType]} {
-                if {[string match -nocase "0x" $upperLimit]} {
-                    set upperLimit [] 
-                }
-                if {[string match -nocase "0x" $lowerLimit]} {
-                    set lowerLimit []
-                }
-            }
         } else {
-            $frame1.en_data1 configure -state normal
-            set dataType [$frame1.en_data1 get]
-            $frame1.en_data1 configure -state disabled
+            set dataType [NoteBookManager::GetEntryValue $frame1.en_data1]
+        }
+        set pdoType [NoteBookManager::GetEntryValue $frame1.en_pdo1]
+        set upperLimit [NoteBookManager::GetEntryValue $frame1.en_upper1]
+        set lowerLimit [NoteBookManager::GetEntryValue $frame1.en_lower1]
+        set default [NoteBookManager::GetEntryValue $frame1.en_default1]
+        if {[string match -nocase "INTEGER*" $dataType] || [string match -nocase "UNSIGNED*" $dataType] || [string match -nocase "BOOLEAN" $dataType] || [string match -nocase "REAL*" $dataType]} {
+            if {[string match -nocase "0x" $upperLimit]} {
+                set upperLimit [] 
+            }
+            if {[string match -nocase "0x" $lowerLimit]} {
+                set lowerLimit []
+            }
         }
         
-        $frame1.en_access1 configure -state normal
-        set accessType [$frame1.en_access1 get]
-        $frame1.en_access1 configure -state disabled
+        set accessType [NoteBookManager::GetEntryValue $frame1.en_access1]
+    } else {
+        #objects less than 2000 only need name and value access type needed for validation
+        set accessType [NoteBookManager::GetEntryValue $frame1.en_access1]
+        set dataType [NoteBookManager::GetEntryValue $frame1.en_data1]
     }
     
     if { [string match -nocase "INTEGER*" $dataType] || [string match -nocase "UNSIGNED*" $dataType] || [string match -nocase "BOOLEAN" $dataType ] } {
@@ -1191,7 +1200,8 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
     global $chkGen
     
     if {[string match "*SubIndexValue*" $nodeSelect]} {
-        if { ([expr 0x$indexId > 0x1fff]) && ( ($objectType == "ARRAY") || ($objectType == "VAR") ) } {
+        #if { ([expr 0x$indexId > 0x1fff]) && ( ($objectType == "ARRAY") || ($objectType == "VAR") ) } {}
+        if { ([expr 0x$indexId > 0x1fff]) } {
             set catchErrCode [SetAllSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName $accessType $dataType $pdoType $default $upperLimit $lowerLimit $objectType [subst $[subst $chkGen]] ]
         } else {
             if { [string match -nocase "18??" $indexId] || [string match "14??" $indexId]} {
@@ -1221,7 +1231,8 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
         }
     } elseif {[string match "*IndexValue*" $nodeSelect]} {
         
-        if { [expr 0x$indexId > 0x1fff] && (($objectType == "ARRAY") || ($objectType == "VAR")) } {
+        #if { [expr 0x$indexId > 0x1fff] && (($objectType == "ARRAY") || ($objectType == "VAR")) } {}
+        if { [expr 0x$indexId > 0x1fff] } {
             # if the index is greater than 1fff and the object type is not ARRAY or RECORD the delete all subobjects if present
             #puts "llength $treePath nodes $nodeSelect ------>[llength [$treePath nodes $nodeSelect] ]" 
             if { [expr 0x$indexId > 0x1fff] && (($objectType != "ARRAY") && ($objectType != "RECORD")) && ([llength [$treePath nodes $nodeSelect] ] > 0) } {
@@ -1232,6 +1243,7 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
                         #continue
         		    }
         		    cancel {
+                        Validation::ResetPromptFlag
         			    return
         		    }
         	    }
@@ -1541,7 +1553,6 @@ proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 frame2 
         }
     }
     
-    #puts "newNodeId->$newNodeId newNodeName->$newNodeName stationType->$stationType saveSpinVal->$saveSpinVal"
     set catchErrCode [UpdateNodeParams $nodeId $newNodeId $nodeType $newNodeName $stationType $saveSpinVal]
     set ErrCode [ocfmRetCode_code_get $catchErrCode]
     if { $ErrCode != 0 } {
@@ -2042,6 +2053,57 @@ proc NoteBookManager::ChangeValidation {framePath comboPath {objectType ""}} {
                 $framePath.en_lower1 configure -state disabled
             }
         }
+    } elseif {[string match "*.co_obj1" $comboPath]} {
+        #based on the object type selected make other fields editable
+        #VAR except default type all are editable
+        #ARRAy datatype name and value are ediable
+        #for all other object types only name and value are ediable
+        set value [$comboPath getvalue]
+        set valueList [$comboPath cget -values]
+        set selObjectType [lindex $valueList $value]
+        set selObjectType [string toupper $selObjectType]
+        switch -- $selObjectType {
+            VAR {
+                grid remove $framePath.en_data1
+                grid $framePath.co_data1
+
+                grid remove $framePath.en_access1
+                grid $framePath.co_access1
+            
+                grid remove $framePath.en_pdo1
+                grid $framePath.co_pdo1
+                #enable the entry boxes upper and lower limit
+                $framePath.en_upper1 configure -state normal
+                $framePath.en_lower1 configure -state normal
+            }
+            ARRAY {
+                grid remove $framePath.en_data1
+                grid $framePath.co_data1
+                
+                grid $framePath.en_access1
+                grid remove $framePath.co_access1
+                
+                grid $framePath.en_pdo1
+                grid remove $framePath.co_pdo1
+                #disable the entry boxes upper and lower limit
+                $framePath.en_upper1 configure -state disabled
+                $framePath.en_lower1 configure -state disabled
+            }
+            default {
+                grid $framePath.en_data1
+                grid remove $framePath.co_data1
+                
+                grid $framePath.en_access1
+                grid remove $framePath.co_access1
+                
+                grid $framePath.en_pdo1
+                grid remove $framePath.co_pdo1
+                #disable the entry boxes upper and lower limit
+                $framePath.en_upper1 configure -state disabled
+                $framePath.en_lower1 configure -state disabled
+            }
+        }
+        
     }
     focus -force $framePath.en_value1
     return

@@ -1666,7 +1666,7 @@ proc Operations::SingleClickNode {node} {
     
     #configuring the index and subindex save buttons with object type
     $saveButton configure -command "NoteBookManager::SaveValue $tmpInnerf0 $tmpInnerf1 [lindex $IndexProp 1]"
-    if { ([expr 0x$indexId > 0x1fff]) && ([lindex $IndexProp 1] == "VAR") } {
+    if { ([expr 0x$indexId > 0x1fff]) && ( ([lindex $IndexProp 1] == "VAR") || ([lindex $IndexProp 1] == "") ) } {
         set entryState normal
     } else {
 	    set entryState disabled
@@ -1712,13 +1712,38 @@ proc Operations::SingleClickNode {node} {
     $tmpInnerf1.en_upper1 insert 0 [lindex $IndexProp 8]
     $tmpInnerf1.en_upper1 configure -state $entryState -bg white -validate key
 
-    if { [expr 0x$indexId > 0x1fff] || ([lindex $IndexProp 1] == "ARRAY") || ([lindex $IndexProp 1] == "VAR") } {
-        #call the api to get the data list
-        set catchErrCode [GetNodeDataTypes $nodeId $nodeType]
-        #puts "GetNodeDataTypes nodeId->$nodeId errcode->[ocfmRetCode_code_get [lindex $catchErrCode 0]] catchErrCode----->$catchErrCode"
-        #TODO : populate the obtained datatype into the datatype combo box
-        #$tmpInnerf1.co_data1 configure -values
-    }
+    $tmpInnerf1.en_obj1 configure -state normal
+    $tmpInnerf1.en_obj1 delete 0 end
+    $tmpInnerf1.en_obj1 insert 0 [lindex $IndexProp 1]
+    $tmpInnerf1.en_obj1 configure -state disabled
+    NoteBookManager::SetComboValue $tmpInnerf1.co_obj1  [lindex $IndexProp 1]
+
+    $tmpInnerf1.en_data1 configure -state normal
+    $tmpInnerf1.en_data1 delete 0 end
+    $tmpInnerf1.en_data1 insert 0 [lindex $IndexProp 2]
+    $tmpInnerf1.en_data1 configure -state disabled -bg white
+    NoteBookManager::SetComboValue $tmpInnerf1.co_data1 [ string toupper [lindex $IndexProp 2]]
+    
+    $tmpInnerf1.en_access1 configure -state normal
+    $tmpInnerf1.en_access1 delete 0 end
+    $tmpInnerf1.en_access1 insert 0 [lindex $IndexProp 3]
+    $tmpInnerf1.en_access1 configure -state disabled
+    NoteBookManager::SetComboValue $tmpInnerf1.co_access1 [lindex $IndexProp 3]
+    
+    $tmpInnerf1.en_pdo1 configure -state normal
+    $tmpInnerf1.en_pdo1 delete 0 end
+    $tmpInnerf1.en_pdo1 insert 0 [lindex $IndexProp 6]
+    $tmpInnerf1.en_pdo1 configure -state disabled
+    NoteBookManager::SetComboValue $tmpInnerf1.co_pdo1 [lindex $IndexProp 6]
+    
+    #if { [expr 0x$indexId > 0x1fff] || ([lindex $IndexProp 1] == "ARRAY") || ([lindex $IndexProp 1] == "VAR") } {
+    #    #call the api to get the data list
+    #    set catchErrCode [GetNodeDataTypes $nodeId $nodeType]
+    #    #puts "GetNodeDataTypes nodeId->$nodeId errcode->[ocfmRetCode_code_get [lindex $catchErrCode 0]] catchErrCode----->$catchErrCode"
+    #    #TODO : populate the obtained datatype into the datatype combo box
+    #    #$tmpInnerf1.co_data1 configure -values
+    #}
+    
     #
     ##for index greater than 1FFF
     #    #for object type VAR all the fields except the default value are editable
@@ -1734,45 +1759,30 @@ proc Operations::SingleClickNode {node} {
     set exp3 [expr 0x$indexId > 0x1fff]
     set exp4 [lindex $IndexProp 1]
     
-    if {  ( $exp1 != 1 ) && ( ( $exp2 == 1) || ( ($exp3 == 1) && ( $exp4 != "VAR" ) ) ) } {
-
+    if {  ( $exp1 != 1 ) && ( ( $exp2 == 1) || ( ($exp3 == 1) && !($exp4 == "VAR" || $exp4 == "") ) ) } {
         grid remove $tmpInnerf1.co_obj1
         grid $tmpInnerf1.en_obj1
-        $tmpInnerf1.en_obj1 configure -state normal
-        $tmpInnerf1.en_obj1 delete 0 end
-        $tmpInnerf1.en_obj1 insert 0 [lindex $IndexProp 1]
-        $tmpInnerf1.en_obj1 configure -state disabled
         
-        #for objects greater than 1FFF with objecttype ARRAY datatype also can be edited
-	    if {( [expr 0x$indexId > 0x1fff] ) && ( [lindex $IndexProp 1] == "ARRAY") } {
-            grid remove $tmpInnerf1.en_data1
-    	    NoteBookManager::SetComboValue $tmpInnerf1.co_data1 [ string toupper [lindex $IndexProp 2]]
-            $tmpInnerf1.co_data1 configure -modifycmd "NoteBookManager::ChangeValidation $tmpInnerf1 $tmpInnerf1.co_data1 [lindex $IndexProp 1]"
-    	    grid $tmpInnerf1.co_data1
-        } else {
-            grid remove $tmpInnerf1.co_data1
-            grid $tmpInnerf1.en_data1        
-            $tmpInnerf1.en_data1 configure -state normal
-            $tmpInnerf1.en_data1 delete 0 end
-            $tmpInnerf1.en_data1 insert 0 [lindex $IndexProp 2]
-            $tmpInnerf1.en_data1 configure -state $entryState -bg white
+        grid remove $tmpInnerf1.co_data1
+        grid $tmpInnerf1.en_data1
+        
+	    if {( [expr 0x$indexId > 0x1fff] ) } {
+            #for objects greater than 1FFF show the combo box for object type
+            grid $tmpInnerf1.co_obj1
+            grid remove $tmpInnerf1.en_obj1
+            #for objects greater than 1FFF with object type ARRAY datatype can be edited
+            if { ( [lindex $IndexProp 1] == "ARRAY") } {
+                grid remove $tmpInnerf1.en_data1
+                $tmpInnerf1.co_data1 configure -modifycmd "NoteBookManager::ChangeValidation $tmpInnerf1 $tmpInnerf1.co_data1 [lindex $IndexProp 1]"
+                grid $tmpInnerf1.co_data1
+            }
         }
-
+        
 	    grid remove $tmpInnerf1.co_access1
 	    grid $tmpInnerf1.en_access1
-	    $tmpInnerf1.en_access1 configure -state normal
-	    $tmpInnerf1.en_access1 delete 0 end
-	    $tmpInnerf1.en_access1 insert 0 [lindex $IndexProp 3]
-	    $tmpInnerf1.en_access1 configure -state disabled
-	
+	    
 	    grid remove $tmpInnerf1.co_pdo1
 	    grid $tmpInnerf1.en_pdo1
-	    $tmpInnerf1.en_pdo1 configure -state normal
-	    $tmpInnerf1.en_pdo1 delete 0 end
-	    $tmpInnerf1.en_pdo1 insert 0 [lindex $IndexProp 6]
-	    $tmpInnerf1.en_pdo1 configure -state disabled
-	
-	
 
 	    if { [lindex $IndexProp 3] == "const" || [lindex $IndexProp 3] == "ro" || [lindex $IndexProp 3] == "" } {
 		    #the field is non editable
@@ -1781,66 +1791,47 @@ proc Operations::SingleClickNode {node} {
 		    $tmpInnerf1.en_value1 configure -state "normal"
 	    }
     } else {
-            
-            #these must be objects greater than 1FFF with object type VAR or objects starting with A
-            grid $tmpInnerf1.frame1.ra_dec
+        #these must be objects greater than 1FFF with object type VAR or objects starting with A
+        grid $tmpInnerf1.frame1.ra_dec
 	    grid $tmpInnerf1.frame1.ra_hex
             
-        # if the index id is less than 1FFF and i object type is VAR then the object type cannot be changed
-        #if { ( [expr 0x$indexId <= 0x1fff] ) && ( [lindex $IndexProp 1] == "VAR" ) } {
-        #    grid remove $tmpInnerf1.co_obj1
-        #    grid $tmpInnerf1.en_obj1
-        #    $tmpInnerf1.en_obj1 configure -state normal
-        #    $tmpInnerf1.en_obj1 delete 0 end
-        #    $tmpInnerf1.en_obj1 insert 0 [lindex $IndexProp 1]
-        #    $tmpInnerf1.en_obj1 configure -state disabled
-        #} else {
-            grid remove $tmpInnerf1.en_obj1
-            NoteBookManager::SetComboValue $tmpInnerf1.co_obj1  [lindex $IndexProp 1]
-            grid $tmpInnerf1.co_obj1
-        #}
+        grid remove $tmpInnerf1.en_obj1
+        grid $tmpInnerf1.co_obj1
 
         grid remove $tmpInnerf1.en_data1
-	    NoteBookManager::SetComboValue $tmpInnerf1.co_data1 [ string toupper [lindex $IndexProp 2]]
-        $tmpInnerf1.co_data1 configure -modifycmd "NoteBookManager::ChangeValidation $tmpInnerf1 $tmpInnerf1.co_data1 [lindex $IndexProp 1]"
 	    grid $tmpInnerf1.co_data1
         
-	
 	    grid remove $tmpInnerf1.en_access1
-	    NoteBookManager::SetComboValue $tmpInnerf1.co_access1 [lindex $IndexProp 3]
 	    grid $tmpInnerf1.co_access1
 	
 	    grid remove $tmpInnerf1.en_pdo1
-	    NoteBookManager::SetComboValue $tmpInnerf1.co_pdo1 [lindex $IndexProp 6]
 	    grid $tmpInnerf1.co_pdo1
 	
 	    $tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::IsValidEntryData %P"
 	    if { [string match -nocase "A???" $indexId] == 1 } {
-                grid remove $tmpInnerf1.frame1.ra_dec
-                grid remove $tmpInnerf1.frame1.ra_hex
+            grid remove $tmpInnerf1.frame1.ra_dec
+            grid remove $tmpInnerf1.frame1.ra_hex
                 
 	    	set widgetState disabled
 	    	set comboState disabled
 	    } else {
 	        set widgetState normal
-                set comboState normal
+            set comboState normal
 	    }
 		    #make the save button disabled
 		    $indexSaveBtn configure -state $widgetState
 		    $subindexSaveBtn configure -state $widgetState
 		
 		    $tmpInnerf0.en_nam1 configure -state $widgetState
-                    #default entry always disabled
-                    $tmpInnerf1.en_default1 configure -state disabled
+            #default entry always disabled
+            $tmpInnerf1.en_default1 configure -state disabled
 		    $tmpInnerf1.en_value1 configure -state $widgetState
 		    $tmpInnerf1.en_lower1 configure -state $widgetState -validate key -vcmd "Validation::IsHex %P %s $tmpInnerf1.en_lower1 %d %i [lindex $IndexProp 2]"
 		    $tmpInnerf1.en_upper1 configure -state $widgetState -validate key -vcmd "Validation::IsHex %P %s $tmpInnerf1.en_upper1 %d %i [lindex $IndexProp 2]"
-                    $tmpInnerf1.co_data1 configure -state $comboState
+            $tmpInnerf1.co_data1 configure -state $comboState
 		    $tmpInnerf1.co_obj1 configure -state $comboState
 		    $tmpInnerf1.co_access1 configure -state $comboState
 		    $tmpInnerf1.co_pdo1 configure -state $comboState
-
-	
     }
 
 
@@ -1966,8 +1957,6 @@ proc Operations::SingleClickNode {node} {
         grid remove $tmpInnerf1.frame1.ra_hex
         $tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::IsValidStr %P" -bg $savedBg
     }
-#newly added#
-    #puts "node->$node datatype->[lindex $IndexProp 2] objecttype->[lindex $IndexProp 1] \n"
     return
 }
 
@@ -2271,7 +2260,7 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
     set MN_FEATURES 1
     set CN_FEATURES 2
     set catchErrCode [GetFeatureValue 240 0 $MN_FEATURES "DLLMNFeatureMultiplex" ]
-   # puts "GetFeatureValue 240 0 $MN_FEATURES DLLMNFeatureMultiplex successcode->[ocfmRetCode_code_get [lindex $catchErrCode 0]] -----catchErrCode---->$catchErrCode"
+    #puts "GetFeatureValue 240 0 $MN_FEATURES DLLMNFeatureMultiplex successcode->[ocfmRetCode_code_get [lindex $catchErrCode 0]] -----catchErrCode---->$catchErrCode"
     if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
             tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
@@ -2282,7 +2271,7 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
     set MNFeatureMultiplexFlag [lindex $catchErrCode 1]
 
     set catchErrCode [GetFeatureValue $nodeId $nodeType $CN_FEATURES "DLLCNFeatureMultiplex" ]
-   # puts "GetFeatureValue $nodeId $nodeType $CN_FEATURES DLLCNFeatureMultiplex successcode->[ocfmRetCode_code_get [lindex $catchErrCode 0]] -----catchErrCode---->$catchErrCode"
+    #puts "GetFeatureValue $nodeId $nodeType $CN_FEATURES DLLCNFeatureMultiplex successcode->[ocfmRetCode_code_get [lindex $catchErrCode 0]] -----catchErrCode---->$catchErrCode"
     if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
             tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .

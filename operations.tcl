@@ -657,11 +657,14 @@ proc Operations::RePopulate { projectDir projectName } {
 				    set nodeType 0
 				    $treePath insert end ProjectNode MN-$mnCount -text "$nodeName\(240\)" -open 1 -image [Bitmap::get mn]
 				    set treeNode OBD-$mnCount-1
-                                    $treePath insert end MN-$mnCount $treeNode -text "OBD" -open 0 -image [Bitmap::get pdo]	
+                    #insert the OBD icon only if the view is in EXPERT mode
+                    if {[string match "EXPERT" $Operations::viewType ] == 1} {
+                        $treePath insert end MN-$mnCount $treeNode -text "OBD" -open 0 -image [Bitmap::get pdo]
+                    }
 				    	
 			    } else {
 				    set nodeType 1
-                                    set treeNode CN-$mnCount-$cnCount
+                    set treeNode CN-$mnCount-$cnCount
 				    set child [$treePath insert end MN-$mnCount $treeNode -text "$nodeName\($nodeId\)" -open 0 -image [Bitmap::get cn]]
 			    }
 			    if { [ catch { set result [WrapperInteractions::Import $treeNode $nodeType $nodeId] } ] } {   
@@ -2153,7 +2156,6 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
     set dummyNodeId [new_intp]
     set tmp_stationType [new_EStationTypep]
     set catchErrCode [GetNodeAttributesbyNodePos $nodePos $dummyNodeId $tmp_stationType]
-    #puts "GetNodeAttributesbyNodePos catchErrCode->$catchErrCode"
     if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
     	    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
@@ -2183,7 +2185,7 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
     
     # value from 1F98 03 for PResponse Cycle time
     set CNDatalist ""
-    set presponseCycleTimeResult [GetObjectValueData $nodePos $nodeId $nodeType [list 2 4 5 7] [lindex $Operations::PRES_TIMEOUT_OBJ 0] [lindex $Operations::PRES_TIMEOUT_OBJ 1] ]
+    set presponseCycleTimeResult [GetObjectValueData $nodePos $nodeId $nodeType [list 2 4 5 ] [lindex $Operations::PRES_TIMEOUT_OBJ 0] [lindex $Operations::PRES_TIMEOUT_OBJ 1] ]
     if {[string equal "pass" [lindex $presponseCycleTimeResult 0]] == 1} {
         if {[lindex $presponseCycleTimeResult 3] == "" } {
             #if the actual is empty assign the default value
@@ -2191,47 +2193,48 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
         } else {
             set presponseCycleTimeValue [lindex $presponseCycleTimeResult 3]
         }
-        
-        #if both the actual and default value is empty the lower limit plus 25 micro seconds value
-        if { $presponseCycleTimeValue == "" } {
-            set presponseCycleTimeValue [expr [lindex $presponseCycleTimeResult 3] + 25000]
-        }
+        #add 25 micro seconds to the actual or default value
+        set presponseCycleTimeValue [expr $presponseCycleTimeValue + 25000]
         set presponseCycleTimeDatatype [lindex $presponseCycleTimeResult 1]
         
         # the value of Presponse timeout is in nanoseconds divide it by 1000 to
         #display it as microseconds
         if {$presponseCycleTimeValue != ""} {
             if { [ catch { set presponseCycleTimeValue [expr $presponseCycleTimeValue / 1000] } ] } {
-                set presponseCycleTimeValue 
+                #if error has occured set it to default 25 micro seconds
+                set presponseCycleTimeValue 25
             }
         }
-        $tmpInnerf0.en_time configure -state normal -validate none -bg $savedBg
+        $tmpInnerf0.en_time configure -state normal -validate none -bg white
         $tmpInnerf0.en_time delete 0 end
         $tmpInnerf0.en_time insert 0 $presponseCycleTimeValue
-        set schRes [lsearch $userPrefList [list $nodeSelect *]]
-        if { $schRes != -1 } {
-            Operations::CheckConvertValue $tmpInnerf0.en_time $presponseCycleTimeDatatype [lindex [lindex $userPrefList $schRes] 1]
-            if { [lindex [lindex $userPrefList $schRes] 1] == "dec" } {
-                set lastConv dec
-                $tmpInnerf0.formatframe1.ra_dec select
-            } elseif { [lindex [lindex $userPrefList $schRes] 1] == "hex" } {
-                set lastConv hex
-                $tmpInnerf0.formatframe1.ra_hex select
-            } else {
-                return 
-            }
-        } else {
-            if {[string match -nocase "0x*" $presponseCycleTimeValue]} {
-                set lastConv hex
-                $tmpInnerf0.formatframe1.ra_hex select
-                $tmpInnerf0.en_time configure -validate key -vcmd "Validation::IsHex %P %s $tmpInnerf0.en_time %d %i $presponseCycleTimeDatatype"
-            } else {
-                set lastConv dec
-                $tmpInnerf0.formatframe1.ra_dec select
-                $tmpInnerf0.en_time configure -validate key -vcmd "Validation::IsDec %P $tmpInnerf0.en_time %d %i $presponseCycleTimeDatatype"
-            }    
-		    
-        }
+        #set schRes [lsearch $userPrefList [list $nodeSelect *]]
+        #if { $schRes != -1 } {
+            Operations::CheckConvertValue $tmpInnerf0.en_time $presponseCycleTimeDatatype "dec"
+            # the user cannot enter value which is less than the obtained minimum value
+            $tmpInnerf0.en_time configure -validate key -vcmd "Validation::ValidatePollRespTimeout \
+                %P $tmpInnerf0.en_time %d %i %V $presponseCycleTimeValue $presponseCycleTimeDatatype"
+        #    if { [lindex [lindex $userPrefList $schRes] 1] == "dec" } {
+        #        set lastConv dec
+        #        $tmpInnerf0.formatframe1.ra_dec select
+        #    } elseif { [lindex [lindex $userPrefList $schRes] 1] == "hex" } {
+        #        set lastConv hex
+        #        $tmpInnerf0.formatframe1.ra_hex select
+        #    } else {
+        #        return 
+        #    }
+        #} else {
+        #    if {[string match -nocase "0x*" $presponseCycleTimeValue]} {
+        #        set lastConv hex
+        #        $tmpInnerf0.formatframe1.ra_hex select
+        #        $tmpInnerf0.en_time configure -validate key -vcmd "Validation::IsHex %P %s $tmpInnerf0.en_time %d %i $presponseCycleTimeDatatype"
+        #    } else {
+        #        set lastConv dec
+        #        $tmpInnerf0.formatframe1.ra_dec select
+        #        $tmpInnerf0.en_time configure -validate key -vcmd "Validation::IsDec %P $tmpInnerf0.en_time %d %i $presponseCycleTimeDatatype"
+        #    }    
+		#    
+        #}
         lappend CNDatalist [list presponseCycleTimeDatatype $presponseCycleTimeDatatype]
     } else {
         #fail occured
@@ -2248,7 +2251,6 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
    $tmpInnerf2.sp_cycleNo configure -state disabled
    
    set stationType [EStationTypep_value $tmp_stationType]
-   #puts " Operations::CNProperties node->$node $nodeId $nodeType stationType->$stationType $tmp_stationType catchErrCode->$catchErrCode"
    
    $tmpInnerf1.ra_StMulti deselect
    $tmpInnerf1.ra_StMulti configure -state disabled
@@ -2260,7 +2262,6 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
     set MN_FEATURES 1
     set CN_FEATURES 2
     set catchErrCode [GetFeatureValue 240 0 $MN_FEATURES "DLLMNFeatureMultiplex" ]
-    #puts "GetFeatureValue 240 0 $MN_FEATURES DLLMNFeatureMultiplex successcode->[ocfmRetCode_code_get [lindex $catchErrCode 0]] -----catchErrCode---->$catchErrCode"
     if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
             tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
@@ -2271,7 +2272,6 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
     set MNFeatureMultiplexFlag [lindex $catchErrCode 1]
 
     set catchErrCode [GetFeatureValue $nodeId $nodeType $CN_FEATURES "DLLCNFeatureMultiplex" ]
-    #puts "GetFeatureValue $nodeId $nodeType $CN_FEATURES DLLCNFeatureMultiplex successcode->[ocfmRetCode_code_get [lindex $catchErrCode 0]] -----catchErrCode---->$catchErrCode"
     if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
             tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
@@ -2282,7 +2282,6 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
     set CNFeatureMultiplexFlag [lindex $catchErrCode 1]
 
     set catchErrCode [GetFeatureValue 240 0 $MN_FEATURES "DLLMNFeatureChaining" ]
-    #puts "GetFeatureValue 240 0 $MN_FEATURES DLLMNFeatureChaining successcode->[ocfmRetCode_code_get [lindex $catchErrCode 0]] -----catchErrCode---->$catchErrCode"
     if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
             tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
@@ -2293,7 +2292,6 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
     set MNFeatureChainFlag [lindex $catchErrCode 1]
 
     set catchErrCode [GetFeatureValue $nodeId $nodeType $CN_FEATURES "DLLCNFeatureChaining" ]
-    #puts "GetFeatureValue $nodeId $nodeType $CN_FEATURES DLLCNFeatureChaining successcode->[ocfmRetCode_code_get [lindex $catchErrCode 0]] -----catchErrCode---->$catchErrCode"
     if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
             tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
@@ -2319,9 +2317,7 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
         if { $ErrCode == 0 && $mnExistfFlag == 1 } {
             #the node exist continue 
         
-            #puts "GetObjectValueData $nodePos $nodeId $nodeType [list 2 5] [lindex $Operations::MULTI_PRESCAL_OBJ 0] [lindex $Operations::MULTI_PRESCAL_OBJ 1]"
             set multiPrescaler [GetObjectValueData $mnNodePos $mnNodeId $mnNodeType [list 2 5] [lindex $Operations::MULTI_PRESCAL_OBJ 0] [lindex $Operations::MULTI_PRESCAL_OBJ 1] ]
-            #puts "multiPrescaler ->$multiPrescaler \n\n"
             if {[string equal "pass" [lindex $multiPrescaler 0]] == 1} {
                 if {[lindex $multiPrescaler 2] == "" } {
                     #value is empty disable the muliplex radio button
@@ -2337,7 +2333,6 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
                         #it must be hex convert it to dec
                         set multiPrescalerValue [string range $multiPrescalerValue 2 end]
                         set convResult [Validation::InputToDec $multiPrescalerValue [lindex $multiPrescaler 1] ]
-                        #puts "convResult->$convResult"
                         #check the result of conversion
                         if { [string match -nocase "pass" [lindex $convResult 1]] == 0 } {
                             #error in conversion
@@ -2366,7 +2361,6 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
                         -validate key -vcmd "Validation::CheckForceCycleNumber %P $multiPrescalerDecValue"
                     # the saved force cycle no will be in hexa decimal convert it to decimal
                     set prevSelCycleNoDec [Validation::InputToDec $prevSelCycleNo [lindex $multiPrescaler 1] ]
-                    #puts "prevSelCycleNoDec->$prevSelCycleNoDec"
                     if { [string match -nocase "pass" [lindex $prevSelCycleNoDec 1]] == 0 } {
                         #error in conversion
                         set prevSelCycleNoDec ""
@@ -3254,7 +3248,7 @@ proc Operations::BuildProject {} {
         } else {
             #some error in getting the actual value
             set errCycleTimeFlag 2
-            set msg "Error in getting value of Index 1006 in MN."
+            set msg "Error in getting value of Index 1006 in MN.\nIndex 1006 or MN object dictonary might have been deleted"
         }
     } else {
         #mn node doesnot exist
@@ -3528,14 +3522,15 @@ proc Operations::ReImport {} {
 	    pack forget [lindex $f2 0]
 	    [lindex $f2 1] cancelediting
 	    [lindex $f2 1] configure -state disabled
-            pack forget [lindex $f3 0]
-            pack forget [lindex $f4 0]
+        pack forget [lindex $f3 0]
+        pack forget [lindex $f4 0]
 
 	    #xdc/xdd is reimported need to save
 	    set status_save 1
 
 	    catch {
-		    if { $res == -1} {
+            #only in expert mode when there is no OBD icon then insert the it
+		    if { ($res == -1) && ([string match "EXPERT" $Operations::viewType ] == 1) } {
 			    #there can be one OBD in MN so -1 is hardcoded
 			    $treePath insert 0 MN$tmpNode OBD$tmpNode-1 -text "OBD" -open 0 -image [Bitmap::get pdo]
 		    }
@@ -3545,13 +3540,13 @@ proc Operations::ReImport {} {
 	    pack forget [lindex $f2 0]
 	    [lindex $f2 1] cancelediting
 	    [lindex $f2 1] configure -state disabled
-            pack forget [lindex $f3 0]
-            pack forget [lindex $f4 0]
+        pack forget [lindex $f3 0]
+        pack forget [lindex $f4 0]
 
 	    Operations::CleanList $node 0
 	    Operations::CleanList $node 1
 	    catch {$treePath delete [$treePath nodes $node]}
-	    $treePath itemconfigure $node -open 0
+	    catch {$treePath itemconfigure $node -open 0}
 	
 	    thread::send  [tsv::set application importProgress] "StartProgress"
 	    set result [WrapperInteractions::Import $node $nodeType $nodeId]
@@ -3582,20 +3577,29 @@ proc Operations::DeleteTreeNode {} {
 	    #should not delete when pjt, mn, pdo, tpdo or rpdo is selected 
 	    return
     }
+    set MNnode ""
+    set OBDnode ""
     if {[string match "MN*" $node]} {
+        set MNnode $node
 	    set nodePos [split $node -]
 	    set nodePos [lrange $nodePos 1 end]
 	    set nodePos [join $nodePos -]
 
 	    # always OBD node ends with -1
 	    set node OBD-$nodePos-1
+        set OBDnode $node
 	    set exist [$treePath exists $node]	
 	    if {$exist} { 
 		    #has OBD node continue processing
-	    } else {
-		    #does not have any OBD exit from procedure		
+	    } elseif { ($exist == 0) && ([string match "EXPERT" $Operations::viewType ] == 1) } {
+		    #does not have any OBD exit from procedure	for EXPERT viewtype
 		    return
-	    }
+	    } elseif { ($exist == 0) && ([string match "SIMPLE" $Operations::viewType ] == 1) } {
+            #the OBD icon is not present but the view type is SIMPLE so can continue
+            set node $MNnode
+        } else {
+            return
+        }
     }
     #gets the nodeId and Type of selected node
     set result [Operations::GetNodeIdType $node]
@@ -3608,7 +3612,7 @@ proc Operations::DeleteTreeNode {} {
 
     set nodeList ""
     set nodeList [Operations::GetNodeList]
-    if {[lsearch -exact $nodeList $node ]!=-1} {
+    if { ([lsearch -exact $nodeList $node ]!= -1) || ([string match "MN*" $MNnode]) } {
 	    set result [tk_messageBox -message "Do you want to delete node?" -type yesno -icon question -title "Question" -parent .]
 	     switch -- $result {
 	         yes {			 
@@ -3642,7 +3646,6 @@ proc Operations::DeleteTreeNode {} {
 	    #to clear the list from child of the node from saved value list
 	    Operations::CleanList $node 0
 	    Operations::CleanList $node 1
-
     } else {
 
 	    set res []
@@ -3692,6 +3695,16 @@ proc Operations::DeleteTreeNode {} {
 
     #index or subindex is deleted need to save
     set status_save 1
+
+    if { ([string match "OBD*" $OBDnode]) && ([string match "SIMPLE" $Operations::viewType ] == 1) } {
+        #for MN OBD in the SIMPLE view mode the OBD node doesnot exist so exit from the function
+        #to clear the list from child of the node from saved value list
+	    Operations::CleanList $OBDnode 0
+	    Operations::CleanList $OBDnode 1
+        Operations::RemoveAllFrames
+        Validation::ResetPromptFlag
+        return
+    }
 
     set parent [$treePath parent $node]
     set nxtSelList [$treePath nodes $parent]
@@ -3906,6 +3919,7 @@ proc Operations::GetNodeIdType {node} {
     } elseif {[string match "MN-*" $node]} {
 	    set reqNode [lsearch -regexp [$treePath nodes $node] "OBD-*" ]
 	    set parent [lindex [$treePath nodes $node] $reqNode]
+        return [list 240 0]
     } else {
 	    #it is root or ProjectNode
 	    return
@@ -4074,7 +4088,7 @@ proc Operations::_ArrowDown {node origNode} {
 proc Operations::ArrowLeft {} {
     global treePath
     set node [$treePath selection get]
-    if {[$treePath nodes $node] != "" } {
+    if { ([$treePath exists $node]) && ([$treePath nodes $node] != "") } {
 	    $treePath itemconfigure $node -open 0		
     } else {
 	    # it has no child no need to collapse
@@ -4093,7 +4107,7 @@ proc Operations::ArrowLeft {} {
 proc Operations::ArrowRight {} {
     global treePath
     set node [$treePath selection get]
-    if {[$treePath nodes $node] != "" } {	
+    if { ([$treePath exists $node]) && ([$treePath nodes $node] != "") } {	
 	    $treePath itemconfigure $node -open 1		
     } else {
 	    # it has no child no need to expand
@@ -4149,13 +4163,13 @@ proc Operations::AutoGenerateMNOBD {} {
 		set status_save 1
 
 		catch {
-			if { $res == -1} {
-				#there can be one OBD in MN so -1 is hardcoded
+			if { ($res == -1) && ( [string match "EXPERT" $Operations::viewType ] == 1 ) } {
+				#there can be one OBD in MN so -1 is hardcoded insert the OBD icon only for expert view
 				$treePath insert 0 MN$tmpNode OBD$tmpNode-1 -text "OBD" -open 0 -image [Bitmap::get pdo]
 			}
 		}
 		catch {$treePath delete [$treePath nodes OBD$tmpNode-1]}
-		$treePath itemconfigure $node -open 0
+		catch {$treePath itemconfigure $node -open 0}
 		
 		thread::send  [tsv::set application importProgress] "StartProgress"
 		set result [WrapperInteractions::Import $node $nodeType $nodeId]

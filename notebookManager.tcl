@@ -1356,7 +1356,7 @@ proc NoteBookManager::SaveMNValue {nodePos frame0 frame1} {
 	
     set newNodeName [$frame0.en_nodeName get]
     set stationType 0
-    set catchErrCode [UpdateNodeParams $nodeId $nodeId $nodeType $newNodeName $stationType "" ]
+    set catchErrCode [UpdateNodeParams $nodeId $nodeId $nodeType $newNodeName $stationType "" ""]
     set ErrCode [ocfmRetCode_code_get $catchErrCode]
     if { $ErrCode != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
@@ -1431,7 +1431,7 @@ proc NoteBookManager::SaveMNValue {nodePos frame0 frame1} {
                     #value for MN porpety is edited need to change
                     set status_save 1
                     Validation::ResetPromptFlag
-                    $entryPath configure -bg #fdfdd4
+                    #$entryPath configure -bg #fdfdd4
                 } else {
                     continue
                 }
@@ -1443,10 +1443,10 @@ proc NoteBookManager::SaveMNValue {nodePos frame0 frame1} {
     if { $dispMsg == 1 } {
         Console::DisplayWarning "Empty values in MN properties are not saved"
     }
-    if { [lsearch $savedValueList $nodeSelect] == -1 } {
-        lappend savedValueList $nodeSelect
-    }
-    $frame0.en_nodeName configure -bg #fdfdd4
+    #if { [lsearch $savedValueList $nodeSelect] == -1 } {
+    #    lappend savedValueList $nodeSelect
+    #}
+    #$frame0.en_nodeName configure -bg #fdfdd4
 }
 
 #---------------------------------------------------------------------------------------------------
@@ -1470,19 +1470,7 @@ proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 frame2 
     global CNDatalist
     global cnPropSaveBtn
 
-    #puts "SaveCNValue nodeSelect->$nodeSelect multiPrescalDatatype->$multiPrescalDatatype"
-
-    ##gets the nodeId and Type of selected node
-    #set result [Operations::GetNodeIdType $nodeSelect]
-    #if {$result != "" } {
-    #    set nodeId [lindex $result 0]
-    #    set nodeType [lindex $result 1]
-    #} else {
-    #        #must be some other node this condition should never reach
-    #    Validation::ResetPromptFlag
-    #    return
-    #}
-	
+    	
     #save node name and node number
     set newNodeId [$frame0.sp_nodeNo get]
     set newNodeId [string trim $newNodeId]
@@ -1493,30 +1481,7 @@ proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 frame2 
     }
     # check whether the node is changed or not
     if { $nodeId != $newNodeId } {
-    #    set tempNodePos [new_intp]
-    #    set ExistfFlag [new_boolp]
-    #    set catchErrCode [IfNodeExists $newNodeId $nodeType $tempNodePos $ExistfFlag]
-    #    set tempNodePos [intp_value $tempNodePos]
-    #    set ExistfFlag [boolp_value $ExistfFlag]
-    #    set ErrCode [ocfmRetCode_code_get $catchErrCode]
-    #    if { $ErrCode == 0  } {
-    #        if { $ExistfFlag == 0 } {
-    #            #the node does not exist continue    
-    #        } else {
-    #            tk_messageBox -message "The node number \"$newNodeId\" already exists" -title Warning -icon warning -parent .
-    #            Validation::ResetPromptFlag
-    #            return
-    #        }
-    #    } else {
-    #        if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
-    #		    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -parent . -title Error -icon error
-    #	    } else {
-    #		    tk_messageBox -message "Unknown Error" -parent . -title Error -icon error
-    #	    }
-    #        Validation::ResetPromptFlag
-    #	    return
-    #    }
-    #chec k that the node id is not an existing node id
+        #chec k that the node id is not an existing node id
         set schDataRes [lsearch $nodeIdList $newNodeId]
         if { $schDataRes != -1 } {
             tk_messageBox -message "The node number \"$newNodeId\" already exists" -title Warning -icon warning -parent .
@@ -1524,6 +1489,20 @@ proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 frame2 
             return
         }
     }
+    
+    #validate whether the entered cycle reponse time is greater tha 1F98 03 value
+    set validateResult [$frame0.en_time validate]
+    switch -- $validateResult {
+        0 {
+            tk_messageBox -message "The Entered value should not be less than the Poll Response Timeout value" -parent . -icon warning -title "Warning"
+            Validation::ResetPromptFlag
+            return
+        }
+        1 {
+            #the value is valid can continue
+        }
+    }
+    
     set newNodeName [$frame0.en_nodeName get]
     set stationType [NoteBookManager::RetStationEnumValue]
     set saveSpinVal ""
@@ -1533,14 +1512,12 @@ proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 frame2 
     global $chkVar
     set chkVal [subst $[subst $chkVar] ]
     #check the state and if it is selected.
-    #puts "chkState->$chkState chkVar->$chkVar chkVal->$chkVal multiPrescalDatatype->$multiPrescalDatatype"
     if { ($chkState == "normal") && ($chkVal == 1) && ($multiPrescalDatatype != "") } {
         #check wheteher a valid data is set or not
         set spinVar [$frame2.sp_cycleNo cget -textvariable]
         global $spinVar
         set spinVal [subst $[subst $spinVar] ]
         set spinVal [string trim $spinVal]
-        #puts "spinVal->$spinVal"
         if { ($spinVal != "") && ([$frame2.sp_cycleNo validate] == 1) } {
             # the entered spin box value is validated save it convert the value to hexadecimal
             # remove the 0x appended to the converted value
@@ -1553,7 +1530,40 @@ proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 frame2 
         }
     }
     
-    set catchErrCode [UpdateNodeParams $nodeId $newNodeId $nodeType $newNodeName $stationType $saveSpinVal]
+    set radioSel [$frame0.formatframe1.ra_dec cget -variable]
+    global $radioSel
+    set radioSel [subst $[subst $radioSel]]
+    
+    set CNDatatypeObjectPathList [list \
+        [list presponseCycleTimeDatatype $Operations::PRES_TIMEOUT_OBJ $frame0.en_time] ]
+    
+    foreach tempDatatype $CNDatalist {
+        set schDataRes [lsearch $CNDatatypeObjectPathList [list [lindex $tempDatatype 0] * *]]
+        if {$schDataRes  != -1 } {
+            set dataType [lindex $tempDatatype 1]
+            set entryPath [lindex [lindex $CNDatatypeObjectPathList $schDataRes] 2]
+            
+            # if entry is disabled no need to save it
+            set entryState [$entryPath cget -state]
+            if { $entryState != "normal" } {
+                # if entry is disabled no need to save it"
+                set validValue ""
+                continue
+            }
+            set objectList [lindex [lindex $CNDatatypeObjectPathList $schDataRes] 1]
+            set value [$entryPath get]
+            set result [Validation::CheckDatatypeValue $entryPath $dataType $radioSel $value]
+            if { [lindex $result 0] == "pass" } {
+                #get the flag and name of the object
+                set validValue [lindex $result 1]
+            } else {
+                set validValue ""
+            }
+            
+        }
+    }
+
+    set catchErrCode [UpdateNodeParams $nodeId $newNodeId $nodeType $newNodeName $stationType $saveSpinVal $validValue]
     set ErrCode [ocfmRetCode_code_get $catchErrCode]
     if { $ErrCode != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
@@ -1567,12 +1577,16 @@ proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 frame2 
     
     #if the forced cycle no is changed and saved subobjects will be added to MN
     #based on the internal logic so need to rebuild the mn tree
-    
     #delete the OBD node and rebuild the tree
     set MnTreeNode [lindex [$treePath nodes ProjectNode] 0]
-    set ObdTreeNode [lindex [$treePath nodes $MnTreeNode] 0]
+    set tmpNode [string range $MnTreeNode 2 end]
+    #there can be one OBD in MN so -1 is hardcoded
+    set ObdTreeNode OBD$tmpNode-1
     catch {$treePath delete $ObdTreeNode}
-    $treePath insert 0 $MnTreeNode $ObdTreeNode -text "OBD" -open 0 -image [Bitmap::get pdo]
+    #insert the OBD ico only for expert view mode
+    if { [string match "EXPERT" $Operations::viewType ] == 1 } {
+        $treePath insert 0 $MnTreeNode $ObdTreeNode -text "OBD" -open 0 -image [Bitmap::get pdo]
+    }
     set mnNodeType 0
     set mnNodeId 240
     thread::send [tsv::get application importProgress] "StartProgress"
@@ -1584,85 +1598,18 @@ proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 frame2 
     }
     thread::send  [tsv::set application importProgress] "StopProgress"
     
-    #TODO:save is success reconfigure tree, cnSaveButton and nodeIdlist
+    #save is success reconfigure tree, cnSaveButton and nodeIdlist
     set schDataRes [lsearch $nodeIdList $nodeId]
-    #puts "oldlist $nodeIdList"
     set nodeIdList [lreplace $nodeIdList $schDataRes $schDataRes $newNodeId]
-    #puts "newlist $nodeIdList"
     set nodeId $newNodeId
     $cnPropSaveBtn configure -command "NoteBookManager::SaveCNValue $nodePos $nodeId $nodeType $frame0 $frame1 $frame2 $multiPrescalDatatype"
     $treePath itemconfigure $nodeSelect -text "$newNodeName\($nodeId\)"
     
-    set radioSel [$frame0.formatframe1.ra_dec cget -variable]
-    global $radioSel
-    set radioSel [subst $[subst $radioSel]]
-    
-    set CNDatatypeObjectPathList [list \
-        [list presponseCycleTimeDatatype $Operations::PRES_TIMEOUT_OBJ $frame0.en_time] ]
-   
-    foreach tempDatatype $CNDatalist {
-        set schDataRes [lsearch $CNDatatypeObjectPathList [list [lindex $tempDatatype 0] * *]]
-        if {$schDataRes  != -1 } {
-            set dataType [lindex $tempDatatype 1]
-            set entryPath [lindex [lindex $CNDatatypeObjectPathList $schDataRes] 2]
-            
-            # if entry is disabled no need to save it
-            set entryState [$entryPath cget -state]
-            if { $entryState != "normal" } {
-                continue
-            }
-            
-            set objectList [lindex [lindex $CNDatatypeObjectPathList $schDataRes] 1]
-            set value [$entryPath get]
-            set result [Validation::CheckDatatypeValue $entryPath $dataType $radioSel $value]
-            if { [lindex $result 0] == "pass" } {
-                #get the flag and name of the object
-                set validValue [lindex $result 1]
-                if {$validValue == ""} {
-                    #value is empty do not save it
-                    continue
-                }
-                set reqFieldResult [Operations::GetObjectValueData $nodePos $nodeId $nodeType [list 0 9] [lindex $objectList 0] [lindex $objectList 1] ]
-                if { [lindex $reqFieldResult 0] == "pass" } {
-                    set objName [lindex $reqFieldResult 1]
-                    set objFlag [lindex $reqFieldResult 2]
-                    #check whether the object is index or subindex
-                    if { [lindex $objectList 1] == "" } {
-                        # it is an index
-                        set saveCmd "SetIndexAttributes $nodeId $nodeType [lindex $objectList 0] $validValue $objName $objFlag"
-                    } else {
-                        #it is a subindex
-                        set saveCmd "SetSubIndexAttributes $nodeId $nodeType [lindex $objectList 0] [lindex $objectList 1] $validValue $objName $objFlag"
-                    }
-                    #save the value
-                    set catchErrCode [eval $saveCmd]
-                    set ErrCode [ocfmRetCode_code_get $catchErrCode]
-                    if { $ErrCode != 0 } {
-                        if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
-                            tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
-                        } else {
-                            tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
-                        }
-                        Validation::ResetPromptFlag
-                        return
-                    }
-                    #value for Index or SubIndex is edited need to change
-                    set status_save 1
-                    Validation::ResetPromptFlag
-                    $entryPath configure -bg #fdfdd4
-                } else {
-                    continue
-                }
-            } else {
-                continue
-            }
-        }
-    }
     #operations based on station type
-    if { [lsearch $savedValueList $nodeSelect] == -1 } {
-        lappend savedValueList $nodeSelect
-    }
-    $frame0.en_nodeName configure -bg #fdfdd4
+    #if { [lsearch $savedValueList $nodeSelect] == -1 } {
+    #    lappend savedValueList $nodeSelect
+    #}
+    #$frame0.en_nodeName configure -bg #fdfdd4
 }
 
 #---------------------------------------------------------------------------------------------------

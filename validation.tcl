@@ -1049,3 +1049,32 @@ proc Validation::CheckForceCycleNumber {input prescalerLimit} {
         return 0
     }
 }
+
+#---------------------------------------------------------------------------------------------------
+#  Validation::ValidatePollRespTimeout
+# 
+#  Arguments : input     - string (project name)
+# 	           entryPath - path of the entry widget
+#              mode      - Mode of the entry (insert - 1 / delete - 0) 
+#              idx       - Index where the character was inserted or deleted  
+#
+#  Results : 0 or 1
+#
+#  Description : Validates whether an entry is an integer and does not exceed specified range.
+#---------------------------------------------------------------------------------------------------
+proc Validation::ValidatePollRespTimeout {input entryPath mode idx validationType presponseCycleTimeValue {dataType ""}} {
+    if { ($input == "" ) || ([Validation::IsDec $input $entryPath $mode $idx $dataType] == 1) } {
+        if { ($validationType == "focusout" || $validationType == "forced") } {
+            if { ($input != "") && ($input >= $presponseCycleTimeValue) } {
+                #for the poll response time out the user should only enter values
+                #which is higher than the minimum value plus 25micro seconds
+            } else {
+                return 0
+            }
+        }
+        after 1 Validation::SetValue $entryPath $mode $idx $input
+        return 1
+    } else {
+        return 0
+    }
+}

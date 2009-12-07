@@ -1124,7 +1124,9 @@ proc ChildWindows::NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf tempRa_
 		    }
 		    return
 	    }
-	    $treePath insert end MN-$mnCount OBD-$mnCount-1 -text "OBD" -open 0 -image [Bitmap::get pdo]
+        #All the nw project has view type SIMPLE do not insert OBD icon
+        #$treePath insert end MN-$mnCount OBD-$mnCount-1 -text "OBD" -open 0 -image [Bitmap::get pdo]
+
 	    set result [WrapperInteractions::Import OBD-$mnCount-1 0 240]
 	    thread::send  [tsv::set application importProgress] "StopProgress"
 	    if { $result == "fail" } {

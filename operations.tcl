@@ -2018,30 +2018,30 @@ proc Operations::MNProperties {node nodePos nodeId nodeType} {
         $tmpInnerf0.en_time configure -state normal -validate none -bg $savedBg
         $tmpInnerf0.en_time delete 0 end
         $tmpInnerf0.en_time insert 0 $cycleTimeValue
-        set schRes [lsearch $userPrefList [list $nodeSelect *]]
-        if { $schRes != -1 } {
-            Operations::CheckConvertValue $tmpInnerf0.en_time $cycleTimeDatatype [lindex [lindex $userPrefList $schRes] 1]
-            if { [lindex [lindex $userPrefList $schRes] 1] == "dec" } {
-                set lastConv dec
-                $tmpInnerf0.formatframe1.ra_dec select
-            } elseif { [lindex [lindex $userPrefList $schRes] 1] == "hex" } {
-                set lastConv hex
-                $tmpInnerf0.formatframe1.ra_hex select
-            } else {
-                return 
-            }
-        } else {
-            if {[string match -nocase "0x*" $cycleTimeValue]} {
-                set lastConv hex
-                $tmpInnerf0.formatframe1.ra_hex select
-                $tmpInnerf0.en_time configure -validate key -vcmd "Validation::IsHex %P %s $tmpInnerf0.en_time %d %i $cycleTimeDatatype"
-            } else {
-                set lastConv dec
-                $tmpInnerf0.formatframe1.ra_dec select
-                $tmpInnerf0.en_time configure -validate key -vcmd "Validation::IsDec %P $tmpInnerf0.en_time %d %i $cycleTimeDatatype"
-            }    
+        #set schRes [lsearch $userPrefList [list $nodeSelect *]]
+        #if { $schRes != -1 } {
+            Operations::CheckConvertValue $tmpInnerf0.en_time $cycleTimeDatatype "dec"
+        #    if { [lindex [lindex $userPrefList $schRes] 1] == "dec" } {
+        #        set lastConv dec
+        #        $tmpInnerf0.formatframe1.ra_dec select
+        #    } elseif { [lindex [lindex $userPrefList $schRes] 1] == "hex" } {
+        #        set lastConv hex
+        #        $tmpInnerf0.formatframe1.ra_hex select
+        #    } else {
+        #        return 
+        #    }
+        #} else {
+            #if {[string match -nocase "0x*" $cycleTimeValue]} {
+            #    set lastConv hex
+            #    $tmpInnerf0.formatframe1.ra_hex select
+            #    $tmpInnerf0.en_time configure -validate key -vcmd "Validation::IsHex %P %s $tmpInnerf0.en_time %d %i $cycleTimeDatatype"
+            #} else {
+            #    set lastConv dec
+            #    $tmpInnerf0.formatframe1.ra_dec select
+            #    $tmpInnerf0.en_time configure -validate key -vcmd "Validation::IsDec %P $tmpInnerf0.en_time %d %i $cycleTimeDatatype"
+            #}    
 		    
-        }
+        #}
         lappend MNDatalist [list cycleTimeDatatype $cycleTimeDatatype]
     } else {
         #fail occured
@@ -2059,7 +2059,7 @@ proc Operations::MNProperties {node nodePos nodeId nodeType} {
         $tmpInnerf1.en_advOption1 configure -state normal -validate none -bg $savedBg
         $tmpInnerf1.en_advOption1 delete 0 end
         $tmpInnerf1.en_advOption1 insert 0 $asynMTUSizeValue
-        Operations::CheckConvertValue $tmpInnerf1.en_advOption1 $asynMTUSizeDatatype $lastConv
+        Operations::CheckConvertValue $tmpInnerf1.en_advOption1 $asynMTUSizeDatatype "dec"
         lappend MNDatalist [list asynMTUSizeDatatype $asynMTUSizeDatatype]
     } else {
         #fail occured
@@ -2077,7 +2077,7 @@ proc Operations::MNProperties {node nodePos nodeId nodeType} {
         $tmpInnerf1.en_advOption2 configure -state normal -validate none -bg $savedBg
         $tmpInnerf1.en_advOption2 delete 0 end
         $tmpInnerf1.en_advOption2 insert 0 $asynTimeoutValue
-        Operations::CheckConvertValue $tmpInnerf1.en_advOption2 $asynTimeoutDatatype $lastConv
+        Operations::CheckConvertValue $tmpInnerf1.en_advOption2 $asynTimeoutDatatype "dec"
         lappend MNDatalist [list asynTimeoutDatatype $asynTimeoutDatatype]
     } else {
         #fail occured
@@ -2108,7 +2108,7 @@ proc Operations::MNProperties {node nodePos nodeId nodeType} {
         	$tmpInnerf1.en_advOption3 configure -state normal -validate none -bg $savedBg
         	$tmpInnerf1.en_advOption3 delete 0 end
         	$tmpInnerf1.en_advOption3 insert 0 $multiPrescalerValue
-        	Operations::CheckConvertValue $tmpInnerf1.en_advOption3 $multiPrescalerDatatype $lastConv
+        	Operations::CheckConvertValue $tmpInnerf1.en_advOption3 $multiPrescalerDatatype "dec"
         	lappend MNDatalist [list multiPrescalerDatatype $multiPrescalerDatatype]
         } else {
         	$tmpInnerf1.en_advOption3 configure -state normal -validate none

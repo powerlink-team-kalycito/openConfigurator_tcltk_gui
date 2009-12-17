@@ -648,7 +648,8 @@ proc Operations::RePopulate { projectDir projectName } {
 		    #API for getting node attributes based on node position
 		    set tmp_nodeId [new_intp]
             set tmp_stationType [new_EStationTypep]
-		    set catchErrCode [GetNodeAttributesbyNodePos $inc $tmp_nodeId $tmp_stationType]
+			set tmp_forceCycleFlag [new_boolp]
+		    set catchErrCode [GetNodeAttributesbyNodePos $inc $tmp_nodeId $tmp_stationType $tmp_forceCycleFlag]
 		    set ErrCode [ocfmRetCode_code_get [lindex $catchErrCode 0]]
 		    if { $ErrCode == 0 } {
 			    set nodeId [intp_value $tmp_nodeId]
@@ -1978,7 +1979,8 @@ proc Operations::MNProperties {node nodePos nodeId nodeType} {
     #get node name and display it
     set dummyNodeId [new_intp]
     set tmp_stationType [new_EStationTypep]
-    set catchErrCode [GetNodeAttributesbyNodePos $nodePos $dummyNodeId $tmp_stationType]
+	set tmp_forceCycleFlag [new_boolp]
+    set catchErrCode [GetNodeAttributesbyNodePos $nodePos $dummyNodeId $tmp_stationType $tmp_forceCycleFlag]
     #puts "catchErrCode->$catchErrCode"
     if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
@@ -2015,12 +2017,12 @@ proc Operations::MNProperties {node nodePos nodeId nodeType} {
     if {[string equal "pass" [lindex $cycleTimeresult 0]] == 1} {
         set cycleTimeValue [lindex $cycleTimeresult 2]
         set cycleTimeDatatype [lindex $cycleTimeresult 1]
-        $tmpInnerf0.en_time configure -state normal -validate none -bg $savedBg
-        $tmpInnerf0.en_time delete 0 end
-        $tmpInnerf0.en_time insert 0 $cycleTimeValue
+        $tmpInnerf0.cycleframe.en_time configure -state normal -validate none -bg $savedBg
+        $tmpInnerf0.cycleframe.en_time delete 0 end
+        $tmpInnerf0.cycleframe.en_time insert 0 $cycleTimeValue
         #set schRes [lsearch $userPrefList [list $nodeSelect *]]
         #if { $schRes != -1 } {
-            Operations::CheckConvertValue $tmpInnerf0.en_time $cycleTimeDatatype "dec"
+            Operations::CheckConvertValue $tmpInnerf0.cycleframe.en_time $cycleTimeDatatype "dec"
         #    if { [lindex [lindex $userPrefList $schRes] 1] == "dec" } {
         #        set lastConv dec
         #        $tmpInnerf0.formatframe1.ra_dec select
@@ -2045,9 +2047,9 @@ proc Operations::MNProperties {node nodePos nodeId nodeType} {
         lappend MNDatalist [list cycleTimeDatatype $cycleTimeDatatype]
     } else {
         #fail occured
-        $tmpInnerf0.en_time configure -state normal -validate none
-        $tmpInnerf0.en_time delete 0 end
-        $tmpInnerf0.en_time configure -state disabled
+        $tmpInnerf0.cycleframe.en_time configure -state normal -validate none
+        $tmpInnerf0.cycleframe.en_time delete 0 end
+        $tmpInnerf0.cycleframe.en_time configure -state disabled
     }
     
     # value from 0x1F98/08 for Asynchronous MTU size
@@ -2155,7 +2157,8 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
     #get node name and display it
     set dummyNodeId [new_intp]
     set tmp_stationType [new_EStationTypep]
-    set catchErrCode [GetNodeAttributesbyNodePos $nodePos $dummyNodeId $tmp_stationType]
+	set tmp_forceCycleFlag [new_boolp]
+    set catchErrCode [GetNodeAttributesbyNodePos $nodePos $dummyNodeId $tmp_stationType $tmp_forceCycleFlag]
     if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
     	    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
@@ -2165,6 +2168,7 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
         return
     }
     set prevSelCycleNo [lindex $catchErrCode 2]
+	set tmp_forceCycleFlag [boolp_value $tmp_forceCycleFlag]
     
     if {[lsearch $savedValueList $node] != -1} {
 	    set savedBg #fdfdd4
@@ -2205,15 +2209,15 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
                 set presponseCycleTimeValue 25
             }
         }
-        $tmpInnerf0.en_time configure -state normal -validate none -bg white
-        $tmpInnerf0.en_time delete 0 end
-        $tmpInnerf0.en_time insert 0 $presponseCycleTimeValue
+        $tmpInnerf0.cycleframe.en_time configure -state normal -validate none -bg white
+        $tmpInnerf0.cycleframe.en_time delete 0 end
+        $tmpInnerf0.cycleframe.en_time insert 0 $presponseCycleTimeValue
         #set schRes [lsearch $userPrefList [list $nodeSelect *]]
         #if { $schRes != -1 } {
-            Operations::CheckConvertValue $tmpInnerf0.en_time $presponseCycleTimeDatatype "dec"
+            Operations::CheckConvertValue $tmpInnerf0.cycleframe.en_time $presponseCycleTimeDatatype "dec"
             # the user cannot enter value which is less than the obtained minimum value
-            $tmpInnerf0.en_time configure -validate key -vcmd "Validation::ValidatePollRespTimeout \
-                %P $tmpInnerf0.en_time %d %i %V $presponseCycleTimeValue $presponseCycleTimeDatatype"
+            $tmpInnerf0.cycleframe.en_time configure -validate key -vcmd "Validation::ValidatePollRespTimeout \
+                %P $tmpInnerf0.cycleframe.en_time %d %i %V $presponseCycleTimeValue $presponseCycleTimeDatatype"
         #    if { [lindex [lindex $userPrefList $schRes] 1] == "dec" } {
         #        set lastConv dec
         #        $tmpInnerf0.formatframe1.ra_dec select
@@ -2238,9 +2242,9 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
         lappend CNDatalist [list presponseCycleTimeDatatype $presponseCycleTimeDatatype]
     } else {
         #fail occured
-        $tmpInnerf0.en_time configure -state normal -validate none
-        $tmpInnerf0.en_time delete 0 end
-        $tmpInnerf0.en_time configure -state disabled
+        $tmpInnerf0.cycleframe.en_time configure -state normal -validate none
+        $tmpInnerf0.cycleframe.en_time delete 0 end
+        $tmpInnerf0.cycleframe.en_time configure -state disabled
     }
    
    $tmpInnerf2.ch_adv deselect
@@ -2374,7 +2378,9 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
                         # it is multiplexed operation
                         $tmpInnerf1.ra_StMulti select
                         $tmpInnerf2.ch_adv configure -state normal
-                        $tmpInnerf2.ch_adv select
+						if { $tmp_forceCycleFlag == 1 } {
+							$tmpInnerf2.ch_adv select
+						}
                         $tmpInnerf2.sp_cycleNo configure -state normal
                     }
                 }
@@ -3309,12 +3315,13 @@ proc Operations::BuildProject {} {
 
     if { $ErrCode != 0 } {
 	    if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
-		    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
+		    set msg "[ocfmRetCode_errorString_get $catchErrCode]"
 	    } else {
-		    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
+		    set msg "Unknown Error"
 	    }
+		tk_messageBox -message $msg -title Error -icon error -parent .
 	    #error in generating CDC dont generate XAP
-	    Console::DisplayErrMsg "Error in generating cdc, xap was not generated" error
+		Console::DisplayErrMsg "Error in generating cdc, xap, ProcessImage was not generated" error
 	    thread::send [tsv::get application importProgress] "StopProgress"
 	    return
     } else {
@@ -3341,9 +3348,24 @@ proc Operations::BuildProject {} {
 		    thread::send  [tsv::set application importProgress] "StopProgress"			
 		    return
 	    } else {
-		    Console::DisplayInfo "files mnobd.txt, mnobd.cdc, xap.xml, xap.h are generated at location [file join $projectDir cdc_xap]"
-		    thread::send  [tsv::set application importProgress] "StopProgress"
 	    }
+		
+		set catchErrCode [GenerateNET [file join $projectDir cdc_xap ProcessImage] ]
+	    set ErrCode [ocfmRetCode_code_get $catchErrCode]
+	    if { $ErrCode != 0 } {
+		    if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+			    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
+		    } else {
+			    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
+		    }
+		    Console::DisplayErrMsg "Error in generating Process image"
+		    thread::send  [tsv::set application importProgress] "StopProgress"			
+		    return
+	    } else {
+		    Console::DisplayInfo "files mnobd.txt, mnobd.cdc, xap.xml, xap.h, ProcessImage.cs are generated at location [file join $projectDir cdc_xap]"
+			thread::send  [tsv::set application importProgress] "StopProgress"			
+	    }
+		
 	    #project is built need to save
 	    set status_save 1
     }
@@ -3367,7 +3389,7 @@ proc Operations::CleanProject {} {
         return
     }
     set cleanMsg ""
-    foreach tempFile [list mnobd.txt mnobd.cdc xap.xml xap.h] {
+    foreach tempFile [list mnobd.txt mnobd.cdc xap.xml xap.h ProcessImage.cs] {
 	    set CleanFile [file join $projectDir cdc_xap $tempFile]
             if {[file exists [file join $projectDir cdc_xap $tempFile]]} {
                 catch {file delete -force -- $CleanFile}

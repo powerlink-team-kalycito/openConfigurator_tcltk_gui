@@ -321,7 +321,8 @@ proc NoteBookManager::create_nodeFrame {nbpath choice} {
     set tabTitlef1 [TitleFrame $tabInnerf0.tabTitlef1 -text "" ]
     set tabInnerf1 [$tabTitlef1 getframe]
     set tabInnerf0_1 [frame $tabInnerf0.frame1 ]
-    
+    set cycleFrame [frame $tabInnerf0.cycleframe ]
+	
     label $tabInnerf0.la_nodeName     -text "Node name"
     label $tabInnerf0.la_empty1       -text ""
     label $tabInnerf0.la_align1	      -text ""
@@ -329,20 +330,23 @@ proc NoteBookManager::create_nodeFrame {nbpath choice} {
     label $tabInnerf0.la_nodeNo       -text "Node number"
     label $tabInnerf0.la_empty2       -text ""
     label $tabInnerf0.la_time         -text ""
-    label $tabInnerf0.la_ms           -text "µs"
+    label $tabInnerf0.cycleframe.la_ms           -text "µs"
     label $tabInnerf0.la_empty3       -text ""
     label $tabInnerf1.la_advOption1   -text ""
+    label $tabInnerf1.la_advOptionUnit1   -text ""
     label $tabInnerf1.la_empty4       -text ""
     label $tabInnerf1.la_advOption2   -text ""
+    label $tabInnerf1.la_advOptionUnit2   -text ""
     label $tabInnerf1.la_empty5       -text ""
     label $tabInnerf1.la_advOption3   -text ""
+    label $tabInnerf1.la_advOptionUnit3   -text ""
     label $tabInnerf1.la_empty6       -text ""
     label $tabInnerf1.la_seperat1     -text ""
     label $tabInnerf1.la_empty7       -text ""
     
     entry $tabInnerf0.en_nodeName -width 20 -textvariable tmpNodeName$_pageCounter -relief ridge -justify center -bg white -validate key -vcmd "Validation::IsValidStr %P"
     entry $tabInnerf0.en_nodeNo   -width 20 -textvariable tmpNodeNo$_pageCounter -relief ridge -justify center -bg white 
-    entry $tabInnerf0.en_time     -width 20 -textvariable tmpNodeTime$_pageCounter -relief ridge -justify center -bg white  
+    entry $tabInnerf0.cycleframe.en_time     -width 20 -textvariable tmpNodeTime$_pageCounter -relief ridge -justify center -bg white  
     entry $tabInnerf1.en_advOption1 -state disabled -width 20
     entry $tabInnerf1.en_advOption2 -state disabled -width 20
     entry $tabInnerf1.en_advOption3 -state disabled -width 20
@@ -361,14 +365,16 @@ proc NoteBookManager::create_nodeFrame {nbpath choice} {
 
     grid config $tabInnerf0.la_align1    -row 0 -column 0 -padx 5
     grid config $tabInnerf0.la_nodeNo    -row 2 -column 1 -sticky w
-    grid config $tabInnerf0.en_nodeNo    -row 2 -column 2 -padx 5
+    grid config $tabInnerf0.en_nodeNo    -row 2 -column 2 -sticky w -padx 5
     grid config $tabInnerf0.la_align2    -row 0 -column 3 -padx 170
     grid config $tabInnerf0.la_empty1    -row 1 -column 1
     grid config $tabInnerf0.la_nodeName  -row 0 -column 1 -sticky w
-    grid config $tabInnerf0.en_nodeName  -row 0 -column 2 -padx 5
+    grid config $tabInnerf0.en_nodeName  -row 0 -column 2 -sticky w -padx 5
     grid config $tabInnerf0.la_empty2    -row 3 -column 1
     grid config $tabInnerf0.la_time      -row 4 -column 1 -sticky w
-    grid config $tabInnerf0.en_time      -row 4 -column 2 -padx 5
+	grid config $tabInnerf0.cycleframe   -row 4 -column 2 -columnspan 2 -sticky w
+    grid config $tabInnerf0.cycleframe.en_time      -row 0 -column 0 -sticky w -padx 5
+	grid config $tabInnerf0.cycleframe.la_ms      -row 0 -column 1 -sticky w
     grid config $tabInnerf0.la_empty3    -row 5 -column 1
     grid config $frame1                  -row 6 -column 2 -padx 5 
     
@@ -382,17 +388,23 @@ proc NoteBookManager::create_nodeFrame {nbpath choice} {
         $tabInnerf0.tabTitlef1 configure -text "Advanced" 
         $tabInnerf0.en_nodeNo configure -state disabled
         $tabInnerf1.la_advOption1 configure -text "Asynchronous MTU size"
+        $tabInnerf1.la_advOptionUnit1 configure -text "Byte"
         $tabInnerf1.la_advOption2 configure -text "Asynchronous Timeout"
+        $tabInnerf1.la_advOptionUnit2 configure -text "ns"
         $tabInnerf1.la_advOption3 configure -text "Multiplexing prescaler"
+        $tabInnerf1.la_advOptionUnit3 configure -text ""
 	
         grid config $tabInnerf1.la_advOption1 -row 0 -column 1 -sticky w
         grid config $tabInnerf1.en_advOption1 -row 0 -column 2 -padx 5
+        grid config $tabInnerf1.la_advOptionUnit1 -row 0 -column 3 -sticky w
         grid config $tabInnerf1.la_empty4     -row 1 -column 1
         grid config $tabInnerf1.la_advOption2 -row 2 -column 1 -sticky w
         grid config $tabInnerf1.en_advOption2 -row 2 -column 2 -padx 5
+        grid config $tabInnerf1.la_advOptionUnit2 -row 2 -column 3 -sticky w
         grid config $tabInnerf1.la_empty5     -row 3 -column 1
         grid config $tabInnerf1.la_advOption3 -row 4 -column 1 -sticky w
         grid config $tabInnerf1.en_advOption3 -row 4 -column 2 -padx 5
+        grid config $tabInnerf1.la_advOptionUnit3 -row 4 -column 3 -sticky w
         grid config $tabInnerf1.la_empty6     -row 5 -column 1
 	
         #$ra_dec configure -command "NoteBookManager::ConvertMNDec $tabInnerf0 $tabInnerf1"
@@ -409,10 +421,9 @@ proc NoteBookManager::create_nodeFrame {nbpath choice} {
             -from 1 -to 239 -increment 1 -justify center -width $spinWidth
         
         grid forget $tabInnerf0.en_nodeNo
-        grid config $tabInnerf0.sp_nodeNo    -row 2 -column 2 -padx 5
+        grid config $tabInnerf0.sp_nodeNo    -row 2 -column 2 -sticky w -padx 5
         $tabInnerf0.la_time  configure -text "PollResponse Timeout"
-        grid config $tabInnerf0.la_ms      -row 4 -column 3 -sticky w
-        #grid config $tabInnerf0.en_time -in $tabInnerf0.la_ms 
+        #1#grid config $tabInnerf0.la_ms      -row 4 -column 3 -sticky w
         $tabInnerf0.tabTitlef1 configure -text "Type of station" 
 	
         set tabTitlef2 [TitleFrame $tabInnerf1.tabTitlef2 -text "Advanced" ]
@@ -1356,7 +1367,7 @@ proc NoteBookManager::SaveMNValue {nodePos frame0 frame1} {
 	
     set newNodeName [$frame0.en_nodeName get]
     set stationType 0
-    set catchErrCode [UpdateNodeParams $nodeId $nodeId $nodeType $newNodeName $stationType "" ""]
+    set catchErrCode [UpdateNodeParams $nodeId $nodeId $nodeType $newNodeName $stationType "" 0 ""]
     set ErrCode [ocfmRetCode_code_get $catchErrCode]
     if { $ErrCode != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
@@ -1375,7 +1386,7 @@ proc NoteBookManager::SaveMNValue {nodePos frame0 frame1} {
     #set radioSel [subst $[subst $radioSel]]
     
     set MNDatatypeObjectPathList [list \
-        [list cycleTimeDatatype $Operations::CYCLE_TIME_OBJ $frame0.en_time] \
+        [list cycleTimeDatatype $Operations::CYCLE_TIME_OBJ $frame0.cycleframe.en_time] \
         [list asynMTUSizeDatatype $Operations::ASYNC_MTU_SIZE_OBJ $frame1.en_advOption1] \
         [list asynTimeoutDatatype $Operations::ASYNC_TIMEOUT_OBJ $frame1.en_advOption2] \
         [list multiPrescalerDatatype $Operations::MULTI_PRESCAL_OBJ $frame1.en_advOption3] ]
@@ -1491,7 +1502,7 @@ proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 frame2 
     }
     
     #validate whether the entered cycle reponse time is greater tha 1F98 03 value
-    set validateResult [$frame0.en_time validate]
+    set validateResult [$frame0.cycleframe.en_time validate]
     switch -- $validateResult {
         0 {
             tk_messageBox -message "The Entered value should not be less than the Poll Response Timeout value" -parent . -icon warning -title "Warning"
@@ -1535,7 +1546,7 @@ proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 frame2 
     #set radioSel [subst $[subst $radioSel]]
     
     set CNDatatypeObjectPathList [list \
-        [list presponseCycleTimeDatatype $Operations::PRES_TIMEOUT_OBJ $frame0.en_time] ]
+        [list presponseCycleTimeDatatype $Operations::PRES_TIMEOUT_OBJ $frame0.cycleframe.en_time] ]
     
     foreach tempDatatype $CNDatalist {
         set schDataRes [lsearch $CNDatatypeObjectPathList [list [lindex $tempDatatype 0] * *]]
@@ -1563,7 +1574,7 @@ proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 frame2 
         }
     }
 
-    set catchErrCode [UpdateNodeParams $nodeId $newNodeId $nodeType $newNodeName $stationType $saveSpinVal $validValue]
+    set catchErrCode [UpdateNodeParams $nodeId $newNodeId $nodeType $newNodeName $stationType $saveSpinVal $chkVal $validValue]
     set ErrCode [ocfmRetCode_code_get $catchErrCode]
     if { $ErrCode != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {

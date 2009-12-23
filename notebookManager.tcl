@@ -1362,6 +1362,7 @@ proc NoteBookManager::SaveMNValue {nodePos frame0 frame1} {
         set nodeType [lindex $result 1]
     } else {
             #must be some other node this condition should never reach
+			Validation::ResetPromptFlag
             return
     }
 	
@@ -1454,6 +1455,7 @@ proc NoteBookManager::SaveMNValue {nodePos frame0 frame1} {
     if { $dispMsg == 1 } {
         Console::DisplayWarning "Empty values in MN properties are not saved"
     }
+	Validation::ResetPromptFlag
     #if { [lsearch $savedValueList $nodeSelect] == -1 } {
     #    lappend savedValueList $nodeSelect
     #}
@@ -1615,7 +1617,7 @@ proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 frame2 
     set nodeId $newNodeId
     $cnPropSaveBtn configure -command "NoteBookManager::SaveCNValue $nodePos $nodeId $nodeType $frame0 $frame1 $frame2 $multiPrescalDatatype"
     $treePath itemconfigure $nodeSelect -text "$newNodeName\($nodeId\)"
-    
+    Validation::ResetPromptFlag
     #operations based on station type
     #if { [lsearch $savedValueList $nodeSelect] == -1 } {
     #    lappend savedValueList $nodeSelect
@@ -2113,6 +2115,11 @@ proc NoteBookManager::GenerateCnNodeList {} {
 #  Description : enables or disasbles the spinbox based on the check button selection
 #---------------------------------------------------------------------------------------------------
 proc NoteBookManager::StationRadioChanged {framePath radioVal } {
+	global lastRadioVal
+	if { $lastRadioVal != $radioVal } {
+		Validation::SetPromptFlag
+	}
+	set lastRadioVal $radioVal
     set spinVar [$framePath.sp_cycleNo cget -textvariable]
     global $spinVar
     if { $radioVal == "StNormal" } {
@@ -2145,6 +2152,7 @@ proc NoteBookManager::StationRadioChanged {framePath radioVal } {
 #---------------------------------------------------------------------------------------------------
 proc NoteBookManager::forceCycleChecked { framePath check_var } {
     global $check_var
+	Validation::SetPromptFlag
     set check_value [subst $[subst $check_var]]
     if { $check_value == 1 } {
         $framePath.sp_cycleNo configure -state normal -bg white

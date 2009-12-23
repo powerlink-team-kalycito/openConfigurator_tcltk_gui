@@ -1304,8 +1304,10 @@ proc Operations::SingleClickNode {node} {
     global indexSaveBtn
     global subindexSaveBtn
     global tableSaveBtn
-
-    if { $nodeSelect == "" || ![$treePath exists $nodeSelect] || [string match "root" $nodeSelect] || [string match "ProjectNode" $nodeSelect] || [string match "MN-*" $nodeSelect] || [string match "OBD-*" $nodeSelect] || [string match "CN-*" $nodeSelect] || [string match "PDO-*" $nodeSelect] } {
+	global mnPropSaveBtn
+    global cnPropSaveBtn
+	
+    if { $nodeSelect == "" || ![$treePath exists $nodeSelect] || [string match "root" $nodeSelect] || [string match "ProjectNode" $nodeSelect] || [string match "OBD-*" $nodeSelect] || [string match "PDO-*" $nodeSelect] } {
 	    #should not check for project settings option
     } else {
 	    if { $ra_proj == "0"} {
@@ -1314,8 +1316,12 @@ proc Operations::SingleClickNode {node} {
 				    $tableSaveBtn invoke
 			    } elseif { [string match "*SubIndex*" $nodeSelect] } {
 				    $subindexSaveBtn invoke
-			    } elseif { [string match "*Index*" $nodeSelect] } {	
-				    $indexSaveBtn invoke
+				} elseif { [string match "*Index*" $nodeSelect] } {	
+					$indexSaveBtn invoke
+				} elseif { [string match "MN*" $nodeSelect] } {	
+					$mnPropSaveBtn invoke
+				} elseif { [string match "CN*" $nodeSelect] } {	
+					$cnPropSaveBtn invoke
 			    } else {
 				    #must be root, ProjectNode, MN, OBD or CN
 			    }
@@ -1333,6 +1339,10 @@ proc Operations::SingleClickNode {node} {
 						    $subindexSaveBtn invoke
 					    } elseif { [string match "*Index*" $nodeSelect] } {	
 						    $indexSaveBtn invoke
+						} elseif { [string match "MN*" $nodeSelect] } {	
+						    $mnPropSaveBtn invoke
+						} elseif { [string match "CN*" $nodeSelect] } {	
+						    $cnPropSaveBtn invoke
 					    } else {
 						    #must be root, ProjectNode, MN, OBD or CN
 					    }
@@ -2125,7 +2135,7 @@ proc Operations::MNProperties {node nodePos nodeId nodeType} {
         $tmpInnerf1.en_advOption3 configure -state disabled
     }
 
-
+	Validation::ResetPromptFlag
 
 }
 
@@ -2149,6 +2159,7 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
     global nodeSelect
     global CNDatalist
     global cnPropSaveBtn
+	global lastRadioVal
     
     set tmpInnerf0 [lindex $f4 1]
     set tmpInnerf1 [lindex $f4 2]
@@ -2255,7 +2266,7 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
    $tmpInnerf2.sp_cycleNo configure -state disabled
    
    set stationType [EStationTypep_value $tmp_stationType]
-   
+   set lastRadioVal "StNormal"
    $tmpInnerf1.ra_StMulti deselect
    $tmpInnerf1.ra_StMulti configure -state disabled
    $tmpInnerf1.ra_StChain deselect
@@ -2375,6 +2386,7 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
                     #set the previously saved force cycle number
                     set $spinVar $prevSelCycleNoDec
                     if {$stationType == 1} {
+						set lastRadioVal "StMulti"
                         # it is multiplexed operation
                         $tmpInnerf1.ra_StMulti select
                         $tmpInnerf2.ch_adv configure -state normal
@@ -2393,11 +2405,12 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
     if { ( [string match -nocase "TRUE" $MNFeatureChainFlag] == 1 ) && ( [string match -nocase "TRUE" $CNFeatureChainFlag] == 1 ) } {
         $tmpInnerf1.ra_StChain configure -state normal
         if {$stationType == 2} {
+			set lastRadioVal "StChain"
            	# it is chained operation
            	$tmpInnerf1.ra_StChain select
         }
     }
-    
+    Validation::ResetPromptFlag
 }
 
 #---------------------------------------------------------------------------------------------------
@@ -2698,7 +2711,8 @@ proc Operations::ResetGlobalData {} {
     global chkPrompt
     global ra_proj
     global ra_auto
-
+	global lastRadioVal
+	
     #reset all the globaly maintained values 
     set nodeIdList ""
     set savedValueList ""
@@ -2715,6 +2729,7 @@ proc Operations::ResetGlobalData {} {
     Validation::ResetPromptFlag
     set ra_proj 2 
     set ra_auto 1
+	set lastRadioVal ""
     #no need to reset lastOpenPjt, lastXD, tableSaveBtn, indexSaveBtn and subindexSaveBtn
 
     #no index subindex or pdo table should be displayed

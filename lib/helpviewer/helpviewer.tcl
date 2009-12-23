@@ -44,23 +44,39 @@ namespace eval HelpViewer {
     variable LastFileList
     variable images
 	variable displayArrangeList
+	variable workingFolderArrangeList
 }
-    set helpFile License.html
+    set helpFile "Introduction.html"
 	set HelpViewer::HelpBaseDir [file join $masterRootDir help]
+	#set HelpViewer::displayArrangeList [list \
+	#	"License.html" \
+	#	"Introduction.html" \
+	#	"Features summary" \
+	#	"Product Features" \
+	#	"Editing Object dictionary entries" \
+	#	"Editing MN and CN properties" \
+	#	"Compiling and building the project" \
+	#	"Deleting the nodes" \
+	#	"Save project" \
+	#	"Launching the application" \
+	#	"Compiling from source.html" \
+	#	"KnownBugs" \
+	#	"troubleshooting.html" \
+	#]
 	set HelpViewer::displayArrangeList [list \
-		"License.html" \
 		"Introduction.html" \
-		"Features summary" \
-		"Product Features" \
-		"Editing Object dictionary entries" \
-		"Editing MN and CN properties" \
-		"Compiling and building the project" \
-		"Deleting the nodes" \
-		"Save project" \
-		"Launching the application" \
-		"Compiling from source.html" \
-		"KnownBugs" \
-		"troubleshooting.html" \
+		"Features summary.html" \
+		"Working with openCONFIGURATOR" \
+	]
+	set HelpViewer::workingFolderArrangeList [list \
+		"Project Wizard.html" \
+		"Adding CN Node.html" \
+		"Adding Index and Subindex.html" \
+		"Editing OBD Entries.html" \
+		"Editing MN CN Properties.html" \
+		"Building the project.html" \
+		"Project options.html" \
+		"Known bugs and troubleshooting.html" \
 	]
 
 #package provide helpviewer 1.0
@@ -160,7 +176,7 @@ namespace eval History {
             $menu entryconf Forward -state normal
         }
         # HelpViewer::LoadRef $w [lindex $list $pos] 0
-        HelpViewer::LoadRef $w [file join $HelpViewer::HelpBaseDir License.html] 0
+        HelpViewer::LoadRef $w [file join $HelpViewer::HelpBaseDir "Introduction.html"] 0
     }
     proc GoBackward { w } {
         variable list
@@ -1269,7 +1285,7 @@ proc HelpViewer::HelpWindow { file { base .} { geom "" } { title "" } } {
             "focus $html; HelpViewer::Search"
     $base.buts.b3.m add separator
     $base.buts.b3.m add command -label "Close" -acc "ESC" -command \
-            "destroy [winfo toplevel $html]"
+            "help_exit"
     
     bind $html.x <3> [list tk_popup $base.buts.b3.m %X %Y]
     
@@ -1394,7 +1410,7 @@ proc HelpViewer::HelpWindow { file { base .} { geom "" } { title "" } } {
     #    bind [winfo toplevel $html] <Escape> "exit"
     #} else {        bind [winfo toplevel $html] <Escape> "destroy [winfo toplevel $html]"
     #}
-    
+    bind [winfo toplevel $html] <Escape> "help_exit"
     bind [winfo toplevel $html] <Control-f> "focus $html; HelpViewer::SearchWindow ; break"
     
     
@@ -1433,11 +1449,15 @@ proc HelpViewer::HelpSearchWord { word } {
 proc HelpViewer::FillDir { tree node } {
     variable HelpBaseDir
     variable displayArrangeList
+	variable workingFolderArrangeList
 	
 	set files ""
     if { $node == "root" } {
         set dir $HelpBaseDir
 		set files $displayArrangeList
+	} elseif { [ string match "*Working with openCONFIGURATOR" [lindex [$tree itemcget $node -data] 1] ] == 1} {
+		set dir [lindex [$tree itemcget $node -data] 1]
+		set files $workingFolderArrangeList
     } else {
         set dir [lindex [$tree itemcget $node -data] 1]
 		foreach i [glob -nocomplain -dir $dir *] {
@@ -2065,4 +2085,4 @@ proc HelpViewer::WaitState { what } {
 #    set HelpViewer::HelpBaseDir [file join [info script] help]
 #}
 
-HelpViewer::HelpWindow [file join $masterRootDir help License.html] .help
+HelpViewer::HelpWindow [file join $masterRootDir help "Introduction.html"] .help

@@ -3677,7 +3677,26 @@ proc Operations::DeleteTreeNode {} {
 	    if {[string match "OBD*" $node]} {
 		    #should not delete nodeId from list since it is mn
 	    } else {
-		    set nodeIdList [Operations::DeleteList $nodeIdList $nodeId 0]		
+		    set nodeIdList [Operations::DeleteList $nodeIdList $nodeId 0]
+		    set MnTreeNode [lindex [$treePath nodes ProjectNode] 0]
+		    set tmpNode [string range $MnTreeNode 2 end]
+		    #there can be one OBD in MN so -1 is hardcoded
+		    set ObdTreeNode OBD$tmpNode-1
+		    catch {$treePath delete $ObdTreeNode}
+		    #insert the OBD ico only for expert view mode
+		    if { [string match "EXPERT" $Operations::viewType ] == 1 } {
+			$treePath insert 0 $MnTreeNode $ObdTreeNode -text "OBD" -open 0 -image [Bitmap::get pdo]
+		    }
+		    set mnNodeType 0
+		    set mnNodeId 240
+		    thread::send [tsv::get application importProgress] "StartProgress"
+		    if { [ catch { set result [WrapperInteractions::Import $ObdTreeNode $mnNodeType $mnNodeId] } ] } {   
+			# error has occured
+			thread::send  [tsv::set application importProgress] "StopProgress"
+			Operations::CloseProject
+			return 0
+		    }
+		    thread::send  [tsv::set application importProgress] "StopProgress"
 	    }
 
 	    #to clear the list from child of the node from saved value list

@@ -1569,6 +1569,11 @@ proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 frame2 
             if { [lindex $result 0] == "pass" } {
                 #get the flag and name of the object
                 set validValue [lindex $result 1]
+		if { $validValue != "" } {
+		    if { [ catch { set validValue [expr $validValue * 1000] } ] } {
+			set validValue ""
+		    }
+		}
             } else {
                 set validValue ""
             }

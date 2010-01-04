@@ -2842,6 +2842,24 @@ proc Operations::AddCN {cnName tmpImpDir nodeId} {
 	    }
             thread::send  [tsv::set application importProgress] "StartProgress"
 	    set result [WrapperInteractions::Import $treeNodeCN 1 $nodeId]
+	    #rebuild the mn tree
+	    set MnTreeNode [lindex [$treePath nodes ProjectNode] 0]
+	    set tmpNode [string range $MnTreeNode 2 end]
+	    #there can be one OBD in MN so -1 is hardcoded
+	    set ObdTreeNode OBD$tmpNode-1
+	    catch {$treePath delete $ObdTreeNode}
+	    #insert the OBD ico only for expert view mode
+	    if { [string match "EXPERT" $Operations::viewType ] == 1 } {
+		$treePath insert 0 $MnTreeNode $ObdTreeNode -text "OBD" -open 0 -image [Bitmap::get pdo]
+	    }
+	    set mnNodeType 0
+	    set mnNodeId 240
+	    if { [ catch { set result [WrapperInteractions::Import $ObdTreeNode $mnNodeType $mnNodeId] } ] } {   
+		# error has occured
+		thread::send  [tsv::set application importProgress] "StopProgress"
+		Operations::CloseProject
+		return 0
+	    }
 	    thread::send  [tsv::set application importProgress] "StopProgress"
 	    if { $result == "fail" } {
 		    return

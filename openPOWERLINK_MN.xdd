@@ -2021,10 +2021,7 @@ www.kalycito.com
           </Object>
 
           <Object index="1F92" name="NMT_MNCNPResTimeout_AU32" objectType="8" dataType="0007">
-            <SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="rw" defaultValue="3" PDOmapping="no"/>
-             <SubObject subIndex="01" name="CNResTimeout" objectType="7" dataType="0007" accessType="rw" defaultValue="25000"  />
-            <SubObject subIndex="02" name="CNResTimeout" objectType="7" dataType="0007" accessType="rw" defaultValue="25000"  />
-            <SubObject subIndex="03" name="CNResTimeout" objectType="7" dataType="0007" accessType="rw" defaultValue="25000"  />
+            <SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="rw" defaultValue="0" PDOmapping="no"/>
           </Object>
 
 <Object index="1F93" name="NMT_EPLNodeID_REC" objectType="9" dataType="0439">

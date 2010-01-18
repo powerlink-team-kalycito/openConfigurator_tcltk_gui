@@ -1871,8 +1871,22 @@ proc Operations::SingleClickNode {node} {
 	    }
     }
     # disable the object type combobox of sub objects
-    if {[string match "*SubIndex*" $node]} {
+    if { [string match "*SubIndex*" $node] } {
         $tmpInnerf1.co_obj1 configure -state disabled
+    }
+    #disable all the widgets for subindex 00
+    if { [string match "*SubIndex*" $node] && ($subIndexId == "00") } {
+        $tmpInnerf0.en_nam1 configure -state disabled
+        #default entry always disabled
+        $tmpInnerf1.en_default1 configure -state disabled
+        $tmpInnerf1.en_value1 configure -state disabled
+        $tmpInnerf1.en_lower1 configure -state disabled
+        $tmpInnerf1.en_upper1 configure -state disabled
+        $tmpInnerf1.co_data1 configure -state disabled
+        $tmpInnerf1.co_obj1 configure -state disabled
+        $tmpInnerf1.co_access1 configure -state disabled
+        $tmpInnerf1.co_pdo1 configure -state disabled
+        $subindexSaveBtn configure -state disabled
     }
 
     if { [lindex $IndexProp 2] == "IP_ADDRESS" } {

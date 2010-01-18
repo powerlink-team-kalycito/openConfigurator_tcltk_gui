@@ -117,7 +117,12 @@ tsv::set application importProgress [thread::create -joinable {
     wm title . "progress"
     BWidget::place . 0 0 center
     update idletasks
-
+    if {"$tcl_platform(platform)" == "unix"} {
+	catch {
+	    set element [image create photo -file [file join $masterRootDir openConfig.gif] ]
+	    wm iconphoto .help -default $element
+	}
+    }
     proc StartProgress {} {
 	    ImportProgress start
     }
@@ -1366,7 +1371,7 @@ proc Operations::SingleClickNode {node} {
     set nodeSelect $node
 
     #remove all the frames
-    Operations::RemoveAllFrames
+    #Operations::RemoveAllFrames
 
     if {[string match "root" $node] || [string match "ProjectNode" $node] || [string match "OBD-*" $node] || [string match "PDO-*" $node]} {
 	    return
@@ -1687,7 +1692,9 @@ proc Operations::SingleClickNode {node} {
     }
     
     #for index starting with A and their subobjects all the fileds cannot be edited
-    if { [string match -nocase "A???" $indexId] } {
+    #for object type ro or const should not be added to CDC generation
+    $tmpInnerf0.frame1.ch_gen deselect
+    if { [string match -nocase "A???" $indexId] || [string match -nocase "const" [lindex $IndexProp 3]] == 1 || [string match -nocase "ro" [lindex $IndexProp 3]] == 1 } {
         $tmpInnerf0.frame1.ch_gen configure -state disabled
     } else {
         $tmpInnerf0.frame1.ch_gen configure -state normal
@@ -1787,7 +1794,8 @@ proc Operations::SingleClickNode {node} {
             #for objects greater than 1FFF with object type ARRAY datatype can be edited
             if { ( [lindex $IndexProp 1] == "ARRAY") } {
                 grid remove $tmpInnerf1.en_data1
-                $tmpInnerf1.co_data1 configure -modifycmd "NoteBookManager::ChangeValidation $tmpInnerf1 $tmpInnerf1.co_data1 [lindex $IndexProp 1]"
+                #configure the modifycmd of data combobox with object type
+                $tmpInnerf1.co_data1 configure -modifycmd "NoteBookManager::ChangeValidation $tmpInnerf0 $tmpInnerf1 $tmpInnerf1.co_data1 [lindex $IndexProp 1]"
                 grid $tmpInnerf1.co_data1
             }
         }
@@ -1797,8 +1805,10 @@ proc Operations::SingleClickNode {node} {
 	    
 	    grid remove $tmpInnerf1.co_pdo1
 	    grid $tmpInnerf1.en_pdo1
-
-	    if { [lindex $IndexProp 3] == "const" || [lindex $IndexProp 3] == "ro" || [lindex $IndexProp 3] == "" } {
+        #fields are editable only for VAR type and acess type other than ro const or empty
+        #NOTE: also refer to the else part below
+	    if { [lindex $IndexProp 3] == "const" || [lindex $IndexProp 3] == "ro" \
+            || [lindex $IndexProp 3] == "" || [ string match -nocase "VAR" [lindex $IndexProp 1] ] != 1 } {
 		    #the field is non editable
 		    $tmpInnerf1.en_value1 configure -state "disabled"
 	    } else {
@@ -1814,6 +1824,8 @@ proc Operations::SingleClickNode {node} {
 
         grid remove $tmpInnerf1.en_data1
 	    grid $tmpInnerf1.co_data1
+        #configure the modifycmd of data combobox with object type
+        $tmpInnerf1.co_data1 configure -modifycmd "NoteBookManager::ChangeValidation $tmpInnerf0 $tmpInnerf1 $tmpInnerf1.co_data1 [lindex $IndexProp 1]"
         
 	    grid remove $tmpInnerf1.en_access1
 	    grid $tmpInnerf1.co_access1
@@ -1846,8 +1858,22 @@ proc Operations::SingleClickNode {node} {
 		    $tmpInnerf1.co_obj1 configure -state $comboState
 		    $tmpInnerf1.co_access1 configure -state $comboState
 		    $tmpInnerf1.co_pdo1 configure -state $comboState
+        #fields are editable only for VAR type and acess type other than ro const
+        #it is also mot editable for index starting with "A"
+        #NOTE: also refer to the if part above
+        if { [lindex $IndexProp 3] == "const" || [lindex $IndexProp 3] == "ro" \
+            || [ string match -nocase "VAR" [lindex $IndexProp 1] ] != 1 \
+            || [string match -nocase "A???" $indexId] == 1} {
+		    #the field is non editable
+		    $tmpInnerf1.en_value1 configure -state "disabled"
+	    } else {
+		    $tmpInnerf1.en_value1 configure -state "normal"
+	    }
     }
-
+    # disable the object type combobox of sub objects
+    if {[string match "*SubIndex*" $node]} {
+        $tmpInnerf1.co_obj1 configure -state disabled
+    }
 
     if { [lindex $IndexProp 2] == "IP_ADDRESS" } {
         set lastConv ""
@@ -1915,56 +1941,58 @@ proc Operations::SingleClickNode {node} {
                 }
                 set lastConv dec
                 $tmpInnerf1.frame1.ra_dec select
-	    } elseif { [lindex [lindex $userPrefList $schRes] 1] == "hex" } {
-		if {[string match -nocase "0x*" [lindex $IndexProp 5]]} {
-		    # actual already in hexadecimal 
-		} else {
-                    set valueState [$tmpInnerf1.en_value1 cget -state]
-		    $tmpInnerf1.en_value1 configure -state normal -validate none
-		    NoteBookManager::InsertHex $tmpInnerf1.en_value1 [lindex $IndexProp 2]
-		    $tmpInnerf1.en_value1 configure -state $valueState -validate key -vcmd "Validation::IsHex %P %s $tmpInnerf1.en_value1 %d %i [lindex $IndexProp 2]" -bg $savedBg
-		}
-        	if {[string match -nocase "0x*" [lindex $IndexProp 4]]} {
-		    # default is in hexadecimal 
-		} else {
-		    set defaultState [$tmpInnerf1.en_default1 cget -state]
-		    $tmpInnerf1.en_default1 configure -state normal
-		    NoteBookManager::InsertHex $tmpInnerf1.en_default1 [lindex $IndexProp 2]
-            $tmpInnerf1.en_default1 configure -state $defaultState
-		}
-        	set lastConv hex
-            $tmpInnerf1.frame1.ra_hex select
-	    } else {
-            return 
-	    }
-	} else {
-	    if {[string match -nocase "0x*" [lindex $IndexProp 5]]} {
-    		set lastConv hex
-    		if {[string match -nocase "0x*" [lindex $IndexProp 4]]} {
-    		    #default value is in hexadecimal
-    		} else {
-    		    set defaultState [$tmpInnerf1.en_default1 cget -state]
-    		    $tmpInnerf1.en_default1 configure -state normal
-    		    NoteBookManager::InsertHex $tmpInnerf1.en_default1 [lindex $IndexProp 2]
-    		    $tmpInnerf1.en_default1 configure -state $defaultState
-    		}
-    		$tmpInnerf1.frame1.ra_hex select
-    		$tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::IsHex %P %s $tmpInnerf1.en_value1 %d %i [lindex $IndexProp 2]" -bg $savedBg
-	    } else {
-    		set lastConv dec
-		    if {[string match -nocase "0x*" [lindex $IndexProp 4]]} {
-                #convert default hexadecimal to decimal"
-        		set defaultState [$tmpInnerf1.en_default1 cget -state]
-        		$tmpInnerf1.en_default1 configure -state normal
-        		NoteBookManager::InsertDecimal $tmpInnerf1.en_default1 [lindex $IndexProp 2]
-        		$tmpInnerf1.en_default1 configure -state $defaultState
-		    } else {
-        		#default value is in decimal
-		    }
-		    $tmpInnerf1.frame1.ra_dec select
-		    $tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::IsDec %P $tmpInnerf1.en_value1 %d %i [lindex $IndexProp 2]" -bg $savedBg
+            } elseif { [lindex [lindex $userPrefList $schRes] 1] == "hex" } {
+                if {[string match -nocase "0x*" [lindex $IndexProp 5]]} {
+                    # actual already in hexadecimal 
+                } else {
+                            set valueState [$tmpInnerf1.en_value1 cget -state]
+                    $tmpInnerf1.en_value1 configure -state normal -validate none
+                    NoteBookManager::InsertHex $tmpInnerf1.en_value1 [lindex $IndexProp 2]
+                    $tmpInnerf1.en_value1 configure -state $valueState -validate key -vcmd "Validation::IsHex %P %s $tmpInnerf1.en_value1 %d %i [lindex $IndexProp 2]" -bg $savedBg
+                }
+                    if {[string match -nocase "0x*" [lindex $IndexProp 4]]} {
+                    # default is in hexadecimal 
+                } else {
+                    set defaultState [$tmpInnerf1.en_default1 cget -state]
+                    $tmpInnerf1.en_default1 configure -state normal
+                    NoteBookManager::InsertHex $tmpInnerf1.en_default1 [lindex $IndexProp 2]
+                    $tmpInnerf1.en_default1 configure -state $defaultState
+                }
+                    set lastConv hex
+                    $tmpInnerf1.frame1.ra_hex select
+            } else {
+                return 
+            }
+        } else {
+            if {[string match -nocase "0x*" [lindex $IndexProp 5]]} {
+                set lastConv hex
+                if {[string match -nocase "0x*" [lindex $IndexProp 4]]} {
+                    #default value is in hexadecimal
+                } else {
+                    set defaultState [$tmpInnerf1.en_default1 cget -state]
+                    $tmpInnerf1.en_default1 configure -state normal
+                    NoteBookManager::InsertHex $tmpInnerf1.en_default1 [lindex $IndexProp 2]
+                    $tmpInnerf1.en_default1 configure -state $defaultState
+                }
+                $tmpInnerf1.frame1.ra_hex select
+                $tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::IsHex %P %s $tmpInnerf1.en_value1 %d %i [lindex $IndexProp 2]" -bg $savedBg
+            } else {
+                set lastConv dec
+                if {[string match -nocase "0x*" [lindex $IndexProp 4]]} {
+                    #convert default hexadecimal to decimal"
+                    set defaultState [$tmpInnerf1.en_default1 cget -state]
+                    $tmpInnerf1.en_default1 configure -state normal
+                    NoteBookManager::InsertDecimal $tmpInnerf1.en_default1 [lindex $IndexProp 2]
+                    $tmpInnerf1.en_default1 configure -state $defaultState
+                } else {
+                    #default value is in decimal
+                }
+                $tmpInnerf1.frame1.ra_dec select
+                $tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::IsDec %P $tmpInnerf1.en_value1 %d %i [lindex $IndexProp 2]" -bg $savedBg
             }
         }
+        Operations::CheckConvertValue $tmpInnerf1.en_lower1 [lindex $IndexProp 2] $lastConv
+        Operations::CheckConvertValue $tmpInnerf1.en_upper1 [lindex $IndexProp 2] $lastConv
     } else {
         set lastConv ""
         grid remove $tmpInnerf1.frame1.ra_dec

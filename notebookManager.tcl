@@ -159,11 +159,11 @@ proc NoteBookManager::create_tab { nbpath choice } {
                     UNSIGNED8 UNSIGNED16 UNSIGNED24 UNSIGNED32 UNSIGNED40 UNSIGNED48 UNSIGNED56 UNSIGNED64 REAL32 REAL64 MAC_ADDRESS IP_ADDRESS]
     ComboBox $tabInnerf1.co_data1 -values $dataCoList -editable no -textvariable co_data -width $comboWidth
     set objCoList [list DEFTYPE DEFSTRUCT VAR ARRAY RECORD]
-    ComboBox $tabInnerf1.co_obj1 -values $objCoList -editable no -textvariable co_obj -modifycmd "NoteBookManager::ChangeValidation $tabInnerf1 $tabInnerf1.co_obj1" -width $comboWidth 
+    ComboBox $tabInnerf1.co_obj1 -values $objCoList -editable no -textvariable co_obj -modifycmd "NoteBookManager::ChangeValidation $tabInnerf0 $tabInnerf1 $tabInnerf1.co_obj1" -width $comboWidth 
     set accessCoList [list const ro wo rw]
-    ComboBox $tabInnerf1.co_access1 -values $accessCoList -editable no -textvariable co_access -modifycmd "NoteBookManager::ChangeValidation $tabInnerf1 $tabInnerf1.co_access1" -width $comboWidth
+    ComboBox $tabInnerf1.co_access1 -values $accessCoList -editable no -textvariable co_access -modifycmd "NoteBookManager::ChangeValidation $tabInnerf0 $tabInnerf1 $tabInnerf1.co_access1" -width $comboWidth
     set pdoColist [list NO DEFAULT OPTIONAL RPDO TPDO]
-    ComboBox $tabInnerf1.co_pdo1 -values $pdoColist -editable no -textvariable co_pdo -modifycmd "NoteBookManager::ChangeValidation $tabInnerf1 $tabInnerf1.co_pdo1" -width $comboWidth
+    ComboBox $tabInnerf1.co_pdo1 -values $pdoColist -editable no -textvariable co_pdo -modifycmd "NoteBookManager::ChangeValidation $tabInnerf0 $tabInnerf1  $tabInnerf1.co_pdo1" -width $comboWidth
 
     set frame1 [frame $tabInnerf1.frame1]
     set ra_dec [radiobutton $frame1.ra_dec -text "Dec" -variable ra_dataType -value dec -command "NoteBookManager::ConvertDec $tabInnerf0 $tabInnerf1"]
@@ -684,7 +684,17 @@ proc NoteBookManager::ConvertDec {framePath0 framePath1} {
         set state [$framePath1.en_default1 cget -state]
         $framePath1.en_default1 configure -state normal
         NoteBookManager::InsertDecimal $framePath1.en_default1 $dataType
-        $framePath1.en_default1 configure -state $state	
+        $framePath1.en_default1 configure -state $state
+        
+        set state [$framePath1.en_lower1 cget -state]
+        $framePath1.en_lower1 configure -validate none -state normal
+        NoteBookManager::InsertDecimal $framePath1.en_lower1 $dataType
+        $framePath1.en_lower1 configure -validate key -vcmd "Validation::IsDec %P $framePath1.en_lower1 %d %i $dataType" -state $state
+        
+        set state [$framePath1.en_upper1 cget -state]
+        $framePath1.en_upper1 configure -validate none -state normal
+        NoteBookManager::InsertDecimal $framePath1.en_upper1 $dataType
+        $framePath1.en_upper1 configure -validate key -vcmd "Validation::IsDec %P $framePath1.en_upper1 %d %i $dataType" -state $state
     } else {
         #already dec is selected
     }
@@ -754,6 +764,16 @@ proc NoteBookManager::ConvertHex {framePath0 framePath1} {
         $framePath1.en_default1 configure -state normal
         NoteBookManager::InsertHex $framePath1.en_default1 $dataType
         $framePath1.en_default1 configure -state $state
+        
+        set state [$framePath1.en_lower1 cget -state]
+        $framePath1.en_lower1 configure -validate none -state normal
+        NoteBookManager::InsertHex $framePath1.en_lower1 $dataType
+        $framePath1.en_lower1 configure -validate key -vcmd "Validation::IsHex %P %s $framePath1.en_lower1 %d %i $dataType" -state $state
+        
+        set state [$framePath1.en_upper1 cget -state]
+        $framePath1.en_upper1 configure -validate none -state normal
+        NoteBookManager::InsertHex $framePath1.en_upper1 $dataType
+        $framePath1.en_upper1 configure -validate key -vcmd "Validation::IsHex %P %s $framePath1.en_upper1 %d %i $dataType" -state $state
     } else {
         #already hex is selected
     }
@@ -1039,6 +1059,14 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
     global userPrefList
     global lastConv
     global status_save
+    
+    #reloadView will call the Opertions::Singleclicknode so as when for index
+    #2000 and above is saved the datatype validation will take effect
+    set reloadView 0
+    #rebuildNode WrapperInteractions::RebuildNode for 2000 and above index if
+    #the datatype is set as ARRAY or RECORD subindex 00 will automatically
+    #added rebuild that node alone
+    set rebuildNode 0
     set oldName [$treePath itemcget $nodeSelect -text]
     if {[string match "*SubIndexValue*" $nodeSelect]} {
         set subIndexId [string range $oldName end-2 end-1]
@@ -1079,6 +1107,7 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
     set tmpVar1 [$frame1.en_value1 cget -textvariable]
     global $tmpVar1	
     set value [string toupper [subst $[subst $tmpVar1]] ]
+    $frame1.en_value1 configure -state $state
     
     if { [expr 0x$indexId > 0x1fff] } {
         set objectType [NoteBookManager::GetComboValue $frame1.co_obj1]
@@ -1214,6 +1243,7 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
         #if { ([expr 0x$indexId > 0x1fff]) && ( ($objectType == "ARRAY") || ($objectType == "VAR") ) } {}
         if { ([expr 0x$indexId > 0x1fff]) } {
             set catchErrCode [SetAllSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName $accessType $dataType $pdoType $default $upperLimit $lowerLimit $objectType [subst $[subst $chkGen]] ]
+            set reloadView 1
         } else {
             if { [string match -nocase "18??" $indexId] || [string match "14??" $indexId]} {
                 if { [string match "01" $subIndexId] } {
@@ -1279,6 +1309,10 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
                 }
             }
             set catchErrCode [SetAllIndexAttributes $nodeId $nodeType $indexId $value $newName $accessType $dataType $pdoType $default $upperLimit $lowerLimit $objectType [subst $[subst $chkGen]] ]
+            set reloadView 1
+            if { ([string match -nocase "ARRAY" $objectType] == 1) || ([string match -nocase "RECORD" $objectType] == 1) } {
+                set rebuildNode 1
+            }
         } else {
             set catchErrCode [SetIndexAttributes $nodeId $nodeType $indexId $value $newName [subst $[subst $chkGen]] ]
         }
@@ -1307,7 +1341,14 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
     }
     $frame0.en_nam1 configure -bg #fdfdd4
     $frame1.en_value1 configure -bg #fdfdd4
-    $frame1.en_value1 configure -state $state
+    #rebuild the node if index is saved as VAR since 00 will be added
+    if { $rebuildNode == 1 } {
+        WrapperInteractions::RebuildNode $nodeSelect
+    }
+    #reload the view after saving
+    if { $reloadView == 1 } {
+        Operations::SingleClickNode $nodeSelect
+    }
 }
 
 #---------------------------------------------------------------------------------------------------
@@ -1379,6 +1420,7 @@ proc NoteBookManager::SaveMNValue {nodePos frame0 frame1} {
         Validation::ResetPromptFlag
         return
     }
+    set status_save 1
     #reconfiguring the tree
     $treePath itemconfigure $nodeSelect -text "$newNodeName\($nodeId\)"
     
@@ -1592,7 +1634,7 @@ proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 frame2 
         Validation::ResetPromptFlag
         return
     }
-    
+    set status_save 1
     #if the forced cycle no is changed and saved subobjects will be added to MN
     #based on the internal logic so need to rebuild the mn tree
     #delete the OBD node and rebuild the tree
@@ -1892,14 +1934,13 @@ proc NoteBookManager::SetComboValue {comboPath value} {
 #
 #  Description : gets the selected value and sets the value into the Combobox widget
 #---------------------------------------------------------------------------------------------------
-proc NoteBookManager::ChangeValidation {framePath comboPath {objectType ""}} {
+proc NoteBookManager::ChangeValidation {framePath0 framePath comboPath {objectType ""}} {
     global userPrefList
     global nodeSelect
     global lastConv
     global chkPrompt
-
+    set chkPrompt 1
     if {[string match "*.co_data1" $comboPath]} {
-        set chkPrompt 1
         set value [$comboPath getvalue]
         set valueList [$comboPath cget -values]
         set dataType [lindex $valueList $value]
@@ -1917,8 +1958,12 @@ proc NoteBookManager::ChangeValidation {framePath comboPath {objectType ""}} {
         $framePath.en_value1 delete 0 end
         $framePath.en_value1 insert 0 0x
         $framePath.en_value1 configure -validate key -vcmd "Validation::IsHex %P %s $framePath.en_value1 %d %i $dataType"
-    
-        if { $objectType == "VAR" } {
+        $framePath.en_upper1 configure -validate none
+        $framePath.en_upper1 delete 0 end
+        $framePath.en_lower1 configure -validate none
+        $framePath.en_lower1 delete 0 end
+	
+        if { $objectType == "VAR" || $objectType == ""} {
             #upper and lower limit are editable only when object type is VAR and if 
             #index is greater than 1FFF. the combo box appears only for index greater than 1fff
             $framePath.en_upper1 configure -validate none -state normal
@@ -1980,12 +2025,12 @@ proc NoteBookManager::ChangeValidation {framePath comboPath {objectType ""}} {
             UNSIGNED64 {
             }
             REAL32 {
-		grid remove $framePath.frame1.ra_dec
+                grid remove $framePath.frame1.ra_dec
                 grid remove $framePath.frame1.ra_hex
                 tk_messageBox -message "Floating point not supported for $dataType.\nPlease refer IEEE 754 standard to represent the floating point number as a hexadecimal value." -parent .
             }
             REAL64 {
-		grid remove $framePath.frame1.ra_dec
+                grid remove $framePath.frame1.ra_dec
                 grid remove $framePath.frame1.ra_hex
                 tk_messageBox -message "Floating point not supported for $dataType.\nPlease refer IEEE 754 standard to represent the floating point number as a hexadecimal value." -parent .
             }
@@ -2027,6 +2072,9 @@ proc NoteBookManager::ChangeValidation {framePath comboPath {objectType ""}} {
         set valueList [$comboPath cget -values]
         set selObjectType [lindex $valueList $value]
         set selObjectType [string toupper $selObjectType]
+        #reconfigure the modifycmd of data combobox with object type
+        $framePath.co_data1 configure -modifycmd "NoteBookManager::ChangeValidation $framePath0 $framePath $framePath.co_data1 $selObjectType"
+       
         switch -- $selObjectType {
             VAR {
                 grid remove $framePath.en_data1
@@ -2037,9 +2085,15 @@ proc NoteBookManager::ChangeValidation {framePath comboPath {objectType ""}} {
             
                 grid remove $framePath.en_pdo1
                 grid $framePath.co_pdo1
+                
+                set objectDatatype [NoteBookManager::GetComboValue $framePath.co_data1]
+                #setting the datatype to last saved and changing the validation based on it
+                NoteBookManager::ChangeEntryValidationForDatatype $framePath $framePath.en_value1 $objectDatatype
+                
                 #enable the entry boxes upper and lower limit
                 $framePath.en_upper1 configure -state normal
                 $framePath.en_lower1 configure -state normal
+                $framePath.en_value1 configure -state normal
             }
             ARRAY {
                 grid remove $framePath.en_data1
@@ -2050,9 +2104,16 @@ proc NoteBookManager::ChangeValidation {framePath comboPath {objectType ""}} {
                 
                 grid $framePath.en_pdo1
                 grid remove $framePath.co_pdo1
+                
+                set objectDatatype [NoteBookManager::GetComboValue $framePath.co_data1]
+                #setting the datatype to last saved and changing the validation based on it
+                NoteBookManager::ChangeEntryValidationForDatatype $framePath $framePath.en_value1 $objectDatatype
+                
                 #disable the entry boxes upper and lower limit
                 $framePath.en_upper1 configure -state disabled
                 $framePath.en_lower1 configure -state disabled
+                $framePath.en_value1 delete 0 end
+                $framePath.en_value1 configure -state disabled
             }
             default {
                 grid $framePath.en_data1
@@ -2063,15 +2124,130 @@ proc NoteBookManager::ChangeValidation {framePath comboPath {objectType ""}} {
                 
                 grid $framePath.en_pdo1
                 grid remove $framePath.co_pdo1
+                set objectDatatype [NoteBookManager::GetEntryValue $framePath.en_data1]
+                #setting the datatype to last saved and changing the validation based on it
+                NoteBookManager::ChangeEntryValidationForDatatype $framePath $framePath.en_value1 $objectDatatype
                 #disable the entry boxes upper and lower limit
                 $framePath.en_upper1 configure -state disabled
                 $framePath.en_lower1 configure -state disabled
+                $framePath.en_value1 delete 0 end
+                $framePath.en_value1 configure -state disabled
+            }
+        }
+        
+    } elseif {[string match "*.co_access1" $comboPath]} {
+        set value [$comboPath getvalue]
+        set valueList [$comboPath cget -values]
+        set accessType [lindex $valueList $value]
+        set stdAccessType [string toupper $accessType]
+        switch -- $stdAccessType {
+            RO {
+                $framePath0.frame1.ch_gen configure -state disabled
+                $framePath0.frame1.ch_gen deselect
+            }
+            CONST {
+                $framePath0.frame1.ch_gen configure -state disabled
+                $framePath0.frame1.ch_gen deselect
+            }
+            default {
+                $framePath0.frame1.ch_gen configure -state normal
             }
         }
         
     }
     focus -force $framePath.en_value1
     return
+}
+
+proc NoteBookManager::ChangeEntryValidationForDatatype {framePath entryPath dataType } {
+    global lastConv
+    
+    grid $framePath.frame1.ra_dec
+    grid $framePath.frame1.ra_hex
+    if { $lastConv == "dec" } {
+        $entryPath configure -validate key -vcmd "Validation::IsDec %P $entryPath %d %i $dataType"
+    } elseif { $lastConv == "hex"} {   
+        $entryPath configure -validate key -vcmd "Validation::IsHex %P %s $entryPath %d %i $dataType"
+    } else {
+        $entryPath configure -validate key -vcmd "Validation::IsHex %P %s $entryPath %d %i $dataType"
+        $framePath.frame1.ra_hex select
+        set lastConv "hex"
+    }
+    
+    set stdDataType [string toupper $dataType]
+    switch -- $stdDataType {
+        BIT {
+            set lastConv ""
+            grid remove $framePath.frame1.ra_dec
+            grid remove $framePath.frame1.ra_hex
+            $entryPath configure -validate key -vcmd "Validation::CheckBitNumber %P"
+        }
+        BOOLEAN {
+        }
+        INTEGER8 {
+        }
+        UNSIGNED8 {
+        }
+        INTEGER16 {
+        }
+        UNSIGNED16 {
+        }
+        INTEGER24 {
+        }
+        UNSIGNED24 {
+        }
+        INTEGER32 {
+        }
+        UNSIGNED32 {
+        }
+        INTEGER40 {
+        }   
+        UNSIGNED40 {
+        }
+        INTEGER48 {
+        }
+        UNSIGNED48 {
+        }
+        INTEGER56 {
+        }
+        UNSIGNED56 {
+        }
+        INTEGER64 {
+        }
+        UNSIGNED64 {
+        }
+        REAL32 {
+            grid remove $framePath.frame1.ra_dec
+            grid remove $framePath.frame1.ra_hex
+            tk_messageBox -message "Floating point not supported for $dataType.\nPlease refer IEEE 754 standard to represent the floating point number as a hexadecimal value." -parent .
+        }
+        REAL64 {
+            grid remove $framePath.frame1.ra_dec
+            grid remove $framePath.frame1.ra_hex
+            tk_messageBox -message "Floating point not supported for $dataType.\nPlease refer IEEE 754 standard to represent the floating point number as a hexadecimal value." -parent .
+        }
+        MAC_ADDRESS {
+            set lastConv ""
+            grid remove $framePath.frame1.ra_dec
+            grid remove $framePath.frame1.ra_hex
+            $entryPath configure -validate key -vcmd "Validation::IsMAC %P %V"
+        }
+        IP_ADDRESS {
+            set lastConv ""
+            grid remove $framePath.frame1.ra_dec
+            grid remove $framePath.frame1.ra_hex
+            $entryPath configure -validate key -vcmd "Validation::IsIP %P %V"
+        }
+    }
+    set validateResult [$entryPath validate]
+    switch -- $validateResult {
+        0 {
+            $entryPath delete 0 end
+        }
+        1 {
+            #the value is valid can continue
+        }
+    }
 }
 
 #---------------------------------------------------------------------------------------------------

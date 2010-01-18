@@ -431,3 +431,106 @@ proc WrapperInteractions::Import {parentNode nodeType nodeID } {
     return pass
 }
 
+#---------------------------------------------------------------------------------------------------
+#  WrapperInteractions::RebuildNode
+# 
+#  Arguments : Node - node in tree window
+#
+#  Results : pass or fail
+#
+#  Description : rebuilds the node on to the tree window
+#---------------------------------------------------------------------------------------------------
+proc WrapperInteractions::RebuildNode {{Node ""}} {
+	global treePath
+	global nodeSelect
+	if {$Node == ""} {
+		set Node $nodeSelect
+	}
+	if {[$treePath exists $Node] == 1} 	{
+		#node exists continue the function
+	} else {
+		return
+	}
+	
+	#gets the nodeId and Type of selected node
+	set result [Operations::GetNodeIdType $Node]
+	if {$result != "" } {
+		set nodeID [lindex $result 0]
+		set nodeType [lindex $result 1]
+	} else {
+		return
+	}
+	set nodePosition [split $Node -]
+	set nodePosition [lrange $nodePosition 1 end]
+	set nodePosition [join $nodePosition -]
+	
+	set nodePos [new_intp]
+    set ExistfFlag [new_boolp]
+    set catchErrCode [IfNodeExists $nodeID $nodeType $nodePos $ExistfFlag]
+    set nodePos [intp_value $nodePos]
+    set ExistfFlag [boolp_value $ExistfFlag]
+    set ErrCode [ocfmRetCode_code_get $catchErrCode]
+    if { $ErrCode == 0 && $ExistfFlag == 1 } {
+	    #the node exist continue 
+    } else {
+	    if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+		    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -parent . -title Error -icon error
+	    } else {
+		    tk_messageBox -message "Unknown Error" -parent . -title Error -icon error
+	    }
+	    return
+    }
+	
+	set IndexValue [string range [$treePath itemcget $Node -text] end-4 end-1]
+	
+	set indexPos [new_intp] 
+	set catchErrCode [IfIndexExists $nodeID $nodeType $IndexValue $indexPos]
+	if { [ocfmRetCode_code_get $catchErrCode] != 0 } {
+		if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
+		} else {
+			tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
+		}
+		return
+	}
+	set indexPos [intp_value $indexPos] 
+	
+	set childNodeList [$treePath nodes $Node]
+	if {[llength $childNodeList] > 0} {
+		$treePath itemconfigure $Node -open 0
+	}
+	foreach childNode $childNodeList {
+		$treePath delete $childNode
+	}
+	
+	set sidxCorrList [WrapperInteractions::SortNode $nodeType $nodeID $nodePos sub $indexPos $IndexValue]
+
+	set SIdxCount [new_intp]
+	set catchErrCode [GetSubIndexCount $nodeID $nodeType $IndexValue $SIdxCount]
+	set SIdxCount [intp_value $SIdxCount]
+	for { set tmpCount 0 } { $tmpCount < $SIdxCount } { incr tmpCount } {
+		set sortedSubIndexPos [lindex $sidxCorrList $tmpCount]
+		set SIdxValue [GetSubIndexIDbyPositions $nodePos $indexPos $sortedSubIndexPos]
+		if { [ocfmRetCode_code_get [lindex $SIdxValue 0]] != 0 } {
+			if { [ string is ascii [ocfmRetCode_errorString_get [lindex $SIdxValue 0]] ] } {
+				tk_messageBox -message "[ocfmRetCode_errorString_get [lindex $SIdxValue 0] ]\nClosing the project" -title Error -icon error -parent .
+			} else {
+				tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
+			}
+			return fail
+		}
+		set SIdxValue [lindex $SIdxValue 1]
+		set catchErr [GetSubIndexAttributesbyPositions $nodePos $indexPos $sortedSubIndexPos 0 ]
+		set SIdxName [lindex $catchErr 1]
+		if { [ocfmRetCode_code_get [lindex $catchErr 0]] != 0 } {
+			if { [ string is ascii [ocfmRetCode_errorString_get [lindex $catchErr 0]] ] } {
+				tk_messageBox -message "[ocfmRetCode_errorString_get [lindex $catchErr 0]]\nClosing the project" -title Error -icon error -parent .
+			} else {
+				tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
+			}
+			return fail
+		}
+		$treePath insert end $Node SubIndexValue-$nodePosition-$tmpCount -text $SIdxName\(0x$SIdxValue\) -open 0 -image [Bitmap::get subindex]
+	}
+	update idletasks
+}

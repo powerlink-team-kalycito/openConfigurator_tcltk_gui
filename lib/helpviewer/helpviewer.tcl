@@ -46,34 +46,17 @@ namespace eval HelpViewer {
 	variable displayArrangeList
 	variable workingFolderArrangeList
 }
-    set helpFile "Introduction.html"
+	global helpFile
+    set helpFile "Project Wizard.html"
 	set HelpViewer::HelpBaseDir [file join $masterRootDir help]
-	#set HelpViewer::displayArrangeList [list \
-	#	"License.html" \
-	#	"Introduction.html" \
-	#	"Features summary" \
-	#	"Product Features" \
-	#	"Editing Object dictionary entries" \
-	#	"Editing MN and CN properties" \
-	#	"Compiling and building the project" \
-	#	"Deleting the nodes" \
-	#	"Save project" \
-	#	"Launching the application" \
-	#	"Compiling from source.html" \
-	#	"KnownBugs" \
-	#	"troubleshooting.html" \
-	#]
 	set HelpViewer::displayArrangeList [list \
-		"Introduction.html" \
-		"Features summary.html" \
-		"Working with openCONFIGURATOR" \
-	]
-	set HelpViewer::workingFolderArrangeList [list \
 		"Project Wizard.html" \
-		"Adding CN Node.html" \
+		"Simple and Advanced view.html" \
+		"Adding a CN(Controlled Node).html" \
 		"Adding Index and Subindex.html" \
 		"Editing OBD Entries.html" \
-		"Editing MN CN Properties.html" \
+		"Editing MN & CN Properties.html" \
+		"Deleting the nodes.html" \
 		"Building the project.html" \
 		"Project options.html" \
 		"Known bugs and troubleshooting.html" \
@@ -167,7 +150,7 @@ namespace eval History {
         variable list
         variable pos
         variable menu
-        
+        global helpFile
         set pos 0
         if { [info exists menu] && [winfo exists $menu] } {
             $menu entryconf Backward -state disabled
@@ -176,7 +159,7 @@ namespace eval History {
             $menu entryconf Forward -state normal
         }
         # HelpViewer::LoadRef $w [lindex $list $pos] 0
-        HelpViewer::LoadRef $w [file join $HelpViewer::HelpBaseDir "Introduction.html"] 0
+        HelpViewer::LoadRef $w [file join $HelpViewer::HelpBaseDir $helpFile] 0
     }
     proc GoBackward { w } {
         variable list
@@ -2085,4 +2068,4 @@ proc HelpViewer::WaitState { what } {
 #    set HelpViewer::HelpBaseDir [file join [info script] help]
 #}
 
-HelpViewer::HelpWindow [file join $masterRootDir help "Introduction.html"] .help
+HelpViewer::HelpWindow [file join $masterRootDir help "Project Wizard.html"] .help

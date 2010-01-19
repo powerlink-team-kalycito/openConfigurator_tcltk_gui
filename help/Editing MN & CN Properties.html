@@ -1,0 +1,92 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=windows-1252">
+	<TITLE></TITLE>
+	<META NAME="GENERATOR" CONTENT="OpenOffice.org 3.0  (Win32)">
+	<META NAME="AUTHOR" CONTENT="vikram ">
+	<META NAME="CREATED" CONTENT="20091120;20071400">
+	<META NAME="CHANGED" CONTENT="20100119;17192100">
+	<META NAME="CHANGEDBY" CONTENT="deepak">
+	<META NAME="CHANGEDBY" CONTENT="deepak">
+	<META NAME="CHANGEDBY" CONTENT="vikram ">
+	<STYLE TYPE="text/css">
+	<!--
+		H2 { margin-top: 0in; margin-bottom: 0in; line-height: 100%; text-align: justify; page-break-inside: auto; page-break-before: auto; page-break-after: auto }
+		H2.western { font-family: "Times New Roman", serif; font-size: 12pt }
+		H2.cjk { font-family: "DejaVu Sans"; font-size: 14pt }
+		H2.ctl { font-family: "DejaVu Sans"; font-size: 12pt; font-weight: normal }
+	-->
+	</STYLE>
+</HEAD>
+<BODY LANG="en-IN" DIR="LTR">
+<P STYLE="margin-bottom: 0in"><FONT FACE="Times New Roman, serif"><FONT SIZE=4><B>Editing
+MN Properties</B></FONT></FONT></P>
+<P ALIGN=JUSTIFY STYLE="margin-bottom: 0in; font-weight: normal; line-height: 0.17in">
+<FONT FACE="Times New Roman, serif"><FONT SIZE=3>The user can view
+and edit the following clicking a MN node from Network browser</FONT></FONT></P>
+<UL>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-bottom: 0in; font-weight: normal; line-height: 0.17in">
+	<FONT FACE="Times New Roman, serif"><FONT SIZE=3>Name of the
+	managing node</FONT></FONT></P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-bottom: 0in; font-weight: normal; line-height: 0.17in">
+	<FONT FACE="Times New Roman, serif"><FONT SIZE=3>Cycle time : value
+	of the object 1006</FONT></FONT></P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-bottom: 0in; font-weight: normal; line-height: 0.17in">
+	<FONT FACE="Times New Roman, serif"><FONT SIZE=3>Asynchronous MTU
+	size : value of the Object 1F98 SubObject 08</FONT></FONT></P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-bottom: 0in; font-weight: normal; line-height: 0.17in">
+	<FONT FACE="Times New Roman, serif"><FONT SIZE=3>Asynchronous
+	Timeout : value of the object 1F8A SubObject 07</FONT></FONT></P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-bottom: 0in; font-weight: normal; line-height: 0.17in">
+	<FONT FACE="Times New Roman, serif"><FONT SIZE=3>Multiplexing
+	prescaler : value of the Object 1F98 SubObject 07. This value can be
+	edited only if the MN supports multiplexing feature. Multiplex cycle
+	assigned for CN cannot exceed this value. When the Multiplexing
+	prescaler is changed with lesser than the previous value the
+	automatically assigned multiplex cycle values of CNs are
+	recalculated. When this value is set to zero the multiplexed station
+	for the CN will be disabled.</FONT></FONT></P>
+</UL>
+<H2 CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0.2in; line-height: 0.17in">
+<IMG SRC="EditMNprop_1.gif" NAME="graphics2" ALIGN=LEFT WIDTH=715 HEIGHT=370 BORDER=0><BR CLEAR=LEFT><BR><BR>
+</H2>
+<H2 CLASS="western" ALIGN=JUSTIFY STYLE="margin-bottom: 0.2in; line-height: 0.17in">
+<FONT FACE="Times New Roman, serif"><FONT SIZE=4><B>Editing CN
+Properties</B></FONT></FONT></H2>
+<P ALIGN=JUSTIFY STYLE="margin-bottom: 0in; font-weight: normal; line-height: 0.17in">
+<FONT FACE="Times New Roman, serif"><FONT SIZE=3>The user can view
+and edit the following clicking a CN node from Network browser</FONT></FONT></P>
+<UL>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-bottom: 0in; font-weight: normal; line-height: 0.17in">
+	<FONT FACE="Times New Roman, serif"><FONT SIZE=3>Node Name</FONT></FONT></P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-bottom: 0in; font-weight: normal; line-height: 0.17in">
+	<FONT FACE="Times New Roman, serif"><FONT SIZE=3>Node Number</FONT></FONT></P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-bottom: 0in; font-weight: normal; line-height: 0.17in">
+	<FONT FACE="Times New Roman, serif"><FONT SIZE=3>Poll Response
+	Timeout : value of Object 1006 the value set here is saved at MN to
+	the object 1F92 Subobject node number of CN. The 1006 object of CN
+	is not updated with the value.</FONT></FONT></P>
+</UL>
+<P ALIGN=JUSTIFY STYLE="margin-bottom: 0in; line-height: 0.17in"><BR>
+</P>
+<P ALIGN=JUSTIFY STYLE="margin-bottom: 0in; font-weight: normal; line-height: 0.17in">
+<FONT FACE="Times New Roman, serif"><FONT SIZE=3>The user also can
+can switch three stations</FONT></FONT></P>
+<UL>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-bottom: 0in; font-weight: normal; line-height: 0.17in">
+	<FONT FACE="Times New Roman, serif"><FONT SIZE=3>Normal Station</FONT></FONT></P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-bottom: 0in; font-weight: normal; line-height: 0.17in">
+	<FONT FACE="Times New Roman, serif"><FONT SIZE=3>Chained station :
+	This option is enabled only when both MN and the CN supports the
+	Chaining feature.</FONT></FONT></P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-bottom: 0in; font-weight: normal; line-height: 0.17in">
+	<FONT FACE="Times New Roman, serif"><FONT SIZE=3>Multiplex station :
+	This option is enabled only when both MN and the CN supports the
+	Multiplexing feature and the multiplex prescaler should be greater
+	than zero.</FONT></FONT></P>
+</UL>
+<P ALIGN=JUSTIFY STYLE="margin-bottom: 0in; line-height: 0.17in"><IMG SRC="EditMNprop_2.gif" NAME="graphics1" ALIGN=LEFT WIDTH=715 HEIGHT=353 BORDER=0><BR CLEAR=LEFT><BR>
+</P>
+</BODY>
+</HTML>

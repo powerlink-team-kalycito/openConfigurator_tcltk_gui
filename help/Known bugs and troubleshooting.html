@@ -1,0 +1,57 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=windows-1252">
+	<TITLE></TITLE>
+	<META NAME="GENERATOR" CONTENT="OpenOffice.org 3.0  (Win32)">
+	<META NAME="AUTHOR" CONTENT="vikram ">
+	<META NAME="CREATED" CONTENT="20091120;18315200">
+	<META NAME="CHANGED" CONTENT="20100118;18453700">
+	<META NAME="CHANGEDBY" CONTENT="vikram ">
+</HEAD>
+<BODY LANG="en-IN" DIR="LTR">
+<P STYLE="margin-top: 0.08in; margin-bottom: 0.08in; font-style: normal; page-break-before: always">
+<FONT FACE="Times New Roman, serif"><FONT SIZE=4><B>Known bugs and
+Work around</B></FONT></FONT></P>
+<P ALIGN=JUSTIFY STYLE="margin-bottom: 0in; font-weight: normal"><FONT FACE="Times New Roman, serif"><FONT SIZE=3>The
+following are the list of known bugs in the openCONFIGURATOR V 1.2.0</FONT></FONT></P>
+<P ALIGN=CENTER STYLE="margin-bottom: 0in"><IMG SRC="known_bugs_fig48.gif" NAME="graphics1" ALIGN=BOTTOM WIDTH=333 HEIGHT=182 BORDER=0></P>
+<P ALIGN=CENTER STYLE="margin-bottom: 0in"><BR>
+</P>
+<P ALIGN=JUSTIFY STYLE="margin-bottom: 0in"><FONT FACE="Times New Roman, serif"><FONT SIZE=3><I><B>&quot;Error
+Loading Shared library Cannot proceed Consult the user manual to
+troubleshoot &quot; for binaries downloaded from SourceForge on some
+machines.</B></I></FONT></FONT></P>
+<P ALIGN=JUSTIFY STYLE="margin-bottom: 0in"><FONT FACE="Times New Roman, serif"><FONT SIZE=3><B>Description:</B></FONT></FONT></P>
+<P ALIGN=JUSTIFY STYLE="margin-bottom: 0in; font-weight: normal"><FONT FACE="Times New Roman, serif"><FONT SIZE=3>The
+above error happens when the shared libraries are corrupted or when
+the shared libraries are missing. On some Windows machine, the error
+is happening in a undefined way. We are in the process of fixing it.
+Till we make a release for this issue, please follow the work around
+mentioned below.</FONT></FONT></P>
+<P ALIGN=JUSTIFY STYLE="margin-bottom: 0in"><FONT FACE="Times New Roman, serif"><FONT SIZE=3><B>Work
+Around 1:</B></FONT></FONT></P>
+<P ALIGN=JUSTIFY STYLE="margin-bottom: 0in; font-weight: normal"><FONT FACE="Times New Roman, serif"><FONT SIZE=3>Install
+the &quot;Microsoft Visual C++ Redistributable Package (x86)&quot; if
+Visual Studio is not installed. If this doesn't solve the issue, Work
+Around 2 will solve the issue.</FONT></FONT></P>
+<P ALIGN=JUSTIFY STYLE="margin-bottom: 0in"><FONT FACE="Times New Roman, serif"><FONT SIZE=3><B>Work
+Around 2:</B></FONT></FONT></P>
+<P ALIGN=JUSTIFY STYLE="margin-bottom: 0in; font-weight: normal"><FONT FACE="Times New Roman, serif"><FONT SIZE=3>Recompile
+the shared libraries on the machine in which the error happens.
+Follow section &ldquo;Compilation&rdquo; for recompilation.</FONT></FONT></P>
+<P ALIGN=JUSTIFY STYLE="margin-bottom: 0in"><BR>
+</P>
+<P ALIGN=JUSTIFY STYLE="margin-bottom: 0in"><FONT FACE="Times New Roman, serif"><FONT SIZE=3><I><B>Issue
+with Non-ASCII project names</B></I></FONT></FONT></P>
+<P ALIGN=JUSTIFY STYLE="margin-bottom: 0in"><FONT FACE="Times New Roman, serif"><FONT SIZE=3><B>Description:</B></FONT></FONT></P>
+<P ALIGN=JUSTIFY STYLE="margin-bottom: 0in; font-weight: normal"><FONT FACE="Times New Roman, serif"><FONT SIZE=3>If
+non-ASCII project names are used, there may be issues in using the
+project. </FONT></FONT>
+</P>
+<P ALIGN=JUSTIFY STYLE="margin-bottom: 0in"><FONT FACE="Times New Roman, serif"><FONT SIZE=3><B>Work
+Around:</B></FONT></FONT></P>
+<P ALIGN=JUSTIFY STYLE="margin-bottom: 0in; font-weight: normal"><FONT FACE="Times New Roman, serif"><FONT SIZE=3>To
+avoid this use ASCII project names only.</FONT></FONT></P>
+</BODY>
+</HTML>

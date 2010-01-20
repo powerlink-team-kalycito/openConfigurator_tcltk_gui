@@ -144,7 +144,9 @@ proc NoteBookManager::create_tab { nbpath choice } {
     entry $tabInnerf1.en_data1 -state disabled -width 20
     entry $tabInnerf1.en_access1 -state disabled -width 20
     entry $tabInnerf1.en_upper1 -state disabled -width 20
+    bind $tabInnerf1.en_upper1 <FocusOut> "NoteBookManager::LimitFocusChanged $tabInnerf1 $tabInnerf1.en_upper1"
     entry $tabInnerf1.en_lower1 -state disabled -width 20
+    bind $tabInnerf1.en_lower1 <FocusOut> "NoteBookManager::LimitFocusChanged $tabInnerf1 $tabInnerf1.en_lower1"
     entry $tabInnerf1.en_pdo1 -state disabled -width 20
     entry $tabInnerf1.en_default1 -state disabled -width 20
     entry $tabInnerf1.en_value1 -width 20 -textvariable tmpValue$_pageCounter  -relief ridge -bg white 
@@ -653,7 +655,9 @@ proc NoteBookManager::ConvertDec {framePath0 framePath1} {
     global lastConv
     global userPrefList
     global nodeSelect
-
+    global UPPER_LIMIT
+    global LOWER_LIMIT
+    
     if { $lastConv != "dec"} {
         set lastConv dec
         set schRes [lsearch $userPrefList [list $nodeSelect *]]
@@ -689,11 +693,13 @@ proc NoteBookManager::ConvertDec {framePath0 framePath1} {
         set state [$framePath1.en_lower1 cget -state]
         $framePath1.en_lower1 configure -validate none -state normal
         NoteBookManager::InsertDecimal $framePath1.en_lower1 $dataType
+        set LOWER_LIMIT [$framePath1.en_lower1 get]
         $framePath1.en_lower1 configure -validate key -vcmd "Validation::IsDec %P $framePath1.en_lower1 %d %i $dataType" -state $state
         
         set state [$framePath1.en_upper1 cget -state]
         $framePath1.en_upper1 configure -validate none -state normal
         NoteBookManager::InsertDecimal $framePath1.en_upper1 $dataType
+        set UPPER_LIMIT [$framePath1.en_upper1 get]
         $framePath1.en_upper1 configure -validate key -vcmd "Validation::IsDec %P $framePath1.en_upper1 %d %i $dataType" -state $state
     } else {
         #already dec is selected
@@ -733,7 +739,9 @@ proc NoteBookManager::ConvertHex {framePath0 framePath1} {
     global lastConv
     global userPrefList
     global nodeSelect
-
+    global UPPER_LIMIT
+    global LOWER_LIMIT
+    
     if { $lastConv != "hex"} {
         set lastConv hex
         set schRes [lsearch $userPrefList [list $nodeSelect *]]
@@ -768,11 +776,13 @@ proc NoteBookManager::ConvertHex {framePath0 framePath1} {
         set state [$framePath1.en_lower1 cget -state]
         $framePath1.en_lower1 configure -validate none -state normal
         NoteBookManager::InsertHex $framePath1.en_lower1 $dataType
+        set LOWER_LIMIT [$framePath1.en_lower1 get]
         $framePath1.en_lower1 configure -validate key -vcmd "Validation::IsHex %P %s $framePath1.en_lower1 %d %i $dataType" -state $state
         
         set state [$framePath1.en_upper1 cget -state]
         $framePath1.en_upper1 configure -validate none -state normal
         NoteBookManager::InsertHex $framePath1.en_upper1 $dataType
+        set UPPER_LIMIT [$framePath1.en_upper1 get]
         $framePath1.en_upper1 configure -validate key -vcmd "Validation::IsHex %P %s $framePath1.en_upper1 %d %i $dataType" -state $state
     } else {
         #already hex is selected
@@ -1235,7 +1245,20 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
         #value and datatype is not empty continue
         
     }
-    
+    if {[expr 0x$indexId > 0x1fff] } {
+        foreach validateEntryPath [ \
+            [list $frame1.en_value1 $value] \
+            [list $frame1.en_lower1 $lowerLimit] \
+            [list $frame1.en_upper1 $upperLimit]\
+            ] {
+            set limitResult [Validation::CheckAgainstLimits $entryPath $tempInput $dataType]
+            if { [lindex $limitResult 0] == 0 } {
+            tk_messageBox -message "[lindex $limitResult 1]" -title Warning -icon warning -parent .
+            Validation::ResetPromptFlag
+            return
+            }
+        }
+    }
     set chkGen [$frame0.frame1.ch_gen cget -variable]
     global $chkGen
     
@@ -1939,6 +1962,9 @@ proc NoteBookManager::ChangeValidation {framePath0 framePath comboPath {objectTy
     global nodeSelect
     global lastConv
     global chkPrompt
+    global UPPER_LIMIT
+    global LOWER_LIMIT
+    
     set chkPrompt 1
     if {[string match "*.co_data1" $comboPath]} {
         set value [$comboPath getvalue]
@@ -1960,9 +1986,11 @@ proc NoteBookManager::ChangeValidation {framePath0 framePath comboPath {objectTy
         $framePath.en_value1 configure -validate key -vcmd "Validation::IsHex %P %s $framePath.en_value1 %d %i $dataType"
         $framePath.en_upper1 configure -validate none
         $framePath.en_upper1 delete 0 end
+        set UPPER_LIMIT ""
         $framePath.en_lower1 configure -validate none
         $framePath.en_lower1 delete 0 end
-	
+        set LOWER_LIMIT ""
+        
         if { $objectType == "VAR" || $objectType == ""} {
             #upper and lower limit are editable only when object type is VAR and if 
             #index is greater than 1FFF. the combo box appears only for index greater than 1fff
@@ -2243,6 +2271,11 @@ proc NoteBookManager::ChangeEntryValidationForDatatype {framePath entryPath data
     switch -- $validateResult {
         0 {
             $entryPath delete 0 end
+            if {[string match "*.en_lower1" $entryPath]} {
+                set LOWER_LIMIT ""
+            } elseif {[string match "*.en_upper1" $entryPath]} {
+                set UPPER_LIMIT ""
+            }
         }
         1 {
             #the value is valid can continue
@@ -2265,6 +2298,23 @@ proc NoteBookManager::GetEntryValue {entryPath} {
     $entryPath configure -state $entryState
     return $entryValue
     
+}
+
+#---------------------------------------------------------------------------------------------------
+#  NoteBookManager::GetEntryValue
+# 
+#  Arguments : entryPath - path of the entry box widget
+#	   
+#  Results : selected value
+#
+#  Description : gets the value entered in entry widget
+#---------------------------------------------------------------------------------------------------
+proc NoteBookManager::SetEntryValue {entryPath insertValue} {
+    set entryState [$entryPath cget -state]
+    $entryPath configure -state normal
+    $entryPath delete 0 end
+    $entryPath insert 0 $insertValue
+    $entryPath configure -state $entryState
 }
 
 #---------------------------------------------------------------------------------------------------
@@ -2373,4 +2423,50 @@ proc NoteBookManager::RetStationEnumValue {  } {
     }
         
     return $returnVal
+}
+
+#---------------------------------------------------------------------------------------------------
+#  NoteBookManager::LimitFocusChanged
+# 
+#  Arguments : -
+#	   
+#  Results : -
+#
+#  Description : enables or disasbles the spinbox based on the check button selection
+#---------------------------------------------------------------------------------------------------
+proc NoteBookManager::LimitFocusChanged {framePath entryPath} {
+    catch {
+        global UPPER_LIMIT
+        global LOWER_LIMIT
+    
+        set valueState [$framePath.en_value1 cget -state]
+        set valueInput [$framePath.en_value1 get]
+        if { $valueState != "normal" || $valueInput == "" } {
+            return
+        }
+        if {[string match "*.en_lower1" $entryPath]} {
+            if { $LOWER_LIMIT != "" } {
+                if { [ catch { set lowerlimitResult [expr $valueInput >= $LOWER_LIMIT] } ] } {
+                    SetEntryValue $framePath.en_value1 $LOWER_LIMIT
+                    return
+                }
+                puts "lowerlimitResult->$lowerlimitResult"
+                if { $lowerlimitResult == 0 } {
+                    SetEntryValue $framePath.en_value1 $LOWER_LIMIT
+                    return
+                }
+            }
+        } elseif {[string match "*.en_upper1" $entryPath]} {
+            if { $UPPER_LIMIT != "" } {
+                if { [ catch { set upperlimitResult [expr $valueInput <= $UPPER_LIMIT] } ] } {
+                    SetEntryValue $framePath.en_value1 $UPPER_LIMIT
+                    return
+                }
+                if { $upperlimitResult == 0 } {
+                    SetEntryValue $framePath.en_value1 $UPPER_LIMIT
+                    return
+                }
+            }
+        }
+    }
 }

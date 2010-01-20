@@ -243,6 +243,8 @@ proc Validation::IsValidName { input } {
 #  Description : Validates whether an entry is an integer and does not exceed specified range.
 #---------------------------------------------------------------------------------------------------
 proc Validation::IsDec {input entryPath mode idx {dataType ""}} {
+    global UPPER_LIMIT
+    global LOWER_LIMIT
     set tempInput $input
     
     set stdDataType [ string toupper $dataType ]
@@ -342,6 +344,12 @@ proc Validation::IsDec {input entryPath mode idx {dataType ""}} {
 	set reqLengt [expr $reqLengt+1]
     }
     if { $tempInput == "" || ([Validation::CheckDecimalNumber $tempInput] == 1 &&  $tempInput <= $maxLimit && $tempInput >= $minLimit && [string length $tempInput] <= $reqLengt ) || ($tempInput == "-" && [string match -nocase "INTEGER*" $stdDataType]) } {
+        if { $tempInput != ""} {
+            set limitResult [CheckAgainstLimits $entryPath $tempInput $dataType]
+            if { [lindex $limitResult 0] == 0 } {
+                return 0
+            }
+        }
 	    after 1 Validation::SetValue $entryPath $mode $idx $input
 	    Validation::SetPromptFlag
 	    return 1
@@ -477,7 +485,9 @@ proc Validation::HextoBin {hexNo} {
 #  Description : Validates whether an entry is an integer and does not exceed specified range.
 #---------------------------------------------------------------------------------------------------
 proc Validation::IsHex {input preinput entryPath mode idx {dataType ""}} {
-
+    global LOWER_LIMIT
+    global UPPER_LIMIT
+    
     set stdDataType [ string toupper $dataType ]
     switch -- $stdDataType {
         BOOLEAN {
@@ -598,6 +608,12 @@ proc Validation::IsHex {input preinput entryPath mode idx {dataType ""}} {
     }
     
     if { $tempInput == "" || ([string is xdigit $tempInput ] == 1 && [expr 0x$tempInput <= $maxLimit] && [expr 0x$tempInput >= $minLimit] && [string length $tempInput] <= $reqLengt )} {
+        if { $tempInput != "" } {
+            set limitResult [CheckAgainstLimits $entryPath 0x$tempInput $dataType]
+            if { [lindex $limitResult 0] == 0 } {
+                return 0
+            }
+        }
 	set tempInput 0x$tempInput
 	after 1 Validation::SetValue $entryPath $mode $idx $tempInput
 	Validation::SetPromptFlag
@@ -1076,5 +1092,213 @@ proc Validation::ValidatePollRespTimeout {input entryPath mode idx validationTyp
         return 1
     } else {
         return 0
+    }
+}
+
+proc Validation::CheckAgainstLimits {entryPath input {dataType ""} } {
+    global LOWER_LIMIT
+    global UPPER_LIMIT
+    if {$input == ""} {
+        if {[string match "*.en_lower1" $entryPath]} {
+            set LOWER_LIMIT ""
+        } elseif {[string match "*.en_upper1" $entryPath]} {
+            set UPPER_LIMIT ""
+        }
+        return 1
+    }
+    
+    if { [string match "*.en_value1" $entryPath] } {
+        if { !($LOWER_LIMIT == "" || [string match -nocase "0x" $LOWER_LIMIT])} {
+            if { [ catch { set lowerlimitResult [expr $input >= $LOWER_LIMIT] } ] } {
+                return [list 0 "Error in comparing ($input) and lower limit($LOWER_LIMIT)"]
+            }
+            if { $lowerlimitResult == 0 } {
+                return [list 0 "The input value ($input) is less than lowerlimit($LOWER_LIMIT)"]
+            }
+        }
+        if { !($UPPER_LIMIT == "" || [string match -nocase "0x" $UPPER_LIMIT])} {
+            if { [ catch { set uppperlimitResult [expr $input <= $UPPER_LIMIT] } ] } {
+                return [list 0 "Error in comparing ($input) and lowerlimit($LOWER_LIMIT)"]
+            }
+            if { $uppperlimitResult == 0 } {
+                return [list 0 "The input value ($input) is less than lowerlimit($LOWER_LIMIT)"]
+            }
+        }
+    } elseif {[string match "*.en_lower1" $entryPath]} {
+        if { !($UPPER_LIMIT == "" || [string match -nocase "0x" $UPPER_LIMIT]) } {
+            if { [ catch { set uppperlimitResult [expr $input <= $UPPER_LIMIT] } ] } {
+                return [list 0 "Error in comparing lowerlimit($input) and upperlimit($UPPER_LIMIT)"]
+            }
+            if { $uppperlimitResult == 0 } {
+                return [list 0 "The lowerlimit ($input) is greater than upperlimit($UPPER_LIMIT)"]
+            }
+        }
+        set LOWER_LIMIT $input
+    } elseif {[string match "*.en_upper1" $entryPath]} {
+        if { !($LOWER_LIMIT == "" || [string match -nocase "0x" $LOWER_LIMIT]) } {
+            if { [ catch { set lowerlimitResult [expr $input >= $LOWER_LIMIT] } ] } {
+                return [list 0 "Error in comparing upperlimit($input) and lowerlimit($UPPER_LIMIT)"]
+            }
+            if { $lowerlimitResult == 0 } {
+                return [list 0 "The upperlimit($UPPER_LIMIT) is lesser than lowerlimit ($input)"]
+            }
+        }
+        set UPPER_LIMIT $input
+    }
+    return 1
+}
+
+proc Validation::CheckValueIsInRange {input valueFormat {dataType ""}} {
+    set stdDataType [ string toupper $dataType ]
+    switch -- $stdDataType {
+        BOOLEAN {
+            set minDecLimit 0
+            set maxDecLimit 1
+	    set reqDecLengt 1
+                    set minLimit 0x0
+            set maxLimit 0x1
+	    set reqLengt 1
+        }
+        INTEGER8 {
+            set minDecLimit -128
+            set maxDecLimit 127
+            set reqDecLengt 3
+            set minHexLimit 0x0
+            set maxHexLimit 0xFF
+            set reqHexLengt 2
+        }
+        UNSIGNED8 {
+            set minDecLimit 0
+            set maxDecLimit 255
+            set reqDecLengt 3
+            set minHexLimit 0x0
+            set maxHexLimit 0xFF
+            set reqHexLengt 2
+        }
+        INTEGER16 {
+            set minDecLimit -32768
+            set maxDecLimit 32767
+            set reqDecLengt 5
+    	    set minHexLimit 0x0
+            set maxHexLimit 0xFFFF
+            set reqHexLengt 4
+        }
+        UNSIGNED16 {
+            set minDecLimit 0
+            set maxDecLimit 65535
+            set reqDecLengt 5
+            set minHexLimit 0x0
+            set maxHexLimit 0xFFFF
+            set reqHexLengt 4
+        }
+        INTEGER24 {
+            set minDecLimit -8388608
+            set maxDecLimit 8388607
+            set reqDecLengt 7
+            set minHexLimit 0x0
+            set maxHexLimit 0xFFFFFF
+            set reqHexLengt 6
+        }
+        UNSIGNED24 {
+            set minDecLimit 0
+            set maxDecLimit 16777215
+            set reqDecLengt 8
+            set minHexLimit 0x0
+            set maxHexLimit 0xFFFFFF
+    	    set reqHexLengt 6
+        }
+        INTEGER32 {
+            set minDecLimit -2147483648
+            set maxDecLimit 2147483647
+            set reqDecLengt 10
+            set minHexLimit 0x0
+            set maxHexLimit 0xFFFFFFFF
+            set reqHexLengt 8
+        }
+        UNSIGNED32 {
+            set minDecLimit 0
+            set maxDecLimit 4294967295
+            set reqDecLengt 10
+            set minHexLimit 0x0
+            set maxHexLimit 0xFFFFFFFF
+            set reqHexLengt 8
+        }
+        INTEGER40 {
+            set minDecLimit -549755813888
+            set maxDecLimit 549755813887
+            set reqDecLengt 12
+            set minHexLimit 0x0
+            set maxHexLimit 0xFFFFFFFFFF
+            set reqHexLengt 10
+        }
+        UNSIGNED40 {
+            set minDecLimit 0
+            set maxDecLimit 1099511627775
+            set reqDecLengt 13
+            set minHexLimit 0x0
+            set maxHexLimit 0xFFFFFFFFFF
+            set reqHexLengt 10
+        }
+        INTEGER48 {
+            set minDecLimit -140737488355328
+            set maxDecLimit 140737488355327
+            set reqDecLengt 15
+            set minHexLimit 0x0
+            set maxHexLimit 0xFFFFFFFFFFFF
+            set reqHexLengt 12
+        }
+        UNSIGNED48 {
+            set minDecLimit 0
+            set maxDecLimit 281474976710655
+            set reqDecLengt 15
+            set minHexLimit 0x0
+            set maxHexLimit 0xFFFFFFFFFFFF
+            set reqHexLengt 12
+        }
+        INTEGER56 {
+            set minDecLimit -36028797018963968
+            set maxDecLimit 36028797018963967
+            set reqDecLengt 17
+            set minHexLimit 0x0
+            set maxHexLimit 0xFFFFFFFFFFFFFF
+            set reqHexLengt 14
+        }
+        UNSIGNED56 {
+            set minDecLimit 0
+            set maxDecLimit 72057594037927935
+            set reqDecLengt 17
+            set minHexLimit 0x0
+            set maxHexLimit 0xFFFFFFFFFFFFFF
+            set reqHexLengt 14
+        }
+        INTEGER64 {
+            set minDecLimit -9223372036854775808
+            set maxDecLimit 9223372036854775807
+            set reqDecLengt 19
+            set minHexLimit 0x0
+            set maxHexLimit 0xFFFFFFFFFFFFFFFF
+            set reqHexLengt 16
+        }
+        UNSIGNED64 {
+            set minDecLimit 0
+            set maxDecLimit 18446744073709551615
+            set reqDecLengt 20
+            set minHexLimit 0x0
+            set maxHexLimit 0xFFFFFFFFFFFFFFFF
+            set reqHexLengt 16
+        }
+        REAL32 {
+            set minHexLimit 0x0
+            set maxHexLimit 0xFFFFFFFF
+            set reqHexLengt 8
+        }
+        REAL64 {
+            set minLimit 0x0
+            set maxHexLimit 0xFFFFFFFFFFFFFFFF
+            set reqHexLengt 16
+        }
+        default  {
+            return 0
+        }
     }
 }

@@ -119,8 +119,8 @@ tsv::set application importProgress [thread::create -joinable {
     update idletasks
     if {"$tcl_platform(platform)" == "unix"} {
 	catch {
-	    set element [image create photo -file [file join $masterRootDir openConfig.gif] ]
-	    wm iconphoto .help -default $element
+	    set element [image create photo -file [file join $rootDir openConfig.gif] ]
+	    wm iconphoto . -default $element
 	}
     }
     proc StartProgress {} {
@@ -1311,7 +1311,9 @@ proc Operations::SingleClickNode {node} {
     global tableSaveBtn
 	global mnPropSaveBtn
     global cnPropSaveBtn
-	
+    global LOWER_LIMIT
+	global UPPER_LIMIT
+    
     if { $nodeSelect == "" || ![$treePath exists $nodeSelect] || [string match "root" $nodeSelect] || [string match "ProjectNode" $nodeSelect] || [string match "OBD-*" $nodeSelect] || [string match "PDO-*" $nodeSelect] } {
 	    #should not check for project settings option
     } else {
@@ -1727,12 +1729,14 @@ proc Operations::SingleClickNode {node} {
     $tmpInnerf1.en_lower1 delete 0 end
     $tmpInnerf1.en_lower1 insert 0 [lindex $IndexProp 7]
     $tmpInnerf1.en_lower1 configure -state $entryState -bg white -validate key
+    set LOWER_LIMIT [lindex $IndexProp 7]
 
     $tmpInnerf1.en_upper1 configure -state normal -validate none
     $tmpInnerf1.en_upper1 delete 0 end
     $tmpInnerf1.en_upper1 insert 0 [lindex $IndexProp 8]
     $tmpInnerf1.en_upper1 configure -state $entryState -bg white -validate key
-
+	set UPPER_LIMIT [lindex $IndexProp 8]
+    
     $tmpInnerf1.en_obj1 configure -state normal
     $tmpInnerf1.en_obj1 delete 0 end
     $tmpInnerf1.en_obj1 insert 0 [lindex $IndexProp 1]
@@ -1873,9 +1877,12 @@ proc Operations::SingleClickNode {node} {
     # disable the object type combobox of sub objects
     if { [string match "*SubIndex*" $node] } {
         $tmpInnerf1.co_obj1 configure -state disabled
+        #subobjects of index greater than 1fff exists only for index of type
+        #RRAY or RECORD datatype is not editable
+        $tmpInnerf1.co_data1 configure -state disabled
     }
     #disable all the widgets for subindex 00
-    if { [string match "*SubIndex*" $node] && ($subIndexId == "00") } {
+    if { [string match "*SubIndex*" $node] && ($subIndexId == "00") && ([expr 0x$indexId > 0x1fff]) } {
         $tmpInnerf0.en_nam1 configure -state disabled
         #default entry always disabled
         $tmpInnerf1.en_default1 configure -state disabled
@@ -2244,33 +2251,40 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
     set CNDatalist ""
     set presponseCycleTimeResult [GetObjectValueData $nodePos $nodeId $nodeType [list 2 4 5 ] [lindex $Operations::PRES_TIMEOUT_OBJ 0] [lindex $Operations::PRES_TIMEOUT_OBJ 1] ]
     if {[string equal "pass" [lindex $presponseCycleTimeResult 0]] == 1} {
-        if {[lindex $presponseCycleTimeResult 3] == "" } {
-            #if the actual is empty assign the default value
-            set presponseCycleTimeValue [lindex $presponseCycleTimeResult 2]
+        set presponseMinimumCycleTimeValue [lindex $presponseCycleTimeResult 2]
+        if {$presponseMinimumCycleTimeValue == ""} {
+            set presponseMinimumCycleTimeValue 0
         } else {
-            set presponseCycleTimeValue [lindex $presponseCycleTimeResult 3]
-        }
-        #add 25 micro seconds to the actual or default value
-        set presponseCycleTimeValue [expr $presponseCycleTimeValue + 25000]
-        set presponseCycleTimeDatatype [lindex $presponseCycleTimeResult 1]
-        
-        # the value of Presponse timeout is in nanoseconds divide it by 1000 to
-        #display it as microseconds
-        if {$presponseCycleTimeValue != ""} {
-            if { [ catch { set presponseCycleTimeValue [expr $presponseCycleTimeValue / 1000] } ] } {
-                #if error has occured set it to default 25 micro seconds
-                set presponseCycleTimeValue 25
+            if { [ catch { set presponseMinimumCycleTimeValue [expr $presponseMinimumCycleTimeValue / 1000] } ] } {
+                #if error has occured set it to default 0
+                set presponseMinimumCycleTimeValue 0
             }
         }
+
+        set presponseActualCycleTimeValue [lindex $presponseCycleTimeResult 3]
+        if { $presponseActualCycleTimeValue == "" } {
+            #if the actual is empty assign the default value and add 25 microseconds
+            set presponseActualCycleTimeValue [expr $presponseMinimumCycleTimeValue + 25]
+        } else {
+            # the value of Presponse timeout is in nanoseconds divide it by 1000 to
+            #display it as microseconds
+            if { [ catch { set presponseActualCycleTimeValue [expr $presponseActualCycleTimeValue / 1000] } ] } {
+                #if error has occured set it to default 25 micro seconds
+                set presponseActualCycleTimeValue 25
+            }
+        }
+        
+        set presponseCycleTimeDatatype [lindex $presponseCycleTimeResult 1]
+        
         $tmpInnerf0.cycleframe.en_time configure -state normal -validate none -bg white
         $tmpInnerf0.cycleframe.en_time delete 0 end
-        $tmpInnerf0.cycleframe.en_time insert 0 $presponseCycleTimeValue
+        $tmpInnerf0.cycleframe.en_time insert 0 $presponseActualCycleTimeValue
         #set schRes [lsearch $userPrefList [list $nodeSelect *]]
         #if { $schRes != -1 } {
             Operations::CheckConvertValue $tmpInnerf0.cycleframe.en_time $presponseCycleTimeDatatype "dec"
             # the user cannot enter value which is less than the obtained minimum value
             $tmpInnerf0.cycleframe.en_time configure -validate key -vcmd "Validation::ValidatePollRespTimeout \
-                %P $tmpInnerf0.cycleframe.en_time %d %i %V $presponseCycleTimeValue $presponseCycleTimeDatatype"
+                %P $tmpInnerf0.cycleframe.en_time %d %i %V $presponseMinimumCycleTimeValue $presponseCycleTimeDatatype"
         #    if { [lindex [lindex $userPrefList $schRes] 1] == "dec" } {
         #        set lastConv dec
         #        $tmpInnerf0.formatframe1.ra_dec select

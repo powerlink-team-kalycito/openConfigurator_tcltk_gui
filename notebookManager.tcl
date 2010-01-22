@@ -1246,12 +1246,12 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
         
     }
     if {[expr 0x$indexId > 0x1fff] } {
-        foreach validateEntryPath [ \
+        foreach validateEntryPath [list \
             [list $frame1.en_value1 $value] \
             [list $frame1.en_lower1 $lowerLimit] \
             [list $frame1.en_upper1 $upperLimit]\
             ] {
-            set limitResult [Validation::CheckAgainstLimits $entryPath $tempInput $dataType]
+            set limitResult [Validation::CheckAgainstLimits [lindex $validateEntryPath 0] [lindex $validateEntryPath 1] $dataType]
             if { [lindex $limitResult 0] == 0 } {
             tk_messageBox -message "[lindex $limitResult 1]" -title Warning -icon warning -parent .
             Validation::ResetPromptFlag

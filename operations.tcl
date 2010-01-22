@@ -1798,10 +1798,12 @@ proc Operations::SingleClickNode {node} {
             #for objects greater than 1FFF with object type ARRAY datatype can be edited
             if { ( [lindex $IndexProp 1] == "ARRAY") } {
                 grid remove $tmpInnerf1.en_data1
-                #configure the modifycmd of data combobox with object type
-                $tmpInnerf1.co_data1 configure -modifycmd "NoteBookManager::ChangeValidation $tmpInnerf0 $tmpInnerf1 $tmpInnerf1.co_data1 [lindex $IndexProp 1]"
+                ##configure the modifycmd of data combobox with object type
+                #$tmpInnerf1.co_data1 configure -modifycmd "NoteBookManager::ChangeValidation $tmpInnerf0 $tmpInnerf1 $tmpInnerf1.co_data1 [lindex $IndexProp 1]"
                 grid $tmpInnerf1.co_data1
             }
+            #configure the modifycmd of data combobox with object type
+            $tmpInnerf1.co_data1 configure -modifycmd "NoteBookManager::ChangeValidation $tmpInnerf0 $tmpInnerf1 $tmpInnerf1.co_data1 [lindex $IndexProp 1]"
         }
         
 	    grid remove $tmpInnerf1.co_access1

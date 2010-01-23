@@ -1376,6 +1376,7 @@ proc Operations::SingleClickNode {node} {
     #Operations::RemoveAllFrames
 
     if {[string match "root" $node] || [string match "ProjectNode" $node] || [string match "OBD-*" $node] || [string match "PDO-*" $node]} {
+        Operations::RemoveAllFrames
 	    return
     }
 
@@ -1383,6 +1384,7 @@ proc Operations::SingleClickNode {node} {
     set result [Operations::GetNodeIdType $node]
     if {$result == ""} {
 	    #the node is not an index, subindex, TPDO or RPDO do nothing
+        Operations::RemoveAllFrames
 	    return
     } else {
 	    # it is index or subindex
@@ -1404,6 +1406,7 @@ proc Operations::SingleClickNode {node} {
 	    } else {
 		    tk_messageBox -message "Unknown Error" -parent . -title Error -icon error
 	    }
+        Operations::RemoveAllFrames
 	    return
     }
 
@@ -1897,7 +1900,7 @@ proc Operations::SingleClickNode {node} {
         $tmpInnerf1.co_pdo1 configure -state disabled
         $subindexSaveBtn configure -state disabled
     }
-
+#puts "\n###### singclick datatype->[lindex $IndexProp 2]####\n"
     if { [lindex $IndexProp 2] == "IP_ADDRESS" } {
         set lastConv ""
         grid remove $tmpInnerf1.frame1.ra_dec
@@ -1943,44 +1946,45 @@ proc Operations::SingleClickNode {node} {
     } elseif { [string match -nocase "INTEGER*" [lindex $IndexProp 2]] || [string match -nocase "UNSIGNED*" [lindex $IndexProp 2]] || [string match -nocase "BOOLEAN" [lindex $IndexProp 2]] } {
         grid $tmpInnerf1.frame1.ra_dec
         grid $tmpInnerf1.frame1.ra_hex
+        #puts "node->$node Dt [lindex $IndexProp 2]"
         set schRes [lsearch $userPrefList [list $nodeSelect *]]
         if { $schRes != -1 } {
             if { [lindex [lindex $userPrefList $schRes] 1] == "dec" } {
-                if {[string match -nocase "0x*" [lindex $IndexProp 5]]} {
-                    set valueState [$tmpInnerf1.en_value1 cget -state]
-                    $tmpInnerf1.en_value1 configure -state normal -validate none
-                    NoteBookManager::InsertDecimal $tmpInnerf1.en_value1 [lindex $IndexProp 2]
-                    $tmpInnerf1.en_value1 configure -state $valueState -validate key -vcmd "Validation::IsDec %P $tmpInnerf1.en_value1 %d %i [lindex $IndexProp 2]" -bg $savedBg	
-                } else {
-                # actual value already in decimal 
-                }
-            	if {[string match -nocase "0x*" [lindex $IndexProp 4]]} {
-                    set defaultState [$tmpInnerf1.en_default1 cget -state]
-                    $tmpInnerf1.en_default1 configure -state normal 
-                    NoteBookManager::InsertDecimal $tmpInnerf1.en_default1 [lindex $IndexProp 2]
-                    $tmpInnerf1.en_default1 configure -state $defaultState
-            	} else {
-                    # default value already in decimal
-                }
+            #    if {[string match -nocase "0x*" [lindex $IndexProp 5]]} {
+            #        set valueState [$tmpInnerf1.en_value1 cget -state]
+            #        $tmpInnerf1.en_value1 configure -state normal -validate none
+            #        NoteBookManager::InsertDecimal $tmpInnerf1.en_value1 [lindex $IndexProp 2]
+            #        $tmpInnerf1.en_value1 configure -state $valueState -validate key -vcmd "Validation::IsDec %P $tmpInnerf1.en_value1 %d %i [lindex $IndexProp 2]" -bg $savedBg	
+            #    } else {
+            #    # actual value already in decimal 
+            #    }
+            #	if {[string match -nocase "0x*" [lindex $IndexProp 4]]} {
+            #        set defaultState [$tmpInnerf1.en_default1 cget -state]
+            #        $tmpInnerf1.en_default1 configure -state normal 
+            #        NoteBookManager::InsertDecimal $tmpInnerf1.en_default1 [lindex $IndexProp 2]
+            #        $tmpInnerf1.en_default1 configure -state $defaultState
+            #	} else {
+            #        # default value already in decimal
+            #    }
                 set lastConv dec
                 $tmpInnerf1.frame1.ra_dec select
             } elseif { [lindex [lindex $userPrefList $schRes] 1] == "hex" } {
-                if {[string match -nocase "0x*" [lindex $IndexProp 5]]} {
-                    # actual already in hexadecimal 
-                } else {
-                            set valueState [$tmpInnerf1.en_value1 cget -state]
-                    $tmpInnerf1.en_value1 configure -state normal -validate none
-                    NoteBookManager::InsertHex $tmpInnerf1.en_value1 [lindex $IndexProp 2]
-                    $tmpInnerf1.en_value1 configure -state $valueState -validate key -vcmd "Validation::IsHex %P %s $tmpInnerf1.en_value1 %d %i [lindex $IndexProp 2]" -bg $savedBg
-                }
-                    if {[string match -nocase "0x*" [lindex $IndexProp 4]]} {
-                    # default is in hexadecimal 
-                } else {
-                    set defaultState [$tmpInnerf1.en_default1 cget -state]
-                    $tmpInnerf1.en_default1 configure -state normal
-                    NoteBookManager::InsertHex $tmpInnerf1.en_default1 [lindex $IndexProp 2]
-                    $tmpInnerf1.en_default1 configure -state $defaultState
-                }
+                #if {[string match -nocase "0x*" [lindex $IndexProp 5]]} {
+                #    # actual already in hexadecimal 
+                #} else {
+                #            set valueState [$tmpInnerf1.en_value1 cget -state]
+                #    $tmpInnerf1.en_value1 configure -state normal -validate none
+                #    NoteBookManager::InsertHex $tmpInnerf1.en_value1 [lindex $IndexProp 2]
+                #    $tmpInnerf1.en_value1 configure -state $valueState -validate key -vcmd "Validation::IsHex %P %s $tmpInnerf1.en_value1 %d %i [lindex $IndexProp 2]" -bg $savedBg
+                #}
+                #    if {[string match -nocase "0x*" [lindex $IndexProp 4]]} {
+                #    # default is in hexadecimal 
+                #} else {
+                #    set defaultState [$tmpInnerf1.en_default1 cget -state]
+                #    $tmpInnerf1.en_default1 configure -state normal
+                #    NoteBookManager::InsertHex $tmpInnerf1.en_default1 [lindex $IndexProp 2]
+                #    $tmpInnerf1.en_default1 configure -state $defaultState
+                #}
                     set lastConv hex
                     $tmpInnerf1.frame1.ra_hex select
             } else {
@@ -1989,33 +1993,35 @@ proc Operations::SingleClickNode {node} {
         } else {
             if {[string match -nocase "0x*" [lindex $IndexProp 5]]} {
                 set lastConv hex
-                if {[string match -nocase "0x*" [lindex $IndexProp 4]]} {
-                    #default value is in hexadecimal
-                } else {
-                    set defaultState [$tmpInnerf1.en_default1 cget -state]
-                    $tmpInnerf1.en_default1 configure -state normal
-                    NoteBookManager::InsertHex $tmpInnerf1.en_default1 [lindex $IndexProp 2]
-                    $tmpInnerf1.en_default1 configure -state $defaultState
-                }
+                #if {[string match -nocase "0x*" [lindex $IndexProp 4]]} {
+                #    #default value is in hexadecimal
+                #} else {
+                #    set defaultState [$tmpInnerf1.en_default1 cget -state]
+                #    $tmpInnerf1.en_default1 configure -state normal
+                #    NoteBookManager::InsertHex $tmpInnerf1.en_default1 [lindex $IndexProp 2]
+                #    $tmpInnerf1.en_default1 configure -state $defaultState
+                #}
                 $tmpInnerf1.frame1.ra_hex select
-                $tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::IsHex %P %s $tmpInnerf1.en_value1 %d %i [lindex $IndexProp 2]" -bg $savedBg
+                #$tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::IsHex %P %s $tmpInnerf1.en_value1 %d %i [lindex $IndexProp 2]" -bg $savedBg
             } else {
                 set lastConv dec
-                if {[string match -nocase "0x*" [lindex $IndexProp 4]]} {
-                    #convert default hexadecimal to decimal"
-                    set defaultState [$tmpInnerf1.en_default1 cget -state]
-                    $tmpInnerf1.en_default1 configure -state normal
-                    NoteBookManager::InsertDecimal $tmpInnerf1.en_default1 [lindex $IndexProp 2]
-                    $tmpInnerf1.en_default1 configure -state $defaultState
-                } else {
-                    #default value is in decimal
-                }
+                #if {[string match -nocase "0x*" [lindex $IndexProp 4]]} {
+                #    #convert default hexadecimal to decimal"
+                #    set defaultState [$tmpInnerf1.en_default1 cget -state]
+                #    $tmpInnerf1.en_default1 configure -state normal
+                #    NoteBookManager::InsertDecimal $tmpInnerf1.en_default1 [lindex $IndexProp 2]
+                #    $tmpInnerf1.en_default1 configure -state $defaultState
+                #} else {
+                #    #default value is in decimal
+                #}
                 $tmpInnerf1.frame1.ra_dec select
-                $tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::IsDec %P $tmpInnerf1.en_value1 %d %i [lindex $IndexProp 2]" -bg $savedBg
+                #$tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::IsDec %P $tmpInnerf1.en_value1 %d %i [lindex $IndexProp 2]" -bg $savedBg
             }
         }
         Operations::CheckConvertValue $tmpInnerf1.en_lower1 [lindex $IndexProp 2] $lastConv
         Operations::CheckConvertValue $tmpInnerf1.en_upper1 [lindex $IndexProp 2] $lastConv
+        Operations::CheckConvertValue $tmpInnerf1.en_value1 [lindex $IndexProp 2] $lastConv
+        Operations::CheckConvertValue $tmpInnerf1.en_default1 [lindex $IndexProp 2] $lastConv
     } else {
         set lastConv ""
         grid remove $tmpInnerf1.frame1.ra_dec
@@ -2042,7 +2048,6 @@ proc Operations::MNProperties {node nodePos nodeId nodeType} {
     set tmp_stationType [new_EStationTypep]
 	set tmp_forceCycleFlag [new_boolp]
     set catchErrCode [GetNodeAttributesbyNodePos $nodePos $dummyNodeId $tmp_stationType $tmp_forceCycleFlag]
-    #puts "catchErrCode->$catchErrCode"
     if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
             tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
@@ -2285,6 +2290,8 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
         #if { $schRes != -1 } {
             Operations::CheckConvertValue $tmpInnerf0.cycleframe.en_time $presponseCycleTimeDatatype "dec"
             # the user cannot enter value which is less than the obtained minimum value
+            #NOTE:: the minimum value is shown from the vcmd cmd if vcmd then look into
+            #savecnvalue to modify the same
             $tmpInnerf0.cycleframe.en_time configure -validate key -vcmd "Validation::ValidatePollRespTimeout \
                 %P $tmpInnerf0.cycleframe.en_time %d %i %V $presponseMinimumCycleTimeValue $presponseCycleTimeDatatype"
         #    if { [lindex [lindex $userPrefList $schRes] 1] == "dec" } {
@@ -3306,11 +3313,52 @@ proc Operations::BuildProject {} {
     global f3
     global f4
     global status_save
+    global chkPrompt
+    global mnPropSaveBtn
+    global cnPropSaveBtn
 
     if {$projectDir == "" || $projectName == "" } {
 	    Console::DisplayErrMsg "No project to Build"
 	    return	
     }
+    
+    if { $chkPrompt == 1 && [$treePath exists $nodeSelect] && ([string match "MN*" $nodeSelect] || [string match "CN*" $nodeSelect]) } {
+        if { $ra_proj == "0"} {
+		    if { $chkPrompt == 1 } {
+			    if { [string match "MN*" $nodeSelect] } {	
+					$mnPropSaveBtn invoke
+				} elseif { [string match "CN*" $nodeSelect] } {	
+					$cnPropSaveBtn invoke
+			    } else {
+				    #must be root, ProjectNode, MN, OBD or CN
+			    }
+		    }
+		    Validation::ResetPromptFlag
+	    } elseif { $ra_proj == "1" } {
+		    if { $chkPrompt == 1 } {
+			    set result [tk_messageBox -message "Do you want to save [$treePath itemcget $nodeSelect -text ]?" -parent . -type yesno -icon question]
+			    switch -- $result {
+				    yes {
+					    #save the value
+					    if { [string match "MN*" $nodeSelect] } {	
+						    $mnPropSaveBtn invoke
+						} elseif { [string match "CN*" $nodeSelect] } {	
+						    $cnPropSaveBtn invoke
+					    } else {
+						    #must be root, ProjectNode, MN, OBD or CN
+					    }
+				    }
+				    no  {#continue}
+			    }
+		    }
+		    Validation::ResetPromptFlag
+	    } elseif { $ra_proj == "2" } {
+		
+	    } else {
+            Validation::ResetPromptFlag
+	    }
+    }
+    
     # check that 1006 object of MN actual value is greater than zero
     set mnNodeId 240
     set mnNodeType 0
@@ -4448,6 +4496,8 @@ proc Operations::ViewModeChanged {} {
 	    }
     }
     
+    #remove all the frames
+    Operations::RemoveAllFrames
     #rebuild the tree
     thread::send [tsv::set application importProgress] "StartProgress"
     Operations::RePopulate $projectDir [string range $projectName 0 end-[string length [file extension $projectName] ] ]
@@ -4466,7 +4516,6 @@ proc Operations::ViewModeChanged {} {
 #---------------------------------------------------------------------------------------------------
 proc Operations::SetVideoType {videoMode} {
     
-    #puts "Operations::SetVideoType videoMode->$videoMode"
     if { $videoMode == 1} {
         set Operations::viewType "EXPERT"
     } else {

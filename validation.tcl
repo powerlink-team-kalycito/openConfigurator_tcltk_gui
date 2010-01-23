@@ -344,11 +344,18 @@ proc Validation::IsDec {input entryPath mode idx {dataType ""}} {
 	set reqLengt [expr $reqLengt+1]
     }
     if { $tempInput == "" || ([Validation::CheckDecimalNumber $tempInput] == 1 &&  $tempInput <= $maxLimit && $tempInput >= $minLimit && [string length $tempInput] <= $reqLengt ) || ($tempInput == "-" && [string match -nocase "INTEGER*" $stdDataType]) } {
-        if { $tempInput != ""} {
-            set limitResult [CheckAgainstLimits $entryPath $tempInput $dataType]
-            if { [lindex $limitResult 0] == 0 } {
-                return 0
-            }
+        ##if { $tempInput != ""} {
+        #if { [string match "*.en_value1" $entryPath] } {
+        #    set limitResult [CheckAgainstLimits $entryPath $tempInput $dataType]
+        #    if { [lindex $limitResult 0] == 0 } {
+        #        return 0
+        #    }
+        #}
+        ##}
+    	if {[string match "*.en_lower1" $entryPath] && $tempInput != "-"} {
+            set LOWER_LIMIT $tempInput
+        } elseif {[string match "*.en_upper1" $entryPath] && $tempInput != "-"} {
+            set UPPER_LIMIT $tempInput
         }
 	    after 1 Validation::SetValue $entryPath $mode $idx $input
 	    Validation::SetPromptFlag
@@ -608,13 +615,20 @@ proc Validation::IsHex {input preinput entryPath mode idx {dataType ""}} {
     }
     
     if { $tempInput == "" || ([string is xdigit $tempInput ] == 1 && [expr 0x$tempInput <= $maxLimit] && [expr 0x$tempInput >= $minLimit] && [string length $tempInput] <= $reqLengt )} {
-        if { $tempInput != "" } {
-            set limitResult [CheckAgainstLimits $entryPath 0x$tempInput $dataType]
-            if { [lindex $limitResult 0] == 0 } {
-                return 0
-            }
-        }
+        ##if { $tempInput != "" } {
+        #if { [string match "*.en_value1" $entryPath] } {
+        #    set limitResult [CheckAgainstLimits $entryPath 0x$tempInput $dataType]
+        #    if { [lindex $limitResult 0] == 0 } {
+        #        return 0
+        #    }
+        #}
+        ##}
 	set tempInput 0x$tempInput
+	if {[string match "*.en_lower1" $entryPath] && $tempInput != "0x"} {
+            set LOWER_LIMIT $tempInput
+        } elseif {[string match "*.en_upper1" $entryPath] && $tempInput != "0x"} {
+            set UPPER_LIMIT $tempInput
+        }
 	after 1 Validation::SetValue $entryPath $mode $idx $tempInput
 	Validation::SetPromptFlag
 	return 1
@@ -1098,7 +1112,11 @@ proc Validation::ValidatePollRespTimeout {input entryPath mode idx validationTyp
 proc Validation::CheckAgainstLimits {entryPath input {dataType ""} } {
     global LOWER_LIMIT
     global UPPER_LIMIT
-    if {$input == ""} {
+
+    if {$input == "-"} {
+        return 1
+    }
+    if {$input == "" || [string match -nocase "0x" $input]} {
         if {[string match "*.en_lower1" $entryPath]} {
             set LOWER_LIMIT ""
         } elseif {[string match "*.en_upper1" $entryPath]} {
@@ -1121,7 +1139,7 @@ proc Validation::CheckAgainstLimits {entryPath input {dataType ""} } {
                 return [list 0 "Error in comparing ($input) and lowerlimit($LOWER_LIMIT)"]
             }
             if { $uppperlimitResult == 0 } {
-                return [list 0 "The input value ($input) is less than lowerlimit($LOWER_LIMIT)"]
+                return [list 0 "The input value ($input) is greater than upperlimit($UPPER_LIMIT)"]
             }
         }
     } elseif {[string match "*.en_lower1" $entryPath]} {
@@ -1301,4 +1319,56 @@ proc Validation::CheckValueIsInRange {input valueFormat {dataType ""}} {
             return 0
         }
     }
+}
+
+proc Validation::validateValueandLimit {input lowerlimit upperlimit} {
+    global LOWER_LIMIT
+    global UPPER_LIMIT
+    
+    foreach tempValue [list \
+	[list $input "Input Value"] \
+	[list $lowerlimit "Lower limit"] \
+	[list $upperlimit "Upper limit"] \
+	] {
+	if { [lindex $tempValue 0] == "-"} {
+	    return [0 "\"-\" cannot be saved for [lindex $tempValue 1]"]
+	}
+    }
+    foreach tempValue [list \
+	input lowerlimit upperlimit] {
+	if {[string match -nocase "0X" [subst $[subst $tempValue]] ]} {
+	    set $tempValue ""
+	}
+    }
+
+    if { $lowerlimit != "" && $upperlimit != "" } {
+	if { [ catch { set limitResult [expr $lowerlimit <= $upperlimit] } ] } {
+	    return [list 0 "Error in comparing lowerlimit($lowerlimit) and upperlimit($upperlimit)"]
+	}
+	if { $limitResult == 0 } {
+	    return [list 0 "The lowerlimit($lowerlimit) is greater than upperlimit($upperlimit)"]
+	}
+    }
+    set LOWER_LIMIT $lowerlimit
+    set UPPER_LIMIT $upperlimit
+    
+    if { $lowerlimit != "" && $input != "" } {
+	if { [ catch { set lowerlimitResult [expr $input >= $LOWER_LIMIT] } ] } {
+	    return [list 0 "Error in comparing input value($input) and lower limit($LOWER_LIMIT)"]
+	}
+	if { $lowerlimitResult == 0 } {
+	    return [list 0 "The input value($input) is less than lowerlimit($LOWER_LIMIT)"]
+	}
+    }
+	
+        
+    if { $upperlimit != "" && $input != "" } {
+	if { [ catch { set uppperlimitResult [expr $input <= $UPPER_LIMIT] } ] } {
+	    return [list 0 "Error in comparing lowerlimit($input) and upperlimit($UPPER_LIMIT)"]
+	}
+	if { $uppperlimitResult == 0 } {
+	    return [list 0 "The input value($input) is greater than upperlimit($UPPER_LIMIT)"]
+	}
+    }
+    return 1   
 }

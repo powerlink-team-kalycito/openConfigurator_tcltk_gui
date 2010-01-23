@@ -149,7 +149,8 @@ proc NoteBookManager::create_tab { nbpath choice } {
     bind $tabInnerf1.en_lower1 <FocusOut> "NoteBookManager::LimitFocusChanged $tabInnerf1 $tabInnerf1.en_lower1"
     entry $tabInnerf1.en_pdo1 -state disabled -width 20
     entry $tabInnerf1.en_default1 -state disabled -width 20
-    entry $tabInnerf1.en_value1 -width 20 -textvariable tmpValue$_pageCounter  -relief ridge -bg white 
+    entry $tabInnerf1.en_value1 -width 20 -textvariable tmpValue$_pageCounter  -relief ridge -bg white
+    bind $tabInnerf1.en_value1 <FocusOut> "NoteBookManager::ValueFocusChanged $tabInnerf1 $tabInnerf1.en_value1"
 	    
     if {"$tcl_platform(platform)" == "windows"} {
         set comboWidth 17
@@ -1069,6 +1070,8 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
     global userPrefList
     global lastConv
     global status_save
+    global LOWER_LIMIT
+    global UPPER_LIMIT
     
     #reloadView will call the Opertions::Singleclicknode so as when for index
     #2000 and above is saved the datatype validation will take effect
@@ -1171,6 +1174,18 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
         set dataType [NoteBookManager::GetEntryValue $frame1.en_data1]
     }
     
+    #if { [info exists lowerLimit] } {
+    #    if { $lowerLimit != "-" } {
+    #        set LOWER_LIMIT $lowerLimit
+    #    }
+    #}
+    #if { [info exists upperLimit] } {
+    #    if { $upperLimit != "-" } {
+    #        set UPPER_LIMIT $upperLimit
+    #    }
+    #}
+    set tempValidateValue $value
+    
     if { [string match -nocase "INTEGER*" $dataType] || [string match -nocase "UNSIGNED*" $dataType] || [string match -nocase "BOOLEAN" $dataType ] } {
         #need to convert
         set radioSel [$frame1.frame1.ra_dec cget -variable]
@@ -1232,7 +1247,7 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
     } elseif { [string match -nocase "Visible_String" $dataType] } {
         #continue
     }
-    if { $value == "" || $dataType == ""  } {
+    if { $value == "" || $dataType == "" || $value == "-" } {
         #no need to check
         if { ($dataType == "") && ([expr 0x$indexId > 0x1fff]) && ( ($objectType == "ARRAY") || ($objectType == "VAR") ) } {
             #for objects less than 1fff and objects greater than 1fff with object type other than
@@ -1241,23 +1256,23 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
             Validation::ResetPromptFlag
             return
         }
+        if { $value == "-" } {
+            tk_messageBox -message "\"-\" cannot be saved for value" -title Warning -icon warning -parent .
+            Validation::ResetPromptFlag
+            return
+        }
     } else {
         #value and datatype is not empty continue
         
     }
     if {[expr 0x$indexId > 0x1fff] } {
-        foreach validateEntryPath [list \
-            [list $frame1.en_value1 $value] \
-            [list $frame1.en_lower1 $lowerLimit] \
-            [list $frame1.en_upper1 $upperLimit]\
-            ] {
-            set limitResult [Validation::CheckAgainstLimits [lindex $validateEntryPath 0] [lindex $validateEntryPath 1] $dataType]
-            if { [lindex $limitResult 0] == 0 } {
-            tk_messageBox -message "[lindex $limitResult 1]" -title Warning -icon warning -parent .
-            Validation::ResetPromptFlag
-            return
-            }
-        }
+	set limitResult [Validation::validateValueandLimit $tempValidateValue $lowerLimit $upperLimit]
+	if { [lindex $limitResult 0] == 0 } {
+	    Console::DisplayWarning "[lindex $limitResult 1].\nValues not saved"
+	    set result [tk_messageBox -message "[lindex $limitResult 1].\nValues not saved" -title Warning -icon warning -parent .]
+	    Validation::ResetPromptFlag
+	    return
+	}
     }
     set chkGen [$frame0.frame1.ch_gen cget -variable]
     global $chkGen
@@ -1572,7 +1587,9 @@ proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 frame2 
     set validateResult [$frame0.cycleframe.en_time validate]
     switch -- $validateResult {
         0 {
-            tk_messageBox -message "The Entered value should not be less than the Poll Response Timeout value" -parent . -icon warning -title "Warning"
+            #NOTE:: the minimum value is got from vcmd
+            set minimumvalue [ lindex [$frame0.cycleframe.en_time cget -vcmd] end-1]
+            tk_messageBox -message "The Entered value should not be less than the minimum value $minimumvalue" -parent . -icon warning -title "Warning"
             Validation::ResetPromptFlag
             return
         }
@@ -1972,20 +1989,42 @@ proc NoteBookManager::ChangeValidation {framePath0 framePath comboPath {objectTy
         set dataType [lindex $valueList $value]
         set stdDataType [string toupper $dataType]
         
+        #grid $framePath.frame1.ra_dec
+        #grid $framePath.frame1.ra_hex
+        #$framePath.frame1.ra_hex select
+        #set lastConv hex
+        #
+        ##delete the the node in userpreference list else create problem in conversion
+        #set userPrefList [Operations::DeleteList $userPrefList $nodeSelect 1]
+        
+        global lastConv
+    
         grid $framePath.frame1.ra_dec
         grid $framePath.frame1.ra_hex
-        $framePath.frame1.ra_hex select
-        set lastConv hex
-        
-        #delete the the node in userpreference list else create problem in conversion
-        set userPrefList [Operations::DeleteList $userPrefList $nodeSelect 1]
         
         $framePath.en_value1 configure -validate none
-        $framePath.en_value1 delete 0 end
-        $framePath.en_value1 insert 0 0x
-        $framePath.en_value1 configure -validate key -vcmd "Validation::IsHex %P %s $framePath.en_value1 %d %i $dataType"
+        #$framePath.en_value1 delete 0 end
         $framePath.en_upper1 configure -validate none
         $framePath.en_upper1 delete 0 end
+        $framePath.en_lower1 configure -validate none
+        $framePath.en_lower1 delete 0 end
+        if { $lastConv == "dec" } {
+            $framePath.en_value1 configure -validate key -vcmd "Validation::IsDec %P $framePath.en_value1 %d %i $dataType"
+        } elseif { $lastConv == "hex"} {   
+            $framePath.en_value1 configure -validate key -vcmd "Validation::IsHex %P %s $framePath.en_value1 %d %i $dataType"
+            $framePath.en_value1 insert 0 0x
+        } else {
+            $framePath.en_value1 configure -validate key -vcmd "Validation::IsHex %P %s $framePath.en_value1 %d %i $dataType"
+            $framePath.frame1.ra_hex select
+            set lastConv "hex"
+        }
+        
+        #$framePath.en_value1 configure -validate none
+        #$framePath.en_value1 delete 0 end
+        #$framePath.en_value1 insert 0 0x
+        #$framePath.en_value1 configure -validate key -vcmd "Validation::IsHex %P %s $framePath.en_value1 %d %i $dataType"
+        #$framePath.en_upper1 configure -validate none
+        #$framePath.en_upper1 delete 0 end
         set UPPER_LIMIT ""
         $framePath.en_lower1 configure -validate none
         $framePath.en_lower1 delete 0 end
@@ -1997,11 +2036,19 @@ proc NoteBookManager::ChangeValidation {framePath0 framePath comboPath {objectTy
             $framePath.en_upper1 configure -validate none -state normal
             $framePath.en_upper1 delete 0 end
             #$framePath.en_upper1 insert 0 0x
-            $framePath.en_upper1 configure -validate key -vcmd "Validation::IsHex %P %s $framePath.en_upper1 %d %i $dataType"
+            if { $lastConv == "dec" } {
+                $framePath.en_upper1 configure -validate key -vcmd "Validation::IsDec %P $framePath.en_upper1 %d %i $dataType"
+            } else {
+                $framePath.en_upper1 configure -validate key -vcmd "Validation::IsHex %P %s $framePath.en_upper1 %d %i $dataType"
+            }
             $framePath.en_lower1 configure -validate none -state normal
             $framePath.en_lower1 delete 0 end
             #$framePath.en_lower1 insert 0 0x
-            $framePath.en_lower1 configure -validate key -vcmd "Validation::IsHex %P %s $framePath.en_lower1 %d %i $dataType"
+            if { $lastConv == "dec" } {
+                $framePath.en_lower1 configure -validate key -vcmd "Validation::IsDec %P $framePath.en_lower1 %d %i $dataType"
+            } else {
+                $framePath.en_lower1 configure -validate key -vcmd "Validation::IsHex %P %s $framePath.en_lower1 %d %i $dataType"
+            }
         }
         switch -- $stdDataType {
             BIT {
@@ -2439,34 +2486,135 @@ proc NoteBookManager::LimitFocusChanged {framePath entryPath} {
         global UPPER_LIMIT
         global LOWER_LIMIT
     
+        set dontCompareValue 0
         set valueState [$framePath.en_value1 cget -state]
         set valueInput [$framePath.en_value1 get]
-        if { $valueState != "normal" || $valueInput == "" } {
-            return
+#        puts "LimitFocusChanged UPPER_LIMIT->$UPPER_LIMIT LOWER_LIMIT->$LOWER_LIMIT"
+#        puts "LimitFocusChanged valueState->$valueState valueInput->$valueInput"
+        if { $valueState != "normal" || $valueInput == "" || $valueInput == "-" || [string match -nocase "0x" $valueInput] } {
+            
+            set dontCompareValue 1
+            #puts "LimitFocusChanged dontCompareValue->$dontCompareValue"
         }
+        
+        set msg ""
         if {[string match "*.en_lower1" $entryPath]} {
-            if { $LOWER_LIMIT != "" } {
-                if { [ catch { set lowerlimitResult [expr $valueInput >= $LOWER_LIMIT] } ] } {
-                    SetEntryValue $framePath.en_value1 $LOWER_LIMIT
-                    return
+            set lowervalueState [$framePath.en_lower1 cget -state]
+            set lowervalueInput [$framePath.en_lower1 get]
+            if { $lowervalueInput == "" || $lowervalueInput == "-" || [string match -nocase "0x" $lowervalueInput] } {
+                set lowervalueInput ""
+                set LOWER_LIMIT ""
+                return 1
+            }
+            if { $lowervalueState != "normal" } {
+                return 1
+            }
+            #puts "@@@@ lowervalueInput->$lowervalueInput"
+            if { $lowervalueInput != "" && $UPPER_LIMIT != ""} {
+                if { [ catch { set lowerlimitResult [expr $lowervalueInput <= $UPPER_LIMIT] } ] } {
+                    SetEntryValue $framePath.en_lower1 ""
+                    set LOWER_LIMIT ""
+                    set msg "Error in comparing lowerlimit($lowervalueInput) and upperlimit($UPPER_LIMIT).\n lowerlimit is made empty"
+                    #puts "$msg"
                 }
-                puts "lowerlimitResult->$lowerlimitResult"
+                if { $lowerlimitResult == 0 } {
+                    SetEntryValue $framePath.en_lower1 ""
+                    set LOWER_LIMIT ""
+                    set msg "The entered lowerlimit($lowervalueInput) is greater than upperlimit($UPPER_LIMIT).\n lowerlimit is made empty"
+                }
+                if {$msg != ""} {
+                    #tk_messageBox -message "$msg" -parent . -title "Warning" -icon warning
+		    Console::DisplayWarning $msg
+                    return 0
+                }
+            }
+            set LOWER_LIMIT $lowervalueInput
+            #puts "@@@@@ LOWER_LIMIT->$LOWER_LIMIT"
+            if { $LOWER_LIMIT != "" && $dontCompareValue == 0} {
+                if { [ catch { set lowerlimitResult [expr $valueInput >= $LOWER_LIMIT] } ] } {
+                    #SetEntryValue $framePath.en_value1 $LOWER_LIMIT
+		    set msg "Error in comparing input($valueInput) and lowerlimit($lowervalueInput)."
+		    #tk_messageBox -message "$msg" -parent . -title "Warning" -icon warning
+		    Console::DisplayWarning $msg
+                    return 1
+                }
+                #puts "lowerlimitResult->$lowerlimitResult"
                 if { $lowerlimitResult == 0 } {
                     SetEntryValue $framePath.en_value1 $LOWER_LIMIT
-                    return
+		    set msg "The entered input($valueInput) is less than lowerlimit($LOWER_LIMIT).\nlower limit is copied into the value"
+		    #tk_messageBox -message "$msg" -parent . -title "Warning" -icon warning
+		    Console::DisplayWarning $msg
+                    return 1
                 }
             }
         } elseif {[string match "*.en_upper1" $entryPath]} {
-            if { $UPPER_LIMIT != "" } {
+            set uppervalueState [$framePath.en_upper1 cget -state]
+            set uppervalueInput [$framePath.en_upper1 get]
+            if { $uppervalueInput == "" || $uppervalueInput == "-" || [string match -nocase "0x" $uppervalueInput] } {
+                set uppervalueInput ""
+                set UPPER_LIMIT ""
+                return 1
+            }
+            if { $uppervalueState != "normal" } {
+                return 1
+            }
+            #puts "@@@@ uppervalueInput->$uppervalueInput"
+            if { $uppervalueInput != "" && $LOWER_LIMIT != "" } {
+                if { [ catch { set upperlimitResult [expr $uppervalueInput >= $LOWER_LIMIT] } ] } {
+                    SetEntryValue $framePath.en_upper1 ""
+                    set UPPER_LIMIT ""
+                    set msg "Error in comparing upperlimit($uppervalueInput) and lowerlimit($LOWER_LIMIT).\nupperlimit is made empty"
+                    puts "$msg"
+                }
+                #puts "upperlimitResult->$upperlimitResult"
+                if { $upperlimitResult == 0 } {
+                    SetEntryValue $framePath.en_upper1 ""
+                    set UPPER_LIMIT ""
+                    set msg "The entered upperlimit($uppervalueInput) is lesser than lowerlimit($LOWER_LIMIT).\nupperlimit is made empty"
+                }
+                if {$msg != ""} {
+                    #tk_messageBox -message "$msg" -parent . -title "Warning" -icon warning
+		    Console::DisplayWarning $msg
+                    return 0
+                }
+            }
+            set UPPER_LIMIT $uppervalueInput
+            #puts "@@@@@ UPPER_LIMIT->$UPPER_LIMIT"
+            if { $UPPER_LIMIT != "" && $dontCompareValue == 0} {
                 if { [ catch { set upperlimitResult [expr $valueInput <= $UPPER_LIMIT] } ] } {
-                    SetEntryValue $framePath.en_value1 $UPPER_LIMIT
-                    return
+                    #SetEntryValue $framePath.en_value1 $UPPER_LIMIT
+		    set msg "Error in comparing input($valueInput) and upperlimit($UPPER_LIMIT)."
+		    #tk_messageBox -message "$msg" -parent . -title "Warning" -icon warning
+		    Console::DisplayWarning $msg
+                    return 1
                 }
                 if { $upperlimitResult == 0 } {
                     SetEntryValue $framePath.en_value1 $UPPER_LIMIT
-                    return
+    		    set msg "The entered input($valueInput) is greter than upperlimit($UPPER_LIMIT).\nupperlimit is copied into the value"
+		    #tk_messageBox -message "$msg" -parent . -title "Warning" -icon warning
+		    Console::DisplayWarning $msg
+                    return 1
                 }
             }
         }
+    }
+}
+
+proc NoteBookManager::ValueFocusChanged {framePath entryPath} {
+    catch {
+        set valueState [$entryPath cget -state]
+        set valueInput [$entryPath get]
+        if { $valueState != "normal" || $valueInput == "" || $valueInput == "-" || [string match -nocase "0x" $valueInput] } {
+            return
+        }
+        if { [string match "*.en_value1" $entryPath] } {
+            set limitResult [Validation::CheckAgainstLimits $entryPath $valueInput ]
+            if { [lindex $limitResult 0] == 0 } {
+                #tk_messageBox -message "[lindex $limitResult 1]" -title "Warning" -icon warning
+		Console::DisplayWarning [lindex $limitResult 1]
+                return 0
+            }
+        }
+            return 1
     }
 }

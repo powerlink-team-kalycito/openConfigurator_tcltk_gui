@@ -3798,7 +3798,7 @@ proc Operations::DeleteTreeNode {} {
 	    set status_save 1
 
 
-	    if {[string match "OBD*" $node]} {
+	    if {[string match "OBD*" $node] || ([string match "MN*" $MNnode])} {
 		    #should not delete nodeId from list since it is mn
 	    } else {
 		    set nodeIdList [Operations::DeleteList $nodeIdList $nodeId 0]

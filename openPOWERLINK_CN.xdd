@@ -1738,7 +1738,7 @@ www.kalycito.com
       </TransportLayers>
       <NetworkManagement>
         <GeneralFeatures DLLFeatureMN="false" NMTBootTimeNotActive="8000000" NMTCycleTimeMax="60000" NMTCycleTimeMin="200" NMTErrorEntries="2" />
-        <CNFeatures DLLCNFeatureMultiplex="true" NMTCNSoC2PReq="0" />
+        <CNFeatures DLLCNFeatureMultiplex="false" NMTCNSoC2PReq="0" />
         <Diagnostic>
         </Diagnostic>
       </NetworkManagement>

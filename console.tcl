@@ -232,7 +232,8 @@ proc Console::InitWarnWindow {win {width 60} {height 5}} {
     }
 
     text $windowPath.t -width $width -height $height -bg white
-
+	
+	$windowPath.t configure -foreground blue
     $windowPath.t tag configure output -foreground blue
     $windowPath.t tag configure promptChar -foreground grey40
     $windowPath.t tag configure error -foreground red
@@ -267,6 +268,8 @@ proc Console::DisplayWarning {var {tag output} {win {}} {see 1}} {
     }
     $win configure -state normal
     $win mark gravity promptChar right
+	$win tag delete $tag
+	$win tag configure output -foreground blue
     $win insert end $var $tag
     if {[string index $var [expr [string length $var]-1]] != "\n"} {
 	    $win insert end "\n"
@@ -274,10 +277,12 @@ proc Console::DisplayWarning {var {tag output} {win {}} {see 1}} {
 
     $win insert end "$promptChar " promptChar
     $win mark gravity promptChar left
+	[lindex $warWindow 1] raise [lindex $warWindow 2]
     if $see {$win see insert}
     update
+	Console::BlinkText $win $tag
     $win configure -state disabled
-    [lindex $warWindow 1] raise [lindex $warWindow 2]
+    
     return
 }
 
@@ -303,5 +308,31 @@ proc Console::ClearMsgs {} {
 	    $windowPath insert end "$promptChar " promptChar
 	    $windowPath configure -state disabled
     }
+	
+}
+
+#---------------------------------------------------------------------------------------------------
+#  Console::BlinkText
+# 
+#  Arguments : -
+#
+#  Results : -
+#
+#  Description :  Clear information, error and warning message
+#---------------------------------------------------------------------------------------------------
+proc Console::BlinkText {{win {}} {tag {}} } {
+	if {$win == ""} {
+		return
+	}
+
+	set fg [$win cget -foreground]
+	for {set blinkcount 0} { $blinkcount < 3 } { incr blinkcount} {
+			$win tag configure $tag -foreground [$win cget -background]
+			update idletasks
+			after 500
+			$win tag configure $tag -foreground $fg
+			update idletasks
+			after 500
+	}
 	
 }

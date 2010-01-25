@@ -1357,7 +1357,7 @@ proc Validation::validateValueandLimit {input lowerlimit upperlimit} {
 	    return [list 0 "Error in comparing input value($input) and lower limit($LOWER_LIMIT)"]
 	}
 	if { $lowerlimitResult == 0 } {
-	    return [list 0 "The input value($input) is less than lowerlimit($LOWER_LIMIT)"]
+	    return [list 0 "The input value($input) is lesser than lowerlimit($LOWER_LIMIT)"]
 	}
     }
 	

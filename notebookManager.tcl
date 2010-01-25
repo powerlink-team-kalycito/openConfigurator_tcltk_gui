@@ -2514,13 +2514,13 @@ proc NoteBookManager::LimitFocusChanged {framePath entryPath} {
                 if { [ catch { set lowerlimitResult [expr $lowervalueInput <= $UPPER_LIMIT] } ] } {
                     SetEntryValue $framePath.en_lower1 ""
                     set LOWER_LIMIT ""
-                    set msg "Error in comparing lowerlimit($lowervalueInput) and upperlimit($UPPER_LIMIT).\n lowerlimit is made empty"
+                    set msg "Error in comparing lowerlimit($lowervalueInput) and upperlimit($UPPER_LIMIT). lowerlimit is made empty"
                     #puts "$msg"
                 }
                 if { $lowerlimitResult == 0 } {
                     SetEntryValue $framePath.en_lower1 ""
                     set LOWER_LIMIT ""
-                    set msg "The entered lowerlimit($lowervalueInput) is greater than upperlimit($UPPER_LIMIT).\n lowerlimit is made empty"
+                    set msg "The entered lowerlimit($lowervalueInput) is greater than upperlimit($UPPER_LIMIT). lowerlimit is made empty"
                 }
                 if {$msg != ""} {
                     #tk_messageBox -message "$msg" -parent . -title "Warning" -icon warning
@@ -2541,7 +2541,7 @@ proc NoteBookManager::LimitFocusChanged {framePath entryPath} {
                 #puts "lowerlimitResult->$lowerlimitResult"
                 if { $lowerlimitResult == 0 } {
                     SetEntryValue $framePath.en_value1 $LOWER_LIMIT
-		    set msg "The entered input($valueInput) is less than lowerlimit($LOWER_LIMIT).\nlower limit is copied into the value"
+		    set msg "The entered input($valueInput) is lesser than lowerlimit($LOWER_LIMIT).lower limit is copied into the value"
 		    #tk_messageBox -message "$msg" -parent . -title "Warning" -icon warning
 		    Console::DisplayWarning $msg
                     return 1
@@ -2563,14 +2563,14 @@ proc NoteBookManager::LimitFocusChanged {framePath entryPath} {
                 if { [ catch { set upperlimitResult [expr $uppervalueInput >= $LOWER_LIMIT] } ] } {
                     SetEntryValue $framePath.en_upper1 ""
                     set UPPER_LIMIT ""
-                    set msg "Error in comparing upperlimit($uppervalueInput) and lowerlimit($LOWER_LIMIT).\nupperlimit is made empty"
-                    puts "$msg"
+                    set msg "Error in comparing upperlimit($uppervalueInput) and lowerlimit($LOWER_LIMIT). upperlimit is made empty"
+                    #puts "$msg"
                 }
                 #puts "upperlimitResult->$upperlimitResult"
                 if { $upperlimitResult == 0 } {
                     SetEntryValue $framePath.en_upper1 ""
                     set UPPER_LIMIT ""
-                    set msg "The entered upperlimit($uppervalueInput) is lesser than lowerlimit($LOWER_LIMIT).\nupperlimit is made empty"
+                    set msg "The entered upperlimit($uppervalueInput) is lesser than lowerlimit($LOWER_LIMIT). upperlimit is made empty"
                 }
                 if {$msg != ""} {
                     #tk_messageBox -message "$msg" -parent . -title "Warning" -icon warning
@@ -2590,7 +2590,7 @@ proc NoteBookManager::LimitFocusChanged {framePath entryPath} {
                 }
                 if { $upperlimitResult == 0 } {
                     SetEntryValue $framePath.en_value1 $UPPER_LIMIT
-    		    set msg "The entered input($valueInput) is greter than upperlimit($UPPER_LIMIT).\nupperlimit is copied into the value"
+    		    set msg "The entered input($valueInput) is greater than upperlimit($UPPER_LIMIT). upperlimit is copied into the value"
 		    #tk_messageBox -message "$msg" -parent . -title "Warning" -icon warning
 		    Console::DisplayWarning $msg
                     return 1

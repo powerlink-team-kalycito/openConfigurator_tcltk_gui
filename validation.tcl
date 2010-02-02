@@ -725,7 +725,12 @@ proc Validation::IsTableHex {input preinput mode idx reqLen tablePath rowIndex c
     if {[string is xdigit $input] == 0 || [string length $input] > $reqLen } {
 	    return 0
     } else {
-	    after 1 Validation::SetTableValue $entryPath $mode $idx 0x$input
+		if { $columnIndex == 1} {
+			#for editing node id
+			after 1 Validation::SetTableValueNodeid $tablePath $rowIndex $columnIndex $entryPath $mode $idx 0x$input
+		} else {
+			after 1 Validation::SetTableValue $entryPath $mode $idx 0x$input
+		}
 	
 	    Validation::SetPromptFlag
 	
@@ -757,6 +762,30 @@ proc Validation::SetTableValue { entryPath mode idx input } {
 	    $entryPath icursor [expr $idx+1] 
     }
     $entryPath configure -validate key
+}
+
+proc Validation::SetTableValueNodeid {tablePath rowIndex columnIndex entryPath mode idx input} {
+	global populatedCommParamList
+	
+	Validation::SetTableValue $entryPath $mode $idx $input
+	
+	foreach tempList $populatedCommParamList {
+		set rowlist [lindex $tempList 2]
+		#puts "rowlist->$rowlist"
+		set chkRslt [lsearch $rowlist $rowIndex]
+		if { $chkRslt != -1} {
+		
+			foreach indRow $rowlist {
+				if { $indRow == $rowIndex } {
+					continue;
+				}
+				$tablePath cellconfigure $indRow,$columnIndex -text "$input"
+			}
+			return;
+		} else {
+			
+		}
+	}
 }
 
 #---------------------------------------------------------------------------------------------------

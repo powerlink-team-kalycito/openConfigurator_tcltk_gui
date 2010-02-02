@@ -280,7 +280,7 @@ proc Console::DisplayWarning {var {tag output} {win {}} {see 1}} {
 	[lindex $warWindow 1] raise [lindex $warWindow 2]
     if $see {$win see insert}
     update
-	Console::BlinkText $win $tag
+	#Console::BlinkText $win $tag
     $win configure -state disabled
     
     return

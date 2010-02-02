@@ -1302,6 +1302,7 @@ proc Operations::SingleClickNode {node} {
     global savedValueList
     global lastConv
     global populatedPDOList
+	global populatedCommParamList
     global userPrefList
     global LastTableFocus
     global chkPrompt
@@ -1473,12 +1474,16 @@ proc Operations::SingleClickNode {node} {
 		    }
 	    }
 	    set popCount 0 
+		set popCountList ""
+		set populatedCommParamList ""
 	    [lindex $f2 1] delete 0 end
 	
 	    set commParamValue ""
+		set nodeidEditableFlag 0
 	    for {set count 0} { $count <= [expr [llength $finalMappList]-2] } {incr count 2} {
 		    set tempIdx [lindex $finalMappList $count]
 		    set commParamValue ""
+			set nodeidEditableFlag 0
 		    if { $tempIdx != "" } {
 			    set indexId [string range [$treePath itemcget $tempIdx -text] end-4 end-1 ]
 			    set sidx [$treePath nodes $tempIdx]
@@ -1504,7 +1509,7 @@ proc Operations::SingleClickNode {node} {
 						    # no 0x no need to do anything
 					    }
 					    set commParamValue $IndexActualValue
-					    break 
+						set nodeidEditableFlag 1
 				    }
 			    }
 		    }
@@ -1564,18 +1569,27 @@ proc Operations::SingleClickNode {node} {
                                         }
                                     }
 				    [lindex $f2 1] insert $popCount [list $popCount $commParamValue $offset $length $listIndex $listSubIndex ]
+					lappend popCountList $popCount
 				    if { $accessType == "ro" || $accessType == "const" } {
 					    foreach col [list 2 3 4 5 ] {
 						    [lindex $f2 1] cellconfigure $popCount,$col -editable no
 					    }							
 				    } else {
+					# as a default the first cell is always non editable, adding it to the list only when made editable
 					    foreach col [list 2 3 4 5 ] {
 						    [lindex $f2 1] cellconfigure $popCount,$col -editable yes
 					    }	
+						if { $nodeidEditableFlag == 1} {
+						    [lindex $f2 1] cellconfigure $popCount,1 -editable yes
+						}
 				    }
 				    incr popCount 1 
 			    }
 		    }
+			#the populatedCommParamList contains the index id of the displayed mapping parameter
+			#the tree node of the communication parameter and the cells in which they are  inserted
+			lappend populatedCommParamList [list $indexId [lindex $finalMappList $count]  $popCountList]
+			set popCountList ""
 	    }
 	    pack forget [lindex $f0 0]
 	    pack forget [lindex $f1 0]

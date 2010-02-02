@@ -1269,7 +1269,7 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
 	set limitResult [Validation::validateValueandLimit $tempValidateValue $lowerLimit $upperLimit]
 	if { [lindex $limitResult 0] == 0 } {
 	    Console::DisplayWarning "[lindex $limitResult 1].\nValues not saved"
-	    set result [tk_messageBox -message "[lindex $limitResult 1].\nValues not saved" -title Warning -icon warning -parent .]
+	    tk_messageBox -message "[lindex $limitResult 1].\nValues not saved" -title Warning -icon warning -parent .
 	    Validation::ResetPromptFlag
 	    return
 	}
@@ -1727,6 +1727,9 @@ proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 frame2 
 proc NoteBookManager::StartEdit {tablePath rowIndex columnIndex text} {
         set win [$tablePath editwinpath]
         switch -- $columnIndex {
+			1 {
+                $win configure -invalidcommand bell -validate key  -validatecommand "Validation::IsTableHex %P %s %d %i 2 $tablePath $rowIndex $columnIndex $win"
+            }
             2 {	
                 $win configure -invalidcommand bell -validate key  -validatecommand "Validation::IsTableHex %P %s %d %i 4 $tablePath $rowIndex $columnIndex $win"
             }
@@ -1763,6 +1766,13 @@ proc NoteBookManager::EndEdit {tablePath rowIndex columnIndex text} {
         $tablePath rejectinput
     }
   	switch -- $columnIndex {
+            1 {
+                if {[string length $text] < 1 || [string length $text] > 2} {
+	                bell
+                    $tablePath rejectinput
+                } else {
+                }
+            }
         	2 {
                 if {[string length $text] != 4} {
 				    bell
@@ -1814,6 +1824,7 @@ proc NoteBookManager::SaveTable {tableWid} {
     global treePath
     global status_save
     global populatedPDOList
+	global populatedCommParamList 
 
     set result [$tableWid finishediting]
     if {$result == 0} {
@@ -1888,7 +1899,55 @@ proc NoteBookManager::SaveTable {tableWid} {
             }
         }
     }
-
+	
+	#saving the nodeid to communication parameter subindex 01
+	foreach childIndex $populatedCommParamList {
+		set treeNode [lindex $childIndex 1]
+		if {[$treePath exists $treeNode] == 0} {
+			continue;
+		}
+        set indexId [string range [$treePath itemcget $treeNode -text] end-4 end-1]
+        foreach childSubIndex [$treePath nodes $treeNode] {
+            set subIndexId [string range [$treePath itemcget $childSubIndex -text] end-2 end-1]
+			set name [string range [$treePath itemcget $childSubIndex -text] 0 end-6] 
+			set rowCount [lindex [lindex $childIndex 2] 0]
+            if { [string match "01" $subIndexId] } {
+				#
+				if { $rowCount == ""} {
+					break
+				}
+                set enteredNodeId [string range [$tableWid cellcget $rowCount,1 -text] 2 end] 
+                set value $enteredNodeId
+                #0x is appended when saving value to indicate it is a hexa decimal number
+                if { ([string length $value] < 1) || ([string length $value] > 2) } {
+                    set flag 1
+                    break
+                } else {
+                    set value 0x$value
+                }
+                set indexPos [new_intp] 
+                set subIndexPos [new_intp] 
+                set catchErrCode [IfSubIndexExists $nodeId $nodeType $indexId $subIndexId $subIndexPos $indexPos]
+                if { [ocfmRetCode_code_get $catchErrCode] == 0 } {
+                    set indexPos [intp_value $indexPos] 
+                    set subIndexPos [intp_value $subIndexPos]
+                    #to get include subindex in cdc generation
+                    set tempIndexProp [GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos 9 ]
+		    set ErrCode [ocfmRetCode_code_get [lindex $tempIndexProp 0]]
+		    if {$ErrCode == 0} {	
+			    set incFlag [lindex $tempIndexProp 1]
+		    } else {
+			    set incFlag 0
+		    }
+                } else {
+                    set incFlag 0
+                }
+                SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $name $incFlag
+                #incr rowCount
+				break
+            }
+        }
+    }
     if { $flag == 1} {
         Console::DisplayInfo "Values which are completely filled (Offset, Length, Index and Sub Index) only saved"
     }
@@ -2523,8 +2582,8 @@ proc NoteBookManager::LimitFocusChanged {framePath entryPath} {
                     set msg "The entered lowerlimit($lowervalueInput) is greater than upperlimit($UPPER_LIMIT). lowerlimit is made empty"
                 }
                 if {$msg != ""} {
-                    #tk_messageBox -message "$msg" -parent . -title "Warning" -icon warning
-		    Console::DisplayWarning $msg
+                    tk_messageBox -message "$msg" -parent . -title "Warning" -icon warning
+                    #Console::DisplayWarning $msg
                     return 0
                 }
             }
@@ -2534,16 +2593,16 @@ proc NoteBookManager::LimitFocusChanged {framePath entryPath} {
                 if { [ catch { set lowerlimitResult [expr $valueInput >= $LOWER_LIMIT] } ] } {
                     #SetEntryValue $framePath.en_value1 $LOWER_LIMIT
 		    set msg "Error in comparing input($valueInput) and lowerlimit($lowervalueInput)."
-		    #tk_messageBox -message "$msg" -parent . -title "Warning" -icon warning
-		    Console::DisplayWarning $msg
+		    tk_messageBox -message "$msg" -parent . -title "Warning" -icon warning
+		    #Console::DisplayWarning $msg
                     return 1
                 }
                 #puts "lowerlimitResult->$lowerlimitResult"
                 if { $lowerlimitResult == 0 } {
                     SetEntryValue $framePath.en_value1 $LOWER_LIMIT
 		    set msg "The entered input($valueInput) is lesser than lowerlimit($LOWER_LIMIT).lower limit is copied into the value"
-		    #tk_messageBox -message "$msg" -parent . -title "Warning" -icon warning
-		    Console::DisplayWarning $msg
+		    tk_messageBox -message "$msg" -parent . -title "Warning" -icon warning
+		    #Console::DisplayWarning $msg
                     return 1
                 }
             }
@@ -2573,8 +2632,8 @@ proc NoteBookManager::LimitFocusChanged {framePath entryPath} {
                     set msg "The entered upperlimit($uppervalueInput) is lesser than lowerlimit($LOWER_LIMIT). upperlimit is made empty"
                 }
                 if {$msg != ""} {
-                    #tk_messageBox -message "$msg" -parent . -title "Warning" -icon warning
-		    Console::DisplayWarning $msg
+                    tk_messageBox -message "$msg" -parent . -title "Warning" -icon warning
+		    #Console::DisplayWarning $msg
                     return 0
                 }
             }
@@ -2584,15 +2643,15 @@ proc NoteBookManager::LimitFocusChanged {framePath entryPath} {
                 if { [ catch { set upperlimitResult [expr $valueInput <= $UPPER_LIMIT] } ] } {
                     #SetEntryValue $framePath.en_value1 $UPPER_LIMIT
 		    set msg "Error in comparing input($valueInput) and upperlimit($UPPER_LIMIT)."
-		    #tk_messageBox -message "$msg" -parent . -title "Warning" -icon warning
-		    Console::DisplayWarning $msg
+		    tk_messageBox -message "$msg" -parent . -title "Warning" -icon warning
+		    #Console::DisplayWarning $msg
                     return 1
                 }
                 if { $upperlimitResult == 0 } {
                     SetEntryValue $framePath.en_value1 $UPPER_LIMIT
     		    set msg "The entered input($valueInput) is greater than upperlimit($UPPER_LIMIT). upperlimit is copied into the value"
-		    #tk_messageBox -message "$msg" -parent . -title "Warning" -icon warning
-		    Console::DisplayWarning $msg
+		    tk_messageBox -message "$msg" -parent . -title "Warning" -icon warning
+		    #Console::DisplayWarning $msg
                     return 1
                 }
             }
@@ -2610,8 +2669,8 @@ proc NoteBookManager::ValueFocusChanged {framePath entryPath} {
         if { [string match "*.en_value1" $entryPath] } {
             set limitResult [Validation::CheckAgainstLimits $entryPath $valueInput ]
             if { [lindex $limitResult 0] == 0 } {
-                #tk_messageBox -message "[lindex $limitResult 1]" -title "Warning" -icon warning
-		Console::DisplayWarning [lindex $limitResult 1]
+                tk_messageBox -message "[lindex $limitResult 1]" -title "Warning" -icon warning
+		#Console::DisplayWarning [lindex $limitResult 1]
                 return 0
             }
         }

@@ -1897,8 +1897,10 @@ proc Operations::SingleClickNode {node} {
     if { [string match "*SubIndex*" $node] } {
         $tmpInnerf1.co_obj1 configure -state disabled
         #subobjects of index greater than 1fff exists only for index of type
-        #RRAY or RECORD datatype is not editable
-        $tmpInnerf1.co_data1 configure -state disabled
+        #ARRAY datatype is not editable
+	if { [ string match -nocase "ARRAY" [lindex $IndexProp 1] ] } {
+	    $tmpInnerf1.co_data1 configure -state disabled
+	}
     }
     #disable all the widgets for subindex 00
     if { [string match "*SubIndex*" $node] && ($subIndexId == "00") && ([expr 0x$indexId > 0x1fff]) } {
@@ -1914,6 +1916,7 @@ proc Operations::SingleClickNode {node} {
         $tmpInnerf1.co_pdo1 configure -state disabled
         $subindexSaveBtn configure -state disabled
     }
+    
 #puts "\n###### singclick datatype->[lindex $IndexProp 2]####\n"
     if { [lindex $IndexProp 2] == "IP_ADDRESS" } {
         set lastConv ""
@@ -2040,7 +2043,8 @@ proc Operations::SingleClickNode {node} {
         set lastConv ""
         grid remove $tmpInnerf1.frame1.ra_dec
         grid remove $tmpInnerf1.frame1.ra_hex
-        $tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::IsValidStr %P" -bg $savedBg
+        #$tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::IsValidStr %P" -bg $savedBg
+	$tmpInnerf1.en_value1 configure -validate key -vcmd "0" -bg $savedBg
     }
     return
 }
@@ -2481,6 +2485,7 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
         }
 
     } ; #end of the condition checking multiplex feature flag of mn and cn
+    
     if { ( [string match -nocase "TRUE" $MNFeatureChainFlag] == 1 ) && ( [string match -nocase "TRUE" $CNFeatureChainFlag] == 1 ) } {
         $tmpInnerf1.ra_StChain configure -state normal
         if {$stationType == 2} {

@@ -268,8 +268,8 @@ proc Console::DisplayWarning {var {tag output} {win {}} {see 1}} {
     }
     $win configure -state normal
     $win mark gravity promptChar right
-	$win tag delete $tag
-	$win tag configure output -foreground blue
+	#$win tag delete $tag
+	#$win tag configure output -foreground blue
     $win insert end $var $tag
     if {[string index $var [expr [string length $var]-1]] != "\n"} {
 	    $win insert end "\n"

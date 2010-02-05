@@ -1138,6 +1138,18 @@ proc Validation::ValidatePollRespTimeout {input entryPath mode idx validationTyp
     }
 }
 
+#---------------------------------------------------------------------------------------------------
+#  Validation::CheckAgainstLimits
+# 
+#  Arguments : input     - input string 
+# 	       entryPath - path of the entry widget(Actual alue text box)
+#              dataType  - datatype of the input
+#              idx       - Index where the character was inserted or deleted  
+#
+#  Results : 0 with error message or 1
+#
+#  Description : Validates the input value is within the limit range
+#---------------------------------------------------------------------------------------------------
 proc Validation::CheckAgainstLimits {entryPath input {dataType ""} } {
     global LOWER_LIMIT
     global UPPER_LIMIT
@@ -1350,6 +1362,17 @@ proc Validation::CheckValueIsInRange {input valueFormat {dataType ""}} {
     }
 }
 
+#---------------------------------------------------------------------------------------------------
+#  Validation::validateValueandLimit
+# 
+#  Arguments : input       - value input
+# 	       lowerlimit  - lower limit value
+#              upperlimit  - uppper limit value
+#
+#  Results : 0 with error message or 1
+#
+#  Description : Validates the limits against each other and the value is in range
+#---------------------------------------------------------------------------------------------------
 proc Validation::validateValueandLimit {input lowerlimit upperlimit} {
     global LOWER_LIMIT
     global UPPER_LIMIT

@@ -2538,7 +2538,7 @@ proc NoteBookManager::RetStationEnumValue {  } {
 #	   
 #  Results : -
 #
-#  Description : enables or disasbles the spinbox based on the check button selection
+#  Description : based on the entry path it validates value with upper limit or lower limit
 #---------------------------------------------------------------------------------------------------
 proc NoteBookManager::LimitFocusChanged {framePath entryPath} {
     catch {
@@ -2582,8 +2582,8 @@ proc NoteBookManager::LimitFocusChanged {framePath entryPath} {
                     set msg "The entered lowerlimit($lowervalueInput) is greater than upperlimit($UPPER_LIMIT). lowerlimit is made empty"
                 }
                 if {$msg != ""} {
-                    tk_messageBox -message "$msg" -parent . -title "Warning" -icon warning
-                    #Console::DisplayWarning $msg
+                    #tk_messageBox -message "$msg" -parent . -title "Warning" -icon warning
+                    Console::DisplayWarning $msg
                     return 0
                 }
             }
@@ -2593,16 +2593,16 @@ proc NoteBookManager::LimitFocusChanged {framePath entryPath} {
                 if { [ catch { set lowerlimitResult [expr $valueInput >= $LOWER_LIMIT] } ] } {
                     #SetEntryValue $framePath.en_value1 $LOWER_LIMIT
 		    set msg "Error in comparing input($valueInput) and lowerlimit($lowervalueInput)."
-		    tk_messageBox -message "$msg" -parent . -title "Warning" -icon warning
-		    #Console::DisplayWarning $msg
+		    #tk_messageBox -message "$msg" -parent . -title "Warning" -icon warning
+		    Console::DisplayWarning $msg
                     return 1
                 }
                 #puts "lowerlimitResult->$lowerlimitResult"
                 if { $lowerlimitResult == 0 } {
                     SetEntryValue $framePath.en_value1 $LOWER_LIMIT
 		    set msg "The entered input($valueInput) is lesser than lowerlimit($LOWER_LIMIT).lower limit is copied into the value"
-		    tk_messageBox -message "$msg" -parent . -title "Warning" -icon warning
-		    #Console::DisplayWarning $msg
+		    #tk_messageBox -message "$msg" -parent . -title "Warning" -icon warning
+		    Console::DisplayWarning $msg
                     return 1
                 }
             }
@@ -2632,8 +2632,8 @@ proc NoteBookManager::LimitFocusChanged {framePath entryPath} {
                     set msg "The entered upperlimit($uppervalueInput) is lesser than lowerlimit($LOWER_LIMIT). upperlimit is made empty"
                 }
                 if {$msg != ""} {
-                    tk_messageBox -message "$msg" -parent . -title "Warning" -icon warning
-		    #Console::DisplayWarning $msg
+                    #tk_messageBox -message "$msg" -parent . -title "Warning" -icon warning
+		    Console::DisplayWarning $msg
                     return 0
                 }
             }
@@ -2643,15 +2643,15 @@ proc NoteBookManager::LimitFocusChanged {framePath entryPath} {
                 if { [ catch { set upperlimitResult [expr $valueInput <= $UPPER_LIMIT] } ] } {
                     #SetEntryValue $framePath.en_value1 $UPPER_LIMIT
 		    set msg "Error in comparing input($valueInput) and upperlimit($UPPER_LIMIT)."
-		    tk_messageBox -message "$msg" -parent . -title "Warning" -icon warning
-		    #Console::DisplayWarning $msg
+		    #tk_messageBox -message "$msg" -parent . -title "Warning" -icon warning
+		    Console::DisplayWarning $msg
                     return 1
                 }
                 if { $upperlimitResult == 0 } {
                     SetEntryValue $framePath.en_value1 $UPPER_LIMIT
     		    set msg "The entered input($valueInput) is greater than upperlimit($UPPER_LIMIT). upperlimit is copied into the value"
-		    tk_messageBox -message "$msg" -parent . -title "Warning" -icon warning
-		    #Console::DisplayWarning $msg
+		    #tk_messageBox -message "$msg" -parent . -title "Warning" -icon warning
+		    Console::DisplayWarning $msg
                     return 1
                 }
             }
@@ -2669,8 +2669,8 @@ proc NoteBookManager::ValueFocusChanged {framePath entryPath} {
         if { [string match "*.en_value1" $entryPath] } {
             set limitResult [Validation::CheckAgainstLimits $entryPath $valueInput ]
             if { [lindex $limitResult 0] == 0 } {
-                tk_messageBox -message "[lindex $limitResult 1]" -title "Warning" -icon warning
-		#Console::DisplayWarning [lindex $limitResult 1]
+		Console::DisplayWarning [lindex $limitResult 1]
+		#tk_messageBox -message "[lindex $limitResult 1]" -title "Warning" -icon warning
                 return 0
             }
         }

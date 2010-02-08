@@ -1856,6 +1856,9 @@ proc NoteBookManager::SaveTable {tableWid} {
         Validation::ResetPromptFlag
         return
     }
+	#sort the tablelist based on the No column
+	$tableWid sortbycolumn 0 -increasing
+	update
 	foreach childIndex $populatedPDOList {
         set indexId [string range [$treePath itemcget $childIndex -text] end-4 end-1]
         foreach childSubIndex [$treePath nodes $childIndex] {

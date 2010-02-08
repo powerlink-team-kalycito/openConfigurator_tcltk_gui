@@ -2817,14 +2817,14 @@ proc Operations::ResetGlobalData {} {
     #no need to reset lastOpenPjt, lastXD, tableSaveBtn, indexSaveBtn and subindexSaveBtn
 
     #no index subindex or pdo table should be displayed
-    pack forget [lindex $f0 0]
-    pack forget [lindex $f1 0]
-    pack forget [lindex $f2 0]
-    [lindex $f2 1] cancelediting
-    [lindex $f2 1] configure -state disabled
-    pack forget [lindex $f3 0]
-    pack forget [lindex $f4 0]
-
+    #pack forget [lindex $f0 0]
+    #pack forget [lindex $f1 0]
+    #pack forget [lindex $f2 0]
+    #[lindex $f2 1] cancelediting
+    #[lindex $f2 1] configure -state disabled
+    #pack forget [lindex $f3 0]
+    #pack forget [lindex $f4 0]
+    Operations::RemoveAllFrames
     update
 }
 
@@ -3697,14 +3697,14 @@ proc Operations::ReImport {} {
 		    Console::DisplayInfo "Imported file $tmpImpDir for Node ID:$nodeId"
 	    }
 
-	    pack forget [lindex $f0 0]
-	    pack forget [lindex $f1 0]
-	    pack forget [lindex $f2 0]
-	    [lindex $f2 1] cancelediting
-	    [lindex $f2 1] configure -state disabled
-        pack forget [lindex $f3 0]
-        pack forget [lindex $f4 0]
-
+#	    pack forget [lindex $f0 0]
+#	    pack forget [lindex $f1 0]
+#	    pack forget [lindex $f2 0]
+#	    [lindex $f2 1] cancelediting
+#	    [lindex $f2 1] configure -state disabled
+#        pack forget [lindex $f3 0]
+#        pack forget [lindex $f4 0]
+	    Operations::RemoveAllFrames
 	    #xdc/xdd is reimported need to save
 	    set status_save 1
 
@@ -3715,13 +3715,14 @@ proc Operations::ReImport {} {
 			    $treePath insert 0 MN$tmpNode OBD$tmpNode-1 -text "OBD" -open 0 -image [Bitmap::get pdo]
 		    }
 	    }
-	    pack forget [lindex $f0 0]
-	    pack forget [lindex $f1 0]
-	    pack forget [lindex $f2 0]
-	    [lindex $f2 1] cancelediting
-	    [lindex $f2 1] configure -state disabled
-        pack forget [lindex $f3 0]
-        pack forget [lindex $f4 0]
+#	    pack forget [lindex $f0 0]
+#	    pack forget [lindex $f1 0]
+#	    pack forget [lindex $f2 0]
+#	    [lindex $f2 1] cancelediting
+#	    [lindex $f2 1] configure -state disabled
+#        pack forget [lindex $f3 0]
+#        pack forget [lindex $f4 0]
+	    Operations::RemoveAllFrames
 
 	    Operations::CleanList $node 0
 	    Operations::CleanList $node 1
@@ -4626,6 +4627,11 @@ proc Operations::RemoveAllFrames {} {
     global f2
     global f3
     global f4
+    
+    #focusing the name entry box while removing all the frames
+    #as a fix due to triggerring of focusout events of entry boxes 
+    catch { focus [lindex $f0 1].en_nam1 }
+    catch { focus [lindex $f1 1].en_nam1 }
     
     pack forget [lindex $f0 0]
     pack forget [lindex $f1 0]

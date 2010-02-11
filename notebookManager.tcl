@@ -1115,6 +1115,17 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
         Validation::ResetPromptFlag
         return
     }
+    
+    if { [expr 0x$indexId > 0x1fff] } {
+	set lastFocus [focus]
+	if { $lastFocus == "$frame1.en_lower1" || $lastFocus == "$frame1.en_upper1" } {
+	    #event generate $lastFocus <FocusOut> 
+	    #this is the function binded to both the upper limit and lower limit entry boxes
+	    NoteBookManager::LimitFocusChanged $frame1 $lastFocus
+	}
+	
+    }
+    
     set state [$frame1.en_value1 cget -state]
     $frame1.en_value1 configure -state normal
     set tmpVar1 [$frame1.en_value1 cget -textvariable]

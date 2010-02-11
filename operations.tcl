@@ -2044,7 +2044,7 @@ proc Operations::SingleClickNode {node} {
         grid remove $tmpInnerf1.frame1.ra_dec
         grid remove $tmpInnerf1.frame1.ra_hex
         #$tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::IsValidStr %P" -bg $savedBg
-	$tmpInnerf1.en_value1 configure -validate key -vcmd "0" -bg $savedBg
+	$tmpInnerf1.en_value1 configure -validate key -vcmd { return 0 } -bg $savedBg
     }
     return
 }

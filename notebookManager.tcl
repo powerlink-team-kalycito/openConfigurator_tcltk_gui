@@ -1968,7 +1968,7 @@ proc NoteBookManager::SaveTable {tableWid} {
 
     #PDO entries value is changed need to save 
     set status_save 1
-    set populatedPDOList ""
+    #set populatedPDOList ""
     Validation::ResetPromptFlag
 }
 

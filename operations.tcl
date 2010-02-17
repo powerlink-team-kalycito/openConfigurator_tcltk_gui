@@ -1894,11 +1894,20 @@ proc Operations::SingleClickNode {node} {
 	    }
     }
     # disable the object type combobox of sub objects
-    if { [string match "*SubIndex*" $node] } {
+    if { [string match "*SubIndex*" $node] && ([expr 0x$indexId > 0x1fff]) } {
         $tmpInnerf1.co_obj1 configure -state disabled
         #subobjects of index greater than 1fff exists only for index of type
         #ARRAY datatype is not editable
-	if { [ string match -nocase "ARRAY" [lindex $IndexProp 1] ] } {
+	set tempIndexObjtype [GetIndexAttributesbyPositions $nodePos $indexPos 1 ]
+    	set ErrCode [ocfmRetCode_code_get [lindex $tempIndexObjtype 0]]
+	if {$ErrCode == 0} {
+	    set IndexObjtype [lindex $tempIndexObjtype 1]
+	} else {
+	    set IndexObjtype []
+	}
+	if { [ string match -nocase "RECORD" $IndexObjtype ] } {
+	    $tmpInnerf1.co_data1 configure -state normal
+	} else {
 	    $tmpInnerf1.co_data1 configure -state disabled
 	}
     }

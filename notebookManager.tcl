@@ -2211,6 +2211,12 @@ proc NoteBookManager::ChangeValidation {framePath0 framePath comboPath {objectTy
                 $framePath.en_lower1 configure -state disabled
             }
         }
+        set validateResult [$framePath.en_value1 validate]
+	switch -- $validateResult {
+	    0 {
+		$framePath.en_value1 delete 0 end
+	    }
+	}
     } elseif {[string match "*.co_obj1" $comboPath]} {
         #based on the object type selected make other fields editable
         #VAR except default type all are editable

@@ -1950,7 +1950,7 @@ proc Operations::SingleClickNode {node} {
             $tmpInnerf1.en_value1 configure -state normal
             $tmpInnerf1.en_value1 delete 0 end
     
-            if { [string match -nocase "0x* [lindex $IndexProp 5]] } {
+            if { [string match -nocase "0x*" [lindex $IndexProp 5]] } {
                 #check whether it is hex
                 set bitInput [string range [lindex $IndexProp 5] 2 end]
                 if { [Validation::CheckHexaNumber $bitInput ] == 1 && [string length $bitInput] <= 8  && $bitInput != "" } {

@@ -1094,16 +1094,16 @@ proc ChildWindows::NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf tempRa_
 
     $treePath itemconfigure ProjectNode -text $tmpPjtName
 
-    set catchErrCode [Operations::NodeCreate 240 0 openPOWERLINK_MN]
-    set ErrCode [ocfmRetCode_code_get $catchErrCode]
-    if { $ErrCode != 0 } {
-	    if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
-		    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
-	    } else {
-		    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
-	    }
-	    return
-    }
+#    set catchErrCode [Operations::NodeCreate 240 0 openPOWERLINK_MN]
+#    set ErrCode [ocfmRetCode_code_get $catchErrCode]
+#    if { $ErrCode != 0 } {
+#	    if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+#		    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
+#	    } else {
+#		    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
+#	    }
+#	    return
+#    }
 
 
     #New project is created need to save
@@ -1114,7 +1114,8 @@ proc ChildWindows::NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf tempRa_
 
     if {$conf == "off" || $conf == "on" } {
 	    thread::send [tsv::get application importProgress] "StartProgress" 
-	    set catchErrCode [ImportXML "$tmpImpDir" 240 0]
+	    #set catchErrCode [ImportXML "$tmpImpDir" 240 0]
+	    set catchErrCode [NewProjectNode 240 0 openPOWERLINK_MN "$tmpImpDir"]
 	    set ErrCode [ocfmRetCode_code_get $catchErrCode]
 	    if { $ErrCode != 0 } {
 		    if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
@@ -1122,6 +1123,7 @@ proc ChildWindows::NewProjectCreate {tmpPjtDir tmpPjtName tmpImpDir conf tempRa_
 		    } else {
 			    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
 		    }
+		    thread::send  [tsv::set application importProgress] "StopProgress"
 		    return
 	    }
         #All the nw project has view type SIMPLE do not insert OBD icon

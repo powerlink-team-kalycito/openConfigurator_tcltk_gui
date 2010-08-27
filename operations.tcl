@@ -90,6 +90,7 @@ namespace eval Operations {
     variable ASYNC_TIMEOUT_OBJ
     variable MULTI_PRESCAL_OBJ
     variable PRES_TIMEOUT_OBJ
+    variable LOSS_SOC_TOLERANCE
 }
 
 
@@ -204,6 +205,7 @@ set Operations::ASYNC_MTU_SIZE_OBJ [list 1F98 08]
 set Operations::ASYNC_TIMEOUT_OBJ [list 1F8A 02]
 set Operations::MULTI_PRESCAL_OBJ [list 1F98 07]
 set Operations::PRES_TIMEOUT_OBJ [list 1F98 03]
+set Operations::LOSS_SOC_TOLERANCE 1C14
 
 #---------------------------------------------------------------------------------------------------
 #  Operations::about
@@ -2113,36 +2115,54 @@ proc Operations::MNProperties {node nodePos nodeId nodeType} {
         $tmpInnerf0.cycleframe.en_time configure -state normal -validate none -bg $savedBg
         $tmpInnerf0.cycleframe.en_time delete 0 end
         $tmpInnerf0.cycleframe.en_time insert 0 $cycleTimeValue
-        #set schRes [lsearch $userPrefList [list $nodeSelect *]]
-        #if { $schRes != -1 } {
             Operations::CheckConvertValue $tmpInnerf0.cycleframe.en_time $cycleTimeDatatype "dec"
-        #    if { [lindex [lindex $userPrefList $schRes] 1] == "dec" } {
-        #        set lastConv dec
-        #        $tmpInnerf0.formatframe1.ra_dec select
-        #    } elseif { [lindex [lindex $userPrefList $schRes] 1] == "hex" } {
-        #        set lastConv hex
-        #        $tmpInnerf0.formatframe1.ra_hex select
-        #    } else {
-        #        return 
-        #    }
-        #} else {
-            #if {[string match -nocase "0x*" $cycleTimeValue]} {
-            #    set lastConv hex
-            #    $tmpInnerf0.formatframe1.ra_hex select
-            #    $tmpInnerf0.en_time configure -validate key -vcmd "Validation::IsHex %P %s $tmpInnerf0.en_time %d %i $cycleTimeDatatype"
-            #} else {
-            #    set lastConv dec
-            #    $tmpInnerf0.formatframe1.ra_dec select
-            #    $tmpInnerf0.en_time configure -validate key -vcmd "Validation::IsDec %P $tmpInnerf0.en_time %d %i $cycleTimeDatatype"
-            #}    
-		    
-        #}
         lappend MNDatalist [list cycleTimeDatatype $cycleTimeDatatype]
     } else {
         #fail occured
         $tmpInnerf0.cycleframe.en_time configure -state normal -validate none
         $tmpInnerf0.cycleframe.en_time delete 0 end
         $tmpInnerf0.cycleframe.en_time configure -state disabled
+    }
+    
+    # value from 0x1C14 for Loss of SoC Tolerance
+    set lossSoCToleranceResult [GetObjectValueData $nodePos $nodeId $nodeType  [list 2 4 5] $Operations::LOSS_SOC_TOLERANCE]
+    if {[string equal "pass" [lindex $lossSoCToleranceResult 0]] == 1} {
+        set lossSoCToleranceValue [lindex $lossSoCToleranceResult 3]
+	set lossSoCToleranceDefaultValue [lindex $lossSoCToleranceResult 2]
+        set lossSoCToleranceDatatype [lindex $lossSoCToleranceResult 1]
+        
+	if {$lossSoCToleranceDefaultValue == ""} {
+	    #if empty set it to default 100 microseconds as per specification
+            set lossSoCToleranceDefaultValue 100
+        } else {
+            if { [ catch { set lossSoCToleranceDefaultValue [expr $lossSoCToleranceDefaultValue / 1000] } ] } {
+                #if error has occured set it to default 10 milliseconds i.e., 100 microseconds as per specification
+                set presponseMinimumCycleTimeValue 100
+            }
+        }
+	
+        $tmpInnerf1.en_advOption4 configure -state normal -validate none -bg $savedBg
+        $tmpInnerf1.en_advOption4 delete 0 end
+	if { $lossSoCToleranceValue == "" } {
+            #if the actual is empty assign the default value
+            set lossSoCToleranceValue $lossSoCToleranceDefaultValue
+	} else {
+	    # the value of loss of SoC Tolerance is in nanoseconds divide it by 1000 to
+	    #display it as microseconds
+	    if { [ catch { set lossSoCToleranceValue [expr $lossSoCToleranceValue / 1000] } ] } {
+		#if error has occured set it to default 10 milliseconds i.e., 100 microseconds as per specification
+		set lossSoCToleranceValue 100
+	    }
+	}
+        
+        $tmpInnerf1.en_advOption4 insert 0 $lossSoCToleranceValue
+        Operations::CheckConvertValue $tmpInnerf1.en_advOption4 $lossSoCToleranceDatatype "dec"
+        lappend MNDatalist [list lossSoCToleranceDatatype $lossSoCToleranceDatatype]
+    } else {
+        #fail occured
+        $tmpInnerf1.en_advOption4 configure -state normal -validate none
+        $tmpInnerf1.en_advOption4 delete 0 end
+        $tmpInnerf1.en_advOption4 configure -state disabled
     }
     
     # value from 0x1F98/08 for Asynchronous MTU size
@@ -2388,7 +2408,7 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
     }
     set CNFeatureMultiplexFlag [lindex $catchErrCode 1]
 
-    set catchErrCode [GetFeatureValue 240 0 $MN_FEATURES "DLLMNFeatureChaining" ]
+    set catchErrCode [GetFeatureValue 240 0 $MN_FEATURES "DLLMNPResChaining" ]
     if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
             tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
@@ -2398,7 +2418,7 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
     }
     set MNFeatureChainFlag [lindex $catchErrCode 1]
 
-    set catchErrCode [GetFeatureValue $nodeId $nodeType $CN_FEATURES "DLLCNFeatureChaining" ]
+    set catchErrCode [GetFeatureValue $nodeId $nodeType $CN_FEATURES "DLLCNPResChaining" ]
     if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
             tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
@@ -3434,8 +3454,7 @@ proc Operations::BuildProject {} {
             tk_messageBox -message "$msg" -icon warning -title "Warning" -parent .
             return
         } elseif {$errCycleTimeFlag == 1} { 
-            set result [tk_messageBox -message "$msg\nDo you want to copy the default value 50000 µs" \
-                -type yesno -icon info -title "Information" -parent .]
+            set result [tk_messageBox -message "$msg\nDo you want to copy the default value 50000 µs" -type yesno -icon info -title "Information" -parent .]
             switch -- $result {
 			    yes {
                         #hard code the value 50000 for 1006 object in MN
@@ -4048,10 +4067,10 @@ proc Operations::CleanList {node choice} {
 #  Description : Creates a node with given data
 #---------------------------------------------------------------------------------------------------
 proc Operations::NodeCreate {NodeID NodeType NodeName} {
-    set objNode [new_CNode]
-    set objNodeCollection [new_CNodeCollection]
-    set objNodeCollection [CNodeCollection_getNodeColObjectPointer]
-    set catchErrCode [new_ocfmRetCode]
+    #set objNode [new_CNode]
+    #set objNodeCollection [new_CNodeCollection]
+    #set objNodeCollection [CNodeCollection_getNodeColObjectPointer]
+    #set catchErrCode [new_ocfmRetCode]
     set catchErrCode [CreateNode $NodeID $NodeType $NodeName]
     set ErrCode [ocfmRetCode_code_get $catchErrCode]
     if { $ErrCode != 0 } {

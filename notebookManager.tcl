@@ -125,7 +125,7 @@ proc NoteBookManager::create_tab { nbpath choice } {
     label $tabInnerf0.la_empty2 -text "" 
     label $tabInnerf0.la_nam     -text "Name           " 
     label $tabInnerf0.la_empty3 -text ""
-    label $tabInnerf0_1.la_generate -text "Include index in CDC generation"
+    label $tabInnerf0_1.la_generate -text ""
     label $tabInnerf1.la_obj     -text "Object Type" 
     label $tabInnerf1.la_empty4 -text "" 
     label $tabInnerf1.la_data    -text "Data Type"  
@@ -233,6 +233,7 @@ proc NoteBookManager::create_tab { nbpath choice } {
         grid config $tabInnerf0.en_idx1 -row 0 -column 1 -sticky w -padx 0
         grid config $tabInnerf0.la_nam -row 2 -column 0 -sticky w 
         grid config $tabInnerf0.en_nam1 -row 2 -column 1  -sticky w -columnspan 1
+        
         grid config $tabInnerf0_1 -row 4 -column 0 -columnspan 2 -sticky w
         grid config $tabInnerf0_1.la_generate -row 0 -column 0 -sticky w 
         grid config $tabInnerf0_1.ch_gen -row 0 -column 1 -sticky e -padx 5
@@ -346,6 +347,9 @@ proc NoteBookManager::create_nodeFrame {nbpath choice} {
     label $tabInnerf1.la_empty6       -text ""
     label $tabInnerf1.la_seperat1     -text ""
     label $tabInnerf1.la_empty7       -text ""
+    label $tabInnerf1.la_advOption4   -text ""
+    label $tabInnerf1.la_empty8       -text ""
+    label $tabInnerf1.la_advOptionUnit4 -text ""
     
     entry $tabInnerf0.en_nodeName -width 20 -textvariable tmpNodeName$_pageCounter -relief ridge -justify center -bg white -validate key -vcmd "Validation::IsValidStr %P"
     entry $tabInnerf0.en_nodeNo   -width 20 -textvariable tmpNodeNo$_pageCounter -relief ridge -justify center -bg white 
@@ -353,6 +357,7 @@ proc NoteBookManager::create_nodeFrame {nbpath choice} {
     entry $tabInnerf1.en_advOption1 -state disabled -width 20
     entry $tabInnerf1.en_advOption2 -state disabled -width 20
     entry $tabInnerf1.en_advOption3 -state disabled -width 20
+    entry $tabInnerf1.en_advOption4 -state disabled -width 20
 
     set frame1 [frame $tabInnerf0.formatframe1]
     #set ra_dec [radiobutton $frame1.ra_dec -text "Dec" -variable ra_nodeDataType -value "dec" -command ""]
@@ -390,25 +395,30 @@ proc NoteBookManager::create_nodeFrame {nbpath choice} {
 	
         $tabInnerf0.tabTitlef1 configure -text "Advanced" 
         $tabInnerf0.en_nodeNo configure -state disabled
+	$tabInnerf1.la_advOption4 configure  -text "Loss of SoC Tolerance"
+	$tabInnerf1.la_advOptionUnit4 configure -text "µs"
         $tabInnerf1.la_advOption1 configure -text "Asynchronous MTU size"
         $tabInnerf1.la_advOptionUnit1 configure -text "Byte"
         $tabInnerf1.la_advOption2 configure -text "Asynchronous Timeout"
         $tabInnerf1.la_advOptionUnit2 configure -text "ns"
         $tabInnerf1.la_advOption3 configure -text "Multiplexing prescaler"
-        $tabInnerf1.la_advOptionUnit3 configure -text ""
 	
-        grid config $tabInnerf1.la_advOption1 -row 0 -column 1 -sticky w
-        grid config $tabInnerf1.en_advOption1 -row 0 -column 2 -padx 5
-        grid config $tabInnerf1.la_advOptionUnit1 -row 0 -column 3 -sticky w
-        grid config $tabInnerf1.la_empty4     -row 1 -column 1
-        grid config $tabInnerf1.la_advOption2 -row 2 -column 1 -sticky w
-        grid config $tabInnerf1.en_advOption2 -row 2 -column 2 -padx 5
-        grid config $tabInnerf1.la_advOptionUnit2 -row 2 -column 3 -sticky w
-        grid config $tabInnerf1.la_empty5     -row 3 -column 1
-        grid config $tabInnerf1.la_advOption3 -row 4 -column 1 -sticky w
-        grid config $tabInnerf1.en_advOption3 -row 4 -column 2 -padx 5
-        grid config $tabInnerf1.la_advOptionUnit3 -row 4 -column 3 -sticky w
-        grid config $tabInnerf1.la_empty6     -row 5 -column 1
+	grid config $tabInnerf1.la_advOption4 -row 0 -column 1 -sticky w
+	grid config $tabInnerf1.en_advOption4 -row 0 -column 2 -padx 5
+	grid config $tabInnerf1.la_advOptionUnit4 -row 0 -column 3 -sticky w
+        grid config $tabInnerf1.la_empty8     -row 1 -column 1
+        grid config $tabInnerf1.la_advOption1 -row 2 -column 1 -sticky w
+        grid config $tabInnerf1.en_advOption1 -row 2 -column 2 -padx 5
+        grid config $tabInnerf1.la_advOptionUnit1 -row 2 -column 3 -sticky w
+        grid config $tabInnerf1.la_empty4     -row 3 -column 1
+        grid config $tabInnerf1.la_advOption2 -row 4 -column 1 -sticky w
+        grid config $tabInnerf1.en_advOption2 -row 4 -column 2 -padx 5
+        grid config $tabInnerf1.la_advOptionUnit2 -row 4 -column 3 -sticky w
+        grid config $tabInnerf1.la_empty5     -row 5 -column 1
+        grid config $tabInnerf1.la_advOption3 -row 6 -column 1 -sticky w
+        grid config $tabInnerf1.en_advOption3 -row 6 -column 2 -padx 5
+        grid config $tabInnerf1.la_advOptionUnit3 -row 6 -column 3 -sticky w
+        grid config $tabInnerf1.la_empty6     -row 7 -column 1
 	
         #$ra_dec configure -command "NoteBookManager::ConvertMNDec $tabInnerf0 $tabInnerf1"
         #$ra_hex configure -command "NoteBookManager::ConvertMNHex $tabInnerf0 $tabInnerf1"
@@ -1479,6 +1489,7 @@ proc NoteBookManager::SaveMNValue {nodePos frame0 frame1} {
     
     set MNDatatypeObjectPathList [list \
         [list cycleTimeDatatype $Operations::CYCLE_TIME_OBJ $frame0.cycleframe.en_time] \
+	[list lossSoCToleranceDatatype $Operations::LOSS_SOC_TOLERANCE $frame1.en_advOption4] \
         [list asynMTUSizeDatatype $Operations::ASYNC_MTU_SIZE_OBJ $frame1.en_advOption1] \
         [list asynTimeoutDatatype $Operations::ASYNC_TIMEOUT_OBJ $frame1.en_advOption2] \
         [list multiPrescalerDatatype $Operations::MULTI_PRESCAL_OBJ $frame1.en_advOption3] ]
@@ -1507,6 +1518,13 @@ proc NoteBookManager::SaveMNValue {nodePos frame0 frame1} {
                     set dispMsg 1
                     continue
                 }
+
+		if { [ lindex $tempDatatype 0 ] == "lossSoCToleranceDatatype" } {
+		    if { [ catch { set validValue [expr $validValue * 1000] } ] } {
+			#error in conversion
+			continue
+		    }
+		}
                 set reqFieldResult [Operations::GetObjectValueData $nodePos $nodeId $nodeType [list 0 9] [lindex $objectList 0] [lindex $objectList 1] ]
                 if { [lindex $reqFieldResult 0] == "pass" } {
                     set objName [lindex $reqFieldResult 1]

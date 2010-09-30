@@ -90,6 +90,7 @@ namespace eval Operations {
     variable ASYNC_TIMEOUT_OBJ
     variable MULTI_PRESCAL_OBJ
     variable PRES_TIMEOUT_OBJ
+    variable PRES_TIMEOUT_LIMIT_OBJ
     variable LOSS_SOC_TOLERANCE
 }
 
@@ -143,11 +144,9 @@ tsv::set application importProgress [thread::create -joinable {
 tsv::set application helpStatus 0
 tsv::set application helpHtml [thread::create -joinable {
     proc launchHelpTool {} {
-        #package require Tk
         global masterRootDir
         global tcl_platform
         global widgetColor
-        #global auto_path
         set masterRootDir [tsv::get application rootDir]
        
         source [file join $masterRootDir lib helpviewer helpviewer.tcl]
@@ -204,7 +203,7 @@ set Operations::CYCLE_TIME_OBJ 1006
 set Operations::ASYNC_MTU_SIZE_OBJ [list 1F98 08]
 set Operations::ASYNC_TIMEOUT_OBJ [list 1F8A 02]
 set Operations::MULTI_PRESCAL_OBJ [list 1F98 07]
-set Operations::PRES_TIMEOUT_OBJ [list 1F98 03]
+set Operations::PRES_TIMEOUT_LIMIT_OBJ [list 1F98 03]
 set Operations::LOSS_SOC_TOLERANCE 1C14
 
 #---------------------------------------------------------------------------------------------------
@@ -606,7 +605,6 @@ proc Operations::openProject {projectfilename} {
         set lastVideoModeSel $videoMode
         set viewChgFlg [boolp_value $viewChgFlg]
     }
-    #puts "Operations::openProject videoMode->$videoMode Operations::viewType->$Operations::viewType"
 
     set result [ Operations::RePopulate $projectDir $projectName ]
     thread::send [tsv::set application importProgress] "StopProgress"
@@ -2137,7 +2135,7 @@ proc Operations::MNProperties {node nodePos nodeId nodeType} {
         } else {
             if { [ catch { set lossSoCToleranceDefaultValue [expr $lossSoCToleranceDefaultValue / 1000] } ] } {
                 #if error has occured set it to default 10 milliseconds i.e., 100 microseconds as per specification
-                set presponseMinimumCycleTimeValue 100
+                set lossSoCToleranceDefaultValue 100
             }
         }
 	
@@ -2268,6 +2266,16 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
     set tmpInnerf1 [lindex $f4 2]
     set tmpInnerf2 [lindex $f4 4]
     
+    #get the MN node id and node position
+    set mnNodeId 240
+    set mnNodeType 0
+    set mnNodePos [new_intp]
+    set mnExistfFlag [new_boolp]
+    set catchErrCode [IfNodeExists $mnNodeId $mnNodeType $mnNodePos $mnExistfFlag]
+    set mnNodePos [intp_value $mnNodePos]
+    set mnExistfFlag [boolp_value $mnExistfFlag]
+    set mnErrCode [ocfmRetCode_code_get $catchErrCode]
+    
     #get node name and display it
     set dummyNodeId [new_intp]
     set tmp_stationType [new_EStationTypep]
@@ -2303,44 +2311,84 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
     
     # value from 1F98 03 for PResponse Cycle time
     set CNDatalist ""
-    set presponseCycleTimeResult [GetObjectValueData $nodePos $nodeId $nodeType [list 2 4 5 ] [lindex $Operations::PRES_TIMEOUT_OBJ 0] [lindex $Operations::PRES_TIMEOUT_OBJ 1] ]
-    if {[string equal "pass" [lindex $presponseCycleTimeResult 0]] == 1} {
-        set presponseMinimumCycleTimeValue [lindex $presponseCycleTimeResult 2]
-        if {$presponseMinimumCycleTimeValue == ""} {
-            set presponseMinimumCycleTimeValue 0
+    
+    #clear the entry box and disable it
+    $tmpInnerf0.cycleframe.en_time configure -state normal -validate none
+    $tmpInnerf0.cycleframe.en_time delete 0 end
+    $tmpInnerf0.cycleframe.en_time configure -state disabled
+	
+    set nodeIdSidx [lindex [Validation::InputToHex $nodeId INTEGER8] 0]
+    set nodeIdSidx [ string range $nodeIdSidx 2 end ]
+    if { [string length $nodeIdSidx] < 2 } {
+	set nodeIdSidx 0$nodeIdSidx
+    }
+    set Operations::PRES_TIMEOUT_OBJ [list 1F92 $nodeIdSidx]
+	
+    set presponseLimitCycleTimeResult [GetObjectValueData $nodePos $nodeId $nodeType [list 2 4 5 ] [lindex $Operations::PRES_TIMEOUT_LIMIT_OBJ 0] [lindex $Operations::PRES_TIMEOUT_LIMIT_OBJ 1] ]
+    if {[string equal "pass" [lindex $presponseLimitCycleTimeResult 0]] == 1} {
+        set presponseLimitMinimumCycleTimeValue [lindex $presponseLimitCycleTimeResult 2]
+        if {$presponseLimitMinimumCycleTimeValue == ""} {
+            set presponseLimitMinimumCycleTimeValue 0
         } else {
-            if { [ catch { set presponseMinimumCycleTimeValue [expr $presponseMinimumCycleTimeValue / 1000] } ] } {
+            if { [ catch { set presponseLimitMinimumCycleTimeValue [expr $presponseLimitMinimumCycleTimeValue / 1000] } ] } {
                 #if error has occured set it to default 0
-                set presponseMinimumCycleTimeValue 0
+                set presponseLimitMinimumCycleTimeValue 0
             }
         }
 
-        set presponseActualCycleTimeValue [lindex $presponseCycleTimeResult 3]
-        if { $presponseActualCycleTimeValue == "" } {
+        set presponseLimitActualCycleTimeValue [lindex $presponseLimitCycleTimeResult 3]
+        if { $presponseLimitActualCycleTimeValue == "" } {
             #if the actual is empty assign the default value and add 25 microseconds
-            set presponseActualCycleTimeValue [expr $presponseMinimumCycleTimeValue + 25]
+            set presponseLimitActualCycleTimeValue [expr $presponseLimitMinimumCycleTimeValue + 25]
         } else {
             # the value of Presponse timeout is in nanoseconds divide it by 1000 to
             #display it as microseconds
-            if { [ catch { set presponseActualCycleTimeValue [expr $presponseActualCycleTimeValue / 1000] } ] } {
+            if { [ catch { set presponseLimitActualCycleTimeValue [expr $presponseLimitActualCycleTimeValue / 1000] } ] } {
                 #if error has occured set it to default 25 micro seconds
-                set presponseActualCycleTimeValue 25
+                set presponseLimitActualCycleTimeValue 25
             }
         }
         
-        set presponseCycleTimeDatatype [lindex $presponseCycleTimeResult 1]
+        set presponseLimitCycleTimeDatatype [lindex $presponseLimitCycleTimeResult 1]
+	if { $mnErrCode == 0 && $mnExistfFlag == 1 } {
+            #the node exist continue 
+            set presponseCycleTimeResult [GetObjectValueData $mnNodePos $mnNodeId $mnNodeType [list 2 5] [lindex $Operations::PRES_TIMEOUT_OBJ 0] [lindex $Operations::PRES_TIMEOUT_OBJ 1] ]
+            if {[string equal "pass" [lindex $presponseCycleTimeResult 0]] == 1} {
+		
+		set presponseActualCycleTimeValue [lindex $presponseCycleTimeResult 2]
+		# the value of Presponse timeout is in nanoseconds divide it by 1000 to
+		#display it as microseconds
+		if { [ catch { set presponseActualCycleTimeValue [expr $presponseActualCycleTimeValue / 1000] } ] } {
+		    #if error has occured set it to the calculated
+		    set presponseLimitActualCycleTimeValue $presponseLimitActualCycleTimeValue
+		}
+		if { ([ catch { $presponseActualCycleTimeValue < $presponseLimitActualCycleTimeValue} ]) \
+		    && ($presponseActualCycleTimeValue < $presponseLimitActualCycleTimeValue) } {
+		    
+		    set presponseActualCycleTimeValue $presponseLimitActualCycleTimeValue		    
+		}
+		set presponseCycleTimeDatatype [lindex $presponseCycleTimeResult 1]
+		
+		
+		$tmpInnerf0.cycleframe.en_time configure -state normal -validate none -bg white
+		$tmpInnerf0.cycleframe.en_time delete 0 end
+		$tmpInnerf0.cycleframe.en_time insert 0 $presponseActualCycleTimeValue
+		
+		Operations::CheckConvertValue $tmpInnerf0.cycleframe.en_time $presponseCycleTimeDatatype "dec"
+		# the user cannot enter value which is less than the obtained minimum value
+		#NOTE:: the minimum value is shown from the vcmd cmd if vcmd then look into
+		#savecnvalue to modify the same
+		$tmpInnerf0.cycleframe.en_time configure -validate key -vcmd "Validation::ValidatePollRespTimeout \
+                %P $tmpInnerf0.cycleframe.en_time %d %i %V $presponseLimitMinimumCycleTimeValue $presponseCycleTimeDatatype"
+		
+		lappend CNDatalist [list presponseCycleTimeDatatype $presponseCycleTimeDatatype]
+	    }
+	}
+	
+	
         
-        $tmpInnerf0.cycleframe.en_time configure -state normal -validate none -bg white
-        $tmpInnerf0.cycleframe.en_time delete 0 end
-        $tmpInnerf0.cycleframe.en_time insert 0 $presponseActualCycleTimeValue
         #set schRes [lsearch $userPrefList [list $nodeSelect *]]
         #if { $schRes != -1 } {
-            Operations::CheckConvertValue $tmpInnerf0.cycleframe.en_time $presponseCycleTimeDatatype "dec"
-            # the user cannot enter value which is less than the obtained minimum value
-            #NOTE:: the minimum value is shown from the vcmd cmd if vcmd then look into
-            #savecnvalue to modify the same
-            $tmpInnerf0.cycleframe.en_time configure -validate key -vcmd "Validation::ValidatePollRespTimeout \
-                %P $tmpInnerf0.cycleframe.en_time %d %i %V $presponseMinimumCycleTimeValue $presponseCycleTimeDatatype"
         #    if { [lindex [lindex $userPrefList $schRes] 1] == "dec" } {
         #        set lastConv dec
         #        $tmpInnerf0.formatframe1.ra_dec select
@@ -2362,12 +2410,11 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
         #    }    
 		#    
         #}
-        lappend CNDatalist [list presponseCycleTimeDatatype $presponseCycleTimeDatatype]
     } else {
         #fail occured
-        $tmpInnerf0.cycleframe.en_time configure -state normal -validate none
-        $tmpInnerf0.cycleframe.en_time delete 0 end
-        $tmpInnerf0.cycleframe.en_time configure -state disabled
+        #$tmpInnerf0.cycleframe.en_time configure -state normal -validate none
+        #$tmpInnerf0.cycleframe.en_time delete 0 end
+        #$tmpInnerf0.cycleframe.en_time configure -state disabled
     }
    
    $tmpInnerf2.ch_adv deselect
@@ -2433,15 +2480,16 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
         #check the value of MN multiplex prescaler if it is zero disable the multiplex radiobutton
         #even if the features are available. The value of force cycle list starts from 1 and lists
         #upto the multiplex prescaler value
-        set mnNodeId 240
-        set mnNodeType 0
-        set mnNodePos [new_intp]
-        set mnExistfFlag [new_boolp]
-        set catchErrCode [IfNodeExists $mnNodeId $mnNodeType $mnNodePos $mnExistfFlag]
-        set mnNodePos [intp_value $mnNodePos]
-        set mnExistfFlag [boolp_value $mnExistfFlag]
-        set ErrCode [ocfmRetCode_code_get $catchErrCode]
-        if { $ErrCode == 0 && $mnExistfFlag == 1 } {
+	
+        #set mnNodeId 240
+        #set mnNodeType 0
+        #set mnNodePos [new_intp]
+        #set mnExistfFlag [new_boolp]
+        #set catchErrCode [IfNodeExists $mnNodeId $mnNodeType $mnNodePos $mnExistfFlag]
+        #set mnNodePos [intp_value $mnNodePos]
+        #set mnExistfFlag [boolp_value $mnExistfFlag]
+        #set mnErrCode [ocfmRetCode_code_get $catchErrCode]
+        if { $mnErrCode == 0 && $mnExistfFlag == 1 } {
             #the node exist continue 
         
             set multiPrescaler [GetObjectValueData $mnNodePos $mnNodeId $mnNodeType [list 2 5] [lindex $Operations::MULTI_PRESCAL_OBJ 0] [lindex $Operations::MULTI_PRESCAL_OBJ 1] ]
@@ -3725,13 +3773,7 @@ proc Operations::ReImport {} {
 		    Console::DisplayInfo "Imported file $tmpImpDir for Node ID:$nodeId"
 	    }
 
-#	    pack forget [lindex $f0 0]
-#	    pack forget [lindex $f1 0]
-#	    pack forget [lindex $f2 0]
-#	    [lindex $f2 1] cancelediting
-#	    [lindex $f2 1] configure -state disabled
-#        pack forget [lindex $f3 0]
-#        pack forget [lindex $f4 0]
+
 	    Operations::RemoveAllFrames
 	    #xdc/xdd is reimported need to save
 	    set status_save 1
@@ -3743,13 +3785,6 @@ proc Operations::ReImport {} {
 			    $treePath insert 0 MN$tmpNode OBD$tmpNode-1 -text "OBD" -open 0 -image [Bitmap::get pdo]
 		    }
 	    }
-#	    pack forget [lindex $f0 0]
-#	    pack forget [lindex $f1 0]
-#	    pack forget [lindex $f2 0]
-#	    [lindex $f2 1] cancelediting
-#	    [lindex $f2 1] configure -state disabled
-#        pack forget [lindex $f3 0]
-#        pack forget [lindex $f4 0]
 	    Operations::RemoveAllFrames
 
 	    Operations::CleanList $node 0
@@ -4067,10 +4102,6 @@ proc Operations::CleanList {node choice} {
 #  Description : Creates a node with given data
 #---------------------------------------------------------------------------------------------------
 proc Operations::NodeCreate {NodeID NodeType NodeName} {
-    #set objNode [new_CNode]
-    #set objNodeCollection [new_CNodeCollection]
-    #set objNodeCollection [CNodeCollection_getNodeColObjectPointer]
-    #set catchErrCode [new_ocfmRetCode]
     set catchErrCode [CreateNode $NodeID $NodeType $NodeName]
     set ErrCode [ocfmRetCode_code_get $catchErrCode]
     if { $ErrCode != 0 } {

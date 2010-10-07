@@ -6,7 +6,7 @@
 	<META NAME="GENERATOR" CONTENT="OpenOffice.org 3.0  (Win32)">
 	<META NAME="AUTHOR" CONTENT="vikram ">
 	<META NAME="CREATED" CONTENT="20091120;20071400">
-	<META NAME="CHANGED" CONTENT="20100119;17192100">
+	<META NAME="CHANGED" CONTENT="20101007;15235600">
 	<META NAME="CHANGEDBY" CONTENT="deepak">
 	<META NAME="CHANGEDBY" CONTENT="deepak">
 	<META NAME="CHANGEDBY" CONTENT="vikram ">
@@ -30,21 +30,24 @@ and edit the following clicking a MN node from Network browser</FONT></FONT></P>
 	<FONT FACE="Times New Roman, serif"><FONT SIZE=3>Name of the
 	managing node</FONT></FONT></P>
 	<LI><P ALIGN=JUSTIFY STYLE="margin-bottom: 0in; font-weight: normal; line-height: 0.17in">
-	<FONT FACE="Times New Roman, serif"><FONT SIZE=3>Cycle time : value
-	of the object 1006</FONT></FONT></P>
+	<FONT FACE="Times New Roman, serif"><FONT SIZE=3>Cycle time         
+	            : value of the object 1006</FONT></FONT></P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-bottom: 0in; font-weight: normal; line-height: 0.17in">
+	<FONT FACE="Times New Roman, serif"><FONT SIZE=3>Loss of SoC
+	Tolerance   : value of the object 1C14</FONT></FONT></P>
 	<LI><P ALIGN=JUSTIFY STYLE="margin-bottom: 0in; font-weight: normal; line-height: 0.17in">
 	<FONT FACE="Times New Roman, serif"><FONT SIZE=3>Asynchronous MTU
 	size : value of the Object 1F98 SubObject 08</FONT></FONT></P>
 	<LI><P ALIGN=JUSTIFY STYLE="margin-bottom: 0in; font-weight: normal; line-height: 0.17in">
 	<FONT FACE="Times New Roman, serif"><FONT SIZE=3>Asynchronous
-	Timeout : value of the object 1F8A SubObject 07</FONT></FONT></P>
+	Timeout    : value of the object 1F8A SubObject 07</FONT></FONT></P>
 	<LI><P ALIGN=JUSTIFY STYLE="margin-bottom: 0in; font-weight: normal; line-height: 0.17in">
 	<FONT FACE="Times New Roman, serif"><FONT SIZE=3>Multiplexing
-	prescaler : value of the Object 1F98 SubObject 07. This value can be
-	edited only if the MN supports multiplexing feature. Multiplex cycle
-	assigned for CN cannot exceed this value. When the Multiplexing
-	prescaler is changed with lesser than the previous value the
-	automatically assigned multiplex cycle values of CNs are
+	prescaler   : value of the Object 1F98 SubObject 07. This value can
+	be edited only if the MN supports multiplexing feature. Multiplex
+	cycle assigned for CN cannot exceed this value. When the
+	Multiplexing prescaler is changed with lesser than the previous
+	value the automatically assigned multiplex cycle values of CNs are
 	recalculated. When this value is set to zero the multiplexed station
 	for the CN will be disabled.</FONT></FONT></P>
 </UL>
@@ -64,9 +67,8 @@ and edit the following clicking a CN node from Network browser</FONT></FONT></P>
 	<FONT FACE="Times New Roman, serif"><FONT SIZE=3>Node Number</FONT></FONT></P>
 	<LI><P ALIGN=JUSTIFY STYLE="margin-bottom: 0in; font-weight: normal; line-height: 0.17in">
 	<FONT FACE="Times New Roman, serif"><FONT SIZE=3>Poll Response
-	Timeout : value of Object 1006 the value set here is saved at MN to
-	the object 1F92 Subobject node number of CN. The 1006 object of CN
-	is not updated with the value.</FONT></FONT></P>
+	Timeout : value of Object 1F92 at MN Subobject node number of CN.
+	The value entered cannot be less than default value of  Object 1F98  Subobject 03</FONT></FONT></P>
 </UL>
 <P ALIGN=JUSTIFY STYLE="margin-bottom: 0in; line-height: 0.17in"><BR>
 </P>

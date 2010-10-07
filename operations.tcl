@@ -3543,6 +3543,10 @@ proc Operations::BuildProject {} {
 	    }
     }
 
+    if { [file isdirectory $projectDir] && ![file isdirectory  [file join $projectDir cdc_xap]] } {
+	catch {file mkdir [file join $projectDir cdc_xap]}
+    }
+    
     thread::send [tsv::get application importProgress] "StartProgress"	
     set catchErrCode [GenerateCDC [file join $projectDir cdc_xap] ]
     set ErrCode [ocfmRetCode_code_get $catchErrCode]

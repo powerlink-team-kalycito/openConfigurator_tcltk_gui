@@ -733,8 +733,8 @@ This file is used as a dictionary by openCONFIGURATOR for adding indexex/subinde
             <SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="const" defaultValue="4" PDOmapping="no"/>
             <SubObject subIndex="01" name="Release_BOOL" objectType="7" dataType="0001" accessType="rw" defaultValue="0" PDOmapping="no" />
             <SubObject subIndex="02" name="CmdID_U8" objectType="7" dataType="0005" accessType="rw" defaultValue="FF" PDOmapping="no"/>
-            <SubObject subIndex="03" name="PResMaxLatency_U32" objectType="7" dataType="0005" accessType="rw" defaultValue="00" PDOmapping="no"/>
-            <SubObject subIndex="04" name="PReqActPayloadLimit_U16" objectType="7" dataType="000F" accessType="rw" defaultValue="none" PDOmapping="no"/>
+            <SubObject subIndex="03" name="CmdTarget_U8" objectType="7" dataType="0005" accessType="rw" defaultValue="00" PDOmapping="no"/>
+            <SubObject subIndex="04" name="CmdData_DOM" objectType="7" dataType="000F" accessType="rw" defaultValue="none" PDOmapping="no"/>
  	</Object>
 </ObjectList>
       </ApplicationLayers>

@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.2.1
+Encoding=UTF-8
+Name=openCONFIGURATOR
+Type=Application
+GenericName=openCONFIGURATOR
+Comment=Graphical User Interface for openCONFIGURATOR
+Exec=openCONFIGURATOR
+Icon=flair
+Categories=Development;
+GenericName[en_IN]=openCONFIGURATOR

@@ -539,6 +539,8 @@ proc Operations::OpenProjectWindow { } {
     set lastOpenPjt $projectfilename
 
     Operations::openProject $projectfilename
+#/////////////////////////////////////
+puts "----------OpenPorjectWindow--------END------GUI"
 }
 
 #---------------------------------------------------------------------------------------------------
@@ -557,7 +559,8 @@ proc Operations::openProject {projectfilename} {
     global ra_auto
     global lastVideoModeSel
     global viewChgFlg
-
+#/////////////////////////////////////////
+puts "---------Open Project-----------GUI"
     #Operations::CloseProject is called to delete node and insert tree
     Operations::CloseProject
 
@@ -615,7 +618,8 @@ proc Operations::openProject {projectfilename} {
     } else {
 	    Console::DisplayErrMsg "Error in opening project $tempPjtName at $tempPjtDir"
     }
-	
+#///////////////////////////////////////////
+puts "---------Open Project------END-----GUI"	
 	return 1
 }
 
@@ -634,10 +638,10 @@ proc Operations::RePopulate { projectDir projectName } {
     global nodeIdList
     global mnCount
     global cnCount	
-
     #reset the nodeIdList
     set nodeIdList ""
-
+#////////////////////////////
+puts "-----Repopulate--------GUI"
     set mnCount 1
     set cnCount 1
 
@@ -655,6 +659,9 @@ proc Operations::RePopulate { projectDir projectName } {
             set tmp_stationType [new_EStationTypep]
 			set tmp_forceCycleFlag [new_boolp]
 		    set catchErrCode [GetNodeAttributesbyNodePos $inc $tmp_nodeId $tmp_stationType $tmp_forceCycleFlag]
+#puts "Node Info"
+#puts $tmp_nodeId
+#puts $tmp_stationType
 		    set ErrCode [ocfmRetCode_code_get [lindex $catchErrCode 0]]
 		    if { $ErrCode == 0 } {
 			    set nodeId [intp_value $tmp_nodeId]
@@ -1290,6 +1297,8 @@ proc Operations::UnbindTree {} {
 proc Operations::SingleClickNode {node} {
     variable notebook
 
+puts "----SingleClickNode----GUI"
+
     global treePath
     global nodeIdList
     global f0
@@ -1607,6 +1616,9 @@ proc Operations::SingleClickNode {node} {
     }
 
     if {[string match "*SubIndex*" $node]} {
+
+puts "---SubIndex Found-------GUI"
+puts $node
 	    set tmpInnerf0 [lindex $f1 1]
 	    set tmpInnerf1 [lindex $f1 2]
 	    set subIndexId [string range [$treePath itemcget $node -text] end-2 end-1]
@@ -1629,6 +1641,14 @@ proc Operations::SingleClickNode {node} {
 	    set IndexProp []
 	    for {set cnt 0 } {$cnt <= 9} {incr cnt} {
 		    set tempIndexProp [GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos $cnt ]
+#////////////////////////////////////////////
+puts "---SubIndexAttributes---------GUI"
+puts $nodePos
+puts $indexPos
+puts $subIndexPos
+puts $cnt
+puts $result
+puts $IndexProp
 		    set ErrCode [ocfmRetCode_code_get [lindex $tempIndexProp 0]]
 		    if {$ErrCode == 0} {	
 			    lappend IndexProp [lindex $tempIndexProp 1]
@@ -1741,6 +1761,10 @@ proc Operations::SingleClickNode {node} {
     $tmpInnerf1.en_value1 configure -state normal -validate none -bg $savedBg
     $tmpInnerf1.en_value1 delete 0 end
     $tmpInnerf1.en_value1 insert 0 [lindex $IndexProp 5]
+
+#The Limit check for importing the PResTO is not done here as in case of the node import.
+puts "The Inserted Value"
+puts [lindex $IndexProp 5]
 
     $tmpInnerf1.en_lower1 configure -state normal -validate none
     $tmpInnerf1.en_lower1 delete 0 end
@@ -2075,6 +2099,11 @@ proc Operations::MNProperties {node nodePos nodeId nodeType} {
     set tmp_stationType [new_EStationTypep]
 	set tmp_forceCycleFlag [new_boolp]
     set catchErrCode [GetNodeAttributesbyNodePos $nodePos $dummyNodeId $tmp_stationType $tmp_forceCycleFlag]
+puts "----MNProperties------GUI"
+puts $nodePos 
+puts $dummyNodeId
+puts $tmp_stationType
+puts $tmp_forceCycleFlag 
     if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
             tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
@@ -2280,7 +2309,13 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
     set dummyNodeId [new_intp]
     set tmp_stationType [new_EStationTypep]
 	set tmp_forceCycleFlag [new_boolp]
+#///////////////////////////////////////////////////////////
+puts "GOT YOU!!! :)"
     set catchErrCode [GetNodeAttributesbyNodePos $nodePos $dummyNodeId $tmp_stationType $tmp_forceCycleFlag]
+#puts $nodePos 
+#puts $dummyNodeId 
+#puts $tmp_stationType
+#puts $tmp_forceCycleFlag
     if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
     	    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
@@ -2323,8 +2358,14 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
 	set nodeIdSidx 0$nodeIdSidx
     }
     set Operations::PRES_TIMEOUT_OBJ [list 1F92 $nodeIdSidx]
-	
+#////////////////////////////////////////////////////////////////
+puts "presponseLimitCycleTimeResult--MACRO--GUI"
+puts $Operations::PRES_TIMEOUT_OBJ	
     set presponseLimitCycleTimeResult [GetObjectValueData $nodePos $nodeId $nodeType [list 2 4 5 ] [lindex $Operations::PRES_TIMEOUT_LIMIT_OBJ 0] [lindex $Operations::PRES_TIMEOUT_LIMIT_OBJ 1] ]
+puts "presponseLimitCycleTimeResult--MACRO--GUI"
+puts $Operations::PRES_TIMEOUT_LIMIT_OBJ
+puts "presponseLimitCycleTimeResult---GUI"
+puts $presponseLimitCycleTimeResult
     if {[string equal "pass" [lindex $presponseLimitCycleTimeResult 0]] == 1} {
         set presponseLimitMinimumCycleTimeValue [lindex $presponseLimitCycleTimeResult 2]
         if {$presponseLimitMinimumCycleTimeValue == ""} {
@@ -2354,7 +2395,7 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
             #the node exist continue 
             set presponseCycleTimeResult [GetObjectValueData $mnNodePos $mnNodeId $mnNodeType [list 2 5] [lindex $Operations::PRES_TIMEOUT_OBJ 0] [lindex $Operations::PRES_TIMEOUT_OBJ 1] ]
             if {[string equal "pass" [lindex $presponseCycleTimeResult 0]] == 1} {
-		
+#NO NULL CHECK FOr THE VALUE RETURNED
 		set presponseActualCycleTimeValue [lindex $presponseCycleTimeResult 2]
 		# the value of Presponse timeout is in nanoseconds divide it by 1000 to
 		#display it as microseconds
@@ -2362,25 +2403,30 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
 		    #if error has occured set it to the calculated
 		    set presponseLimitActualCycleTimeValue $presponseLimitActualCycleTimeValue
 		}
-		if { ([ catch { $presponseActualCycleTimeValue < $presponseLimitActualCycleTimeValue} ]) \
-		    && ($presponseActualCycleTimeValue < $presponseLimitActualCycleTimeValue) } {
-		    
-		    set presponseActualCycleTimeValue $presponseLimitActualCycleTimeValue		    
-		}
+#Validation of the Value for the PResTimeOut// Not equivalent to the setting time
+#		if { ([ catch { $presponseActualCycleTimeValue < $presponseLimitActualCycleTimeValue} ]) \
+#		    && ($presponseActualCycleTimeValue < $presponseLimitActualCycleTimeValue) } {
+#		    
+#		    set presponseActualCycleTimeValue $presponseLimitActualCycleTimeValue		    
+#		}
 		set presponseCycleTimeDatatype [lindex $presponseCycleTimeResult 1]
 		
 		
 		$tmpInnerf0.cycleframe.en_time configure -state normal -validate none -bg white
 		$tmpInnerf0.cycleframe.en_time delete 0 end
 		$tmpInnerf0.cycleframe.en_time insert 0 $presponseActualCycleTimeValue
+
+puts "presponseActualCycleTimeValue:"
+puts $presponseActualCycleTimeValue
 		
 		Operations::CheckConvertValue $tmpInnerf0.cycleframe.en_time $presponseCycleTimeDatatype "dec"
 		# the user cannot enter value which is less than the obtained minimum value
 		#NOTE:: the minimum value is shown from the vcmd cmd if vcmd then look into
 		#savecnvalue to modify the same
-		$tmpInnerf0.cycleframe.en_time configure -validate key -vcmd "Validation::ValidatePollRespTimeout \
-                %P $tmpInnerf0.cycleframe.en_time %d %i %V $presponseLimitMinimumCycleTimeValue $presponseCycleTimeDatatype"
-		
+#///////////////////////////The validation for the PResTO
+		$tmpInnerf0.cycleframe.en_time configure -validate key -vcmd "Validation::ValidatePollRespTimeoutMinimum \
+                %P $tmpInnerf0.cycleframe.en_time %d %i %V $presponseLimitActualCycleTimeValue $presponseLimitMinimumCycleTimeValue $presponseCycleTimeDatatype"
+
 		lappend CNDatalist [list presponseCycleTimeDatatype $presponseCycleTimeDatatype]
 	    }
 	}
@@ -2589,6 +2635,8 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
 #---------------------------------------------------------------------------------------------------
 proc Operations::GetObjectValueData {nodePos nodeId nodeType attributeList indexId {subIndexId ""} } {
     set indexPos [new_intp]
+#///////////////////////////////////////
+puts "---------GetObjectValueData---------GUI"
     if { $subIndexId == "" } {
     	#no subindex get the index
         set existCmd "IfIndexExists $nodeId $nodeType $indexId $indexPos"
@@ -2623,10 +2671,15 @@ proc Operations::GetObjectValueData {nodePos nodeId nodeType attributeList index
         #    } else {
         #	tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
         #    }
+#///////////////////////////////////////////////
+puts "GetObjectValueData-----Result(Attribute) per iteration----Failed"
         return fail
         }
         set result [lindex $catchErr 1]
         lappend resultList $result
+puts "GetObjectValueData-----Result(Attribute) per iteration-"
+puts $listAttrib
+puts	$result
     }
     return  $resultList
 }
@@ -2709,7 +2762,8 @@ proc Operations::Saveproject {} {
     global projectName
     global projectDir
     global status_save
-
+#/////////////////////////////////
+puts "-------Saveproject--------GUI"
     if {$projectDir == "" || $projectName == "" } {
 	    #there is no project directory or project name no need to save
 	    return
@@ -3232,6 +3286,7 @@ proc FindSpace::Find { searchStr {node ""} {mode 0} } {
 								    }
 							    } elseif {$chk == 1} {
 								    set chk 0
+
 							    }
 						    }
 					    }	
@@ -3703,6 +3758,7 @@ proc Operations::Transfer {} {
 #  Operations::ReImport
 # 
 #  Arguments : -
+
 #
 #  Results : -
 #
@@ -3876,6 +3932,7 @@ proc Operations::DeleteTreeNode {} {
 	    } elseif {$nodeType == 1} {
 		    #it is a CN so delete the node entirely
 		    set catchErrCode [DeleteNode $nodeId $nodeType]
+
 	    } else {
 		    return
 	    }

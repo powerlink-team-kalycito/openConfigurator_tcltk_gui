@@ -1082,6 +1082,7 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
     global status_save
     global LOWER_LIMIT
     global UPPER_LIMIT
+puts "-----NoteBookManager::SaveValue-------GUI"
     
     #reloadView will call the Opertions::Singleclicknode so as when for index
     #2000 and above is saved the datatype validation will take effect
@@ -1611,22 +1612,48 @@ proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 frame2 
             return
         }
     }
-    
+#////////////////////////////////////////////////////////////////////////////
+#The entered PresTimeout is validated against the default timeout value
+   
     #validate whether the entered cycle reponse time is greater tha 1F98 03 value
     set validateResult [$frame0.cycleframe.en_time validate]
+puts "Validation Result from GUI --"
+puts $validateResult
     switch -- $validateResult {
         0 {
-            #NOTE:: the minimum value is got from vcmd
-            set minimumvalue [ lindex [$frame0.cycleframe.en_time cget -vcmd] end-1]
-            tk_messageBox -message "The Entered value should not be less than the minimum value $minimumvalue" -parent . -icon warning -title "Warning"
-            Validation::ResetPromptFlag
-            return
+				#NOTE:: the minimum value is got from vcmd
+   				set minimumvalue [ lindex [$frame0.cycleframe.en_time cget -vcmd] end-1]
+				tk_messageBox -message "The Entered value should not be less than the minimum value $minimumvalue" -parent . -icon warning -title "Error"
+   				Validation::ResetPromptFlag
         }
         1 {
-            #the value is valid can continue
+				set validateResultConfirm [$frame0.cycleframe.en_time validate]
+puts "Validation Result from GUI --"
+puts $validateResultConfirm						
+				switch -- $validateResultConfirm {
+					0 {
+ 				        set minimumvalue [ lindex [$frame0.cycleframe.en_time cget -vcmd] end-2]
+						set answer [tk_messageBox -message "The Entered value is less than the Set latency value $minimumvalue, Do you wish to continue? " -parent . -type yesno -icon question -title "Warning"]
+						switch -- $answer {
+
+							yes {
+									#continue
+							}
+							no	{
+									tk_messageBox -message "The Poll Response Timeout values are unchanged" -type ok
+									Validation::ResetPromptFlag
+            						return
+							}
+						}
+					}
+					1 {
+						#continue
+					}
+				}		          
+ 
         }
+	
     }
-    
     set newNodeName [$frame0.en_nodeName get]
     set stationType [NoteBookManager::RetStationEnumValue]
     set saveSpinVal ""
@@ -1928,6 +1955,7 @@ proc NoteBookManager::SaveTable {tableWid} {
                 }
                 SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $name $incFlag
                 incr rowCount
+
             }
         }
     }

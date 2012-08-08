@@ -1110,39 +1110,7 @@ proc Validation::CheckForceCycleNumber {input prescalerLimit} {
 }
 
 #---------------------------------------------------------------------------------------------------
-#  Validation::ValidatePollRespTimeout
-# 
-#  Arguments : input     - string (project name)
-# 	           entryPath - path of the entry widget
-#              mode      - Mode of the entry (insert - 1 / delete - 0) 
-#              idx       - Index where the character was inserted or deleted  
-#
-#  Results : 0 or 1
-#
-#  Description : Validates whether an entry is an integer and does not exceed specified range.
-#---------------------------------------------------------------------------------------------------
-proc Validation::ValidatePollRespTimeout {input entryPath mode idx validationType presponseCycleTimeValue presponseLimitMinimumCycleTimeValue {dataType ""}} {
-#///////////////////////////////////The validation process doesnot take into account the actual and default value of presponseCycleTimeValue
-puts "Validating PresTO---GUI"
-puts "presponseCycleTimeValue"
-puts $input
-puts $mode
-puts $idx
-puts $validationType
-#puts $entryPath
-puts $presponseCycleTimeValue
-	$entryPath configure -validate none
-	$entryPath configure -validate key -vcmd "Validation::ValidatePollRespTimeoutMinimum \       										%P $entryPath %d %i %V $presponseCycleTimeValue $presponseLimitMinimumCycleTimeValue $dataType"
-         if { ($input != "") && ($input >= $presponseCycleTimeValue) } {
-             #for the poll response time out the user should only enter values
-             #which is higher than the minimum value plus 25micro seconds
-			 return 1
-         } else {
-             return 0
-         }
-}
 
-#---------------------------------------------------------------------------------------------------
 #  Validation::ValidatePollRespTimeoutMinimum
 # 
 #  Arguments : input     - string (project name)
@@ -1154,7 +1122,7 @@ puts $presponseCycleTimeValue
 #
 #  Description : Validates whether an entry is an integer and does not exceed specified range.
 #---------------------------------------------------------------------------------------------------
-proc Validation::ValidatePollRespTimeoutMinimum {input entryPath mode idx validationType presponseCycleTimeValue presponseLimitMinimumCycleTimeValue {dataType ""}} {
+proc Validation::ValidatePollRespTimeoutMinimum {input entryPath mode idx validationType presponseActualCycleTimeValue presponseLimitMinimumCycleTimeValue {dataType ""} InterchangeParameterFlag} {
 #///////////////////////////////////The validation process doesnot take into account the actual and default value of presponseCycleTimeValue
 puts "Validating PresTOMinimum---GUI"
 puts "presponseCycleTimeValue"
@@ -1163,14 +1131,33 @@ puts $mode
 puts $idx
 puts $validationType
 #puts $entryPath
+puts "InterchangeParameterFlag"
+puts $InterchangeParameterFlag
+puts $presponseActualCycleTimeValue
 puts $presponseLimitMinimumCycleTimeValue
+
+	if { $InterchangeParameterFlag == "1" } {
+		set presponseCycleTimeValue  $presponseActualCycleTimeValue 
+	} else {
+			set presponseCycleTimeValue  $presponseLimitMinimumCycleTimeValue
+	} 
+puts "presponseCycleTimeValue"
+puts $presponseCycleTimeValue
     if { ($input == "" ) || ([Validation::IsDec $input $entryPath $mode $idx $dataType] == 1) } {
         if { ($validationType == "focusout" || $validationType == "forced") } {
-            if { ($input != "") && ($input >= $presponseLimitMinimumCycleTimeValue) } {
+            if { ($input != "") && ($input >= $presponseCycleTimeValue) } {
                 #for the poll response time out the user should only enter values
                 #which is higher than the minimum value plus 25micro seconds
-				$entryPath configure -validate key -vcmd "Validation::ValidatePollRespTimeout \   %P $entryPath %d %i %V $presponseCycleTimeValue $presponseLimitMinimumCycleTimeValue $dataType"
+				if { $InterchangeParameterFlag == "1" } {
+					$entryPath configure -validate key -vcmd "Validation::ValidatePollRespTimeoutMinimum \   %P $entryPath %d %i %V $presponseActualCycleTimeValue $presponseLimitMinimumCycleTimeValue $dataType 0"
+					return 1
+					}
+				$entryPath configure -validate key -vcmd "Validation::ValidatePollRespTimeoutMinimum \   %P $entryPath %d %i %V $presponseActualCycleTimeValue $presponseLimitMinimumCycleTimeValue $dataType 1"
+
             } else {
+					if { $InterchangeParameterFlag == "1" } {
+						$entryPath configure -validate key -vcmd "Validation::ValidatePollRespTimeoutMinimum \   %P $entryPath %d %i %V $presponseActualCycleTimeValue $presponseLimitMinimumCycleTimeValue $dataType 0"
+					}
                 return 0
             }
         }

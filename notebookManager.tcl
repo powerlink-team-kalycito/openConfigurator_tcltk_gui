@@ -1622,7 +1622,7 @@ puts $validateResult
     switch -- $validateResult {
         0 {
 				#NOTE:: the minimum value is got from vcmd
-   				set minimumvalue [ lindex [$frame0.cycleframe.en_time cget -vcmd] end-1]
+   				set minimumvalue [ lindex [$frame0.cycleframe.en_time cget -vcmd] end-2]
 				tk_messageBox -message "The Entered value should not be less than the minimum value $minimumvalue" -parent . -icon warning -title "Error"
    				Validation::ResetPromptFlag
         }
@@ -1632,7 +1632,7 @@ puts "Validation Result from GUI --"
 puts $validateResultConfirm						
 				switch -- $validateResultConfirm {
 					0 {
- 				        set minimumvalue [ lindex [$frame0.cycleframe.en_time cget -vcmd] end-2]
+ 				        set minimumvalue [ lindex [$frame0.cycleframe.en_time cget -vcmd] end-3]
 						set answer [tk_messageBox -message "The Entered value is less than the Set latency value $minimumvalue, Do you wish to continue? " -parent . -type yesno -icon question -title "Warning"]
 						switch -- $answer {
 

@@ -2425,7 +2425,7 @@ puts $presponseActualCycleTimeValue
 		#savecnvalue to modify the same
 #///////////////////////////The validation for the PResTO
 		$tmpInnerf0.cycleframe.en_time configure -validate key -vcmd "Validation::ValidatePollRespTimeoutMinimum \
-                %P $tmpInnerf0.cycleframe.en_time %d %i %V $presponseLimitActualCycleTimeValue $presponseLimitMinimumCycleTimeValue $presponseCycleTimeDatatype"
+                %P $tmpInnerf0.cycleframe.en_time %d %i %V $presponseLimitActualCycleTimeValue $presponseLimitMinimumCycleTimeValue $presponseCycleTimeDatatype 0"
 
 		lappend CNDatalist [list presponseCycleTimeDatatype $presponseCycleTimeDatatype]
 	    }

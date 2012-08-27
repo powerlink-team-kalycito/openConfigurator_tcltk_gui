@@ -754,10 +754,21 @@ proc Operations::BasicFrames { } {
 
     set progressmsg "Please wait while loading ..."
     set prgressindicator -1
-    Operations::_tool_intro
+	#Bug #28 - START
+	if {"$tcl_platform(platform)" == "windows"} {
+		    set ImageKalycito Kalycito_win
+    } else {
+		    set ImageKalycito Kalycito_unix
+    }
+	set prgressindicator 2
+    Operations::_tool_intro {EPSG} {1}
+	update
+	Operations::Sleep 1000
+	set prgressindicator 3
+	Operations::_tool_intro $ImageKalycito {2}
     update
 	Operations::Sleep 1000
-	
+	#Bug #28 - END	
     # Menu description
     set descmenu {
 	    "&File" {} {} 0 {           
@@ -885,7 +896,7 @@ proc Operations::BasicFrames { } {
     $Operations::sidxMenu add command -label "Delete SubIndex" -command {Operations::DeleteTreeNode}
     $Operations::sidxMenu add separator
 
-    set Operations::prgressindicator -1
+    set Operations::prgressindicator 6
     set mainframe [MainFrame::create .mainframe \
             -menu $descmenu  ]
 
@@ -907,7 +918,7 @@ proc Operations::BasicFrames { } {
             	-helptext "Open Project" -command Operations::OpenProjectWindow]
         
 	    pack $bbox -side left -anchor w
-    set prgressindicator 0
+    set prgressindicator 8
     set sep0 [Separator::create $toolbar.sep0 -orient vertical]
     pack $sep0 -side left -fill y -padx 4 -anchor w
 
@@ -1187,8 +1198,10 @@ proc Operations::BasicFrames { } {
     $tree_notebook raise objectTree
     $infotabs_notebook raise Console1
     pack $mainframe -fill both -expand yes
-    set prgressindicator 0
+    set prgressindicator 10
+	Operations::Sleep 100
     destroy .intro
+	set prgressindicator 0
     wm protocol . WM_DELETE_WINDOW Operations::exit_app
     update idletasks
     FindSpace::EscapeTree
@@ -1205,16 +1218,27 @@ proc Operations::BasicFrames { } {
 #
 #  Description : Displays image during launching of application
 #---------------------------------------------------------------------------------------------------
-proc Operations::_tool_intro { } {
+#Bug #28 - START
+proc Operations::_tool_intro {ImageName CallSequence} {
+#Bug #28 - END
     global tcl_platform
     global rootDir
+	
+	#Bug #28 - START
+	if {$CallSequence != 1} {
+	destroy .intro
+	Operations::Sleep 400
+	}
+	#Bug #28 - END
 
-    set top [toplevel .intro -relief raised -borderwidth 2]
+	set top [toplevel .intro -relief raised -borderwidth 2]
 
     wm withdraw $top
     wm overrideredirect $top 1
 
-    set image [image create photo -file [file join $rootDir Kalycito.gif]]
+	#Bug #28 - START
+    set image [image create photo -file [file join $rootDir $ImageName.gif] ]
+	#Bug #28 - END 
     set splashscreen  [label $top.x -image $image]
     set framePath [frame $splashscreen.f -background white]
     set lab1  [label $framePath.la_title1 -text "Loading openCONFIGURATOR" -background white -font {times 8}]
@@ -1222,7 +1246,7 @@ proc Operations::_tool_intro { } {
     set prg   [ProgressBar $framePath.prg -width 50 -height 10 -background  black \
 	    -variable Operations::prgressindicator -maximum 10]
     pack $lab1 $lab2 $prg
-    place $framePath -x 0 -y 0 -anchor nw
+    place $framePath -relx 1 -rely 0 -anchor ne
     pack $splashscreen
     BWidget::place $top 0 0 center
     wm deiconify $top
@@ -1230,7 +1254,7 @@ proc Operations::_tool_intro { } {
     update idletasks
     after 1000
 }
-
+#Bug #28 - END
 #---------------------------------------------------------------------------------------------------
 #  Operations::BindTree
 # 
@@ -3557,7 +3581,7 @@ proc Operations::BuildProject {} {
             tk_messageBox -message "$msg" -icon warning -title "Warning" -parent .
             return
         } elseif {$errCycleTimeFlag == 1} { 
-            set result [tk_messageBox -message "$msg\nDo you want to copy the default value 50000 µs" -type yesno -icon info -title "Information" -parent .]
+            set result [tk_messageBox -message "$msg\nDo you want to copy the default value 50000 \B5s" -type yesno -icon info -title "Information" -parent .]
             switch -- $result {
 			    yes {
                         #hard code the value 50000 for 1006 object in MN
@@ -3605,8 +3629,10 @@ proc Operations::BuildProject {} {
     thread::send [tsv::get application importProgress] "StartProgress"	
     set catchErrCode [GenerateCDC [file join $projectDir cdc_xap] ]
     set ErrCode [ocfmRetCode_code_get $catchErrCode]
-
-    if { $ErrCode != 0 } {
+		#BUG #29 - START
+		#exception for exceeding the limit of number of channels
+    if { ($ErrCode != 0) && ($ErrCode != 49) } {
+		#BUG #29 - END
 	    if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
 		    set msg "[ocfmRetCode_errorString_get $catchErrCode]"
 	    } else {
@@ -3618,6 +3644,12 @@ proc Operations::BuildProject {} {
 	    thread::send [tsv::get application importProgress] "StopProgress"
 	    return
     } else {
+		#BUG #29 - START
+		#exception for exceeding the limit of number of channels
+		if { $ErrCode == 49 } {
+			tk_messageBox -message "The number of Channels has exceeded than the defined value for the MN" -type ok -parent . -icon warning -title "Warning"
+		}
+		#BUG #29 - END			
 	    set tempPjtDir $projectDir
 	    set tempPjtName $projectName
 	    set tempRa_proj $ra_proj

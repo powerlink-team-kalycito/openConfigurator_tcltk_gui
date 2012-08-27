@@ -1110,7 +1110,6 @@ proc Validation::CheckForceCycleNumber {input prescalerLimit} {
 }
 
 #---------------------------------------------------------------------------------------------------
-
 #  Validation::ValidatePollRespTimeoutMinimum
 # 
 #  Arguments : input     - string (project name)

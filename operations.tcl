@@ -3647,7 +3647,9 @@ proc Operations::BuildProject {} {
 		#BUG #29 - START
 		#exception for exceeding the limit of number of channels
 		if { $ErrCode == 49 } {
-			tk_messageBox -message "The number of Channels has exceeded than the defined value for the MN" -type ok -parent . -icon warning -title "Warning"
+			puts $ErrCode
+			puts $catchErrCode
+			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -type ok -parent . -icon warning -title Warning
 		}
 		#BUG #29 - END			
 	    set tempPjtDir $projectDir

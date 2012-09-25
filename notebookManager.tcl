@@ -695,12 +695,12 @@ proc NoteBookManager::ConvertDec {framePath0 framePath1} {
         $framePath1.en_value1 configure -validate none -state normal
         NoteBookManager::InsertDecimal $framePath1.en_value1 $dataType
         $framePath1.en_value1 configure -validate key -vcmd "Validation::IsDec %P $framePath1.en_value1 %d %i $dataType" -state $state
-
+#BugFix 44 START
         set state [$framePath1.en_default1 cget -state]
-        $framePath1.en_default1 configure -state normal
+        $framePath1.en_default1 configure -validate none -state normal
         NoteBookManager::InsertDecimal $framePath1.en_default1 $dataType
-        $framePath1.en_default1 configure -state $state
-        
+        $framePath1.en_default1 configure -validate key -vcmd "Validation::IsDec %P $framePath1.en_default1 %d %i $dataType" -state $state
+#BugFix 44 END      
         set state [$framePath1.en_lower1 cget -state]
         $framePath1.en_lower1 configure -validate none -state normal
         NoteBookManager::InsertDecimal $framePath1.en_lower1 $dataType
@@ -778,12 +778,12 @@ proc NoteBookManager::ConvertHex {framePath0 framePath1} {
         $framePath1.en_value1 configure -validate none -state normal
         NoteBookManager::InsertHex $framePath1.en_value1 $dataType
         $framePath1.en_value1 configure -validate key -vcmd "Validation::IsHex %P %s $framePath1.en_value1 %d %i $dataType" -state $state
-
+#BugFix 44 START
         set state [$framePath1.en_default1 cget -state]
-        $framePath1.en_default1 configure -state normal
+        $framePath1.en_default1 configure -validate none -state normal
         NoteBookManager::InsertHex $framePath1.en_default1 $dataType
-        $framePath1.en_default1 configure -state $state
-        
+        $framePath1.en_default1 configure -validate key -vcmd "Validation::IsHex %P %s $framePath1.en_default1 %d %i $dataType" -state $state
+#BugFix 44 END
         set state [$framePath1.en_lower1 cget -state]
         $framePath1.en_lower1 configure -validate none -state normal
         NoteBookManager::InsertHex $framePath1.en_lower1 $dataType

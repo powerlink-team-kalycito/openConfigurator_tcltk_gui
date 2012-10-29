@@ -534,6 +534,28 @@ proc Operations::OpenProjectWindow { } {
         tk_messageBox -message "Extension $ext not supported" -title "Open Project Error" -icon error -parent .
         return
     }
+    
+#Bug20 STARTS
+    #Validate for the project folder name & check for the project file name same as the project folder name
+    set splitpath [split $projectfilename "/"]
+    set foldername [lindex $splitpath end-1]
+    if { [ string match "*\"*" $foldername ] } {
+	tk_messageBox -message "Project folder name is not valid" -title "Open Project Error" -icon error -parent .
+	return
+    }
+    set filenamewithext [lindex $splitpath end]
+    set filename [string range $filenamewithext 0 end-4]
+    set SrcDir [ string range $projectfilename 0  [string last "/" $projectfilename ] ]
+    Console::ClearMsgs
+    if { ![string equal $foldername $filename] } {
+	    set SrcDir "$SrcDir$foldername.oct"
+	    file rename $projectfilename $SrcDir
+	    set projectfilename $SrcDir
+	    Console::DisplayInfo "File $filename.oct is renamed as $foldername.oct"
+    } else {
+	    #puts "File & Folder names are same"
+    }
+#Bug20 Ends
 
     #save the path of opened project
     set lastOpenPjt $projectfilename

@@ -1059,6 +1059,8 @@ proc Validation::CheckDatatypeValue {entryPath dataType radioSel value} {
         }
     } elseif { $dataType ==  "Visible_String" } {
         #continue
+    }	elseif { $dataType ==  "Octet_String" } {
+        #continue
     }
     return [list pass $value]
 }
@@ -1123,25 +1125,25 @@ proc Validation::CheckForceCycleNumber {input prescalerLimit} {
 #---------------------------------------------------------------------------------------------------
 proc Validation::ValidatePollRespTimeoutMinimum {input entryPath mode idx validationType presponseActualCycleTimeValue presponseLimitMinimumCycleTimeValue {dataType ""} InterchangeParameterFlag} {
 #///////////////////////////////////The validation process doesnot take into account the actual and default value of presponseCycleTimeValue
-puts "Validating PresTOMinimum---GUI"
-puts "presponseCycleTimeValue"
-puts $input
-puts $mode
-puts $idx
-puts $validationType
+#puts "Validating PresTOMinimum---GUI"
+#puts "presponseCycleTimeValue"
+#puts $input
+#puts $mode
+#puts $idx
+#puts $validationType
 #puts $entryPath
-puts "InterchangeParameterFlag"
-puts $InterchangeParameterFlag
-puts $presponseActualCycleTimeValue
-puts $presponseLimitMinimumCycleTimeValue
+#puts "InterchangeParameterFlag"
+#puts $InterchangeParameterFlag
+#puts $presponseActualCycleTimeValue
+#puts $presponseLimitMinimumCycleTimeValue
 
 	if { $InterchangeParameterFlag == "1" } {
 		set presponseCycleTimeValue  $presponseActualCycleTimeValue 
 	} else {
 			set presponseCycleTimeValue  $presponseLimitMinimumCycleTimeValue
 	} 
-puts "presponseCycleTimeValue"
-puts $presponseCycleTimeValue
+#puts "presponseCycleTimeValue"
+#puts $presponseCycleTimeValue
     if { ($input == "" ) || ([Validation::IsDec $input $entryPath $mode $idx $dataType] == 1) } {
         if { ($validationType == "focusout" || $validationType == "forced") } {
             if { ($input != "") && ($input >= $presponseCycleTimeValue) } {

@@ -562,7 +562,7 @@ proc Operations::OpenProjectWindow { } {
 
     Operations::openProject $projectfilename
 #/////////////////////////////////////
-puts "----------OpenPorjectWindow--------END------GUI"
+#puts "----------OpenPorjectWindow--------END------GUI"
 }
 
 #---------------------------------------------------------------------------------------------------
@@ -582,7 +582,7 @@ proc Operations::openProject {projectfilename} {
     global lastVideoModeSel
     global viewChgFlg
 #/////////////////////////////////////////
-puts "---------Open Project-----------GUI"
+#puts "---------Open Project-----------GUI"
     #Operations::CloseProject is called to delete node and insert tree
     Operations::CloseProject
 
@@ -641,7 +641,7 @@ puts "---------Open Project-----------GUI"
 	    Console::DisplayErrMsg "Error in opening project $tempPjtName at $tempPjtDir"
     }
 #///////////////////////////////////////////
-puts "---------Open Project------END-----GUI"	
+#puts "---------Open Project------END-----GUI"	
 	return 1
 }
 
@@ -663,7 +663,7 @@ proc Operations::RePopulate { projectDir projectName } {
     #reset the nodeIdList
     set nodeIdList ""
 #////////////////////////////
-puts "-----Repopulate--------GUI"
+#puts "-----Repopulate--------GUI"
     set mnCount 1
     set cnCount 1
 
@@ -776,21 +776,12 @@ proc Operations::BasicFrames { } {
 
     set progressmsg "Please wait while loading ..."
     set prgressindicator -1
-	#Bug #28 - START
-	if {"$tcl_platform(platform)" == "windows"} {
-		    set ImageKalycito Kalycito_win
-    } else {
-		    set ImageKalycito Kalycito_unix
-    }
-	set prgressindicator 2
-    Operations::_tool_intro {EPSG} {1}
-	update
-	Operations::Sleep 1000
-	set prgressindicator 3
-	Operations::_tool_intro $ImageKalycito {2}
+    set ImageKalycito Splash
+
+    set prgressindicator 2
+    Operations::_tool_intro $ImageKalycito
     update
-	Operations::Sleep 1000
-	#Bug #28 - END	
+    Operations::Sleep 1000
     # Menu description
     set descmenu {
 	    "&File" {} {} 0 {           
@@ -1240,21 +1231,12 @@ proc Operations::BasicFrames { } {
 #
 #  Description : Displays image during launching of application
 #---------------------------------------------------------------------------------------------------
-#Bug #28 - START
-proc Operations::_tool_intro {ImageName CallSequence} {
-#Bug #28 - END
+proc Operations::_tool_intro {ImageName} {
     global tcl_platform
     global rootDir
 	
-	#Bug #28 - START
-	if {$CallSequence != 1} {
-	destroy .intro
-	Operations::Sleep 400
-	}
-	#Bug #28 - END
 
-	set top [toplevel .intro -relief raised -borderwidth 2]
-
+    set top [toplevel .intro -relief raised -borderwidth 0]
     wm withdraw $top
     wm overrideredirect $top 1
 
@@ -1262,21 +1244,18 @@ proc Operations::_tool_intro {ImageName CallSequence} {
     set image [image create photo -file [file join $rootDir $ImageName.gif] ]
 	#Bug #28 - END 
     set splashscreen  [label $top.x -image $image]
-    set framePath [frame $splashscreen.f -background white]
-    set lab1  [label $framePath.la_title1 -text "Loading openCONFIGURATOR" -background white -font {times 8}]
-    set lab2  [label $framePath.la_title2 -textvariable Operations::progressmsg -background red -font {times 8} -width 35]
-    set prg   [ProgressBar $framePath.prg -width 50 -height 10 -background  black \
+    set framePath [frame $splashscreen.f ]
+    set prg   [ProgressBar $framePath.prg -width 240 -height 7 -background  yellow \
 	    -variable Operations::prgressindicator -maximum 10]
-    pack $lab1 $lab2 $prg
-    place $framePath -relx 1 -rely 0 -anchor ne
+    pack $prg
+    place $framePath -x 150 -y 170 -anchor nw
     pack $splashscreen
     BWidget::place $top 0 0 center
     wm deiconify $top
     update
     update idletasks
-    after 1000
+    after 100
 }
-#Bug #28 - END
 #---------------------------------------------------------------------------------------------------
 #  Operations::BindTree
 # 
@@ -1343,7 +1322,7 @@ proc Operations::UnbindTree {} {
 proc Operations::SingleClickNode {node} {
     variable notebook
 
-puts "----SingleClickNode----GUI"
+#puts "----SingleClickNode----GUI"
 
     global treePath
     global nodeIdList
@@ -1663,8 +1642,8 @@ puts "----SingleClickNode----GUI"
 
     if {[string match "*SubIndex*" $node]} {
 
-puts "---SubIndex Found-------GUI"
-puts $node
+#puts "---SubIndex Found-------GUI"
+#puts $node
 	    set tmpInnerf0 [lindex $f1 1]
 	    set tmpInnerf1 [lindex $f1 2]
 	    set subIndexId [string range [$treePath itemcget $node -text] end-2 end-1]
@@ -1688,13 +1667,13 @@ puts $node
 	    for {set cnt 0 } {$cnt <= 9} {incr cnt} {
 		    set tempIndexProp [GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos $cnt ]
 #////////////////////////////////////////////
-puts "---SubIndexAttributes---------GUI"
-puts $nodePos
-puts $indexPos
-puts $subIndexPos
-puts $cnt
-puts $result
-puts $IndexProp
+#puts "---SubIndexAttributes---------GUI"
+#puts $nodePos
+#puts $indexPos
+#puts $subIndexPos
+#puts $cnt
+#puts $result
+#puts $IndexProp
 		    set ErrCode [ocfmRetCode_code_get [lindex $tempIndexProp 0]]
 		    if {$ErrCode == 0} {	
 			    lappend IndexProp [lindex $tempIndexProp 1]
@@ -1809,8 +1788,8 @@ puts $IndexProp
     $tmpInnerf1.en_value1 insert 0 [lindex $IndexProp 5]
 
 #The Limit check for importing the PResTO is not done here as in case of the node import.
-puts "The Inserted Value"
-puts [lindex $IndexProp 5]
+#puts "The Inserted Value"
+#puts [lindex $IndexProp 5]
 
     $tmpInnerf1.en_lower1 configure -state normal -validate none
     $tmpInnerf1.en_lower1 delete 0 end
@@ -2012,6 +1991,11 @@ puts [lindex $IndexProp 5]
         grid remove $tmpInnerf1.frame1.ra_dec
         grid remove $tmpInnerf1.frame1.ra_hex
         $tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::IsValidStr %P" -bg $savedBg
+    } elseif { [lindex $IndexProp 2] == "Octet_String" } {
+        set lastConv ""
+        grid remove $tmpInnerf1.frame1.ra_dec
+        grid remove $tmpInnerf1.frame1.ra_hex
+        $tmpInnerf1.en_value1 configure -validate key -vcmd "Validation::IsValidStr %P" -bg $savedBg
     } elseif { [ string match -nocase "BIT" [lindex $IndexProp 2] ] == 1 } {
         set state [$tmpInnerf1.en_value1 cget -state]
         if { [Validation::CheckBitNumber[lindex $IndexProp 5]] == 1 } {
@@ -2145,11 +2129,11 @@ proc Operations::MNProperties {node nodePos nodeId nodeType} {
     set tmp_stationType [new_EStationTypep]
 	set tmp_forceCycleFlag [new_boolp]
     set catchErrCode [GetNodeAttributesbyNodePos $nodePos $dummyNodeId $tmp_stationType $tmp_forceCycleFlag]
-puts "----MNProperties------GUI"
-puts $nodePos 
-puts $dummyNodeId
-puts $tmp_stationType
-puts $tmp_forceCycleFlag 
+#puts "----MNProperties------GUI"
+#puts $nodePos 
+#puts $dummyNodeId
+#puts $tmp_stationType
+#puts $tmp_forceCycleFlag 
     if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
             tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
@@ -2355,13 +2339,9 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
     set dummyNodeId [new_intp]
     set tmp_stationType [new_EStationTypep]
 	set tmp_forceCycleFlag [new_boolp]
-#///////////////////////////////////////////////////////////
-puts "GOT YOU!!! :)"
+
     set catchErrCode [GetNodeAttributesbyNodePos $nodePos $dummyNodeId $tmp_stationType $tmp_forceCycleFlag]
-#puts $nodePos 
-#puts $dummyNodeId 
-#puts $tmp_stationType
-#puts $tmp_forceCycleFlag
+
     if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
     	    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
@@ -2405,13 +2385,13 @@ puts "GOT YOU!!! :)"
     }
     set Operations::PRES_TIMEOUT_OBJ [list 1F92 $nodeIdSidx]
 #////////////////////////////////////////////////////////////////
-puts "presponseLimitCycleTimeResult--MACRO--GUI"
-puts $Operations::PRES_TIMEOUT_OBJ	
+#puts "presponseLimitCycleTimeResult--MACRO--GUI"
+#puts $Operations::PRES_TIMEOUT_OBJ	
     set presponseLimitCycleTimeResult [GetObjectValueData $nodePos $nodeId $nodeType [list 2 4 5 ] [lindex $Operations::PRES_TIMEOUT_LIMIT_OBJ 0] [lindex $Operations::PRES_TIMEOUT_LIMIT_OBJ 1] ]
-puts "presponseLimitCycleTimeResult--MACRO--GUI"
-puts $Operations::PRES_TIMEOUT_LIMIT_OBJ
-puts "presponseLimitCycleTimeResult---GUI"
-puts $presponseLimitCycleTimeResult
+#puts "presponseLimitCycleTimeResult--MACRO--GUI"
+#puts $Operations::PRES_TIMEOUT_LIMIT_OBJ
+#puts "presponseLimitCycleTimeResult---GUI"
+#puts $presponseLimitCycleTimeResult
     if {[string equal "pass" [lindex $presponseLimitCycleTimeResult 0]] == 1} {
         set presponseLimitMinimumCycleTimeValue [lindex $presponseLimitCycleTimeResult 2]
         if {$presponseLimitMinimumCycleTimeValue == ""} {
@@ -2462,8 +2442,8 @@ puts $presponseLimitCycleTimeResult
 		$tmpInnerf0.cycleframe.en_time delete 0 end
 		$tmpInnerf0.cycleframe.en_time insert 0 $presponseActualCycleTimeValue
 
-puts "presponseActualCycleTimeValue:"
-puts $presponseActualCycleTimeValue
+#puts "presponseActualCycleTimeValue:"
+#puts $presponseActualCycleTimeValue
 		
 		Operations::CheckConvertValue $tmpInnerf0.cycleframe.en_time $presponseCycleTimeDatatype "dec"
 		# the user cannot enter value which is less than the obtained minimum value
@@ -2682,7 +2662,7 @@ puts $presponseActualCycleTimeValue
 proc Operations::GetObjectValueData {nodePos nodeId nodeType attributeList indexId {subIndexId ""} } {
     set indexPos [new_intp]
 #///////////////////////////////////////
-puts "---------GetObjectValueData---------GUI"
+#puts "---------GetObjectValueData---------GUI"
     if { $subIndexId == "" } {
     	#no subindex get the index
         set existCmd "IfIndexExists $nodeId $nodeType $indexId $indexPos"
@@ -2718,14 +2698,14 @@ puts "---------GetObjectValueData---------GUI"
         #	tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
         #    }
 #///////////////////////////////////////////////
-puts "GetObjectValueData-----Result(Attribute) per iteration----Failed"
+#puts "GetObjectValueData-----Result(Attribute) per iteration----Failed"
         return fail
         }
         set result [lindex $catchErr 1]
         lappend resultList $result
-puts "GetObjectValueData-----Result(Attribute) per iteration-"
-puts $listAttrib
-puts	$result
+#puts "GetObjectValueData-----Result(Attribute) per iteration-"
+#puts $listAttrib
+#puts	$result
     }
     return  $resultList
 }
@@ -2809,7 +2789,7 @@ proc Operations::Saveproject {} {
     global projectDir
     global status_save
 #/////////////////////////////////
-puts "-------Saveproject--------GUI"
+#puts "-------Saveproject--------GUI"
     if {$projectDir == "" || $projectName == "" } {
 	    #there is no project directory or project name no need to save
 	    return
@@ -3669,8 +3649,8 @@ proc Operations::BuildProject {} {
 		#BUG #29 - START
 		#exception for exceeding the limit of number of channels
 		if { $ErrCode == 49 } {
-			puts $ErrCode
-			puts $catchErrCode
+			#puts $ErrCode
+			#puts $catchErrCode
 			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -type ok -parent . -icon warning -title Warning
 		}
 		#BUG #29 - END			

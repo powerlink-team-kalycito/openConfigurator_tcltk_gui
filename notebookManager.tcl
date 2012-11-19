@@ -159,7 +159,7 @@ proc NoteBookManager::create_tab { nbpath choice } {
     }
 	    	
     set dataCoList [list BIT BOOLEAN INTEGER8 INTEGER16 INTEGER24 INTEGER32 INTEGER40 INTEGER48 INTEGER56 INTEGER64 \
-                    UNSIGNED8 UNSIGNED16 UNSIGNED24 UNSIGNED32 UNSIGNED40 UNSIGNED48 UNSIGNED56 UNSIGNED64 REAL32 REAL64 MAC_ADDRESS IP_ADDRESS]
+                    UNSIGNED8 UNSIGNED16 UNSIGNED24 UNSIGNED32 UNSIGNED40 UNSIGNED48 UNSIGNED56 UNSIGNED64 REAL32 REAL64 MAC_ADDRESS IP_ADDRESS OCTET_STRING]
     ComboBox $tabInnerf1.co_data1 -values $dataCoList -editable no -textvariable co_data -width $comboWidth
     set objCoList [list DEFTYPE DEFSTRUCT VAR ARRAY RECORD]
     ComboBox $tabInnerf1.co_obj1 -values $objCoList -editable no -textvariable co_obj -modifycmd "NoteBookManager::ChangeValidation $tabInnerf0 $tabInnerf1 $tabInnerf1.co_obj1" -width $comboWidth 
@@ -1082,7 +1082,7 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
     global status_save
     global LOWER_LIMIT
     global UPPER_LIMIT
-puts "-----NoteBookManager::SaveValue-------GUI"
+#puts "-----NoteBookManager::SaveValue-------GUI"
     
     #reloadView will call the Opertions::Singleclicknode so as when for index
     #2000 and above is saved the datatype validation will take effect
@@ -1268,6 +1268,9 @@ puts "-----NoteBookManager::SaveValue-------GUI"
         }
     } elseif { [string match -nocase "Visible_String" $dataType] } {
         #continue
+    } elseif { [string match -nocase "Octet_String" $dataType] } {
+        #continue
+		set value [subst $[subst $tmpVar1]]
     }
     if { $value == "" || $dataType == "" || $value == "-" } {
         #no need to check
@@ -1617,8 +1620,8 @@ proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 frame2 
    
     #validate whether the entered cycle reponse time is greater tha 1F98 03 value
     set validateResult [$frame0.cycleframe.en_time validate]
-puts "Validation Result from GUI --"
-puts $validateResult
+#puts "Validation Result from GUI --"
+#puts $validateResult
     switch -- $validateResult {
         0 {
 				#NOTE:: the minimum value is got from vcmd
@@ -1628,8 +1631,8 @@ puts $validateResult
         }
         1 {
 				set validateResultConfirm [$frame0.cycleframe.en_time validate]
-puts "Validation Result from GUI --"
-puts $validateResultConfirm						
+#puts "Validation Result from GUI --"
+#puts $validateResultConfirm						
 				switch -- $validateResultConfirm {
 					0 {
  				        set minimumvalue [ lindex [$frame0.cycleframe.en_time cget -vcmd] end-3]
@@ -2256,6 +2259,20 @@ proc NoteBookManager::ChangeValidation {framePath0 framePath comboPath {objectTy
                 $framePath.en_lower1 delete 0 end
                 $framePath.en_lower1 configure -state disabled
             }
+	    OCTET_STRING {
+                set lastConv ""
+                grid remove $framePath.frame1.ra_dec
+                grid remove $framePath.frame1.ra_hex
+		$framePath.en_value1 configure -validate none
+                $framePath.en_value1 delete 0 end
+		$framePath.en_value1 configure -validate key -vcmd "Validation::IsValidStr %P"
+                $framePath.en_upper1 configure -validate none
+                $framePath.en_upper1 delete 0 end
+                $framePath.en_upper1 configure -state disabled
+                $framePath.en_lower1 configure -validate none
+                $framePath.en_lower1 delete 0 end
+                $framePath.en_lower1 configure -state disabled
+            }
         }
         set validateResult [$framePath.en_value1 validate]
 	switch -- $validateResult {
@@ -2438,6 +2455,11 @@ proc NoteBookManager::ChangeEntryValidationForDatatype {framePath entryPath data
             grid remove $framePath.frame1.ra_hex
             $entryPath configure -validate key -vcmd "Validation::IsIP %P %V"
         }
+	OCTET_STRING {
+	    set lastConv ""
+            grid remove $framePath.frame1.ra_dec
+            grid remove $framePath.frame1.ra_hex
+	}
     }
     set validateResult [$entryPath validate]
     switch -- $validateResult {

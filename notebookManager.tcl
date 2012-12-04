@@ -334,7 +334,7 @@ proc NoteBookManager::create_nodeFrame {nbpath choice} {
     label $tabInnerf0.la_nodeNo       -text "Node number"
     label $tabInnerf0.la_empty2       -text ""
     label $tabInnerf0.la_time         -text ""
-    label $tabInnerf0.cycleframe.la_ms           -text "µs"
+    label $tabInnerf0.cycleframe.la_ms           -text "?s"
     label $tabInnerf0.la_empty3       -text ""
     label $tabInnerf1.la_advOption1   -text ""
     label $tabInnerf1.la_advOptionUnit1   -text ""
@@ -396,7 +396,7 @@ proc NoteBookManager::create_nodeFrame {nbpath choice} {
         $tabInnerf0.tabTitlef1 configure -text "Advanced" 
         $tabInnerf0.en_nodeNo configure -state disabled
 	$tabInnerf1.la_advOption4 configure  -text "Loss of SoC Tolerance"
-	$tabInnerf1.la_advOptionUnit4 configure -text "µs"
+	$tabInnerf1.la_advOptionUnit4 configure -text "?s"
         $tabInnerf1.la_advOption1 configure -text "Asynchronous MTU size"
         $tabInnerf1.la_advOptionUnit1 configure -text "Byte"
         $tabInnerf1.la_advOption2 configure -text "Asynchronous Timeout"
@@ -695,12 +695,12 @@ proc NoteBookManager::ConvertDec {framePath0 framePath1} {
         $framePath1.en_value1 configure -validate none -state normal
         NoteBookManager::InsertDecimal $framePath1.en_value1 $dataType
         $framePath1.en_value1 configure -validate key -vcmd "Validation::IsDec %P $framePath1.en_value1 %d %i $dataType" -state $state
-#BugFix 44 START
+
         set state [$framePath1.en_default1 cget -state]
         $framePath1.en_default1 configure -validate none -state normal
         NoteBookManager::InsertDecimal $framePath1.en_default1 $dataType
         $framePath1.en_default1 configure -validate key -vcmd "Validation::IsDec %P $framePath1.en_default1 %d %i $dataType" -state $state
-#BugFix 44 END      
+	
         set state [$framePath1.en_lower1 cget -state]
         $framePath1.en_lower1 configure -validate none -state normal
         NoteBookManager::InsertDecimal $framePath1.en_lower1 $dataType
@@ -778,12 +778,12 @@ proc NoteBookManager::ConvertHex {framePath0 framePath1} {
         $framePath1.en_value1 configure -validate none -state normal
         NoteBookManager::InsertHex $framePath1.en_value1 $dataType
         $framePath1.en_value1 configure -validate key -vcmd "Validation::IsHex %P %s $framePath1.en_value1 %d %i $dataType" -state $state
-#BugFix 44 START
+
         set state [$framePath1.en_default1 cget -state]
         $framePath1.en_default1 configure -validate none -state normal
         NoteBookManager::InsertHex $framePath1.en_default1 $dataType
         $framePath1.en_default1 configure -validate key -vcmd "Validation::IsHex %P %s $framePath1.en_default1 %d %i $dataType" -state $state
-#BugFix 44 END
+
         set state [$framePath1.en_lower1 cget -state]
         $framePath1.en_lower1 configure -validate none -state normal
         NoteBookManager::InsertHex $framePath1.en_lower1 $dataType
@@ -1082,7 +1082,6 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
     global status_save
     global LOWER_LIMIT
     global UPPER_LIMIT
-#puts "-----NoteBookManager::SaveValue-------GUI"
     
     #reloadView will call the Opertions::Singleclicknode so as when for index
     #2000 and above is saved the datatype validation will take effect
@@ -1615,13 +1614,9 @@ proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 frame2 
             return
         }
     }
-#////////////////////////////////////////////////////////////////////////////
-#The entered PresTimeout is validated against the default timeout value
-   
+    
     #validate whether the entered cycle reponse time is greater tha 1F98 03 value
     set validateResult [$frame0.cycleframe.en_time validate]
-#puts "Validation Result from GUI --"
-#puts $validateResult
     switch -- $validateResult {
         0 {
 				#NOTE:: the minimum value is got from vcmd
@@ -1631,8 +1626,7 @@ proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 frame2 
         }
         1 {
 				set validateResultConfirm [$frame0.cycleframe.en_time validate]
-#puts "Validation Result from GUI --"
-#puts $validateResultConfirm						
+
 				switch -- $validateResultConfirm {
 					0 {
  				        set minimumvalue [ lindex [$frame0.cycleframe.en_time cget -vcmd] end-3]
@@ -1958,7 +1952,6 @@ proc NoteBookManager::SaveTable {tableWid} {
                 }
                 SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $name $incFlag
                 incr rowCount
-
             }
         }
     }

@@ -1237,10 +1237,10 @@ proc Operations::_tool_intro {ImageName} {
 
     set splashscreen  [label $top.x -image $image]
     set framePath [frame $splashscreen.f ]
-    set prg   [ProgressBar $framePath.prg -width 240 -height 7 -background  yellow \
-	    -variable Operations::prgressindicator -maximum 10]
+    set prg   [ProgressBar $framePath.prg -width 300 -height 7 -foreground aquamarine2 -background  yellow \
+ 	    -variable Operations::prgressindicator -maximum 10]
     pack $prg
-    place $framePath -x 150 -y 170 -anchor nw
+    place $framePath -x 80 -y 170 -anchor nw
     pack $splashscreen
     BWidget::place $top 0 0 center
     wm deiconify $top
@@ -3535,7 +3535,7 @@ proc Operations::BuildProject {} {
             tk_messageBox -message "$msg" -icon warning -title "Warning" -parent .
             return
         } elseif {$errCycleTimeFlag == 1} { 
-            set result [tk_messageBox -message "$msg\nDo you want to copy the default value 50000 Âµs" -type yesno -icon info -title "Information" -parent .]
+            set result [tk_messageBox -message "$msg\nDo you want to copy the default value 50000 µs" -type yesno -icon info -title "Information" -parent .]
             switch -- $result {
 			    yes {
                         #hard code the value 50000 for 1006 object in MN

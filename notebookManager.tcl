@@ -334,7 +334,7 @@ proc NoteBookManager::create_nodeFrame {nbpath choice} {
     label $tabInnerf0.la_nodeNo       -text "Node number"
     label $tabInnerf0.la_empty2       -text ""
     label $tabInnerf0.la_time         -text ""
-    label $tabInnerf0.cycleframe.la_ms           -text "?s"
+    label $tabInnerf0.cycleframe.la_ms           -text "µs"
     label $tabInnerf0.la_empty3       -text ""
     label $tabInnerf1.la_advOption1   -text ""
     label $tabInnerf1.la_advOptionUnit1   -text ""
@@ -396,7 +396,7 @@ proc NoteBookManager::create_nodeFrame {nbpath choice} {
         $tabInnerf0.tabTitlef1 configure -text "Advanced" 
         $tabInnerf0.en_nodeNo configure -state disabled
 	$tabInnerf1.la_advOption4 configure  -text "Loss of SoC Tolerance"
-	$tabInnerf1.la_advOptionUnit4 configure -text "?s"
+	$tabInnerf1.la_advOptionUnit4 configure -text "µs"
         $tabInnerf1.la_advOption1 configure -text "Asynchronous MTU size"
         $tabInnerf1.la_advOptionUnit1 configure -text "Byte"
         $tabInnerf1.la_advOption2 configure -text "Asynchronous Timeout"

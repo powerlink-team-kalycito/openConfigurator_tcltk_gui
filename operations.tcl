@@ -188,7 +188,9 @@ source [file join $dir option.tcl]
 #-------------------------
 global projectDir 
 global projectName
+global build_nodesList
 
+set build_nodesList 0
 set cnCount 0
 set mnCount 0
 set nodeIdList ""
@@ -664,7 +666,7 @@ proc Operations::RePopulate { projectDir projectName } {
 
     catch {$treePath delete ProjectNode}
     $treePath insert end root ProjectNode -text $projectName -open 1 -image [Bitmap::get network]
-
+    #API GetNodeCount
     set count [new_intp]
     set catchErrCode [GetNodeCount 240 $count]
     set ErrCode [ocfmRetCode_code_get $catchErrCode]
@@ -3021,7 +3023,7 @@ proc Operations::AddCN {cnName tmpImpDir nodeId} {
     set child [$treePath insert end $node $treeNodeCN -text "$cnName\($nodeId\)" -open 0 -image [Bitmap::get cn]]
 
     if {$tmpImpDir != ""} {
-	    #API
+	    #Importxml API
 	    set catchErrCode [ImportXML "$tmpImpDir" $nodeId 1]
 	    set ErrCode [ocfmRetCode_code_get $catchErrCode]
 	    if { $ErrCode != 0 } {
@@ -3445,6 +3447,7 @@ proc Operations::BuildProject {} {
     global chkPrompt
     global mnPropSaveBtn
     global cnPropSaveBtn
+    global build_nodesList
 
     if {$projectDir == "" || $projectName == "" } {
 	    Console::DisplayErrMsg "No project to Build"
@@ -3600,6 +3603,28 @@ proc Operations::BuildProject {} {
 		#exception for exceeding the limit of number of channels
 		if { $ErrCode == 49 } {
 			tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -type ok -parent . -icon warning -title Warning
+		}
+	    #build_nodesList is used while deleting the node after the node is built. So collecting the list of CN nodes while the project is build
+		set build_nodesList ""
+	        foreach mnNode [$treePath nodes ProjectNode] {
+		    set chk 1
+		    foreach cnNode [$treePath nodes $mnNode] {
+			if {$chk == 1} {
+			    if {[string match "OBD*" $cnNode]} {
+				    #Nothing to do for MN
+			    } else {
+				    set buildCN_result [Operations::GetNodeIdType $cnNode]
+			    }
+			    set chk 0
+			} else {
+			    	set buildCN_result [Operations::GetNodeIdType $cnNode]
+			}
+			if {$buildCN_result != "" } {
+			    set buildCN_nodeId [lindex $buildCN_result 0]
+			    #set buildCN_nodeType [lindex $buildCN_result 1]
+			}
+			lappend build_nodesList $buildCN_nodeId
+		    }
 		}
 
 	    set tempPjtDir $projectDir
@@ -3857,6 +3882,7 @@ proc Operations::DeleteTreeNode {} {
     global savedValueList
     global userPrefList
     global status_save
+    global build_nodesList
 
     set node [$treePath selection get]
 
@@ -3915,6 +3941,46 @@ proc Operations::DeleteTreeNode {} {
 	    } elseif {$nodeType == 1} {
 		    #it is a CN so delete the node entirely
 		    set catchErrCode [DeleteNode $nodeId $nodeType]
+		    # If the CN is deleted ater build using autogenerate the MN mappings should be removed. To prompt for the user to autogenerate the MNobd
+		    set ErrCode [ocfmRetCode_code_get $catchErrCode]
+		    if { $ErrCode != 0 } {
+			if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+			    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
+			} else {
+			    tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
+			}
+		    } else {
+			    #a condition to be set Atlease once build process happen
+			    set node_present [lsearch -exact $build_nodesList $nodeId]
+			    if { ($node_present != -1) } {
+			    #Remove the node id from the build list
+				    set build_nodesList [lreplace $build_nodesList $node_present $node_present]
+
+				    if { 0 != [llength $build_nodesList] } {
+					set result [tk_messageBox -message "CN node deleted successfully. The MN Mappings might be corrupted. Do you want fix it by autogenerating the MN object dictionary? \n Note: Any user edited MN values will be lost" -type yesno -icon question -title "Question" -parent .]
+					switch -- $result {
+					    yes {			 
+					            set catchErrCode [GenerateMNOBD]		
+					            set ErrCode [ocfmRetCode_code_get $catchErrCode]
+					            if { $ErrCode != 0 } {
+					        	    if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
+					        	        tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
+							    } else {
+							        tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
+							    }
+							}
+					        }
+					    no {
+					           #continue with process to populate the tree for deleted node
+					        }
+					}
+				    } else {
+					#No CN nodes present. Autogenerate will not be success
+				    }
+			    } else {
+				#node is not build for cdc generation. So MN mappings will not be corrupted
+			    }
+		    }
 	    } else {
 		    return
 	    }

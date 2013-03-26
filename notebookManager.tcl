@@ -1950,6 +1950,9 @@ proc NoteBookManager::SaveTable {tableWid} {
                 } else {
                     set incFlag 0
                 }
+		if { [expr [expr 0x$index > 0x0000 ] && [expr 0x$subindex > 0x00 ] && [expr 0x$length > 0x0000 ]]} {
+		    SetSubIndexAttributes $nodeId $nodeType $indexId "00" "0x$subIndexId" "NumberOfEntries" 1
+		}
                 SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $name $incFlag
                 incr rowCount
             }

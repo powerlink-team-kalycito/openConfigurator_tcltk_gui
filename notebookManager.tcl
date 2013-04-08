@@ -516,30 +516,53 @@ proc NoteBookManager::create_table {nbpath choice} {
     font create custom1 -size 9 -family TkDefaultFont
 
     if {$choice == "pdo"} {
-        set st [tablelist::tablelist $st \
-            -columns {0 "No" left
-            0 "Node Id" center
-            0 "Offset" center
-            0 "Length" center
-            0 "Index" center
-            0 "Sub Index" center} \
-            -setgrid 0 -width 0 \
-            -stripebackground gray98 \
-            -resizable 1 -movablecolumns 0 -movablerows 0 \
-            -showseparators 1 -spacing 10 -font custom1 \
-            -editstartcommand NoteBookManager::StartEdit -editendcommand NoteBookManager::EndEdit ]
+            set st [tablelist::tablelist $st \
+                -columns {0 "No" left
+                0 "Node Id" center
+                0 "Offset" center
+                0 "Length" center
+                0 "Index" center
+                0 "Sub Index" center} \
+                -setgrid 0 -width 0 \
+                -stripebackground gray98 \
+                -resizable 1 -movablecolumns 0 -movablerows 0 \
+                -showseparators 1 -spacing 10 -font custom1 \
+                -editstartcommand NoteBookManager::StartEdit -editendcommand NoteBookManager::EndEdit ]
 
-        $st columnconfigure 0 -editable no 
-        $st columnconfigure 1 -editable no
-        $st columnconfigure 2 -editable yes -editwindow entry	
-        $st columnconfigure 3 -editable yes -editwindow entry
-        $st columnconfigure 4 -editable yes -editwindow entry
-        $st columnconfigure 5 -editable yes -editwindow entry
+            $st columnconfigure 0 -editable no 
+            $st columnconfigure 1 -editable no
+            $st columnconfigure 2 -editable yes -editwindow entry	
+            $st columnconfigure 3 -editable yes -editwindow entry
+            $st columnconfigure 4 -editable yes -editwindow entry
+            $st columnconfigure 5 -editable yes -editwindow entry
+
+    } elseif {$choice == "AUTOpdo"} {
+	set st [tablelist::tablelist $st \
+                -columns {0 "S.No" left
+			    0 "Target Node Id" center
+			    0 "Offset" center
+			    0 "Length" center
+	                    0 "Index" center
+	                    0 "Sub Index" center} \
+                -setgrid 0 -width 0 \
+                -stripebackground gray98 \
+                -resizable 1 -movablecolumns 0 -movablerows 0 \
+                -showseparators 1 -spacing 10 -font custom1 \
+                -editstartcommand NoteBookManager::StartEditCombo \
+		-editendcommand NoteBookManager::EndEdit]
+
+            $st columnconfigure 0 -editable no 
+            $st columnconfigure 1 -editable no -editwindow ComboBox
+            $st columnconfigure 2 -editable no	
+            $st columnconfigure 3 -editable no -editwindow ComboBox
+            $st columnconfigure 4 -editable no -editwindow ComboBox
+            $st columnconfigure 5 -editable no -editwindow ComboBox
     } else {
         #invalid choice
         return
     }
 
+    puts "st: $st"
     $scrollWin setwidget $st
     pack $st -fill both -expand true
     $st configure -height 4 -width 40 -stretch all	
@@ -1796,6 +1819,86 @@ proc NoteBookManager::StartEdit {tablePath rowIndex columnIndex text} {
                 $win configure -invalidcommand bell -validate key  -validatecommand "Validation::IsTableHex %P %s %d %i 2 $tablePath $rowIndex $columnIndex $win"
             }
         }
+    return $text
+}
+
+#---------------------------------------------------------------------------------------------------
+#  NoteBookManager::StartEditCombo
+# 
+#  Arguments :	tablePath   - path of the tablelist widget
+#		rowIndex    - row of the edited cell
+#		columnIndex - column of the edited cell
+#		text        - entered value
+#
+#  Results : text - to be displayed in tablelist
+#
+#  Description : to validate the entered value
+#---------------------------------------------------------------------------------------------------
+proc NoteBookManager::StartEditCombo {tablePath rowIndex columnIndex text} {
+    global treePath
+    global nodeIdList
+    global treePath
+
+#######Getting the current cell value in the row. and converting node id to decimal val#######
+    set nodeidValhex [$tablePath cellcget $rowIndex,1 -text]
+    scan $nodeidValhex %x nodeidVal
+    set offsetVal [$tablePath cellcget $rowIndex,2 -text]
+    set lengthVal [$tablePath cellcget $rowIndex,3 -text]
+    set idxidVal [$tablePath cellcget $rowIndex,4 -text]
+    set sidxVal [$tablePath cellcget $rowIndex,5 -text]
+    puts "Nodeid: $nodeidValhex - $nodeidVal , offsetVal: $offsetVal , lengthVal: $lengthVal , idxidVal: $idxidVal , sidxVal: $sidxVal"
+
+    ##Fail when user right clicks on other nodes while editing
+    ## selection is assumed always will be either TPDO or RPDO
+    set selectedNode [$treePath selection get]
+    set pdoType ""
+    set pdoType "[$treePath itemcget $selectedNode -text ]"
+    puts "$pdoType"
+    
+    set result [Operations::GetNodeIdType $selectedNode]
+    set nodeidVal [lindex $result 0]
+
+    set win [$tablePath editwinpath]
+    switch -- $columnIndex {
+	1 {
+            set nodeIdListHex ""
+	    set nodeIdListHex "0x0"
+	    foreach tempnodeId $nodeIdList {
+		set hexnodeid 0x[string toupper [format %x $tempnodeId]]
+		lappend nodeIdListHex "$hexnodeid"
+	    }
+
+	    $win configure -values "$nodeIdListHex"
+	    $win configure -invalidcommand bell -validate key -validatecommand "Validation::SetTableValueNodeid $tablePath $rowIndex $columnIndex $win %d %i %P"
+	#    $win configure -invalidcommand bell -validate key  -validatecommand "Validation::IsTableHex %P %s %d %i 2 $tablePath $rowIndex $columnIndex $win"
+	}
+	2 {
+	    $win configure -invalidcommand bell -validate key  -validatecommand "Validation::IsTableHex %P %s %d %i 4 $tablePath $rowIndex $columnIndex $win"
+	}
+	3 {
+	    set sidxLength [Operations::FuncSubIndexLength $nodeidVal $idxidVal $sidxVal]
+	    puts "SINdex length cell: $sidxLength"
+	    $win configure -values "$sidxLength"
+	    #$win configure -values {0x1200 0x2400 0x4800 0x9600 0x9200 0x3400}
+	    #$win configure -invalidcommand bell -validate key  -validatecommand "Validation::IsTableHex %P %s %d %i 4 $tablePath $rowIndex $columnIndex $win"
+	    $win configure -invalidcommand bell -validate key  -validatecommand "Validation::SetTableComboValue %P $tablePath $rowIndex $columnIndex $win"
+    	}
+	4 {
+	    set idxList [Operations::FuncIndexlist $nodeidVal]
+	    puts "INdex cell: $idxList"
+	    $win configure -values "$idxList"
+	    #$win configure -values {0x1200 0x2400 0x4800 0x9600 0x9200 0x3400}
+	    #$win configure -invalidcommand bell -validate key  -validatecommand "Validation::IsTableHex %P %s %d %i 4 $tablePath $rowIndex $columnIndex $win"
+	    $win configure -invalidcommand bell -validate key  -validatecommand "Validation::SetTableComboValue %P $tablePath $rowIndex $columnIndex $win"
+	}
+	5 {
+	    set sidxList [Operations::FuncSubIndexlist $nodeidVal $idxidVal $pdoType]
+	    puts "SUBINdex cell: $sidxList"
+	    $win configure -values "$sidxList"
+	    #$win configure -values {0x12 0x24 0x48 0x96 0x92 0x34}
+	    $win configure -invalidcommand bell -validate key  -validatecommand "Validation::SetTableComboValue %P $tablePath $rowIndex $columnIndex $win"
+	}
+    }
 
         return $text
 }
@@ -1813,6 +1916,8 @@ proc NoteBookManager::StartEdit {tablePath rowIndex columnIndex text} {
 #  Description : to validate the entered value when focus leave the cell
 #---------------------------------------------------------------------------------------------------
 proc NoteBookManager::EndEdit {tablePath rowIndex columnIndex text} {
+    global populatedCommParamList
+    puts "ENDEDIT::  tablePath:$tablePath,  rowIndex:$rowIndex,  columnIndex:$columnIndex,  text:$text "
     if { [string match -nocase "0x*" $text] } {
         set text [string range $text 2 end]
     } else {

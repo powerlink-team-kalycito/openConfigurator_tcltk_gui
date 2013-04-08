@@ -99,7 +99,7 @@ namespace eval Operations {
 set path_to_Tablelist [file join $rootDir tablelist4.10]
 lappend auto_path $path_to_Tablelist
 package require Tablelist
-
+tablelist::addBWidgetComboBox
 #Initiating thread for progress bar
 package require Thread
 tsv::set application main [thread::id]
@@ -323,7 +323,9 @@ proc Operations::tselectright {x y node} {
     variable treeWindow
 
     $treeWindow selection clear
-    $treeWindow selection set $node 
+    $treeWindow selection set $node
+    Operations::SingleClickNode $node
+
     if { [string match "ProjectNode" $node] == 1 } {
 	    tk_popup $Operations::projMenu $x $y 
     } elseif { [string match "MN-*" $node] == 1 } {
@@ -743,7 +745,8 @@ proc Operations::BasicFrames { } {
     global f1
     global f2
     global f3
-    global f4    
+    global f4
+    global f5
     global LastTableFocus
     global lastVideoModeSel
 
@@ -1200,6 +1203,62 @@ proc Operations::BasicFrames { } {
             bind . <MouseWheel> ""
         }
     }
+
+    #######Combobox implementation########
+    set f5 [NoteBookManager::create_table $alignFrame  "AUTOpdo"]
+    [lindex $f5 1] columnconfigure 0 -background #e0e8f0 -width 6 -sortmode integer
+    [lindex $f5 1] columnconfigure 1 -background #e0e8f0 -width 14 
+    [lindex $f5 1] columnconfigure 2 -background #e0e8f0 -width 11
+    [lindex $f5 1] columnconfigure 3 -background #e0e8f0 -width 11
+    [lindex $f5 1] columnconfigure 4 -background #e0e8f0 -width 11
+    [lindex $f5 1] columnconfigure 5 -background #e0e8f0 -width 11
+
+    #binding for tablelist widget
+    bind [lindex $f5 0] <Enter> {
+        bind . <KeyPress-Return> {
+                global tableSaveBtn
+                $tableSaveBtn invoke
+        }
+    }
+    bind [lindex $f5 0] <Leave> {
+        bind . <KeyPress-Return> ""
+    }
+    bind [lindex $f5 1] <Enter> {
+	    global LastTableFocus
+	    if { [ winfo exists $LastTableFocus ] && [ string match "[lindex $f5 1]*" $LastTableFocus ] } {
+		    focus $LastTableFocus
+	    } else {
+		    focus [lindex $f5 1]
+	    }
+	
+	    bind . <Motion> {
+		    global LastTableFocus
+		    set LastTableFocus [focus]
+	    }
+    }
+    bind [lindex $f5 1] <Leave> {
+	    bind . <Motion> {}
+	    global LastTableFocus
+	    global treeFrame
+	    if { "$LastTableFocus" == "$treeFrame.en_find" } {
+			    focus $treeFrame.en_find
+	    } else {
+			    focus .
+	    }
+    }
+    bind [lindex $f5 1] <FocusOut> {
+	    bind . <Motion> {}
+	    global LastTableFocus
+	    set LastTableFocus [focus]
+    }
+    #bind [lindex $f5 1] <<ComboboxSelected>> {
+#	puts "chosen [%W get]"
+#    }
+#    set tempTablepath [lindex $f5 1]
+#    set temp ".body.f.e"
+#    set tempeditpath "$tempTablepath$temp"
+#    bind $tempeditpath <ButtonPress-1> [list ComboBox::_unmapliste $tempTablepath]
+    ##########Combobox implementation#############
     pack $pannedwindow2 -fill both -expand yes
 
     $tree_notebook raise objectTree
@@ -1323,6 +1382,7 @@ proc Operations::SingleClickNode {node} {
     global f2
     global f3
     global f4
+    global f5
     global nodeSelect
     global nodeIdList
     global savedValueList
@@ -1333,6 +1393,7 @@ proc Operations::SingleClickNode {node} {
     global LastTableFocus
     global chkPrompt
     global ra_proj
+    global ra_auto
     global indexSaveBtn
     global subindexSaveBtn
     global tableSaveBtn
@@ -1443,6 +1504,9 @@ proc Operations::SingleClickNode {node} {
     	pack forget [lindex $f2 0]
     	[lindex $f2 1] cancelediting
     	[lindex $f2 1] configure -state disabled
+	pack forget [lindex $f5 0]
+	[lindex $f5 1] cancelediting
+    	[lindex $f5 1] configure -state disabled
     	pack [lindex $f3 0] -expand yes -fill both -padx 2 -pady 4
     	pack forget [lindex $f4 0]
 	
@@ -1454,6 +1518,9 @@ proc Operations::SingleClickNode {node} {
     	pack forget [lindex $f2 0]
     	[lindex $f2 1] cancelediting
     	[lindex $f2 1] configure -state disabled
+	pack forget [lindex $f5 0]
+	[lindex $f5 1] cancelediting
+    	[lindex $f5 1] configure -state disabled
     	pack forget [lindex $f3 0]
     	pack [lindex $f4 0] -expand yes -fill both -padx 2 -pady 4
 	
@@ -1475,7 +1542,8 @@ proc Operations::SingleClickNode {node} {
 	    }
 	    set commParamList ""
 	    set mappParamList ""
-	    [lindex $f2 1] configure -state normal
+	    
+	    
 	    set idx [$treePath nodes $node]
 	    foreach tempIdx $idx {
 		    set indexId [string range [$treePath itemcget $tempIdx -text] end-4 end-1 ]
@@ -1502,7 +1570,17 @@ proc Operations::SingleClickNode {node} {
 	    set popCount 0 
 		set popCountList ""
 		set populatedCommParamList ""
-	    [lindex $f2 1] delete 0 end
+
+	    puts "F2:: $f2"
+	    puts "F5:: $f5"
+	    if {$ra_auto == 1 } {
+		[lindex $f2 1] configure -state disabled
+		[lindex $f5 1] configure -state normal
+		[lindex $f5 1] delete 0 end
+	    } else {
+		[lindex $f2 1] configure -state normal
+		[lindex $f2 1] delete 0 end
+	    }
 	
 	    set commParamValue ""
 		set nodeidEditableFlag 0
@@ -1556,24 +1634,38 @@ proc Operations::SingleClickNode {node} {
 				    # 3 is passed to get the accesstype
 				    set tempIndexProp [GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos 3 ] 
 				    if {$ErrCode != 0} {
-					    [lindex $f2 1] insert $popCount [list "" "" "" "" "" ""]
+					if {$ra_auto == 1 } {
+					    [lindex $f5 1] insert $popCount [list "" "" "" "" "" ""]
+					    foreach col [list 2 3 4 5 ] {
+						    [lindex $f5 1] cellconfigure $popCount,$col -editable no
+					    }
+					} else {
+ 					    [lindex $f2 1] insert $popCount [list "" "" "" "" "" ""]
 					    foreach col [list 2 3 4 5 ] {
 						    [lindex $f2 1] cellconfigure $popCount,$col -editable no
-					    }
-					    incr popCount 1 
-					    continue	
+					    }   
+					}
+					incr popCount 1 
+					continue	
 				    } 
 				    set accessType [lindex $tempIndexProp 1]
 				    # 5 is passed to get the actual value
 				    set tempIndexProp [GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos 5 ] 
 				    set ErrCode [ocfmRetCode_code_get [lindex $tempIndexProp 0] ]
 				    if {$ErrCode != 0} {
+					if {$ra_auto == 1 } {
+					    [lindex $f5 1] insert $popCount [list "" "" "" "" "" ""]
+					    foreach col [list 2 3 4 5 ] {
+						[lindex $f5 1] cellconfigure $popCount,$col -editable no
+					    }
+					} else {
 					    [lindex $f2 1] insert $popCount [list "" "" "" "" "" ""]
 					    foreach col [list 2 3 4 5 ] {
-						    [lindex $f2 1] cellconfigure $popCount,$col -editable no
+						[lindex $f2 1] cellconfigure $popCount,$col -editable no
 					    }
-					    incr popCount 1 
-					    continue	
+					}
+					incr popCount 1 
+					continue
 				    }
 
 				    set IndexActualValue [lindex $tempIndexProp 1]
@@ -1594,20 +1686,39 @@ proc Operations::SingleClickNode {node} {
                                             set $tempPdo 0x[subst $[subst $tempPdo]]
                                         }
                                     }
-				    [lindex $f2 1] insert $popCount [list $popCount $commParamValue $offset $length $listIndex $listSubIndex ]
-					lappend popCountList $popCount
+
+				    if {$ra_auto == 1 } {
+					[lindex $f5 1] insert $popCount [list $popCount $commParamValue $offset $length $listIndex $listSubIndex ]
+				    } else {
+					[lindex $f2 1] insert $popCount [list $popCount $commParamValue $offset $length $listIndex $listSubIndex ]
+				    }
+					
+				    lappend popCountList $popCount
+				
 				    if { $accessType == "ro" || $accessType == "const" } {
 					    foreach col [list 2 3 4 5 ] {
 						    [lindex $f2 1] cellconfigure $popCount,$col -editable no
+						    [lindex $f5 1] cellconfigure $popCount,$col -editable no
 					    }							
 				    } else {
 					# as a default the first cell is always non editable, adding it to the list only when made editable
-					    foreach col [list 2 3 4 5 ] {
-						    [lindex $f2 1] cellconfigure $popCount,$col -editable yes
-					    }	
+					    if {$ra_auto == 1 } {
+						foreach col [list 3 4 5 ] {
+						    set text [lindex $f5 1]
+						    puts "TEST:$text"
+						    [lindex $f5 1] cellconfigure $popCount,$col -editable yes
+						}	
 						if { $nodeidEditableFlag == 1} {
-						    [lindex $f2 1] cellconfigure $popCount,1 -editable yes
+							[lindex $f5 1] cellconfigure $popCount,1 -editable yes
 						}
+					    } else {
+						foreach col [list 2 3 4 5 ] {
+						    [lindex $f2 1] cellconfigure $popCount,$col -editable yes
+						}	
+						if { $nodeidEditableFlag == 1} {
+							[lindex $f2 1] cellconfigure $popCount,1 -editable yes
+						}
+					    }
 				    }
 				    incr popCount 1 
 			    }
@@ -1617,11 +1728,22 @@ proc Operations::SingleClickNode {node} {
 			lappend populatedCommParamList [list $indexId [lindex $finalMappList $count]  $popCountList]
 			set popCountList ""
 	    }
+	    puts  "F2: $f2"
+	    puts "lindexxx:  [lindex $f2 0]"
 	    pack forget [lindex $f0 0]
 	    pack forget [lindex $f1 0]
-	    pack [lindex $f2 0] -expand yes -fill both -padx 2 -pady 4
+	    if {$ra_auto == 1 } {
+		pack forget [lindex $f2 0]
+		pack [lindex $f5 0] -expand yes -fill both -padx 2 -pady 4
+	    } else {
+		pack [lindex $f2 0] -expand yes -fill both -padx 2 -pady 4
+		pack forget [lindex $f5 0]
+	    }
 	    pack forget [lindex $f3 0]
 	    pack forget [lindex $f4 0]
+	    
+	    puts "populatedCommParamList: $populatedCommParamList"
+	    puts "populatedPDOList: $populatedPDOList"
 	    return 
     } 
 
@@ -1681,7 +1803,9 @@ proc Operations::SingleClickNode {node} {
 	    [lindex $f2 1] configure -state disabled
 	    pack forget [lindex $f3 0]
 	    pack forget [lindex $f4 0]
-        
+	    pack forget [lindex $f5 0]
+	    [lindex $f5 1] cancelediting
+	    [lindex $f5 1] configure -state disabled
         set saveButton $subindexSaveBtn
     } elseif {[string match "*Index*" $node]} {
 	    set tmpInnerf0 [lindex $f0 1]
@@ -1724,7 +1848,9 @@ proc Operations::SingleClickNode {node} {
 	    [lindex $f2 1] configure -state disabled
 	    pack forget [lindex $f3 0]
 	    pack forget [lindex $f4 0]
-            
+            pack forget [lindex $f5 0]
+	    [lindex $f5 1] cancelediting
+	    [lindex $f5 1] configure -state disabled
         set saveButton $indexSaveBtn
     }
     
@@ -3084,6 +3210,288 @@ proc Operations::InsertTree { } {
     $treePath insert end root ProjectNode -text "POWERLINK Network" -open 1 -image [Bitmap::get network]
 }
 
+
+
+proc Operations::FuncIndexlist {nodeIdparm} {
+    global treePath
+
+    puts "treePath: $treePath"
+    list mappingidxlist
+    set mappingidxlist ""
+    set nodeId ""
+
+    set mnNode [$treePath nodes ProjectNode]
+    foreach tempMn $mnNode {
+	puts "tempMn: $tempMn"
+	set childMn [$treePath nodes $tempMn]
+	foreach tempChildMn $childMn {
+	    puts "tempChildMn: $tempChildMn"
+	    set tempNodeId "[$treePath itemcget $tempChildMn -text ]"
+	    puts "tempNodeId: $tempNodeId"
+	    set result [Operations::GetNodeIdType $tempChildMn]
+	    if {$result != "" } {
+		    set nodeId [lindex $result 0]
+		    set nodeType [lindex $result 1]
+	    } else {
+		set nodeId "-1"
+	    }
+	    if { $nodeId == $nodeIdparm } {
+		set idx [$treePath nodes $tempChildMn]
+		foreach tempIdx $idx {
+		    set idxName "[$treePath itemcget $tempIdx -text ]"
+		    puts "idxName: $idxName"
+		    # pdo should not be processed
+		    if { [string match -nocase "PDO" $idxName] } {
+			
+		    } else {
+			set idxId "[string range $idxName end-6 end-1]"
+			puts "idxId: $idxId"
+			if { [expr $idxId > 0x1FFF] } {
+			    lappend mappingidxlist $idxId
+			}
+		    }
+		}
+	    }
+	}
+    }
+    
+    
+    if { [string length $mappingidxlist] < 6 } {
+	Console::DisplayWarning "No index are available in this node for mapping. Add index with a index value greater than 2000"
+    }
+    return $mappingidxlist
+}
+
+
+
+proc Operations::FuncSubIndexlist {nodeIdparm idxIdparm pdoTypeparm} {
+    global treePath
+
+    puts "treePath: $treePath"
+    list mappingSidxList
+    set mappingSidxList ""
+    set nodeId ""
+
+    if { [string length $idxIdparm] < 6 } {
+	Console::DisplayInfo "Set the Index value first to view the available subindexes"
+	return $mappingSidxList
+    }
+
+    
+    set mnNode [$treePath nodes ProjectNode]
+    foreach tempMn $mnNode {
+	puts "tempMn: $tempMn"
+	set childMn [$treePath nodes $tempMn]
+	foreach tempChildMn $childMn {
+	    puts "tempChildMn: $tempChildMn"
+	    set tempNodeId "[$treePath itemcget $tempChildMn -text ]"
+	    puts "tempNodeId: $tempNodeId"
+	    set result [Operations::GetNodeIdType $tempChildMn]
+	    if {$result != "" } {
+		    set nodeId [lindex $result 0]
+		    set nodeType [lindex $result 1]
+	    } else {
+		set nodeId "-1"
+	    }
+	    if { $nodeId == $nodeIdparm } {
+
+		    set nodePos [new_intp]
+		    set ExistfFlag [new_boolp]
+		    set catchErrCode [IfNodeExists $nodeIdparm $nodeType $nodePos $ExistfFlag]
+		    set nodePos [intp_value $nodePos]
+		    set ExistfFlag [boolp_value $ExistfFlag]
+		    set ErrCode [ocfmRetCode_code_get $catchErrCode]
+		    if { $ErrCode == 0 && $ExistfFlag == 1 } {
+			    #the node exist continue 
+		    } else {
+		    }
+		
+		set idx [$treePath nodes $tempChildMn]
+		foreach tempIdx $idx {
+		    set idxName "[$treePath itemcget $tempIdx -text ]"
+		    puts "idxName: $idxName"
+		    # pdo should not be processed
+		    if { [string match -nocase "PDO" $idxName] } {
+			
+		    } else {
+			set idxId "[string range $idxName end-6 end-1]"
+			puts "idxId: $idxId"
+			if { [expr $idxId == $idxIdparm] } {
+			    set sidx [$treePath nodes $tempIdx]
+			    foreach tempSidx $sidx {
+				set sidxName "[$treePath itemcget $tempSidx -text ]"
+				puts "sidxName: $sidxName"
+				set sidxId "[string range $sidxName end-4 end-1]"
+				puts "sidxId: $sidxId"
+				#ocfmRetCode GetSubIndexAttributes(INT32 iNodeID, ENodeType enumNodeType, char* pbIndexID, char* pbSubIndexID, EAttributeType enumAttributeType, char* pbOutAttributeValue)
+				set tempIdxIdparm "[string range $idxIdparm end-3 end]"
+				set tempSidxId "[string range $sidxId end-1 end]"
+				#set result []
+				#set result [GetSubIndexAttributes $nodeIdparm $nodeType $tempIdxIdparm $tempSidxId 6]
+				#puts "[lindex $result 0]"
+				#puts "[lindex $result 1]"
+
+				puts "tempIdxIdparm: $tempIdxIdparm"
+				puts "tempSidxId: $tempSidxId"
+
+				set indexPos [new_intp] 
+				set subIndexPos [new_intp] 
+				set catchErrCode [IfSubIndexExists $nodeIdparm $nodeType $tempIdxIdparm $tempSidxId $subIndexPos $indexPos] 
+				set indexPos [intp_value $indexPos]
+				set subIndexPos [intp_value $subIndexPos] 
+				# 6 is passed to get the pdo mapping
+				set tempIndexProp [GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos 6 ]
+				set ErrCode [ocfmRetCode_code_get [lindex $tempIndexProp 0] ]		
+				if {$ErrCode != 0} {
+					continue	
+				}
+				set pdoMapping [lindex $tempIndexProp 1]
+				
+				puts "pdoMapping: $pdoMapping # Parm: $pdoTypeparm"
+				if { [string match $pdoTypeparm $pdoMapping] } {
+				    puts "sidxId: $sidxId"
+				    lappend mappingSidxList $sidxId   
+				}
+			    }
+			    
+			}
+		    }
+		}
+	    }
+	}
+    }
+    
+    
+    if { [string length $mappingSidxList] < 4 } {
+	Console::DisplayWarning "No Subindex are available in the Node:$nodeIdparm Index:$idxIdparm for mapping as a $pdoTypeparm. \n Add sub-Index if not present Or check for the pdomappingtype"
+    }
+    return $mappingSidxList
+}
+
+
+
+
+proc Operations::FuncSubIndexLength {nodeIdparm idxIdparm sidxparm} {
+    global treePath
+
+    puts "treePath: $treePath"
+    list mappingSidxLength
+    set mappingSidxLength ""
+    set nodeId ""
+
+    
+    if { [string length $idxIdparm] < 6 || [string length $sidxparm] < 4 }  {
+	
+	if { [string length $sidxparm] < 4 }  {
+	    Console::DisplayInfo "SubIndex value Empty. set the subindex value first to view the length"
+	    return $mappingSidxLength
+	}
+	Console::DisplayInfo "Set the Index value first to load the length"
+	return $mappingSidxLength
+    }    
+
+    set mnNode [$treePath nodes ProjectNode]
+    foreach tempMn $mnNode {
+	puts "tempMn: $tempMn"
+	set childMn [$treePath nodes $tempMn]
+	foreach tempChildMn $childMn {
+	    puts "tempChildMn: $tempChildMn"
+	    set tempNodeId "[$treePath itemcget $tempChildMn -text ]"
+	    puts "tempNodeId: $tempNodeId"
+	    set result [Operations::GetNodeIdType $tempChildMn]
+	    if {$result != "" } {
+		    set nodeId [lindex $result 0]
+		    set nodeType [lindex $result 1]
+	    } else {
+		set nodeId "-1"
+	    }
+	    if { $nodeId == $nodeIdparm } {
+
+		    set nodePos [new_intp]
+		    set ExistfFlag [new_boolp]
+		    set catchErrCode [IfNodeExists $nodeIdparm $nodeType $nodePos $ExistfFlag]
+		    set nodePos [intp_value $nodePos]
+		    set ExistfFlag [boolp_value $ExistfFlag]
+		    set ErrCode [ocfmRetCode_code_get $catchErrCode]
+		    if { $ErrCode == 0 && $ExistfFlag == 1 } {
+			    #the node exist continue 
+		    } else {
+		    }
+		
+		set idx [$treePath nodes $tempChildMn]
+		foreach tempIdx $idx {
+		    set idxName "[$treePath itemcget $tempIdx -text ]"
+		    puts "idxName: $idxName"
+		    # pdo should not be processed
+		    if { [string match -nocase "PDO" $idxName] } {
+			
+		    } else {
+			set idxId "[string range $idxName end-6 end-1]"
+			puts "idxId: $idxId"
+			if { [expr $idxId == $idxIdparm] } {
+			    set sidx [$treePath nodes $tempIdx]
+			    foreach tempSidx $sidx {
+				set sidxName "[$treePath itemcget $tempSidx -text ]"
+				puts "sidxName: $sidxName"
+				set sidxId "[string range $sidxName end-4 end-1]"
+				puts "sidxId: $sidxId"
+
+
+				if { [string match $sidxparm $sidxId] } {
+				
+				    set tempIdxIdparm "[string range $idxIdparm end-3 end]"
+				    set tempSidxId "[string range $sidxId end-1 end]"
+				    puts "tempIdxIdparm: $tempIdxIdparm"
+				    puts "tempSidxId: $tempSidxId"
+				
+				    set indexPos [new_intp] 
+				    set subIndexPos [new_intp] 
+				    set catchErrCode [IfSubIndexExists $nodeIdparm $nodeType $tempIdxIdparm $tempSidxId $subIndexPos $indexPos] 
+				    set indexPos [intp_value $indexPos]
+				    set subIndexPos [intp_value $subIndexPos] 
+				    # 2 is passed to get the Datatype value
+				    set tempIndexProp [GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos 2 ]
+				    set ErrCode [ocfmRetCode_code_get [lindex $tempIndexProp 0] ]		
+				    if {$ErrCode != 0} {
+					    continue	
+				    }
+				    set sidxDatatype [lindex $tempIndexProp 1]
+				    
+				    puts "sidxDatatype: $sidxDatatype"
+
+				    #Get the lenth for the datatype and append all the length
+				    # consider about xdc and xdd DOMain objects also
+				    set datasize [getDataSize $sidxDatatype]
+				    puts "datasize: $datasize"
+				    
+				    set tempHexDataSizeBits [string toupper [format %x [expr $datasize * 8 ]]]
+				    puts "tempHexDataSizeBits: $tempHexDataSizeBits"
+
+				    set mappingSidxLength 0x[NoteBookManager::AppendZero $tempHexDataSizeBits 4]
+				    puts "mappingSidxLength: $mappingSidxLength"
+
+#set dataCoList [list BIT BOOLEAN INTEGER8 INTEGER16 INTEGER24 INTEGER32 INTEGER40 INTEGER48 INTEGER56 INTEGER64 UNSIGNED8 UNSIGNED16 UNSIGNED24 UNSIGNED32 UNSIGNED40 UNSIGNED48 UNSIGNED56 UNSIGNED64 REAL32 REAL64 MAC_ADDRESS IP_ADDRESS OCTET_STRING]
+#Boolean Integer8 Integer16 Integer32 Unsigned8 Unsigned16 Unsigned32 Real32 Visible_String Integer24 Real64 Integer40 Integer48 Integer56 Integer64 Octet_String Unicode_String Time_of_Day Time_Diff Domain Unsigned24 Unsigned40 Unsigned48 Unsigned56 Unsigned64 MAC_ADDRESS IP_ADDRESS NETTIME
+
+				}
+			    }
+			    
+			}
+		    }
+		}
+	    }
+	}
+    }
+
+    if { [string length $mappingSidxLength] < 6 } {
+	Console::DisplayWarning "Length not available for the Subindex in the Node:$nodeIdparm Index:$idxIdparm. \n Add sub-Index if not present Or check for the Datatype mapped"
+    }
+    return $mappingSidxLength
+}
+
+
+
+
 #---------------------------------------------------------------------------------------------------
 #  NameSpace Declaration
 #
@@ -3606,6 +4014,8 @@ proc Operations::BuildProject {} {
 		}
 	    #build_nodesList is used while deleting the node after the node is built. So collecting the list of CN nodes while the project is build
 		set build_nodesList ""
+		set buildCN_result ""
+		set buildCN_nodeId ""
 	        foreach mnNode [$treePath nodes ProjectNode] {
 		    set chk 1
 		    foreach cnNode [$treePath nodes $mnNode] {
@@ -4795,7 +5205,8 @@ proc Operations::RemoveAllFrames {} {
     global f2
     global f3
     global f4
-    
+    global f5
+
     #focusing the name entry box while removing all the frames
     #as a fix due to triggerring of focusout events of entry boxes 
     catch { focus [lindex $f0 1].en_nam1 }
@@ -4808,4 +5219,7 @@ proc Operations::RemoveAllFrames {} {
     [lindex $f2 1] configure -state disabled
     pack forget [lindex $f3 0]
     pack forget [lindex $f4 0]
+    pack forget [lindex $f5 0]
+    [lindex $f5 1] cancelediting
+    [lindex $f5 1] configure -state disabled
 }

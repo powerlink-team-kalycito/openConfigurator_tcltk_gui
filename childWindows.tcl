@@ -183,6 +183,7 @@ proc ChildWindows::ProjectSettingWindow {} {
     global ra_proj
     global ra_auto
     global viewChgFlg
+    global nodeSelect
 
     if {$projectDir == "" || $projectName == "" } {
 	return
@@ -265,6 +266,7 @@ proc ChildWindows::ProjectSettingWindow {} {
             }
 	}
         destroy .projSett
+	Operations::SingleClickNode $nodeSelect
     }
 	
     button $frame3.bt_cancel -width 8 -text "Cancel" -command {

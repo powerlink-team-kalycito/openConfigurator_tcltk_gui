@@ -1211,32 +1211,54 @@ proc Operations::BasicFrames { } {
     [lindex $f5 1] columnconfigure 2 -background #e0e8f0 -width 11
     [lindex $f5 1] columnconfigure 3 -background #e0e8f0 -width 11
     [lindex $f5 1] columnconfigure 4 -background #e0e8f0 -width 11
-    [lindex $f5 1] columnconfigure 5 -background #e0e8f0 -width 11
+    [lindex $f5 1] columnconfigure 5 -background #e0e8f0 -width 11 -foreground #606060
 
     #binding for tablelist widget
     bind [lindex $f5 0] <Enter> {
+	puts "Key 0 press enter"
         bind . <KeyPress-Return> {
                 global tableSaveBtn
                 $tableSaveBtn invoke
         }
+	set temppath "[lindex $f5 1]"
+	#set tempAdd ".body.f"
+	bind . <KeyPress-Escape> {
+	    #pack forget "$temppath$tempAdd.a"
+	    puts "keypress 0 escape enter"
+	    set result [$temppath finishediting]
+	    puts "result:$result"
+	}
+	bind . <Double-1> {
+	puts "Double clicking tablelist"
+	}
     }
     bind [lindex $f5 0] <Leave> {
-        bind . <KeyPress-Return> ""
+	puts "keypress 0 leave"
+        bind . <KeyPress-Return> {
+	    puts "keypress 0 leave return"
+	}
     }
     bind [lindex $f5 1] <Enter> {
+	puts "keypress 1 Enter"
 	    global LastTableFocus
 	    if { [ winfo exists $LastTableFocus ] && [ string match "[lindex $f5 1]*" $LastTableFocus ] } {
 		    focus $LastTableFocus
 	    } else {
 		    focus [lindex $f5 1]
 	    }
-	
-	    bind . <Motion> {
-		    global LastTableFocus
-		    set LastTableFocus [focus]
+	    bind . <KeyPress-Escape> {
+		puts "keypress 0 escape enter"
+		set result [[lindex $f5 1] finishediting]
+		puts "result:$result"
 	    }
+	    #bind . <Motion> {
+	#	puts "keypress 1 Enter motion"
+	#	    global LastTableFocus
+	#	    set LastTableFocus [focus]
+	#    }
     }
     bind [lindex $f5 1] <Leave> {
+	puts "keypress 1 Leave"
 	    bind . <Motion> {}
 	    global LastTableFocus
 	    global treeFrame
@@ -1245,11 +1267,20 @@ proc Operations::BasicFrames { } {
 	    } else {
 			    focus .
 	    }
+	    focus $treeFrame.en_find
     }
     bind [lindex $f5 1] <FocusOut> {
+	puts "keypress 1 FocusOut"
 	    bind . <Motion> {}
 	    global LastTableFocus
 	    set LastTableFocus [focus]
+    }
+    bind [lindex $f5 1] <Double-1> {
+	puts "Double clicking tablelist"
+    }
+
+    bind [lindex $f5 1] <KeyPress-Escape> {
+	puts "KEypress esc"
     }
     #bind [lindex $f5 1] <<ComboboxSelected>> {
 #	puts "chosen [%W get]"
@@ -1688,11 +1719,11 @@ proc Operations::SingleClickNode {node} {
                                     }
 
 				    if {$ra_auto == 1 } {
-					[lindex $f5 1] insert $popCount [list $popCount $commParamValue $offset $length $listIndex $listSubIndex ]
+					[lindex $f5 1] insert $popCount [list $popCount $commParamValue $listIndex $listSubIndex $length $offset ]
 				    } else {
-					[lindex $f2 1] insert $popCount [list $popCount $commParamValue $offset $length $listIndex $listSubIndex ]
+					[lindex $f2 1] insert $popCount [list $popCount $commParamValue $listIndex $listSubIndex $length $offset ]
 				    }
-					
+
 				    lappend popCountList $popCount
 				
 				    if { $accessType == "ro" || $accessType == "const" } {
@@ -1703,9 +1734,7 @@ proc Operations::SingleClickNode {node} {
 				    } else {
 					# as a default the first cell is always non editable, adding it to the list only when made editable
 					    if {$ra_auto == 1 } {
-						foreach col [list 3 4 5 ] {
-						    set text [lindex $f5 1]
-						    puts "TEST:$text"
+						foreach col [list 2 3 4 ] {
 						    [lindex $f5 1] cellconfigure $popCount,$col -editable yes
 						}	
 						if { $nodeidEditableFlag == 1} {

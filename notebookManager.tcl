@@ -519,10 +519,10 @@ proc NoteBookManager::create_table {nbpath choice} {
             set st [tablelist::tablelist $st \
                 -columns {0 "No" left
                 0 "Node Id" center
-                0 "Offset" center
-                0 "Length" center
                 0 "Index" center
-                0 "Sub Index" center} \
+                0 "Sub Index" center
+		0 "Length" center
+		0 "Offset" center} \
                 -setgrid 0 -width 0 \
                 -stripebackground gray98 \
                 -resizable 1 -movablecolumns 0 -movablerows 0 \
@@ -537,13 +537,13 @@ proc NoteBookManager::create_table {nbpath choice} {
             $st columnconfigure 5 -editable yes -editwindow entry
 
     } elseif {$choice == "AUTOpdo"} {
-	set st [tablelist::tablelist $st \
+	    set st [tablelist::tablelist $st \
                 -columns {0 "S.No" left
-			    0 "Target Node Id" center
-			    0 "Offset" center
-			    0 "Length" center
-	                    0 "Index" center
-	                    0 "Sub Index" center} \
+			0 "Target Node Id" center
+			0 "Index" center
+			0 "Sub Index" center
+			0 "Length" center
+			0 "Offset" center} \
                 -setgrid 0 -width 0 \
                 -stripebackground gray98 \
                 -resizable 1 -movablecolumns 0 -movablerows 0 \
@@ -553,10 +553,10 @@ proc NoteBookManager::create_table {nbpath choice} {
 
             $st columnconfigure 0 -editable no 
             $st columnconfigure 1 -editable no -editwindow ComboBox
-            $st columnconfigure 2 -editable no	
+            $st columnconfigure 2 -editable no -editwindow ComboBox
             $st columnconfigure 3 -editable no -editwindow ComboBox
             $st columnconfigure 4 -editable no -editwindow ComboBox
-            $st columnconfigure 5 -editable no -editwindow ComboBox
+            $st columnconfigure 5 -editable no 
     } else {
         #invalid choice
         return
@@ -1810,13 +1810,13 @@ proc NoteBookManager::StartEdit {tablePath rowIndex columnIndex text} {
                 $win configure -invalidcommand bell -validate key  -validatecommand "Validation::IsTableHex %P %s %d %i 4 $tablePath $rowIndex $columnIndex $win"
             }
             3 {
-                $win configure -invalidcommand bell -validate key  -validatecommand "Validation::IsTableHex %P %s %d %i 4 $tablePath $rowIndex $columnIndex $win"
+                $win configure -invalidcommand bell -validate key  -validatecommand "Validation::IsTableHex %P %s %d %i 2 $tablePath $rowIndex $columnIndex $win"
             }
             4 {
                 $win configure -invalidcommand bell -validate key  -validatecommand "Validation::IsTableHex %P %s %d %i 4 $tablePath $rowIndex $columnIndex $win"
             }
             5 {
-                $win configure -invalidcommand bell -validate key  -validatecommand "Validation::IsTableHex %P %s %d %i 2 $tablePath $rowIndex $columnIndex $win"
+                $win configure -invalidcommand bell -validate key  -validatecommand "Validation::IsTableHex %P %s %d %i 4 $tablePath $rowIndex $columnIndex $win"
             }
         }
     return $text
@@ -1859,6 +1859,7 @@ proc NoteBookManager::StartEditCombo {tablePath rowIndex columnIndex text} {
     set nodeidVal [lindex $result 0]
 
     set win [$tablePath editwinpath]
+    $win configure -editable no
     switch -- $columnIndex {
 	1 {
             set nodeIdListHex ""
@@ -1869,21 +1870,10 @@ proc NoteBookManager::StartEditCombo {tablePath rowIndex columnIndex text} {
 	    }
 
 	    $win configure -values "$nodeIdListHex"
-	    $win configure -invalidcommand bell -validate key -validatecommand "Validation::SetTableValueNodeid $tablePath $rowIndex $columnIndex $win %d %i %P"
+	    $win configure -invalidcommand bell -validate key -validatecommand "Validation::SetTableComboValue %P $tablePath $rowIndex $columnIndex $win"
 	#    $win configure -invalidcommand bell -validate key  -validatecommand "Validation::IsTableHex %P %s %d %i 2 $tablePath $rowIndex $columnIndex $win"
 	}
 	2 {
-	    $win configure -invalidcommand bell -validate key  -validatecommand "Validation::IsTableHex %P %s %d %i 4 $tablePath $rowIndex $columnIndex $win"
-	}
-	3 {
-	    set sidxLength [Operations::FuncSubIndexLength $nodeidVal $idxidVal $sidxVal]
-	    puts "SINdex length cell: $sidxLength"
-	    $win configure -values "$sidxLength"
-	    #$win configure -values {0x1200 0x2400 0x4800 0x9600 0x9200 0x3400}
-	    #$win configure -invalidcommand bell -validate key  -validatecommand "Validation::IsTableHex %P %s %d %i 4 $tablePath $rowIndex $columnIndex $win"
-	    $win configure -invalidcommand bell -validate key  -validatecommand "Validation::SetTableComboValue %P $tablePath $rowIndex $columnIndex $win"
-    	}
-	4 {
 	    set idxList [Operations::FuncIndexlist $nodeidVal]
 	    puts "INdex cell: $idxList"
 	    $win configure -values "$idxList"
@@ -1891,12 +1881,24 @@ proc NoteBookManager::StartEditCombo {tablePath rowIndex columnIndex text} {
 	    #$win configure -invalidcommand bell -validate key  -validatecommand "Validation::IsTableHex %P %s %d %i 4 $tablePath $rowIndex $columnIndex $win"
 	    $win configure -invalidcommand bell -validate key  -validatecommand "Validation::SetTableComboValue %P $tablePath $rowIndex $columnIndex $win"
 	}
-	5 {
+	3 {
 	    set sidxList [Operations::FuncSubIndexlist $nodeidVal $idxidVal $pdoType]
 	    puts "SUBINdex cell: $sidxList"
 	    $win configure -values "$sidxList"
 	    #$win configure -values {0x12 0x24 0x48 0x96 0x92 0x34}
 	    $win configure -invalidcommand bell -validate key  -validatecommand "Validation::SetTableComboValue %P $tablePath $rowIndex $columnIndex $win"
+    	}
+	4 {
+	    set sidxLength [Operations::FuncSubIndexLength $nodeidVal $idxidVal $sidxVal]
+	    puts "SINdex length cell: $sidxLength"
+	    $win configure -values "$sidxLength"
+	    #$win configure -values {0x1200 0x2400 0x4800 0x9600 0x9200 0x3400}
+	    #$win configure -invalidcommand bell -validate key  -validatecommand "Validation::IsTableHex %P %s %d %i 4 $tablePath $rowIndex $columnIndex $win"
+	    $win configure -invalidcommand bell -validate key  -validatecommand "Validation::SetTableComboValue %P $tablePath $rowIndex $columnIndex $win"
+	}
+	5 {
+	    puts "Offset Loading"
+	    #$win configure -invalidcommand bell -validate key  -validatecommand "Validation::IsTableHex %P %s %d %i 4 $tablePath $rowIndex $columnIndex $win"
 	}
     }
 
@@ -1939,7 +1941,7 @@ proc NoteBookManager::EndEdit {tablePath rowIndex columnIndex text} {
                 }
             }
             3 {
-                if {[string length $text] != 4} {
+                if {[string length $text] != 2} {
                     bell
                     $tablePath rejectinput
                 } else {
@@ -1953,7 +1955,7 @@ proc NoteBookManager::EndEdit {tablePath rowIndex columnIndex text} {
                 }
             }
             5 {
-                if {[string length $text] != 2} {
+                if {[string length $text] != 4} {
 	                bell
                     $tablePath rejectinput
                 } else {
@@ -2024,11 +2026,11 @@ proc NoteBookManager::SaveTable {tableWid} {
             if {[string match "00" $subIndexId]} {
             } else {
                 set name [string range [$treePath itemcget $childSubIndex -text] 0 end-6] 
-                set offset [string range [$tableWid cellcget $rowCount,2 -text] 2 end] 
-                set length [string range [$tableWid cellcget $rowCount,3 -text] 2 end] 
+                set offset [string range [$tableWid cellcget $rowCount,5 -text] 2 end] 
+                set length [string range [$tableWid cellcget $rowCount,4 -text] 2 end] 
                 set reserved 00
-                set index [string range [$tableWid cellcget $rowCount,4 -text] 2 end] 
-                set subindex [string range [$tableWid cellcget $rowCount,5 -text] 2 end]
+                set index [string range [$tableWid cellcget $rowCount,2 -text] 2 end] 
+                set subindex [string range [$tableWid cellcget $rowCount,3 -text] 2 end]
                 set value $length$offset$reserved$subindex$index
                 #0x is appended when saving value to indicate it is a hexa decimal number
                 if { [string length $value] != 16 } {

@@ -729,7 +729,6 @@ proc Validation::IsTableHex {input preinput mode idx reqLen tablePath rowIndex c
     } else {
 		if { $columnIndex == 1} {
 			#for editing node id
-			after 1 Validation::SetTableValue $entryPath $mode $idx 0x$input
 			after 1 Validation::SetTableValueNodeid $tablePath $rowIndex $columnIndex $entryPath $mode $idx 0x$input
 		} else {
 			after 1 Validation::SetTableValue $entryPath $mode $idx 0x$input
@@ -772,96 +771,120 @@ proc Validation::SetTableValue { entryPath mode idx input } {
 proc Validation::SetTableComboValue { input tablePath rowIndex columnIndex entryPath} {
     global populatedCommParamList
 	switch -- $columnIndex {
-	    0 {
-		#Do nothing for Sno
-	    }
-	    1 {
-		#Do nothing for Nodeid
-	    }
-	    2{
-		#Do nothing for offset
-	    }
-	    3 {
-		puts "tablePath: $tablePath,"
-		puts "rowIndex: $rowIndex, columnIndex: $columnIndex, input: $input"
-
-		foreach tempList $populatedCommParamList {
-		    set rowlist [lindex $tempList 2]
-		    puts "rowlist: $rowlist"
-		    set chkRslt [lsearch $rowlist $rowIndex]
-		    if { $chkRslt != -1} {
-			    set maxRow [llength $rowlist]
-			    puts "maxRow: $maxRow"
-			    set counter 1
-			    foreach indRow $rowlist {
-
-				    #while 1a00 has one index
-				    if { $counter == 1 } {
-					puts "counter == 1"
-					#1st subindex in an channel for which offset is 0x0000
-					$tablePath cellconfigure $indRow,2 -text "0x0000"
-					set offsetVal [$tablePath cellcget $indRow,2 -text]
-					if { $indRow == $rowIndex } {
-					    set lengthVal $input
-					} else {
-					    set lengthVal [$tablePath cellcget $indRow,3 -text]    
-					}
-					puts "offsetVal: $offsetVal, lengthVal: $lengthVal"
-				    } elseif { $counter == $maxRow } {
-					puts "counter == maxRow"
-					#no need to manipulate and set offset value to next row if it is a last row
-					set totalOffset [expr $offsetVal+$lengthVal]
-					puts "totalOffset: $totalOffset"
-					set totalOffsethex 0x[NoteBookManager::AppendZero [string toupper [format %x $totalOffset]] 4]
-					puts "totalOffsethex: $totalOffsethex"
-					$tablePath cellconfigure $indRow,2 -text "$totalOffsethex"
-				    } elseif { $indRow == $rowIndex } {
-					puts "indRow == rowIndex"
-					set totalOffset [expr $offsetVal+$lengthVal]
-					puts "totalOffset: $totalOffset"
-					set totalOffsethex 0x[NoteBookManager::AppendZero [string toupper [format %x $totalOffset]] 4]
-					$tablePath cellconfigure $indRow,2 -text "$totalOffsethex"
-					set offsetVal [$tablePath cellcget $indRow,2 -text]
-					puts "offsetVal: $offsetVal"
-					set lengthVal $input
-					puts "inputlengthval: $lengthVal"
-				    } else {
-					puts "Else"
-					set totalOffset [expr $offsetVal+$lengthVal]
-					puts "totalOffset: $totalOffset"
-					set totalOffsethex 0x[NoteBookManager::AppendZero [string toupper [format %x $totalOffset]] 4]
-					puts "totalOffsethex: $totalOffsethex"
-					$tablePath cellconfigure $indRow,2 -text "$totalOffsethex"
-					set offsetVal [$tablePath cellcget $indRow,2 -text]
-					set lengthVal [$tablePath cellcget $indRow,3 -text]
-					puts "offsetVal: $offsetVal, lengthVal: $lengthVal"
-				    }
-				    incr counter
-			    }
-		    } else {
-
-		    }
+		0 {
+			# Do nothing for Sno
 		}
-	    }
-	    4 {
-		$tablePath cellconfigure $rowIndex,3 -text "0x"
-		$tablePath cellconfigure $rowIndex,5 -text "0x"
-	    }
-	    5 {
-		$tablePath cellconfigure $rowIndex,3 -text "0x"
-	    }
+		1 {
+			#set enty [Widget::subcget $tablePath .e]
+			#$entryPath configure -editable no
+			if { [string length $input] < 3 || [string length $input] > 4 } {
+				return 0
+			}
+
+			foreach tempList $populatedCommParamList {
+				set rowlist [lindex $tempList 2]
+				# puts "rowlist: $rowlist"
+				set chkRslt [lsearch $rowlist $rowIndex]
+				if { $chkRslt != -1} {
+
+					foreach indRow $rowlist {
+						if { $indRow == $rowIndex } {
+							continue;
+						}
+						$tablePath cellconfigure $indRow,$columnIndex -text "$input"
+					}
+					return 0;
+				} else {
+				}
+			}
+		}
+		2 {
+			# sidx and length should be set empty after index is edited or modified
+			$tablePath cellconfigure $rowIndex,3 -text "0x"
+			$tablePath cellconfigure $rowIndex,4 -text "0x"
+		}
+		3 {
+			# length should be set empty after sidx is modified or edited
+			$tablePath cellconfigure $rowIndex,4 -text "0x"
+		}
+		4 {
+			puts "tablePath: $tablePath,"
+			puts "rowIndex: $rowIndex, columnIndex: $columnIndex, input: $input"
+			if {[string length $input] != 6} {
+				return 0;
+			}
+			foreach tempList $populatedCommParamList {
+				set rowlist [lindex $tempList 2]
+				puts "rowlist: $rowlist"
+				set chkRslt [lsearch $rowlist $rowIndex]
+				if { $chkRslt != -1} {
+					set maxRow [llength $rowlist]
+					puts "maxRow: $maxRow"
+					set counter 1
+					foreach indRow $rowlist {
+						# while 1a00 has one index
+						if { $counter == 1 } {
+							puts "counter == 1"
+							# 1st subindex in an channel for which offset is 0x0000
+							$tablePath cellconfigure $indRow,5 -text "0x0000"
+							set offsetVal [$tablePath cellcget $indRow,5 -text]
+							if { $indRow == $rowIndex } {
+								set lengthVal $input
+							} else {
+								set lengthVal [$tablePath cellcget $indRow,4 -text]    
+							}
+							puts "offsetVal: $offsetVal, lengthVal: $lengthVal"
+						} elseif { $counter == $maxRow } {
+							puts "counter == maxRow"
+							#no need to manipulate and set offset value to next row if it is a last row
+							set totalOffset [expr $offsetVal+$lengthVal]
+							puts "totalOffset: $totalOffset"
+							set totalOffsethex 0x[NoteBookManager::AppendZero [string toupper [format %x $totalOffset]] 4]
+							puts "totalOffsethex: $totalOffsethex"
+							$tablePath cellconfigure $indRow,5 -text "$totalOffsethex"
+						} elseif { $indRow == $rowIndex } {
+							puts "indRow == rowIndex"
+							set totalOffset [expr $offsetVal+$lengthVal]
+							puts "totalOffset: $totalOffset"
+							set totalOffsethex 0x[NoteBookManager::AppendZero [string toupper [format %x $totalOffset]] 4]
+							$tablePath cellconfigure $indRow,5 -text "$totalOffsethex"
+							set offsetVal [$tablePath cellcget $indRow,5 -text]
+							puts "offsetVal: $offsetVal"
+							set lengthVal $input
+							puts "inputlengthval: $lengthVal"
+						} else {
+							puts "Else"
+							set totalOffset [expr $offsetVal+$lengthVal]
+							puts "totalOffset: $totalOffset"
+							set totalOffsethex 0x[NoteBookManager::AppendZero [string toupper [format %x $totalOffset]] 4]
+							puts "totalOffsethex: $totalOffsethex"
+							$tablePath cellconfigure $indRow,5 -text "$totalOffsethex"
+							set offsetVal [$tablePath cellcget $indRow,5 -text]
+							set lengthVal [$tablePath cellcget $indRow,4 -text]
+							puts "offsetVal: $offsetVal, lengthVal: $lengthVal"
+						}
+						incr counter
+					}
+				} else {
+
+				}
+			}
+		}
+		5 {
+		    # do nothing for offset
+		}
 	}
     return 0
 }
 
 proc Validation::SetTableValueNodeid {tablePath rowIndex columnIndex entryPath mode idx input} {
 	global populatedCommParamList
-puts "tablePath:$tablePath rowIndex:$rowIndex columnIndex:$columnIndex entryPath:$entryPath mode:$mode idx:$idx input:$input"
-	#Validation::SetTableValue $entryPath $mode $idx $input
-	puts "populatedCommParamList: $populatedCommParamList"
+
+	Validation::SetTableValue $entryPath $mode $idx $input
+	
 	foreach tempList $populatedCommParamList {
 		set rowlist [lindex $tempList 2]
-		puts "rowlist: $rowlist"
+		#puts "rowlist: $rowlist"
 		set chkRslt [lsearch $rowlist $rowIndex]
 		if { $chkRslt != -1} {
 		
@@ -871,7 +894,7 @@ puts "tablePath:$tablePath rowIndex:$rowIndex columnIndex:$columnIndex entryPath
 				}
 				$tablePath cellconfigure $indRow,$columnIndex -text "$input"
 			}
-			return 1;
+			return;
 		} else {
 			
 		}

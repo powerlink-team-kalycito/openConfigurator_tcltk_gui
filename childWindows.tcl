@@ -189,9 +189,9 @@ proc ChildWindows::ProjectSettingWindow {} {
 	return
     }
 	
-    set ra_autop [new_EAutoGeneratep]
-    set ra_projp [new_EAutoSavep]
-    set videoMode [new_EViewModep]
+    set ra_autop [new_AutoGeneratep]
+    set ra_projp [new_AutoSavep]
+    set videoMode [new_ViewModep]
     set viewChgFlg [new_boolp]
 
     set catchErrCode [GetProjectSettings $ra_autop $ra_projp $videoMode $viewChgFlg]
@@ -207,9 +207,9 @@ proc ChildWindows::ProjectSettingWindow {} {
         set videoMode 0
         set viewChgFlg 0
     } else {
-        set ra_auto [EAutoGeneratep_value $ra_autop]
-        set ra_proj [EAutoSavep_value $ra_projp]
-        set videoMode [EViewModep_value $videoMode]
+        set ra_auto [AutoGeneratep_value $ra_autop]
+        set ra_proj [AutoSavep_value $ra_projp]
+        set videoMode [ViewModep_value $videoMode]
         set viewChgFlg [boolp_value $viewChgFlg]
         # puts "ChildWindows::ProjectSettingWindow videoMode->$videoMode"
     }
@@ -253,6 +253,7 @@ proc ChildWindows::ProjectSettingWindow {} {
     button $frame3.bt_ok -width 8 -text "Ok" -command {
         if { $Operations::viewType == "EXPERT" } {
             set viewType 1
+	    Operations::SingleClickNode $nodeSelect
         } else {
             set viewType 0
         }
@@ -266,17 +267,16 @@ proc ChildWindows::ProjectSettingWindow {} {
             }
 	}
         destroy .projSett
-	Operations::SingleClickNode $nodeSelect
     }
-	
+
     button $frame3.bt_cancel -width 8 -text "Cancel" -command {
         #if cancel is called project settings for existing project is called
         global ra_proj
         global ra_auto
         global viewChgFlg
-        set ra_autop [new_EAutoGeneratep]
-        set ra_projp [new_EAutoSavep]
-        set videoMode [new_EViewModep]
+        set ra_autop [new_AutoGeneratep]
+        set ra_projp [new_AutoSavep]
+        set videoMode [new_ViewModep]
         set viewChgFlg [new_boolp]
         set catchErrCode [GetProjectSettings $ra_autop $ra_projp $videoMode $viewChgFlg]
         set ErrCode [ocfmRetCode_code_get $catchErrCode]
@@ -286,9 +286,9 @@ proc ChildWindows::ProjectSettingWindow {} {
             set videoMode 0
             set viewChgFlg 0
         } else {
-            set ra_auto [EAutoGeneratep_value $ra_autop]
-            set ra_proj [EAutoSavep_value $ra_projp]
-            set videoMode [EViewModep_value $videoMode]
+            set ra_auto [AutoGeneratep_value $ra_autop]
+            set ra_proj [AutoSavep_value $ra_projp]
+            set videoMode [ViewModep_value $videoMode]
             set viewChgFlg [boolp_value $viewChgFlg]
         }
         #puts "ChildWindows::ProjectSettingWindow videoMode->$videoMode"
@@ -938,22 +938,22 @@ proc ChildWindows::NewProjectWindow {} {
         global viewChgFlg
 	    catch {
 		if { $projectDir != "" && $projectName != "" } {
-		    set ra_autop [new_EAutoGeneratep]
-		    set ra_projp [new_EAutoSavep]
-            set videoMode [new_EViewModep]
-            set viewChgFlg [new_boolp]
+		    set ra_autop [new_AutoGeneratep]
+		    set ra_projp [new_AutoSavep]
+		    set videoMode [new_ViewModep]
+		    set viewChgFlg [new_boolp]
 		    set catchErrCode [GetProjectSettings $ra_autop $ra_projp $videoMode $viewChgFlg]
 		    set ErrCode [ocfmRetCode_code_get $catchErrCode]
 		    if { $ErrCode == 0 } {
-		        set ra_auto [EAutoGeneratep_value $ra_autop]
-		        set ra_proj [EAutoSavep_value $ra_projp]
-                Operations::SetVideoType [EViewModep_value $videoMode]
-                set viewChgFlg [boolp_value $viewChgFlg]
+		        set ra_auto [AutoGeneratep_value $ra_autop]
+		        set ra_proj [AutoSavep_value $ra_projp]
+			Operations::SetVideoType [ViewModep_value $videoMode]
+			set viewChgFlg [boolp_value $viewChgFlg]
 		    } else {
 		        set ra_auto 1
 		        set ra_proj 1
-                Operations::SetVideoType 0
-                set viewChgFlg 0
+			Operations::SetVideoType 0
+			set viewChgFlg 0
             }
 		}
             #puts "ChildWindows::NewProjectWindow videoMode->$videoMode"

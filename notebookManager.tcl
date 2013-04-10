@@ -1352,7 +1352,7 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
             #if { ($objectType == "ARRAY") || ($objectType == "VAR") } {
             #    set catchErrCode [SetAllSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName $accessType $dataType $pdoType $default $upperLimit $lowerLimit $objectType [subst $[subst $chkGen]] ]
             #} else {
-                set catchErrCode [SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName [subst $[subst $chkGen]] ]
+                set catchErrCode [SetBasicSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName [subst $[subst $chkGen]] ]
             #}
         }
     } elseif {[string match "*IndexValue*" $nodeSelect]} {
@@ -1399,7 +1399,7 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
                 set rebuildNode 1
             }
         } else {
-            set catchErrCode [SetIndexAttributes $nodeId $nodeType $indexId $value $newName [subst $[subst $chkGen]] ]
+            set catchErrCode [SetBasicIndexAttributes $nodeId $nodeType $indexId $value $newName [subst $[subst $chkGen]] ]
         }
     } else {
         #invalid condition
@@ -1558,10 +1558,10 @@ proc NoteBookManager::SaveMNValue {nodePos frame0 frame1} {
                     #check whether the object is index or subindex
                     if { [lindex $objectList 1] == "" } {
                         # it is an index
-                        set saveCmd "SetIndexAttributes $nodeId $nodeType [lindex $objectList 0] $validValue $objName $objFlag"
+                        set saveCmd "SetBasicIndexAttributes $nodeId $nodeType [lindex $objectList 0] $validValue $objName $objFlag"
                     } else {
                         #it is a subindex
-                        set saveCmd "SetSubIndexAttributes $nodeId $nodeType [lindex $objectList 0] [lindex $objectList 1] $validValue $objName $objFlag"
+                        set saveCmd "SetBasicSubIndexAttributes $nodeId $nodeType [lindex $objectList 0] [lindex $objectList 1] $validValue $objName $objFlag"
                     }
                     #save the value
                     set catchErrCode [eval $saveCmd]
@@ -2058,9 +2058,9 @@ proc NoteBookManager::SaveTable {tableWid} {
                     set incFlag 0
                 }
 		if { [expr [expr 0x$index > 0x0000 ] && [expr 0x$subindex > 0x00 ] && [expr 0x$length > 0x0000 ]]} {
-		    SetSubIndexAttributes $nodeId $nodeType $indexId "00" "0x$subIndexId" "NumberOfEntries" 1
+		    SetBasicSubIndexAttributes $nodeId $nodeType $indexId "00" "0x$subIndexId" "NumberOfEntries" 1
 		}
-                SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $name $incFlag
+                SetBasicSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $name $incFlag
                 incr rowCount
             }
         }
@@ -2108,7 +2108,7 @@ proc NoteBookManager::SaveTable {tableWid} {
                 } else {
                     set incFlag 0
                 }
-                SetSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $name $incFlag
+                SetBasicSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $name $incFlag
                 #incr rowCount
 				break
             }

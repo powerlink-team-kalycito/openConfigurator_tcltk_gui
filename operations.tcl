@@ -606,9 +606,9 @@ proc Operations::openProject {projectfilename} {
     set projectName [string range $tempPjtName 0 end-[string length [file extension $tempPjtName]]]
 
     # API to get project settings
-    set ra_autop [new_EAutoGeneratep]
-    set ra_projp [new_EAutoSavep]
-    set videoMode [new_EViewModep]
+    set ra_autop [new_AutoGeneratep]
+    set ra_projp [new_AutoSavep]
+    set videoMode [new_ViewModep]
     set viewChgFlg [new_boolp]
     set catchErrCode [GetProjectSettings $ra_autop $ra_projp $videoMode $viewChgFlg]
     set ErrCode [ocfmRetCode_code_get $catchErrCode]
@@ -624,17 +624,17 @@ proc Operations::openProject {projectfilename} {
         set lastVideoModeSel 0
         set viewChgFlg 0
     } else {
-	    set ra_auto [EAutoGeneratep_value $ra_autop]
-	    set ra_proj [EAutoSavep_value $ra_projp]
-        Operations::SetVideoType [EViewModep_value $videoMode]
-        set lastVideoModeSel $videoMode
-        set viewChgFlg [boolp_value $viewChgFlg]
+	    set ra_auto [AutoGeneratep_value $ra_autop]
+	    set ra_proj [AutoSavep_value $ra_projp]
+	    Operations::SetVideoType [ViewModep_value $videoMode]
+	    set lastVideoModeSel $videoMode
+	    set viewChgFlg [boolp_value $viewChgFlg]
     }
 
     set result [ Operations::RePopulate $projectDir $projectName ]
     thread::send [tsv::set application importProgress] "StopProgress"
 
-    Console::ClearMsgs
+    #Console::ClearMsgs
     if { $result == 1 } {
 	    Console::DisplayInfo "Project $projectName at $projectDir is successfully opened"
     } else {
@@ -677,8 +677,8 @@ proc Operations::RePopulate { projectDir projectName } {
 	    for {set inc 0} {$inc < $nodeCount} {incr inc} {
 		    #API for getting node attributes based on node position
 		    set tmp_nodeId [new_intp]
-            set tmp_stationType [new_EStationTypep]
-			set tmp_forceCycleFlag [new_boolp]
+		    set tmp_stationType [new_StationTypep]
+		    set tmp_forceCycleFlag [new_boolp]
 		    set catchErrCode [GetNodeAttributesbyNodePos $inc $tmp_nodeId $tmp_stationType $tmp_forceCycleFlag]
 		    set ErrCode [ocfmRetCode_code_get [lindex $catchErrCode 0]]
 		    if { $ErrCode == 0 } {
@@ -688,14 +688,14 @@ proc Operations::RePopulate { projectDir projectName } {
 				    set nodeType 0
 				    $treePath insert end ProjectNode MN-$mnCount -text "$nodeName\(240\)" -open 1 -image [Bitmap::get mn]
 				    set treeNode OBD-$mnCount-1
-                    #insert the OBD icon only if the view is in EXPERT mode
-                    if {[string match "EXPERT" $Operations::viewType ] == 1} {
-                        $treePath insert end MN-$mnCount $treeNode -text "OBD" -open 0 -image [Bitmap::get pdo]
-                    }
+				#insert the OBD icon only if the view is in EXPERT mode
+				    if {[string match "EXPERT" $Operations::viewType ] == 1} {
+					    $treePath insert end MN-$mnCount $treeNode -text "OBD" -open 0 -image [Bitmap::get pdo]
+				    }
 				    	
 			    } else {
 				    set nodeType 1
-                    set treeNode CN-$mnCount-$cnCount
+				    set treeNode CN-$mnCount-$cnCount
 				    set child [$treePath insert end MN-$mnCount $treeNode -text "$nodeName\($nodeId\)" -open 0 -image [Bitmap::get cn]]
 			    }
 			    if { [ catch { set result [WrapperInteractions::Import $treeNode $nodeType $nodeId] } ] } {   
@@ -1419,7 +1419,7 @@ proc Operations::SingleClickNode {node} {
     global savedValueList
     global lastConv
     global populatedPDOList
-	global populatedCommParamList
+    global populatedCommParamList
     global userPrefList
     global LastTableFocus
     global chkPrompt
@@ -1428,10 +1428,10 @@ proc Operations::SingleClickNode {node} {
     global indexSaveBtn
     global subindexSaveBtn
     global tableSaveBtn
-	global mnPropSaveBtn
+    global mnPropSaveBtn
     global cnPropSaveBtn
     global LOWER_LIMIT
-	global UPPER_LIMIT
+    global UPPER_LIMIT
     
     if { $nodeSelect == "" || ![$treePath exists $nodeSelect] || [string match "root" $nodeSelect] || [string match "ProjectNode" $nodeSelect] || [string match "OBD-*" $nodeSelect] || [string match "PDO-*" $nodeSelect] } {
 	    #should not check for project settings option
@@ -1511,6 +1511,7 @@ proc Operations::SingleClickNode {node} {
 	    set nodeType [lindex $result 1]
     }
 
+    #API for IfNodeExists
     set nodePos [new_intp]
     set ExistfFlag [new_boolp]
     set catchErrCode [IfNodeExists $nodeId $nodeType $nodePos $ExistfFlag]
@@ -1625,12 +1626,15 @@ proc Operations::SingleClickNode {node} {
 			    foreach tempSidx $sidx {
 				    set subIndexId [string range [$treePath itemcget $tempSidx -text] end-2 end-1 ]
 				    if { [string match "01" $subIndexId] == 1 } {
+					
+					    #API for IfSubIndexExists
 					    set indexPos [new_intp] 
 					    set subIndexPos [new_intp] 
 					    set catchErrCode [IfSubIndexExists $nodeId $nodeType $indexId $subIndexId $subIndexPos $indexPos] 
 					    set indexPos [intp_value $indexPos]
 					    set subIndexPos [intp_value $subIndexPos] 
 					    # 5 is passed to get the actual value
+					    #API for GetSubIndexAttributesbyPositions
 					    set tempIndexProp [GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos 5 ]
 					    set ErrCode [ocfmRetCode_code_get [lindex $tempIndexProp 0] ]		
 					    if {$ErrCode != 0} {
@@ -1657,12 +1661,15 @@ proc Operations::SingleClickNode {node} {
 		    foreach tempSidx $sidx { 
 			    set subIndexId [string range [$treePath itemcget $tempSidx -text] end-2 end-1 ]
 			    if {[string match "00" $subIndexId] == 0 } {
+				
+				    #API for IfSubIndexExists
 				    set indexPos [new_intp]
 				    set subIndexPos [new_intp] 
 				    set catchErrCode [IfSubIndexExists $nodeId $nodeType $indexId $subIndexId $subIndexPos $indexPos] 
 				    set indexPos [intp_value $indexPos] 
 				    set subIndexPos [intp_value $subIndexPos] 
 				    # 3 is passed to get the accesstype
+				    #API for GetSubIndexAttributesbyPositions
 				    set tempIndexProp [GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos 3 ] 
 				    if {$ErrCode != 0} {
 					if {$ra_auto == 1 } {
@@ -1681,6 +1688,7 @@ proc Operations::SingleClickNode {node} {
 				    } 
 				    set accessType [lindex $tempIndexProp 1]
 				    # 5 is passed to get the actual value
+				    #API for GetSubIndexAttributesbyPositions
 				    set tempIndexProp [GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos 5 ] 
 				    set ErrCode [ocfmRetCode_code_get [lindex $tempIndexProp 0] ]
 				    if {$ErrCode != 0} {
@@ -1790,6 +1798,7 @@ proc Operations::SingleClickNode {node} {
 	    set parent [$treePath parent $node]
 	    set indexId [string range [$treePath itemcget $parent -text] end-4 end-1]
 
+	    #API for IfSubIndexExists
 	    set indexPos [new_intp] 
 	    set subIndexPos [new_intp] 
 	    set catchErrCode [IfSubIndexExists $nodeId $nodeType $indexId $subIndexId $subIndexPos $indexPos]
@@ -1805,6 +1814,8 @@ proc Operations::SingleClickNode {node} {
 	    set subIndexPos [intp_value $subIndexPos] 
 	    set IndexProp []
 	    for {set cnt 0 } {$cnt <= 9} {incr cnt} {
+		    
+		    #API for IfSubIndexExists
 		    set tempIndexProp [GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos $cnt ]
 		    set ErrCode [ocfmRetCode_code_get [lindex $tempIndexProp 0]]
 		    if {$ErrCode == 0} {	
@@ -1812,7 +1823,6 @@ proc Operations::SingleClickNode {node} {
 		    } else {
 			    lappend IndexProp []
 		    }
-	
         }
 
 	    $tmpInnerf0.en_idx1 configure -state normal
@@ -1841,8 +1851,8 @@ proc Operations::SingleClickNode {node} {
 	    set tmpInnerf1 [lindex $f0 2]
 
 	    set indexId [string range [$treePath itemcget $node -text] end-4 end-1]
-	    	
-	    set indexPos [new_intp] 
+	    set indexPos [new_intp]
+	    #API for IfIndexExists
 	    set catchErrCode [IfIndexExists $nodeId $nodeType $indexId $indexPos]
 	    if { [ocfmRetCode_code_get $catchErrCode] != 0 } {
 		    if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
@@ -1855,6 +1865,7 @@ proc Operations::SingleClickNode {node} {
 	    set indexPos [intp_value $indexPos] 
 	    set IndexProp []
 	    for {set cnt 0 } {$cnt <= 9} {incr cnt} {
+		    #API for GetIndexAttributesbyPositions
 		    set tempIndexProp [GetIndexAttributesbyPositions $nodePos $indexPos $cnt ]
 		    set ErrCode [ocfmRetCode_code_get [lindex $tempIndexProp 0]]
 		    if {$ErrCode == 0} {
@@ -2079,6 +2090,7 @@ proc Operations::SingleClickNode {node} {
         $tmpInnerf1.co_obj1 configure -state disabled
         #subobjects of index greater than 1fff exists only for index of type
         #ARRAY datatype is not editable
+	#API for GetIndexAttributesbyPositions
 	set tempIndexObjtype [GetIndexAttributesbyPositions $nodePos $indexPos 1 ]
     	set ErrCode [ocfmRetCode_code_get [lindex $tempIndexObjtype 0]]
 	if {$ErrCode == 0} {
@@ -2243,7 +2255,18 @@ proc Operations::SingleClickNode {node} {
     }
     return
 }
-
+#---------------------------------------------------------------------------------------------------
+#  Operations::MNProperties
+# 
+#  Arguments : node       - select tree node path
+#              nodePos    - positoion of node in collection
+#              nodeId     - id of the node
+#              nodeType   - indicates the type as MN or CN
+#
+#  Results :  -
+#
+#  Description : displays the properties of selected MN
+#---------------------------------------------------------------------------------------------------
 proc Operations::MNProperties {node nodePos nodeId nodeType} {
     global f3
     global savedValueList
@@ -2258,8 +2281,9 @@ proc Operations::MNProperties {node nodePos nodeId nodeType} {
     
     #get node name and display it
     set dummyNodeId [new_intp]
-    set tmp_stationType [new_EStationTypep]
-	set tmp_forceCycleFlag [new_boolp]
+    set tmp_stationType [new_StationTypep]
+    set tmp_forceCycleFlag [new_boolp]
+    #API for GetNodeAttributesbyNodePos
     set catchErrCode [GetNodeAttributesbyNodePos $nodePos $dummyNodeId $tmp_stationType $tmp_forceCycleFlag]
     if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
@@ -2292,6 +2316,7 @@ proc Operations::MNProperties {node nodePos nodeId nodeType} {
     
     # value from 1006 for Cycle time
     set MNDatalist ""
+
     set cycleTimeresult [GetObjectValueData $nodePos $nodeId $nodeType [list 2 5] $Operations::CYCLE_TIME_OBJ]
     if {[string equal "pass" [lindex $cycleTimeresult 0]] == 1} {
         set cycleTimeValue [lindex $cycleTimeresult 2]
@@ -2387,6 +2412,7 @@ proc Operations::MNProperties {node nodePos nodeId nodeType} {
 
     # value from 0x1F98/07 for Multiplexing prescaler
     #* Multiplexing Prescaler (MN parameter)
+    #API for GetFeatureValue
     set catchErrCode [GetFeatureValue $nodeId $nodeType 1 "DLLMNFeatureMultiplex" ]
     if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
@@ -2446,13 +2472,14 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
     global nodeSelect
     global CNDatalist
     global cnPropSaveBtn
-	global lastRadioVal
+    global lastRadioVal
     
     set tmpInnerf0 [lindex $f4 1]
     set tmpInnerf1 [lindex $f4 2]
     set tmpInnerf2 [lindex $f4 4]
     
     #get the MN node id and node position
+    #API for IfNodeExists
     set mnNodeId 240
     set mnNodeType 0
     set mnNodePos [new_intp]
@@ -2464,9 +2491,10 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
     
     #get node name and display it
     set dummyNodeId [new_intp]
-    set tmp_stationType [new_EStationTypep]
+    set tmp_stationType [new_StationTypep]
 	set tmp_forceCycleFlag [new_boolp]
-
+    
+    #API for GetNodeAttributesbyNodePos
     set catchErrCode [GetNodeAttributesbyNodePos $nodePos $dummyNodeId $tmp_stationType $tmp_forceCycleFlag]
 
     if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
@@ -2614,7 +2642,7 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
    set $spinVar ""
    $tmpInnerf2.sp_cycleNo configure -state disabled
    
-   set stationType [EStationTypep_value $tmp_stationType]
+   set stationType [StationTypep_value $tmp_stationType]
    set lastRadioVal "StNormal"
    $tmpInnerf1.ra_StMulti deselect
    $tmpInnerf1.ra_StMulti configure -state disabled
@@ -2623,6 +2651,7 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
    $tmpInnerf1.ra_StNormal select
    #Normal operation always enabled
    
+   #API for GetFeatureValue
     set MN_FEATURES 1
     set CN_FEATURES 2
     set catchErrCode [GetFeatureValue 240 0 $MN_FEATURES "DLLMNFeatureMultiplex" ]
@@ -2634,7 +2663,8 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
         }
     }
     set MNFeatureMultiplexFlag [lindex $catchErrCode 1]
-
+    
+    #API for GetFeatureValue
     set catchErrCode [GetFeatureValue $nodeId $nodeType $CN_FEATURES "DLLCNFeatureMultiplex" ]
     if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
@@ -2644,7 +2674,8 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
         }
     }
     set CNFeatureMultiplexFlag [lindex $catchErrCode 1]
-
+    
+    #API for GetFeatureValue
     set catchErrCode [GetFeatureValue 240 0 $MN_FEATURES "DLLMNPResChaining" ]
     if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
@@ -2654,7 +2685,8 @@ proc Operations::CNProperties {node nodePos nodeId nodeType} {
         }
     }
     set MNFeatureChainFlag [lindex $catchErrCode 1]
-
+    
+    #API for GetFeatureValue
     set catchErrCode [GetFeatureValue $nodeId $nodeType $CN_FEATURES "DLLCNPResChaining" ]
     if { [ocfmRetCode_code_get [lindex $catchErrCode 0] ] != 0 } {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
@@ -2787,7 +2819,7 @@ proc Operations::GetObjectValueData {nodePos nodeId nodeType attributeList index
     	set subIndexPos [new_intp] 
     	set existCmd "IfSubIndexExists $nodeId $nodeType $indexId $subIndexId $subIndexPos $indexPos"
     }
-    
+    #API call for IfIndexExists or IfSubIndexExists
     set catchErrCode [eval $existCmd]
     if { [ocfmRetCode_code_get $catchErrCode] != 0 } {
         #if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
@@ -2805,6 +2837,8 @@ proc Operations::GetObjectValueData {nodePos nodeId nodeType attributeList index
         set attributeCmd   "GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos "
     }
     set resultList "pass"
+    
+    #API call
     foreach listAttrib $attributeList {
         set catchErr [eval "$attributeCmd $listAttrib" ]
         if { [ocfmRetCode_code_get [lindex $catchErr 0]] != 0 } {
@@ -2910,6 +2944,7 @@ proc Operations::Saveproject {} {
 	    set savePjtName [string range $projectName 0 end-[ string length [file extension $projectName] ]]
 	    set savePjtDir [string range $projectDir 0 end-[string length $savePjtName] ]
             thread::send  [tsv::set application importProgress] "StartProgress"
+	    #API for SaveProject
 	    set catchErrCode [SaveProject $savePjtDir $savePjtName]
 	    thread::send  [tsv::set application importProgress] "StopProgress"
 	    set ErrCode [ocfmRetCode_code_get $catchErrCode]
@@ -3178,7 +3213,7 @@ proc Operations::AddCN {cnName tmpImpDir nodeId} {
     set child [$treePath insert end $node $treeNodeCN -text "$cnName\($nodeId\)" -open 0 -image [Bitmap::get cn]]
 
     if {$tmpImpDir != ""} {
-	    #Importxml API
+	    #API for Importxml
 	    set catchErrCode [ImportXML "$tmpImpDir" $nodeId 1]
 	    set ErrCode [ocfmRetCode_code_get $catchErrCode]
 	    if { $ErrCode != 0 } {
@@ -3239,8 +3274,17 @@ proc Operations::InsertTree { } {
     $treePath insert end root ProjectNode -text "POWERLINK Network" -open 1 -image [Bitmap::get network]
 }
 
-
-
+#---------------------------------------------------------------------------------------------------
+#  Operations::FuncIndexlist
+#
+#  Arguments 	nodeIdparm 	Nodeid of the node for which indexlist to be generated
+#
+#  Results 	mappingidxlist with index id list is returned.
+#		Note: Each index id has the 0x prepended for hex notation
+#
+#  Description : Generates the list of index id's within the range 2000-FFFF from the tree widget
+#		 for the given node id
+#---------------------------------------------------------------------------------------------------
 proc Operations::FuncIndexlist {nodeIdparm} {
     global treePath
 
@@ -3291,7 +3335,19 @@ proc Operations::FuncIndexlist {nodeIdparm} {
     return $mappingidxlist
 }
 
-
+#---------------------------------------------------------------------------------------------------
+#  Operations::FuncSubIndexlist
+#
+#  Arguments 	nodeIdparm 	Nodeid of the node for which subindexlist to be generated
+#		idxIdparm	Indexid with 0x for whic the subindexlist to be generated
+#		pdoTypeparm	PDO mapping type
+#
+#  Results 	mappingSidxList with Subindex id list is returned.
+#		Note: Each index id has the 0x prepended for hex notation
+#
+#  Description : Generates the list of Subindex id's which are set to pdoMapping same as the pdoTypeparm tree widget
+#		 for the given node id & indexid
+#---------------------------------------------------------------------------------------------------
 
 proc Operations::FuncSubIndexlist {nodeIdparm idxIdparm pdoTypeparm} {
     global treePath
@@ -3324,6 +3380,7 @@ proc Operations::FuncSubIndexlist {nodeIdparm idxIdparm pdoTypeparm} {
 	    }
 	    if { $nodeId == $nodeIdparm } {
 
+		    #API for IfNodeExists
 		    set nodePos [new_intp]
 		    set ExistfFlag [new_boolp]
 		    set catchErrCode [IfNodeExists $nodeIdparm $nodeType $nodePos $ExistfFlag]
@@ -3363,6 +3420,7 @@ proc Operations::FuncSubIndexlist {nodeIdparm idxIdparm pdoTypeparm} {
 				puts "tempIdxIdparm: $tempIdxIdparm"
 				puts "tempSidxId: $tempSidxId"
 
+				#API for IfSubIndexExists
 				set indexPos [new_intp] 
 				set subIndexPos [new_intp] 
 				set catchErrCode [IfSubIndexExists $nodeIdparm $nodeType $tempIdxIdparm $tempSidxId $subIndexPos $indexPos] 
@@ -3398,7 +3456,19 @@ proc Operations::FuncSubIndexlist {nodeIdparm idxIdparm pdoTypeparm} {
 }
 
 
-
+#---------------------------------------------------------------------------------------------------
+#  Operations::FuncSubIndexLength
+#
+#  Arguments 	nodeIdparm 	Nodeid of the node for which lengthlist to be generated
+#		idxIdparm	Indexid with 0x for which the lengthlist to be generated
+#		sidxparm	SubIndexid with 0x for which the lengthlist to be generated
+#
+#  Results 	mappingSidxLength with Subindex id list is returned.
+#		Note: Each length has the 0x prepended for hex notation
+#
+#  Description : Generates the list of Subindex id's Datatype length from the tree widget
+#		 for the given node id, indexid & subindexid
+#---------------------------------------------------------------------------------------------------
 
 proc Operations::FuncSubIndexLength {nodeIdparm idxIdparm sidxparm} {
     global treePath
@@ -3435,7 +3505,7 @@ proc Operations::FuncSubIndexLength {nodeIdparm idxIdparm sidxparm} {
 		set nodeId "-1"
 	    }
 	    if { $nodeId == $nodeIdparm } {
-
+		    #API for IfNodeExists
 		    set nodePos [new_intp]
 		    set ExistfFlag [new_boolp]
 		    set catchErrCode [IfNodeExists $nodeIdparm $nodeType $nodePos $ExistfFlag]
@@ -3472,12 +3542,16 @@ proc Operations::FuncSubIndexLength {nodeIdparm idxIdparm sidxparm} {
 				    set tempSidxId "[string range $sidxId end-1 end]"
 				    puts "tempIdxIdparm: $tempIdxIdparm"
 				    puts "tempSidxId: $tempSidxId"
-				
+				    
+				    #API for IfNodeExists
 				    set indexPos [new_intp] 
 				    set subIndexPos [new_intp] 
 				    set catchErrCode [IfSubIndexExists $nodeIdparm $nodeType $tempIdxIdparm $tempSidxId $subIndexPos $indexPos] 
 				    set indexPos [intp_value $indexPos]
 				    set subIndexPos [intp_value $subIndexPos] 
+				    
+				    
+				    #API for IfNodeExists
 				    # 2 is passed to get the Datatype value
 				    set tempIndexProp [GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos 2 ]
 				    set ErrCode [ocfmRetCode_code_get [lindex $tempIndexProp 0] ]		
@@ -3490,7 +3564,8 @@ proc Operations::FuncSubIndexLength {nodeIdparm idxIdparm sidxparm} {
 
 				    #Get the lenth for the datatype and append all the length
 				    # consider about xdc and xdd DOMain objects also
-				    set datasize [getDataSize $sidxDatatype]
+				    #API for GetDataSize
+				    set datasize [GetDataSize $sidxDatatype]
 				    puts "datasize: $datasize"
 				    
 				    set tempHexDataSizeBits [string toupper [format %x [expr $datasize * 8 ]]]
@@ -3498,10 +3573,6 @@ proc Operations::FuncSubIndexLength {nodeIdparm idxIdparm sidxparm} {
 
 				    set mappingSidxLength 0x[NoteBookManager::AppendZero $tempHexDataSizeBits 4]
 				    puts "mappingSidxLength: $mappingSidxLength"
-
-#set dataCoList [list BIT BOOLEAN INTEGER8 INTEGER16 INTEGER24 INTEGER32 INTEGER40 INTEGER48 INTEGER56 INTEGER64 UNSIGNED8 UNSIGNED16 UNSIGNED24 UNSIGNED32 UNSIGNED40 UNSIGNED48 UNSIGNED56 UNSIGNED64 REAL32 REAL64 MAC_ADDRESS IP_ADDRESS OCTET_STRING]
-#Boolean Integer8 Integer16 Integer32 Unsigned8 Unsigned16 Unsigned32 Real32 Visible_String Integer24 Real64 Integer40 Integer48 Integer56 Integer64 Octet_String Unicode_String Time_of_Day Time_Diff Domain Unsigned24 Unsigned40 Unsigned48 Unsigned56 Unsigned64 MAC_ADDRESS IP_ADDRESS NETTIME
-
 				}
 			    }
 			    
@@ -3929,6 +4000,7 @@ proc Operations::BuildProject {} {
     }
     
     # check that 1006 object of MN actual value is greater than zero
+    #API for IfNodeExists
     set mnNodeId 240
     set mnNodeType 0
     set mnNodePos [new_intp]
@@ -3978,8 +4050,9 @@ proc Operations::BuildProject {} {
             set result [tk_messageBox -message "$msg\nDo you want to copy the default value 50000 µs" -type yesno -icon info -title "Information" -parent .]
             switch -- $result {
 			    yes {
+				#API for SetBasicIndexAttributes
                         #hard code the value 50000 for 1006 object in MN
-                        set catchErrCode [SetIndexAttributes $mnNodeId $mnNodeType $Operations::CYCLE_TIME_OBJ 50000 $cycleTimeName $cycleTimeCdcFlag ]
+                        set catchErrCode [SetBasicIndexAttributes $mnNodeId $mnNodeType $Operations::CYCLE_TIME_OBJ 50000 $cycleTimeName $cycleTimeCdcFlag ]
                         set ErrCode [ocfmRetCode_code_get $catchErrCode]
                         if { $ErrCode != 0 } {
                             if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
@@ -4020,7 +4093,8 @@ proc Operations::BuildProject {} {
 	catch {file mkdir [file join $projectDir cdc_xap]}
     }
     
-    thread::send [tsv::get application importProgress] "StartProgress"	
+    thread::send [tsv::get application importProgress] "StartProgress"
+    #API for GenerateCDC
     set catchErrCode [GenerateCDC [file join $projectDir cdc_xap] ]
     set ErrCode [ocfmRetCode_code_get $catchErrCode]
 		#exception for exceeding the limit of number of channels

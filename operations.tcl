@@ -634,7 +634,7 @@ proc Operations::openProject {projectfilename} {
     set result [ Operations::RePopulate $projectDir $projectName ]
     thread::send [tsv::set application importProgress] "StopProgress"
 
-    Console::ClearMsgs
+    #Console::ClearMsgs
     if { $result == 1 } {
 	    Console::DisplayInfo "Project $projectName at $projectDir is successfully opened"
     } else {
@@ -4050,9 +4050,9 @@ proc Operations::BuildProject {} {
             set result [tk_messageBox -message "$msg\nDo you want to copy the default value 50000 µs" -type yesno -icon info -title "Information" -parent .]
             switch -- $result {
 			    yes {
-				#API for SetIndexAttributes
+				#API for SetBasicIndexAttributes
                         #hard code the value 50000 for 1006 object in MN
-                        set catchErrCode [SetIndexAttributes $mnNodeId $mnNodeType $Operations::CYCLE_TIME_OBJ 50000 $cycleTimeName $cycleTimeCdcFlag ]
+                        set catchErrCode [SetBasicIndexAttributes $mnNodeId $mnNodeType $Operations::CYCLE_TIME_OBJ 50000 $cycleTimeName $cycleTimeCdcFlag ]
                         set ErrCode [ocfmRetCode_code_get $catchErrCode]
                         if { $ErrCode != 0 } {
                             if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {

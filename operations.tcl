@@ -448,7 +448,7 @@ proc Operations::exit_app {} {
                     }
 	        }
 	        cancel {
-		         Console::DisplayInfo "Exit Canceled" info
+		         Console::DisplayInfo "Exit Cancelled" info
 		         return
 	        }
 	    }
@@ -505,7 +505,7 @@ proc Operations::OpenProjectWindow { } {
 				    }
 			    }
        		     cancel {
-				    Console::DisplayInfo "Open Project canceled" info
+				    Console::DisplayInfo "Open Project cancelled" info
 				    return
 			    }
        		}
@@ -1215,7 +1215,7 @@ proc Operations::BasicFrames { } {
 
     #binding for tablelist widget
     bind [lindex $f5 0] <Enter> {
-	puts "Key 0 press enter"
+	#puts "Key 0 press enter"
         bind . <KeyPress-Return> {
                 global tableSaveBtn
                 $tableSaveBtn invoke
@@ -1224,22 +1224,22 @@ proc Operations::BasicFrames { } {
 	#set tempAdd ".body.f"
 	bind . <KeyPress-Escape> {
 	    #pack forget "$temppath$tempAdd.a"
-	    puts "keypress 0 escape enter"
+	    #puts "keypress 0 escape enter"
 	    set result [$temppath finishediting]
-	    puts "result:$result"
+	    #puts "result:$result"
 	}
 	bind . <Double-1> {
-	puts "Double clicking tablelist"
+	#puts "Double clicking tablelist"
 	}
     }
     bind [lindex $f5 0] <Leave> {
-	puts "keypress 0 leave"
+	#puts "keypress 0 leave"
         bind . <KeyPress-Return> {
-	    puts "keypress 0 leave return"
+	    #puts "keypress 0 leave return"
 	}
     }
     bind [lindex $f5 1] <Enter> {
-	puts "keypress 1 Enter"
+	#puts "keypress 1 Enter"
 	    global LastTableFocus
 	    if { [ winfo exists $LastTableFocus ] && [ string match "[lindex $f5 1]*" $LastTableFocus ] } {
 		    focus $LastTableFocus
@@ -1247,9 +1247,9 @@ proc Operations::BasicFrames { } {
 		    focus [lindex $f5 1]
 	    }
 	    bind . <KeyPress-Escape> {
-		puts "keypress 0 escape enter"
+		#puts "keypress 0 escape enter"
 		set result [[lindex $f5 1] finishediting]
-		puts "result:$result"
+		#puts "result:$result"
 	    }
 	    #bind . <Motion> {
 	#	puts "keypress 1 Enter motion"
@@ -1258,7 +1258,7 @@ proc Operations::BasicFrames { } {
 	#    }
     }
     bind [lindex $f5 1] <Leave> {
-	puts "keypress 1 Leave"
+	#puts "keypress 1 Leave"
 	    bind . <Motion> {}
 	    global LastTableFocus
 	    global treeFrame
@@ -1270,20 +1270,20 @@ proc Operations::BasicFrames { } {
 	    focus $treeFrame.en_find
     }
     bind [lindex $f5 1] <FocusOut> {
-	puts "keypress 1 FocusOut"
+	#puts "keypress 1 FocusOut"
 	    bind . <Motion> {}
 	    global LastTableFocus
 	    set LastTableFocus [focus]
     }
     bind [lindex $f5 1] <Double-1> {
-	puts "Double clicking tablelist"
+	#puts "Double clicking tablelist"
     }
 
     bind [lindex $f5 1] <KeyPress-Escape> {
-	puts "KEypress esc"
+	#puts "KEypress esc"
     }
     #bind [lindex $f5 1] <<ComboboxSelected>> {
-#	puts "chosen [%W get]"
+#	#puts "chosen [%W get]"
 #    }
 #    set tempTablepath [lindex $f5 1]
 #    set temp ".body.f.e"
@@ -1603,8 +1603,8 @@ proc Operations::SingleClickNode {node} {
 		set popCountList ""
 		set populatedCommParamList ""
 
-	    puts "F2:: $f2"
-	    puts "F5:: $f5"
+	    #puts "F2:: $f2"
+	    #puts "F5:: $f5"
 	    if {$ra_auto == 1 } {
 		[lindex $f2 1] configure -state disabled
 		[lindex $f5 1] configure -state normal
@@ -1765,8 +1765,8 @@ proc Operations::SingleClickNode {node} {
 			lappend populatedCommParamList [list $indexId [lindex $finalMappList $count]  $popCountList]
 			set popCountList ""
 	    }
-	    puts  "F2: $f2"
-	    puts "lindexxx:  [lindex $f2 0]"
+	   # puts  "F2: $f2"
+	   # puts "lindexxx:  [lindex $f2 0]"
 	    pack forget [lindex $f0 0]
 	    pack forget [lindex $f1 0]
 	    if {$ra_auto == 1 } {
@@ -1779,8 +1779,8 @@ proc Operations::SingleClickNode {node} {
 	    pack forget [lindex $f3 0]
 	    pack forget [lindex $f4 0]
 	    
-	    puts "populatedCommParamList: $populatedCommParamList"
-	    puts "populatedPDOList: $populatedPDOList"
+	    #puts "populatedCommParamList: $populatedCommParamList"
+	    #puts "populatedPDOList: $populatedPDOList"
 	    return 
     } 
 
@@ -3288,19 +3288,19 @@ proc Operations::InsertTree { } {
 proc Operations::FuncIndexlist {nodeIdparm} {
     global treePath
 
-    puts "treePath: $treePath"
+    #puts "treePath: $treePath"
     list mappingidxlist
     set mappingidxlist ""
     set nodeId ""
 
     set mnNode [$treePath nodes ProjectNode]
     foreach tempMn $mnNode {
-	puts "tempMn: $tempMn"
+	#puts "tempMn: $tempMn"
 	set childMn [$treePath nodes $tempMn]
 	foreach tempChildMn $childMn {
-	    puts "tempChildMn: $tempChildMn"
+	    #puts "tempChildMn: $tempChildMn"
 	    set tempNodeId "[$treePath itemcget $tempChildMn -text ]"
-	    puts "tempNodeId: $tempNodeId"
+	    #puts "tempNodeId: $tempNodeId"
 	    set result [Operations::GetNodeIdType $tempChildMn]
 	    if {$result != "" } {
 		    set nodeId [lindex $result 0]
@@ -3312,13 +3312,13 @@ proc Operations::FuncIndexlist {nodeIdparm} {
 		set idx [$treePath nodes $tempChildMn]
 		foreach tempIdx $idx {
 		    set idxName "[$treePath itemcget $tempIdx -text ]"
-		    puts "idxName: $idxName"
+		    #puts "idxName: $idxName"
 		    # pdo should not be processed
 		    if { [string match -nocase "PDO" $idxName] } {
 			
 		    } else {
 			set idxId "[string range $idxName end-6 end-1]"
-			puts "idxId: $idxId"
+			#puts "idxId: $idxId"
 			if { [expr $idxId > 0x1FFF] } {
 			    lappend mappingidxlist $idxId
 			}
@@ -3330,7 +3330,7 @@ proc Operations::FuncIndexlist {nodeIdparm} {
     
     
     if { [string length $mappingidxlist] < 6 } {
-	Console::DisplayWarning "No index are available in this node for mapping. Add index with a index value greater than 2000"
+	Console::DisplayWarning "No Indices are available in this node for mapping. Add an Index with value greater than 2000 to view the list of Indices"
     }
     return $mappingidxlist
 }
@@ -3352,25 +3352,25 @@ proc Operations::FuncIndexlist {nodeIdparm} {
 proc Operations::FuncSubIndexlist {nodeIdparm idxIdparm pdoTypeparm} {
     global treePath
 
-    puts "treePath: $treePath"
+    #puts "treePath: $treePath"
     list mappingSidxList
     set mappingSidxList ""
     set nodeId ""
 
     if { [string length $idxIdparm] < 6 } {
-	Console::DisplayInfo "Set the Index value first to view the available subindexes"
+	Console::DisplayInfo "The Index value should be set to view the available SubIndices"
 	return $mappingSidxList
     }
 
     
     set mnNode [$treePath nodes ProjectNode]
     foreach tempMn $mnNode {
-	puts "tempMn: $tempMn"
+	#puts "tempMn: $tempMn"
 	set childMn [$treePath nodes $tempMn]
 	foreach tempChildMn $childMn {
-	    puts "tempChildMn: $tempChildMn"
+	    #puts "tempChildMn: $tempChildMn"
 	    set tempNodeId "[$treePath itemcget $tempChildMn -text ]"
-	    puts "tempNodeId: $tempNodeId"
+	    #puts "tempNodeId: $tempNodeId"
 	    set result [Operations::GetNodeIdType $tempChildMn]
 	    if {$result != "" } {
 		    set nodeId [lindex $result 0]
@@ -3395,20 +3395,20 @@ proc Operations::FuncSubIndexlist {nodeIdparm idxIdparm pdoTypeparm} {
 		set idx [$treePath nodes $tempChildMn]
 		foreach tempIdx $idx {
 		    set idxName "[$treePath itemcget $tempIdx -text ]"
-		    puts "idxName: $idxName"
+		    #puts "idxName: $idxName"
 		    # pdo should not be processed
 		    if { [string match -nocase "PDO" $idxName] } {
 			
 		    } else {
 			set idxId "[string range $idxName end-6 end-1]"
-			puts "idxId: $idxId"
+			#puts "idxId: $idxId"
 			if { [expr $idxId == $idxIdparm] } {
 			    set sidx [$treePath nodes $tempIdx]
 			    foreach tempSidx $sidx {
 				set sidxName "[$treePath itemcget $tempSidx -text ]"
-				puts "sidxName: $sidxName"
+				#puts "sidxName: $sidxName"
 				set sidxId "[string range $sidxName end-4 end-1]"
-				puts "sidxId: $sidxId"
+				#puts "sidxId: $sidxId"
 				#ocfmRetCode GetSubIndexAttributes(INT32 iNodeID, ENodeType enumNodeType, char* pbIndexID, char* pbSubIndexID, EAttributeType enumAttributeType, char* pbOutAttributeValue)
 				set tempIdxIdparm "[string range $idxIdparm end-3 end]"
 				set tempSidxId "[string range $sidxId end-1 end]"
@@ -3417,8 +3417,8 @@ proc Operations::FuncSubIndexlist {nodeIdparm idxIdparm pdoTypeparm} {
 				#puts "[lindex $result 0]"
 				#puts "[lindex $result 1]"
 
-				puts "tempIdxIdparm: $tempIdxIdparm"
-				puts "tempSidxId: $tempSidxId"
+				#puts "tempIdxIdparm: $tempIdxIdparm"
+				#puts "tempSidxId: $tempSidxId"
 
 				#API for IfSubIndexExists
 				set indexPos [new_intp] 
@@ -3434,9 +3434,9 @@ proc Operations::FuncSubIndexlist {nodeIdparm idxIdparm pdoTypeparm} {
 				}
 				set pdoMapping [lindex $tempIndexProp 1]
 				
-				puts "pdoMapping: $pdoMapping # Parm: $pdoTypeparm"
+				#puts "pdoMapping: $pdoMapping # Parm: $pdoTypeparm"
 				if { [string match $pdoTypeparm $pdoMapping] } {
-				    puts "sidxId: $sidxId"
+				    #puts "sidxId: $sidxId"
 				    lappend mappingSidxList $sidxId   
 				}
 			    }
@@ -3473,7 +3473,7 @@ proc Operations::FuncSubIndexlist {nodeIdparm idxIdparm pdoTypeparm} {
 proc Operations::FuncSubIndexLength {nodeIdparm idxIdparm sidxparm} {
     global treePath
 
-    puts "treePath: $treePath"
+    #puts "treePath: $treePath"
     list mappingSidxLength
     set mappingSidxLength ""
     set nodeId ""
@@ -3482,21 +3482,21 @@ proc Operations::FuncSubIndexLength {nodeIdparm idxIdparm sidxparm} {
     if { [string length $idxIdparm] < 6 || [string length $sidxparm] < 4 }  {
 	
 	if { [string length $sidxparm] < 4 }  {
-	    Console::DisplayInfo "SubIndex value Empty. set the subindex value first to view the length"
+	    Console::DisplayInfo "The SubIndex value should be set to view the value of length"
 	    return $mappingSidxLength
 	}
-	Console::DisplayInfo "Set the Index value first to load the length"
+	Console::DisplayInfo "The Index value should be set to view the value of length"
 	return $mappingSidxLength
     }    
 
     set mnNode [$treePath nodes ProjectNode]
     foreach tempMn $mnNode {
-	puts "tempMn: $tempMn"
+	#puts "tempMn: $tempMn"
 	set childMn [$treePath nodes $tempMn]
 	foreach tempChildMn $childMn {
-	    puts "tempChildMn: $tempChildMn"
+	    #puts "tempChildMn: $tempChildMn"
 	    set tempNodeId "[$treePath itemcget $tempChildMn -text ]"
-	    puts "tempNodeId: $tempNodeId"
+	    #puts "tempNodeId: $tempNodeId"
 	    set result [Operations::GetNodeIdType $tempChildMn]
 	    if {$result != "" } {
 		    set nodeId [lindex $result 0]
@@ -3520,28 +3520,28 @@ proc Operations::FuncSubIndexLength {nodeIdparm idxIdparm sidxparm} {
 		set idx [$treePath nodes $tempChildMn]
 		foreach tempIdx $idx {
 		    set idxName "[$treePath itemcget $tempIdx -text ]"
-		    puts "idxName: $idxName"
+		    #puts "idxName: $idxName"
 		    # pdo should not be processed
 		    if { [string match -nocase "PDO" $idxName] } {
 			
 		    } else {
 			set idxId "[string range $idxName end-6 end-1]"
-			puts "idxId: $idxId"
+			#puts "idxId: $idxId"
 			if { [expr $idxId == $idxIdparm] } {
 			    set sidx [$treePath nodes $tempIdx]
 			    foreach tempSidx $sidx {
 				set sidxName "[$treePath itemcget $tempSidx -text ]"
-				puts "sidxName: $sidxName"
+				#puts "sidxName: $sidxName"
 				set sidxId "[string range $sidxName end-4 end-1]"
-				puts "sidxId: $sidxId"
+				#puts "sidxId: $sidxId"
 
 
 				if { [string match $sidxparm $sidxId] } {
 				
 				    set tempIdxIdparm "[string range $idxIdparm end-3 end]"
 				    set tempSidxId "[string range $sidxId end-1 end]"
-				    puts "tempIdxIdparm: $tempIdxIdparm"
-				    puts "tempSidxId: $tempSidxId"
+				    #puts "tempIdxIdparm: $tempIdxIdparm"
+				    #puts "tempSidxId: $tempSidxId"
 				    
 				    #API for IfNodeExists
 				    set indexPos [new_intp] 
@@ -3560,19 +3560,19 @@ proc Operations::FuncSubIndexLength {nodeIdparm idxIdparm sidxparm} {
 				    }
 				    set sidxDatatype [lindex $tempIndexProp 1]
 				    
-				    puts "sidxDatatype: $sidxDatatype"
+				    #puts "sidxDatatype: $sidxDatatype"
 
 				    #Get the lenth for the datatype and append all the length
 				    # consider about xdc and xdd DOMain objects also
 				    #API for GetDataSize
 				    set datasize [GetDataSize $sidxDatatype]
-				    puts "datasize: $datasize"
+				    #puts "datasize: $datasize"
 				    
 				    set tempHexDataSizeBits [string toupper [format %x [expr $datasize * 8 ]]]
-				    puts "tempHexDataSizeBits: $tempHexDataSizeBits"
+				    #puts "tempHexDataSizeBits: $tempHexDataSizeBits"
 
 				    set mappingSidxLength 0x[NoteBookManager::AppendZero $tempHexDataSizeBits 4]
-				    puts "mappingSidxLength: $mappingSidxLength"
+				    #puts "mappingSidxLength: $mappingSidxLength"
 				}
 			    }
 			    
@@ -4106,7 +4106,7 @@ proc Operations::BuildProject {} {
 	    }
 		tk_messageBox -message $msg -title Error -icon error -parent .
 	    #error in generating CDC dont generate XAP
-		Console::DisplayErrMsg "Error in generating cdc, xap, ProcessImage was not generated" error
+		Console::DisplayErrMsg "Error in generating cdc. XAP, ProcessImage were not generated" error
 	    thread::send [tsv::get application importProgress] "StopProgress"
 	    return
     } else {
@@ -5025,7 +5025,7 @@ proc Operations::AutoGenerateMNOBD {} {
 			   Console::DisplayInfo "Auto Generating object dictionary for MN"
 			 }			 
    		     no  {
-			   Console::DisplayInfo "Auto Generate is cancelled for MN"
+			   Console::DisplayInfo "Auto Generation of object dictionary is cancelled for MN"
 			   return
 			 }
 		 }

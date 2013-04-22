@@ -562,7 +562,6 @@ proc NoteBookManager::create_table {nbpath choice} {
         return
     }
 
-    puts "st: $st"
     $scrollWin setwidget $st
     pack $st -fill both -expand true
     $st configure -height 4 -width 40 -stretch all	
@@ -1846,14 +1845,12 @@ proc NoteBookManager::StartEditCombo {tablePath rowIndex columnIndex text} {
     set lengthVal [$tablePath cellcget $rowIndex,3 -text]
     set idxidVal [$tablePath cellcget $rowIndex,4 -text]
     set sidxVal [$tablePath cellcget $rowIndex,5 -text]
-    puts "Nodeid: $nodeidValhex - $nodeidVal , offsetVal: $offsetVal , lengthVal: $lengthVal , idxidVal: $idxidVal , sidxVal: $sidxVal"
+    #puts "Nodeid: $nodeidValhex - $nodeidVal , offsetVal: $offsetVal , lengthVal: $lengthVal , idxidVal: $idxidVal , sidxVal: $sidxVal"
 
-    ##Fail when user right clicks on other nodes while editing
-    ## selection is assumed always will be either TPDO or RPDO
     set selectedNode [$treePath selection get]
     set pdoType ""
     set pdoType "[$treePath itemcget $selectedNode -text ]"
-    puts "$pdoType"
+    #puts "$pdoType"
     
     set result [Operations::GetNodeIdType $selectedNode]
     set nodeidVal [lindex $result 0]
@@ -1871,34 +1868,28 @@ proc NoteBookManager::StartEditCombo {tablePath rowIndex columnIndex text} {
 
 	    $win configure -values "$nodeIdListHex"
 	    $win configure -invalidcommand bell -validate key -validatecommand "Validation::SetTableComboValue %P $tablePath $rowIndex $columnIndex $win"
-	#    $win configure -invalidcommand bell -validate key  -validatecommand "Validation::IsTableHex %P %s %d %i 2 $tablePath $rowIndex $columnIndex $win"
 	}
 	2 {
 	    set idxList [Operations::FuncIndexlist $nodeidVal]
-	    puts "INdex cell: $idxList"
+	    #puts "INdex cell: $idxList"
 	    $win configure -values "$idxList"
-	    #$win configure -values {0x1200 0x2400 0x4800 0x9600 0x9200 0x3400}
-	    #$win configure -invalidcommand bell -validate key  -validatecommand "Validation::IsTableHex %P %s %d %i 4 $tablePath $rowIndex $columnIndex $win"
 	    $win configure -invalidcommand bell -validate key  -validatecommand "Validation::SetTableComboValue %P $tablePath $rowIndex $columnIndex $win"
 	}
 	3 {
 	    set sidxList [Operations::FuncSubIndexlist $nodeidVal $idxidVal $pdoType]
-	    puts "SUBINdex cell: $sidxList"
+	    #puts "SUBINdex cell: $sidxList"
 	    $win configure -values "$sidxList"
-	    #$win configure -values {0x12 0x24 0x48 0x96 0x92 0x34}
 	    $win configure -invalidcommand bell -validate key  -validatecommand "Validation::SetTableComboValue %P $tablePath $rowIndex $columnIndex $win"
     	}
 	4 {
 	    set sidxLength [Operations::FuncSubIndexLength $nodeidVal $idxidVal $sidxVal]
-	    puts "SINdex length cell: $sidxLength"
+	    #puts "SINdex length cell: $sidxLength"
 	    $win configure -values "$sidxLength"
-	    #$win configure -values {0x1200 0x2400 0x4800 0x9600 0x9200 0x3400}
-	    #$win configure -invalidcommand bell -validate key  -validatecommand "Validation::IsTableHex %P %s %d %i 4 $tablePath $rowIndex $columnIndex $win"
 	    $win configure -invalidcommand bell -validate key  -validatecommand "Validation::SetTableComboValue %P $tablePath $rowIndex $columnIndex $win"
 	}
 	5 {
-	    puts "Offset Loading"
-	    #$win configure -invalidcommand bell -validate key  -validatecommand "Validation::IsTableHex %P %s %d %i 4 $tablePath $rowIndex $columnIndex $win"
+	    #puts "Offset Loading"
+	    #Nothing to do for offset. Entry greyed out.
 	}
     }
 
@@ -1918,8 +1909,7 @@ proc NoteBookManager::StartEditCombo {tablePath rowIndex columnIndex text} {
 #  Description : to validate the entered value when focus leave the cell
 #---------------------------------------------------------------------------------------------------
 proc NoteBookManager::EndEdit {tablePath rowIndex columnIndex text} {
-    global populatedCommParamList
-    puts "ENDEDIT::  tablePath:$tablePath,  rowIndex:$rowIndex,  columnIndex:$columnIndex,  text:$text "
+
     if { [string match -nocase "0x*" $text] } {
         set text [string range $text 2 end]
     } else {
@@ -1984,7 +1974,7 @@ proc NoteBookManager::SaveTable {tableWid} {
     global treePath
     global status_save
     global populatedPDOList
-	global populatedCommParamList 
+    global populatedCommParamList 
 
     set result [$tableWid finishediting]
     if {$result == 0} {
@@ -2115,7 +2105,7 @@ proc NoteBookManager::SaveTable {tableWid} {
         }
     }
     if { $flag == 1} {
-        Console::DisplayInfo "Values which are completely filled (Offset, Length, Index and Sub Index) only saved"
+        Console::DisplayInfo "Only the PDO mapping table entries that are completely filled(Offset, Length, Index and Sub Index) are saved"
     }
 
     #PDO entries value is changed need to save 

@@ -707,7 +707,7 @@ proc Validation::IsValidIdx {input indexLength} {
 #---------------------------------------------------------------------------------------------------
 proc Validation::IsTableHex {input preinput mode idx reqLen tablePath rowIndex columnIndex entryPath} {
     
-    puts "IsTableHex::: entryPath:$entryPath, mode:$mode, idx:$idx, input:$input preinput:$preinput"
+    #puts "IsTableHex::: entryPath:$entryPath, mode:$mode, idx:$idx, input:$input preinput:$preinput"
     if {[string match -nocase "0x*" $input]} {
 	    set input [string range $input 2 end]
     } elseif {[string match -nocase "x*" $input]} {
@@ -754,7 +754,7 @@ proc Validation::IsTableHex {input preinput mode idx reqLen tablePath rowIndex c
 #---------------------------------------------------------------------------------------------------
 proc Validation::SetTableValue { entryPath mode idx input } {
     
-    puts "SetTableValue::: entryPath:$entryPath, mode:$mode, idx:$idx, input:$input "
+    #puts "SetTableValue::: entryPath:$entryPath, mode:$mode, idx:$idx, input:$input "
     $entryPath configure -validate none
     $entryPath delete 0 end
     $entryPath insert 0 $input
@@ -808,23 +808,23 @@ proc Validation::SetTableComboValue { input tablePath rowIndex columnIndex entry
 			$tablePath cellconfigure $rowIndex,4 -text "0x"
 		}
 		4 {
-			puts "tablePath: $tablePath,"
-			puts "rowIndex: $rowIndex, columnIndex: $columnIndex, input: $input"
+			#puts "tablePath: $tablePath,"
+			#puts "rowIndex: $rowIndex, columnIndex: $columnIndex, input: $input"
 			if {[string length $input] != 6} {
 				return 0;
 			}
 			foreach tempList $populatedCommParamList {
 				set rowlist [lindex $tempList 2]
-				puts "rowlist: $rowlist"
+				#puts "rowlist: $rowlist"
 				set chkRslt [lsearch $rowlist $rowIndex]
 				if { $chkRslt != -1} {
 					set maxRow [llength $rowlist]
-					puts "maxRow: $maxRow"
+					#puts "maxRow: $maxRow"
 					set counter 1
 					foreach indRow $rowlist {
 						# while 1a00 has one index
 						if { $counter == 1 } {
-							puts "counter == 1"
+							#puts "counter == 1"
 							# 1st subindex in an channel for which offset is 0x0000
 							$tablePath cellconfigure $indRow,5 -text "0x0000"
 							set offsetVal [$tablePath cellcget $indRow,5 -text]
@@ -833,35 +833,35 @@ proc Validation::SetTableComboValue { input tablePath rowIndex columnIndex entry
 							} else {
 								set lengthVal [$tablePath cellcget $indRow,4 -text]    
 							}
-							puts "offsetVal: $offsetVal, lengthVal: $lengthVal"
+							#puts "offsetVal: $offsetVal, lengthVal: $lengthVal"
 						} elseif { $counter == $maxRow } {
-							puts "counter == maxRow"
+							#puts "counter == maxRow"
 							#no need to manipulate and set offset value to next row if it is a last row
 							set totalOffset [expr $offsetVal+$lengthVal]
-							puts "totalOffset: $totalOffset"
+							#puts "totalOffset: $totalOffset"
 							set totalOffsethex 0x[NoteBookManager::AppendZero [string toupper [format %x $totalOffset]] 4]
-							puts "totalOffsethex: $totalOffsethex"
+							#puts "totalOffsethex: $totalOffsethex"
 							$tablePath cellconfigure $indRow,5 -text "$totalOffsethex"
 						} elseif { $indRow == $rowIndex } {
-							puts "indRow == rowIndex"
+							#puts "indRow == rowIndex"
 							set totalOffset [expr $offsetVal+$lengthVal]
-							puts "totalOffset: $totalOffset"
+							#puts "totalOffset: $totalOffset"
 							set totalOffsethex 0x[NoteBookManager::AppendZero [string toupper [format %x $totalOffset]] 4]
 							$tablePath cellconfigure $indRow,5 -text "$totalOffsethex"
 							set offsetVal [$tablePath cellcget $indRow,5 -text]
-							puts "offsetVal: $offsetVal"
+							#puts "offsetVal: $offsetVal"
 							set lengthVal $input
-							puts "inputlengthval: $lengthVal"
+							#puts "inputlengthval: $lengthVal"
 						} else {
-							puts "Else"
+							#puts "Else"
 							set totalOffset [expr $offsetVal+$lengthVal]
-							puts "totalOffset: $totalOffset"
+							#puts "totalOffset: $totalOffset"
 							set totalOffsethex 0x[NoteBookManager::AppendZero [string toupper [format %x $totalOffset]] 4]
-							puts "totalOffsethex: $totalOffsethex"
+							#puts "totalOffsethex: $totalOffsethex"
 							$tablePath cellconfigure $indRow,5 -text "$totalOffsethex"
 							set offsetVal [$tablePath cellcget $indRow,5 -text]
 							set lengthVal [$tablePath cellcget $indRow,4 -text]
-							puts "offsetVal: $offsetVal, lengthVal: $lengthVal"
+							#puts "offsetVal: $offsetVal, lengthVal: $lengthVal"
 						}
 						incr counter
 					}

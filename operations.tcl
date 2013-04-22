@@ -1645,7 +1645,7 @@ proc Operations::SingleClickNode {node} {
 						    #remove appended 0x
 						    set IndexActualValue [string range $IndexActualValue 2 end]
 					    } else {
-						    # no 0x no need to do anything
+						    set IndexActualValue [format %X $IndexActualValue]
 					    }
 					    set commParamValue $IndexActualValue
 						set nodeidEditableFlag 1

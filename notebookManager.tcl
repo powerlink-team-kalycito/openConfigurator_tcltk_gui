@@ -1841,10 +1841,15 @@ proc NoteBookManager::StartEditCombo {tablePath rowIndex columnIndex text} {
 #######Getting the current cell value in the row. and converting node id to decimal val#######
     set nodeidValhex [$tablePath cellcget $rowIndex,1 -text]
     scan $nodeidValhex %x nodeidVal
-    set offsetVal [$tablePath cellcget $rowIndex,2 -text]
-    set lengthVal [$tablePath cellcget $rowIndex,3 -text]
-    set idxidVal [$tablePath cellcget $rowIndex,4 -text]
-    set sidxVal [$tablePath cellcget $rowIndex,5 -text]
+    set idxidVal [$tablePath cellcget $rowIndex,2 -text]
+    set sidxVal [$tablePath cellcget $rowIndex,3 -text]
+    set lengthVal [$tablePath cellcget $rowIndex,4 -text]
+    set offsetVal [$tablePath cellcget $rowIndex,5 -text]
+    
+    #set offsetVal [$tablePath cellcget $rowIndex,2 -text]
+    #set lengthVal [$tablePath cellcget $rowIndex,3 -text]
+    #set idxidVal [$tablePath cellcget $rowIndex,4 -text]
+    #set sidxVal [$tablePath cellcget $rowIndex,5 -text]
     #puts "Nodeid: $nodeidValhex - $nodeidVal , offsetVal: $offsetVal , lengthVal: $lengthVal , idxidVal: $idxidVal , sidxVal: $sidxVal"
 
     set selectedNode [$treePath selection get]

@@ -1,9 +1,9 @@
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-:: (c) Kalycito Infotech Private Limited
+:: © Kalycito Infotech Private Limited
 ::
 ::  Project:        openCONFIGURATOR - written by Kalycito 
 ::
-::  File name:      TransferCDC.bat
+::  File name:      openCONFIGURATOR.bat
 ::
 ::  Description:  
 ::  Copies the file set to "Src' variable to the folder set to "Dest" variable

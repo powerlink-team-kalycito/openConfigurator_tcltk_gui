@@ -800,12 +800,12 @@ proc Validation::SetTableComboValue { input tablePath rowIndex columnIndex entry
 		}
 		2 {
 			# sidx and length should be set empty after index is edited or modified
-			$tablePath cellconfigure $rowIndex,3 -text "0x"
-			$tablePath cellconfigure $rowIndex,4 -text "0x"
+			$tablePath cellconfigure $rowIndex,3 -text "0x00"
+			$tablePath cellconfigure $rowIndex,4 -text "0x0000"
 		}
 		3 {
 			# length should be set empty after sidx is modified or edited
-			$tablePath cellconfigure $rowIndex,4 -text "0x"
+			$tablePath cellconfigure $rowIndex,4 -text "0x0000"
 		}
 		4 {
 			#puts "tablePath: $tablePath,"

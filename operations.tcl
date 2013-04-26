@@ -1644,11 +1644,13 @@ proc Operations::SingleClickNode {node} {
 					    if {[string match -nocase "0x*" $IndexActualValue] } {
 						    #remove appended 0x
 						    set IndexActualValue [string range $IndexActualValue 2 end]
+					    } elseif { $IndexActualValue != ""} {
+						set IndexActualValue [format %X $IndexActualValue]
 					    } else {
-						    set IndexActualValue [format %X $IndexActualValue]
+						#do nothing
 					    }
 					    set commParamValue $IndexActualValue
-						set nodeidEditableFlag 1
+					    set nodeidEditableFlag 1
 				    }
 			    }
 		    }
@@ -4136,7 +4138,8 @@ proc Operations::BuildProject {} {
 			    set buildCN_nodeId [lindex $buildCN_result 0]
 			    #set buildCN_nodeType [lindex $buildCN_result 1]
 			}
-			lappend build_nodesList $buildCN_nodeId
+			#lappend build_nodesList $buildCN_nodeId
+			set build_nodesList [linsert $build_nodesList end $buildCN_nodeId]
 		    }
 		}
 
@@ -4467,9 +4470,11 @@ proc Operations::DeleteTreeNode {} {
 			    set node_present [lsearch -exact $build_nodesList $nodeId]
 			    if { ($node_present != -1) } {
 			    #Remove the node id from the build list
+#puts "build_NOdeList: $build_nodesList"			    
 				    set build_nodesList [lreplace $build_nodesList $node_present $node_present]
-
-				    if { 0 != [llength $build_nodesList] } {
+#puts "build_nodesListAFTER: $build_nodesList"
+#puts "[llength $build_nodesList]"
+				    if { [llength $build_nodesList] > 0 } {
 					set result [tk_messageBox -message "CN node deleted successfully. The MN Mappings might be corrupted. Do you want fix it by autogenerating the MN object dictionary? \n Note: Any user edited MN values will be lost" -type yesno -icon question -title "Question" -parent .]
 					switch -- $result {
 					    yes {			 

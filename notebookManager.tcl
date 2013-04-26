@@ -1846,12 +1846,6 @@ proc NoteBookManager::StartEditCombo {tablePath rowIndex columnIndex text} {
     set lengthVal [$tablePath cellcget $rowIndex,4 -text]
     set offsetVal [$tablePath cellcget $rowIndex,5 -text]
     
-    #set offsetVal [$tablePath cellcget $rowIndex,2 -text]
-    #set lengthVal [$tablePath cellcget $rowIndex,3 -text]
-    #set idxidVal [$tablePath cellcget $rowIndex,4 -text]
-    #set sidxVal [$tablePath cellcget $rowIndex,5 -text]
-    #puts "Nodeid: $nodeidValhex - $nodeidVal , offsetVal: $offsetVal , lengthVal: $lengthVal , idxidVal: $idxidVal , sidxVal: $sidxVal"
-
     set selectedNode [$treePath selection get]
     set pdoType ""
     set pdoType "[$treePath itemcget $selectedNode -text ]"
@@ -1869,7 +1863,7 @@ proc NoteBookManager::StartEditCombo {tablePath rowIndex columnIndex text} {
 	    foreach tempnodeId $nodeIdList {
 		set hexnodeid 0x[string toupper [format %x $tempnodeId]]
 		lappend nodeIdListHex "$hexnodeid"
-	    }
+	}
 
 	    $win configure -values "$nodeIdListHex"
 	    $win configure -invalidcommand bell -validate key -validatecommand "Validation::SetTableComboValue %P $tablePath $rowIndex $columnIndex $win"
@@ -1877,18 +1871,21 @@ proc NoteBookManager::StartEditCombo {tablePath rowIndex columnIndex text} {
 	2 {
 	    set idxList [Operations::FuncIndexlist $nodeidVal]
 	    #puts "INdex cell: $idxList"
+	    set idxList [lappend idxList "0x0000"]
 	    $win configure -values "$idxList"
 	    $win configure -invalidcommand bell -validate key  -validatecommand "Validation::SetTableComboValue %P $tablePath $rowIndex $columnIndex $win"
 	}
 	3 {
 	    set sidxList [Operations::FuncSubIndexlist $nodeidVal $idxidVal $pdoType]
 	    #puts "SUBINdex cell: $sidxList"
+	    set sidxList [lappend sidxList "0x00"]
 	    $win configure -values "$sidxList"
 	    $win configure -invalidcommand bell -validate key  -validatecommand "Validation::SetTableComboValue %P $tablePath $rowIndex $columnIndex $win"
     	}
 	4 {
 	    set sidxLength [Operations::FuncSubIndexLength $nodeidVal $idxidVal $sidxVal]
 	    #puts "SINdex length cell: $sidxLength"
+	    set sidxLength [lappend sidxLength "0x0000"]
 	    $win configure -values "$sidxLength"
 	    $win configure -invalidcommand bell -validate key  -validatecommand "Validation::SetTableComboValue %P $tablePath $rowIndex $columnIndex $win"
 	}
@@ -2019,6 +2016,7 @@ proc NoteBookManager::SaveTable {tableWid} {
         foreach childSubIndex [$treePath nodes $childIndex] {
             set subIndexId [string range [$treePath itemcget $childSubIndex -text] end-2 end-1]
             if {[string match "00" $subIndexId]} {
+		SetBasicSubIndexAttributes $nodeId $nodeType $indexId $subIndexId "0x0" "NumberOfEntries" 1
             } else {
                 set name [string range [$treePath itemcget $childSubIndex -text] 0 end-6] 
                 set offset [string range [$tableWid cellcget $rowCount,5 -text] 2 end] 

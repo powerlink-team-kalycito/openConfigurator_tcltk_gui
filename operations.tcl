@@ -3354,12 +3354,11 @@ proc Operations::AddCN {cnName tmpImpDir nodeId} {
 
 	#Check XDC for schema compliance if existing
 	if {$tmpImpDir != ""} {
-		set catchErrCode [ValidateXDDFile $tmpImpDir]
+		set catchErrCode [ValidateXDDSchema $tmpImpDir]
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
 		if { $ErrCode != 0 } {
 			if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
-				Console::DisplayErrMsg "XDD/XDC validation error: [ocfmRetCode_errorString_get $catchErrCode]"
-				tk_messageBox -message "The imported XDD/XDC is not compliant to XDD schema version 0.13: [ocfmRetCode_errorString_get $catchErrCode]" -title "XDD/XDC import validation error" -icon error -type ok
+				tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error
 	    } else {
 		    tk_messageBox -message "Unknown Error" -title Error -icon error
 	    }
@@ -4343,7 +4342,7 @@ proc Operations::BuildProject {} {
             tk_messageBox -message "$msg" -icon warning -title "Warning" -parent .
             return
         } elseif {$errCycleTimeFlag == 1} {
-            set result [tk_messageBox -message "$msg\nDo you want to copy the default value 50000 µs" -type yesno -icon info -title "Information" -parent .]
+            set result [tk_messageBox -message "$msg\nDo you want to copy the default value 50000 Âµs" -type yesno -icon info -title "Information" -parent .]
             switch -- $result {
 			    yes {
 				#API for SetBasicIndexAttributes
@@ -4643,12 +4642,11 @@ proc Operations::ReImport {} {
 		
 		#Check XDC for schema compliance if existing
 		if {$tmpImpDir != ""} {
-		set catchErrCode [ValidateXDDFile $tmpImpDir]
+		set catchErrCode [ValidateXDDSchema $tmpImpDir]
 		set ErrCode [ocfmRetCode_code_get $catchErrCode]
 		if { $ErrCode != 0 } {
 			if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
-				Console::DisplayErrMsg "XDD/XDC validation error: [ocfmRetCode_errorString_get $catchErrCode]"
-				tk_messageBox -message "The imported XDD/XDC is not compliant to XDD schema version 0.13: [ocfmRetCode_errorString_get $catchErrCode]" -title "XDD/XDC import validation error" -icon error -type ok
+				tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error
 	    } else {
 		    tk_messageBox -message "Unknown Error" -title Error -icon error
 	    }

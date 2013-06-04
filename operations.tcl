@@ -3280,14 +3280,15 @@ proc Operations::InsertTree { } {
 #  Operations::FuncIndexlist
 #
 #  Arguments 	nodeIdparm 	Nodeid of the node for which indexlist to be generated
+#		pdoTypeparm	PDO mapping type
 #
 #  Results 	mappingidxlist with index id list is returned.
 #		Note: Each index id has the 0x prepended for hex notation
 #
-#  Description : Generates the list of index id's within the range 2000-FFFF from the tree widget
+#  Description : Generates the list of index id's which can be mapped as a pdo object the tree widget
 #		 for the given node id
 #---------------------------------------------------------------------------------------------------
-proc Operations::FuncIndexlist {nodeIdparm} {
+proc Operations::FuncIndexlist {nodeIdparm nodeTypeVal pdoTypeparm} {
     global treePath
 
     #puts "treePath: $treePath"
@@ -3314,25 +3315,99 @@ proc Operations::FuncIndexlist {nodeIdparm} {
 		set idx [$treePath nodes $tempChildMn]
 		foreach tempIdx $idx {
 		    set idxName "[$treePath itemcget $tempIdx -text ]"
-		    #puts "idxName: $idxName"
+		    puts "idxName: $idxName"
 		    # pdo should not be processed
+		    #set indexAdded 0
 		    if { [string match -nocase "PDO" $idxName] } {
-			
+			#pdo's will not be added as a pdo.
 		    } else {
 			set idxId "[string range $idxName end-6 end-1]"
 			#puts "idxId: $idxId"
-			if { [expr $idxId > 0x1FFF] } {
-			    lappend mappingidxlist $idxId
+			set tempIdxId [string range $idxName end-4 end-1]
+			
+			set indexPos [new_intp]
+			#ocfmRetCode IfIndexExists(INT32 nodeId, NodeType nodeType, char* indexId, INT32 *idxPos)
+			set catchErrCode [IfIndexExists $nodeIdparm $nodeType $tempIdxId $indexPos] 
+			set indexPos [intp_value $indexPos]
+
+			set catchErrCode [GetIndexAttributes $nodeIdparm $nodeType $tempIdxId 1 ]
+			set ErrCode [ocfmRetCode_code_get [lindex $catchErrCode 0] ]		
+			if {$ErrCode != 0} {
+			    continue	
 			}
+			set objType [lindex $catchErrCode 1]
+			puts "objType: $objType"
+			if {[string match -nocase $objType "ARRAY"] || [string match -nocase $objType "RECORD"]} {
+				set sidxTree [$treePath nodes $tempIdx]
+				set indexAdded 0
+				foreach tempSidx $sidxTree {
+				    if { $indexAdded == 0 } {
+					set sidxName "[$treePath itemcget $tempSidx -text ]"
+					set sidxId "[string range $sidxName end-4 end-1]"
+					puts "sidxName: $sidxName"
+					set tempSidxId [string range $sidxName end-2 end-1]
+					puts "tempSidxId: $tempSidxId"
+					set tempSidxOut [GetSubIndexAttributes $nodeIdparm $nodeType $tempIdxId $tempSidxId 6 ]
+					puts "tempSidxOut: $tempSidxOut"
+					set ErrCode [ocfmRetCode_code_get [lindex $tempSidxOut 0] ]		
+					if {$ErrCode != 0} {
+					    continue	
+					}
+					set pdoMapping [lindex $tempSidxOut 1]
+					puts "pdoMapping: $pdoMapping"
+					if { [string match $pdoTypeparm $pdoMapping] || [string equal $pdoMapping "OPTIONAL"] || [string equal $pdoMapping "DEFAULT"] } {
+					    #if we need to check for Access type put your code here
+					    lappend mappingidxlist $idxId
+					    set indexAdded 1
+					} else {
+					    # no pdo mapping & !pdoTypeparm
+					}
+				    }
+				}
+			} else {
+			    #API for GetIndexAttributes & 6 is passed to get the pdo mapping
+			    set tempIndexProp [GetIndexAttributes $nodeIdparm $nodeType $tempIdxId 6 ]
+
+			    #API for GetSubIndexAttributesbyPositions
+			    #set tempIndexProp [GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos 6 ]
+			    set ErrCode [ocfmRetCode_code_get [lindex $tempIndexProp 0] ]		
+			    if {$ErrCode != 0} {
+				continue	
+			    }
+			    set pdoMapping [lindex $tempIndexProp 1]
+			    if { [string match -nocase $pdoTypeparm $pdoMapping] || [string match -nocase $pdoMapping "OPTIONAL"] } {
+				    #if we need to check for Access type put your code here
+				lappend mappingidxlist $idxId
+			    } else {
+				## || [string match -nocase $pdoMapping "DEFAULT"]
+				# no pdo mapping, !pdoTypeparm & DEFAULT
+			    }
+			}
+			
 		    }
 		}
 	    }
 	}
     }
     
+if {0} {    
+    puts "nodeIdparm: $nodeIdparm nodeTypeVal: $nodeTypeVal pdoTypeparm: $pdoTypeparm"
     
+    set nodeId $nodeIdparm
+    #API for valid mapping index Id
+    set res [GetValidMappingIndexId $nodeId $nodeTypeVal $pdoTypeparm ]
+    set fields [split $res "x"]
+    puts "fields: $fields"
+    foreach tempIdxId $fields {
+	if { $tempIdxId eq {} } {
+	    #empty index list should not be added
+	} else {
+	    lappend mappingidxlist "0x$tempIdxId"   
+	}
+    }
+}
     if { [string length $mappingidxlist] < 6 } {
-	Console::DisplayWarning "No Indices are available in this node for mapping. Add an Index with value greater than 2000 to view the list of Indices"
+	Console::DisplayWarning "No Indices are available in this node for mapping"
     }
     return $mappingidxlist
 }
@@ -3364,7 +3439,6 @@ proc Operations::FuncSubIndexlist {nodeIdparm idxIdparm pdoTypeparm} {
 	return $mappingSidxList
     }
 
-    
     set mnNode [$treePath nodes ProjectNode]
     foreach tempMn $mnNode {
 	#puts "tempMn: $tempMn"
@@ -3382,25 +3456,25 @@ proc Operations::FuncSubIndexlist {nodeIdparm idxIdparm pdoTypeparm} {
 	    }
 	    if { $nodeId == $nodeIdparm } {
 
-		    #API for IfNodeExists
-		    set nodePos [new_intp]
-		    set ExistfFlag [new_boolp]
-		    set catchErrCode [IfNodeExists $nodeIdparm $nodeType $nodePos $ExistfFlag]
-		    set nodePos [intp_value $nodePos]
-		    set ExistfFlag [boolp_value $ExistfFlag]
-		    set ErrCode [ocfmRetCode_code_get $catchErrCode]
-		    if { $ErrCode == 0 && $ExistfFlag == 1 } {
-			    #the node exist continue 
-		    } else {
-		    }
-		
+		#API for IfNodeExists
+		set nodePos [new_intp]
+		set ExistfFlag [new_boolp]
+		set catchErrCode [IfNodeExists $nodeIdparm $nodeType $nodePos $ExistfFlag]
+		set nodePos [intp_value $nodePos]
+		set ExistfFlag [boolp_value $ExistfFlag]
+		set ErrCode [ocfmRetCode_code_get $catchErrCode]
+		if { $ErrCode == 0 && $ExistfFlag == 1 } {
+			#the node exist continue 
+		} else {
+		}
+	    
 		set idx [$treePath nodes $tempChildMn]
 		foreach tempIdx $idx {
 		    set idxName "[$treePath itemcget $tempIdx -text ]"
 		    #puts "idxName: $idxName"
 		    # pdo should not be processed
 		    if { [string match -nocase "PDO" $idxName] } {
-			
+		    
 		    } else {
 			set idxId "[string range $idxName end-6 end-1]"
 			#puts "idxId: $idxId"
@@ -3411,16 +3485,9 @@ proc Operations::FuncSubIndexlist {nodeIdparm idxIdparm pdoTypeparm} {
 				#puts "sidxName: $sidxName"
 				set sidxId "[string range $sidxName end-4 end-1]"
 				#puts "sidxId: $sidxId"
-				#ocfmRetCode GetSubIndexAttributes(INT32 iNodeID, ENodeType enumNodeType, char* pbIndexID, char* pbSubIndexID, EAttributeType enumAttributeType, char* pbOutAttributeValue)
+
 				set tempIdxIdparm "[string range $idxIdparm end-3 end]"
 				set tempSidxId "[string range $sidxId end-1 end]"
-				#set result []
-				#set result [GetSubIndexAttributes $nodeIdparm $nodeType $tempIdxIdparm $tempSidxId 6]
-				#puts "[lindex $result 0]"
-				#puts "[lindex $result 1]"
-
-				#puts "tempIdxIdparm: $tempIdxIdparm"
-				#puts "tempSidxId: $tempSidxId"
 
 				#API for IfSubIndexExists
 				set indexPos [new_intp] 
@@ -3429,20 +3496,24 @@ proc Operations::FuncSubIndexlist {nodeIdparm idxIdparm pdoTypeparm} {
 				set indexPos [intp_value $indexPos]
 				set subIndexPos [intp_value $subIndexPos] 
 				# 6 is passed to get the pdo mapping
+				#API for GetSubIndexAttributesbyPositions
 				set tempIndexProp [GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos 6 ]
 				set ErrCode [ocfmRetCode_code_get [lindex $tempIndexProp 0] ]		
 				if {$ErrCode != 0} {
-					continue	
+					    continue	
 				}
 				set pdoMapping [lindex $tempIndexProp 1]
-				
+			    
 				#puts "pdoMapping: $pdoMapping # Parm: $pdoTypeparm"
-				if { [string match $pdoTypeparm $pdoMapping] } {
-				    #puts "sidxId: $sidxId"
+				if { [string match -nocase $pdoTypeparm $pdoMapping] || [string equal -nocase $pdoMapping "OPTIONAL"] } {
+					#if we need to check for Access type put your code here
 				    lappend mappingSidxList $sidxId   
+				} else {
+				    # || [string equal -nocase $pdoMapping "DEFAULT"]
+				    # no pdo mapping, !pdoTypeparm & default
 				}
 			    }
-			    
+			
 			}
 		    }
 		}
@@ -3528,56 +3599,73 @@ proc Operations::FuncSubIndexLength {nodeIdparm idxIdparm sidxparm} {
 			
 		    } else {
 			set idxId "[string range $idxName end-6 end-1]"
-			#puts "idxId: $idxId"
+			puts "idxId: $idxId"
 			if { [expr $idxId == $idxIdparm] } {
+			    set tempIdxId "[string range $idxIdparm end-3 end]"
+			    puts "tempIdxId: $tempIdxId"
 			    set sidx [$treePath nodes $tempIdx]
-			    foreach tempSidx $sidx {
-				set sidxName "[$treePath itemcget $tempSidx -text ]"
-				#puts "sidxName: $sidxName"
-				set sidxId "[string range $sidxName end-4 end-1]"
-				#puts "sidxId: $sidxId"
+			    puts "sidx: $sidx"
+			    set hasSubIndex [string length $sidx]
+			    puts "hasSubIndex: $hasSubIndex"
+			    if {$hasSubIndex == 0} {
+				set catchErrCode [GetIndexAttributes $nodeId $nodeType $tempIdxId 2]
+				set ErrCode [ocfmRetCode_code_get [lindex $catchErrCode 0] ]		
+				if {$ErrCode != 0} {
+					continue	
+				}
+				set idxDatatype [lindex $catchErrCode 1]
+				puts "idxDatatype: $idxDatatype"
+				set datasize [GetDataSize $idxDatatype]
+				set tempHexDataSizeBits [string toupper [format %x [expr $datasize * 8 ]]]
+				puts "tempHexDataSizeBits: $tempHexDataSizeBits"
+    
+				set mappingSidxLength "0x[NoteBookManager::AppendZero $tempHexDataSizeBits 4]"
 
-
-				if { [string match $sidxparm $sidxId] } {
-				
-				    set tempIdxIdparm "[string range $idxIdparm end-3 end]"
-				    set tempSidxId "[string range $sidxId end-1 end]"
-				    #puts "tempIdxIdparm: $tempIdxIdparm"
-				    #puts "tempSidxId: $tempSidxId"
-				    
-				    #API for IfNodeExists
-				    set indexPos [new_intp] 
-				    set subIndexPos [new_intp] 
-				    set catchErrCode [IfSubIndexExists $nodeIdparm $nodeType $tempIdxIdparm $tempSidxId $subIndexPos $indexPos] 
-				    set indexPos [intp_value $indexPos]
-				    set subIndexPos [intp_value $subIndexPos] 
-				    
-				    
-				    #API for IfNodeExists
-				    # 2 is passed to get the Datatype value
-				    set tempIndexProp [GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos 2 ]
-				    set ErrCode [ocfmRetCode_code_get [lindex $tempIndexProp 0] ]		
-				    if {$ErrCode != 0} {
-					    continue	
+			    } else {
+				foreach tempSidx $sidx {
+				    set sidxName "[$treePath itemcget $tempSidx -text ]"
+				    #puts "sidxName: $sidxName"
+				    set sidxId "[string range $sidxName end-4 end-1]"
+				    #puts "sidxId: $sidxId"
+        
+				    if { [string match -nocase $sidxparm $sidxId] } {
+			    
+					set tempSidxId "[string range $sidxId end-1 end]"
+					
+					#puts "tempSidxId: $tempSidxId"
+					
+					#API for IfNodeExists
+					set indexPos [new_intp] 
+					set subIndexPos [new_intp] 
+					set catchErrCode [IfSubIndexExists $nodeIdparm $nodeType $tempIdxId $tempSidxId $subIndexPos $indexPos] 
+					set indexPos [intp_value $indexPos]
+					set subIndexPos [intp_value $subIndexPos] 
+					
+					#API for IfNodeExists
+					# 2 is passed to get the Datatype value
+					set tempIndexProp [GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos 2 ]
+					set ErrCode [ocfmRetCode_code_get [lindex $tempIndexProp 0] ]		
+					if {$ErrCode != 0} {
+						continue	
+					}
+					set sidxDatatype [lindex $tempIndexProp 1]
+					
+					#puts "sidxDatatype: $sidxDatatype"
+    
+					#Get the lenth for the datatype and append all the length
+					# consider about xdc and xdd DOMain objects also
+					#API for GetDataSize
+					set datasize [GetDataSize $sidxDatatype]
+					#puts "datasize: $datasize"
+					
+					set tempHexDataSizeBits [string toupper [format %x [expr $datasize * 8 ]]]
+					#puts "tempHexDataSizeBits: $tempHexDataSizeBits"
+    
+					set mappingSidxLength 0x[NoteBookManager::AppendZero $tempHexDataSizeBits 4]
+					#puts "mappingSidxLength: $mappingSidxLength"
 				    }
-				    set sidxDatatype [lindex $tempIndexProp 1]
-				    
-				    #puts "sidxDatatype: $sidxDatatype"
-
-				    #Get the lenth for the datatype and append all the length
-				    # consider about xdc and xdd DOMain objects also
-				    #API for GetDataSize
-				    set datasize [GetDataSize $sidxDatatype]
-				    #puts "datasize: $datasize"
-				    
-				    set tempHexDataSizeBits [string toupper [format %x [expr $datasize * 8 ]]]
-				    #puts "tempHexDataSizeBits: $tempHexDataSizeBits"
-
-				    set mappingSidxLength 0x[NoteBookManager::AppendZero $tempHexDataSizeBits 4]
-				    #puts "mappingSidxLength: $mappingSidxLength"
 				}
 			    }
-			    
 			}
 		    }
 		}
@@ -3590,9 +3678,6 @@ proc Operations::FuncSubIndexLength {nodeIdparm idxIdparm sidxparm} {
     }
     return $mappingSidxLength
 }
-
-
-
 
 #---------------------------------------------------------------------------------------------------
 #  NameSpace Declaration

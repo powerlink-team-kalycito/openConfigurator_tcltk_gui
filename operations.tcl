@@ -1738,8 +1738,11 @@ proc Operations::SingleClickNode {node} {
 				
 				    if { $accessType == "ro" || $accessType == "const" } {
 					    foreach col [list 2 3 4 5 ] {
-						    [lindex $f2 1] cellconfigure $popCount,$col -editable no
+						if {$ra_auto == 1 } {
 						    [lindex $f5 1] cellconfigure $popCount,$col -editable no
+						} else {
+						    [lindex $f2 1] cellconfigure $popCount,$col -editable no
+						}
 					    }							
 				    } else {
 					# as a default the first cell is always non editable, adding it to the list only when made editable

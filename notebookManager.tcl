@@ -1821,6 +1821,7 @@ proc NoteBookManager::StartEdit {tablePath rowIndex columnIndex text} {
     return $text
 }
 
+
 #---------------------------------------------------------------------------------------------------
 #  NoteBookManager::StartEditCombo
 # 
@@ -1853,6 +1854,7 @@ proc NoteBookManager::StartEditCombo {tablePath rowIndex columnIndex text} {
     
     set result [Operations::GetNodeIdType $selectedNode]
     set nodeidVal [lindex $result 0]
+    set nodeTypeVal [lindex $result 1]
 
     set win [$tablePath editwinpath]
     $win configure -editable no
@@ -1860,18 +1862,26 @@ proc NoteBookManager::StartEditCombo {tablePath rowIndex columnIndex text} {
 	1 {
             set nodeIdListHex ""
 	    set nodeIdListHex "0x0"
-	    foreach tempnodeId $nodeIdList {
-		set hexnodeid 0x[string toupper [format %x $tempnodeId]]
-		lappend nodeIdListHex "$hexnodeid"
-	}
 
+	    if { $nodeTypeVal == 1 && [string match -nocase "TPDO*" $pdoType] } {
+		    #node id should be = 0 for a CN TPDO
+	    } else {
+		    
+		    puts "nodeTypeVal:$nodeTypeVal  pdoType:$pdoType"
+		    foreach tempnodeId $nodeIdList {
+			set hexnodeid 0x[string toupper [format %x $tempnodeId]]
+			lappend nodeIdListHex "$hexnodeid"
+		    }
+	    }
+	    set nodeIdListHex [lsort $nodeIdListHex]
 	    $win configure -values "$nodeIdListHex"
 	    $win configure -invalidcommand bell -validate key -validatecommand "Validation::SetTableComboValue %P $tablePath $rowIndex $columnIndex $win"
 	}
 	2 {
-	    set idxList [Operations::FuncIndexlist $nodeidVal]
+	    set idxList [Operations::FuncIndexlist $nodeidVal $nodeTypeVal $pdoType]
 	    #puts "INdex cell: $idxList"
 	    set idxList [lappend idxList "0x0000"]
+	    set idxList [lsort $idxList]
 	    $win configure -values "$idxList"
 	    $win configure -invalidcommand bell -validate key  -validatecommand "Validation::SetTableComboValue %P $tablePath $rowIndex $columnIndex $win"
 	}
@@ -1879,6 +1889,7 @@ proc NoteBookManager::StartEditCombo {tablePath rowIndex columnIndex text} {
 	    set sidxList [Operations::FuncSubIndexlist $nodeidVal $idxidVal $pdoType]
 	    #puts "SUBINdex cell: $sidxList"
 	    set sidxList [lappend sidxList "0x00"]
+	    set sidxList [lsort $sidxList]
 	    $win configure -values "$sidxList"
 	    $win configure -invalidcommand bell -validate key  -validatecommand "Validation::SetTableComboValue %P $tablePath $rowIndex $columnIndex $win"
     	}
@@ -1886,6 +1897,7 @@ proc NoteBookManager::StartEditCombo {tablePath rowIndex columnIndex text} {
 	    set sidxLength [Operations::FuncSubIndexLength $nodeidVal $idxidVal $sidxVal]
 	    #puts "SINdex length cell: $sidxLength"
 	    set sidxLength [lappend sidxLength "0x0000"]
+	    set sidxLength [lsort $sidxLength]
 	    $win configure -values "$sidxLength"
 	    $win configure -invalidcommand bell -validate key  -validatecommand "Validation::SetTableComboValue %P $tablePath $rowIndex $columnIndex $win"
 	}

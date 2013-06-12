@@ -833,25 +833,25 @@ proc Validation::SetTableComboValue { input tablePath rowIndex columnIndex entry
 							} else {
 								set lengthVal [$tablePath cellcget $indRow,4 -text]    
 							}
-							#puts "offsetVal: $offsetVal, lengthVal: $lengthVal"
+							puts "offsetVal: $offsetVal, lengthVal: $lengthVal"
 						} elseif { $counter == $maxRow } {
 							#puts "counter == maxRow"
 							#no need to manipulate and set offset value to next row if it is a last row
 							set totalOffset [expr $offsetVal+$lengthVal]
-							#puts "totalOffset: $totalOffset"
+							puts "totalOffset: $totalOffset"
 							set totalOffsethex 0x[NoteBookManager::AppendZero [string toupper [format %x $totalOffset]] 4]
 							#puts "totalOffsethex: $totalOffsethex"
 							$tablePath cellconfigure $indRow,5 -text "$totalOffsethex"
 						} elseif { $indRow == $rowIndex } {
 							#puts "indRow == rowIndex"
 							set totalOffset [expr $offsetVal+$lengthVal]
-							#puts "totalOffset: $totalOffset"
+							puts "totalOffset: $totalOffset"
 							set totalOffsethex 0x[NoteBookManager::AppendZero [string toupper [format %x $totalOffset]] 4]
 							$tablePath cellconfigure $indRow,5 -text "$totalOffsethex"
 							set offsetVal [$tablePath cellcget $indRow,5 -text]
 							#puts "offsetVal: $offsetVal"
 							set lengthVal $input
-							#puts "inputlengthval: $lengthVal"
+							puts "inputlengthval: $lengthVal"
 						} else {
 							#puts "Else"
 							set totalOffset [expr $offsetVal+$lengthVal]
@@ -861,7 +861,11 @@ proc Validation::SetTableComboValue { input tablePath rowIndex columnIndex entry
 							$tablePath cellconfigure $indRow,5 -text "$totalOffsethex"
 							set offsetVal [$tablePath cellcget $indRow,5 -text]
 							set lengthVal [$tablePath cellcget $indRow,4 -text]
-							#puts "offsetVal: $offsetVal, lengthVal: $lengthVal"
+							puts "offsetVal: $offsetVal, lengthVal: $lengthVal"
+						}
+						
+						if { [ string length $lengthVal ] == 0 } {
+						    set lengthVal "0x0000"
 						}
 						incr counter
 					}

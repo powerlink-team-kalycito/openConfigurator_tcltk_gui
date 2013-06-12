@@ -3339,7 +3339,7 @@ proc Operations::FuncIndexlist {nodeIdparm nodeTypeVal pdoTypeparm} {
 			    continue	
 			}
 			set objType [lindex $catchErrCode 1]
-			puts "objType: $objType"
+			#puts "objType: $objType"
 			if {[string match -nocase $objType "ARRAY"] || [string match -nocase $objType "RECORD"]} {
 				set sidxTree [$treePath nodes $tempIdx]
 				set indexAdded 0
@@ -3347,22 +3347,23 @@ proc Operations::FuncIndexlist {nodeIdparm nodeTypeVal pdoTypeparm} {
 				    if { $indexAdded == 0 } {
 					set sidxName "[$treePath itemcget $tempSidx -text ]"
 					set sidxId "[string range $sidxName end-4 end-1]"
-					puts "sidxName: $sidxName"
+					#puts "sidxName: $sidxName"
 					set tempSidxId [string range $sidxName end-2 end-1]
-					puts "tempSidxId: $tempSidxId"
+					#puts "tempSidxId: $tempSidxId"
 					set tempSidxOut [GetSubIndexAttributes $nodeIdparm $nodeType $tempIdxId $tempSidxId 6 ]
-					puts "tempSidxOut: $tempSidxOut"
+					#puts "tempSidxOut: $tempSidxOut"
 					set ErrCode [ocfmRetCode_code_get [lindex $tempSidxOut 0] ]		
 					if {$ErrCode != 0} {
 					    continue	
 					}
 					set pdoMapping [lindex $tempSidxOut 1]
-					puts "pdoMapping: $pdoMapping"
-					if { [string match $pdoTypeparm $pdoMapping] || [string equal $pdoMapping "OPTIONAL"] || [string equal $pdoMapping "DEFAULT"] } {
-					    #if we need to check for Access type put your code here
+					#puts "pdoMapping: $pdoMapping"
+					if { [string match $pdoTypeparm $pdoMapping] || [string equal $pdoMapping "OPTIONAL"] } {
+					    #if we need to check for Access type add your code here
 					    lappend mappingidxlist $idxId
 					    set indexAdded 1
 					} else {
+					    #|| [string equal $pdoMapping "DEFAULT"]
 					    # no pdo mapping & !pdoTypeparm
 					}
 				    }
@@ -3379,7 +3380,7 @@ proc Operations::FuncIndexlist {nodeIdparm nodeTypeVal pdoTypeparm} {
 			    }
 			    set pdoMapping [lindex $tempIndexProp 1]
 			    if { [string match -nocase $pdoTypeparm $pdoMapping] || [string match -nocase $pdoMapping "OPTIONAL"] } {
-				    #if we need to check for Access type put your code here
+				    #if we need to check for Access type add your code here
 				lappend mappingidxlist $idxId
 			    } else {
 				## || [string match -nocase $pdoMapping "DEFAULT"]
@@ -3393,22 +3394,6 @@ proc Operations::FuncIndexlist {nodeIdparm nodeTypeVal pdoTypeparm} {
 	}
     }
     
-if {0} {    
-    puts "nodeIdparm: $nodeIdparm nodeTypeVal: $nodeTypeVal pdoTypeparm: $pdoTypeparm"
-    
-    set nodeId $nodeIdparm
-    #API for valid mapping index Id
-    set res [GetValidMappingIndexId $nodeId $nodeTypeVal $pdoTypeparm ]
-    set fields [split $res "x"]
-    puts "fields: $fields"
-    foreach tempIdxId $fields {
-	if { $tempIdxId eq {} } {
-	    #empty index list should not be added
-	} else {
-	    lappend mappingidxlist "0x$tempIdxId"   
-	}
-    }
-}
     if { [string length $mappingidxlist] < 6 } {
 	Console::DisplayWarning "No Indices are available in this node for mapping"
     }

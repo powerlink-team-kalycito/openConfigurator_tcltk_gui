@@ -2099,29 +2099,37 @@ proc Operations::SingleClickNode {node} {
 	set tempIndexObjtype [GetIndexAttributesbyPositions $nodePos $indexPos 1 ]
     	set ErrCode [ocfmRetCode_code_get [lindex $tempIndexObjtype 0]]
 	if {$ErrCode == 0} {
-	    set IndexObjtype [lindex $tempIndexObjtype 1]
+		set IndexObjtype [lindex $tempIndexObjtype 1]
 	} else {
-	    set IndexObjtype []
+		set IndexObjtype []
 	}
 	if { [ string match -nocase "RECORD" $IndexObjtype ] } {
-	    $tmpInnerf1.co_data1 configure -state normal
+		$tmpInnerf1.co_data1 configure -state normal
 	} else {
-	    $tmpInnerf1.co_data1 configure -state disabled
+		$tmpInnerf1.co_data1 configure -state disabled
 	}
-    }
-    #disable all the widgets for subindex 00
-    if { [string match "*SubIndex*" $node] && ($subIndexId == "00") && ([expr 0x$indexId > 0x1fff]) } {
-        $tmpInnerf0.en_nam1 configure -state disabled
-        #default entry always disabled
-        $tmpInnerf1.en_default1 configure -state disabled
-        $tmpInnerf1.en_value1 configure -state disabled
-        $tmpInnerf1.en_lower1 configure -state disabled
-        $tmpInnerf1.en_upper1 configure -state disabled
-        $tmpInnerf1.co_data1 configure -state disabled
-        $tmpInnerf1.co_obj1 configure -state disabled
-        $tmpInnerf1.co_access1 configure -state disabled
-        $tmpInnerf1.co_pdo1 configure -state disabled
-        $subindexSaveBtn configure -state disabled
+		
+	if { ($subIndexId == "00") } {
+	    $tmpInnerf0.en_nam1 configure -state disabled
+	    #default entry always disabled
+	    $tmpInnerf1.en_default1 configure -state disabled
+	    $tmpInnerf1.en_lower1 configure -state disabled
+	    $tmpInnerf1.en_upper1 configure -state disabled
+	    $tmpInnerf1.co_data1 configure -state disabled
+	    #$tmpInnerf1.co_obj1 configure -state disabled
+
+	    if { [ string match -nocase "ARRAY" $IndexObjtype ] } {
+		$tmpInnerf1.en_value1 configure -state normal
+		$tmpInnerf1.co_access1 configure -state normal
+		$tmpInnerf1.co_pdo1 configure -state normal
+		$subindexSaveBtn configure -state normal
+	    } else { 
+		$tmpInnerf1.en_value1 configure -state disabled
+		$tmpInnerf1.co_access1 configure -state disabled
+		$tmpInnerf1.co_pdo1 configure -state disabled
+		$subindexSaveBtn configure -state disabled
+	    }
+	}
     }
     
 #puts "\n###### singclick datatype->[lindex $IndexProp 2]####\n"

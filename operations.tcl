@@ -3366,12 +3366,29 @@ proc Operations::FuncIndexlist {nodeIdparm nodeTypeVal pdoTypeparm} {
 					}
 					set pdoMapping [lindex $tempSidxOut 1]
 					#puts "pdoMapping: $pdoMapping"
-					if { [string match $pdoTypeparm $pdoMapping] || [string equal $pdoMapping "OPTIONAL"] } {
+
+					set sidxAccessType [GetSubIndexAttributes $nodeIdparm $nodeType $tempIdxId $tempSidxId 3]
+					set ErrCode [ocfmRetCode_code_get [lindex $sidxAccessType 0] ]		
+					if {$ErrCode != 0} {
+					    continue	
+					}
+					set accessType [lindex $sidxAccessType 1]
+
+					if { [string match $pdoTypeparm $pdoMapping] || [string match -nocase $pdoMapping "OPTIONAL"] } {
 					    #if we need to check for Access type add your code here
-					    lappend mappingidxlist $idxId
-					    set indexAdded 1
+					    #lappend mappingidxlist $idxId
+					    #set indexAdded 1
+					    if { $accessType != "" } {
+						if { [string match -nocase $pdoTypeparm "RPDO"] && ( [string match -nocase $accessType "RW"] || [string match -nocase $accessType "WO"] ) } {
+			    			    lappend mappingidxlist $idxId
+						    set indexAdded 1
+						} elseif { [string match -nocase $pdoTypeparm "TPDO"] && ( [string match -nocase $accessType "RW"] || [string match -nocase $accessType "RO"] ) } {
+						    lappend mappingidxlist $idxId
+						    set indexAdded 1
+						}
+					    }
 					} else {
-					    #|| [string equal $pdoMapping "DEFAULT"]
+				    	    #|| [string equal $pdoMapping "DEFAULT"]
 					    # no pdo mapping & !pdoTypeparm
 					}
 				    }
@@ -3387,9 +3404,24 @@ proc Operations::FuncIndexlist {nodeIdparm nodeTypeVal pdoTypeparm} {
 				continue	
 			    }
 			    set pdoMapping [lindex $tempIndexProp 1]
+			    
+			    set idxAccessType [GetIndexAttributes $nodeIdparm $nodeType $tempIdxId 3]
+			    set ErrCode [ocfmRetCode_code_get [lindex $idxAccessType 0] ]		
+			    if {$ErrCode != 0} {
+			        continue
+			    }
+			    set accessType [lindex $idxAccessType 1]
+
 			    if { [string match -nocase $pdoTypeparm $pdoMapping] || [string match -nocase $pdoMapping "OPTIONAL"] } {
 				    #if we need to check for Access type add your code here
-				lappend mappingidxlist $idxId
+				#lappend mappingidxlist $idxId
+				if { $accessType != "" } {
+				    if { [string match -nocase $pdoTypeparm "RPDO"] && ([string match -nocase $accessType "RW"] || [string match -nocase $accessType "WO"]) } {
+					lappend mappingidxlist $idxId
+				    } elseif { [string match -nocase $pdoTypeparm "TPDO"] && ([string match -nocase $accessType "RW"] || [string match -nocase $accessType "RO"]) } {
+					lappend mappingidxlist $idxId
+				    }
+				}
 			    } else {
 				## || [string match -nocase $pdoMapping "DEFAULT"]
 				# no pdo mapping, !pdoTypeparm & DEFAULT
@@ -3496,20 +3528,33 @@ proc Operations::FuncSubIndexlist {nodeIdparm idxIdparm pdoTypeparm} {
 				set tempIndexProp [GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos 6 ]
 				set ErrCode [ocfmRetCode_code_get [lindex $tempIndexProp 0] ]		
 				if {$ErrCode != 0} {
-					    continue	
+				    continue	
 				}
 				set pdoMapping [lindex $tempIndexProp 1]
-			    
+
+				set sidxAccessType [GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos 3 ]
+				set ErrCode [ocfmRetCode_code_get [lindex $sidxAccessType 0] ]		
+				if {$ErrCode != 0} {
+				    continue	
+				}			    
+				set accessType [lindex $sidxAccessType 1]
+
 				#puts "pdoMapping: $pdoMapping # Parm: $pdoTypeparm"
-				if { [string match -nocase $pdoTypeparm $pdoMapping] || [string equal -nocase $pdoMapping "OPTIONAL"] } {
+				if { [string match -nocase $pdoTypeparm $pdoMapping] || [string match -nocase $pdoMapping "OPTIONAL"] } {
 					#if we need to check for Access type put your code here
-				    lappend mappingSidxList $sidxId   
+				    #lappend mappingSidxList $sidxId   
+				    if { $accessType != "" } {
+					if { [string match -nocase $pdoTypeparm "RPDO"] && ( [string match -nocase $accessType "RW"] || [string match -nocase $accessType "WO"] ) } {
+					    lappend mappingSidxList $sidxId
+					} elseif { [string match -nocase $pdoTypeparm "TPDO"] && ( [string match -nocase $accessType "RW"] || [string match -nocase $accessType "RO"] ) } {
+					    lappend mappingSidxList $sidxId
+					}
+				    }
 				} else {
-				    # || [string equal -nocase $pdoMapping "DEFAULT"]
+				    # || [string match -nocase $pdoMapping "DEFAULT"]
 				    # no pdo mapping, !pdoTypeparm & default
 				}
 			    }
-			
 			}
 		    }
 		}
@@ -4189,7 +4234,8 @@ proc Operations::BuildProject {} {
 	    }
 		tk_messageBox -message $msg -title Error -icon error -parent .
 	    #error in generating CDC dont generate XAP
-		Console::DisplayErrMsg "Error in generating cdc. XAP, ProcessImage were not generated" error
+		Console::DisplayErrMsg $msg error
+		#Console::DisplayErrMsg "Error in generating cdc. XAP, ProcessImage were not generated" error
 	    thread::send [tsv::get application importProgress] "StopProgress"
 	    return
     } else {

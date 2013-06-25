@@ -4264,9 +4264,10 @@ proc Operations::BuildProject {} {
 			if {$buildCN_result != "" } {
 			    set buildCN_nodeId [lindex $buildCN_result 0]
 			    #set buildCN_nodeType [lindex $buildCN_result 1]
+			    #lappend build_nodesList $buildCN_nodeId
+			    set build_nodesList [linsert $build_nodesList end $buildCN_nodeId]
+			    #puts "Insert: $build_nodesList"
 			}
-			#lappend build_nodesList $buildCN_nodeId
-			set build_nodesList [linsert $build_nodesList end $buildCN_nodeId]
 		    }
 		}
 
@@ -4597,7 +4598,7 @@ proc Operations::DeleteTreeNode {} {
 			    set node_present [lsearch -exact $build_nodesList $nodeId]
 			    if { ($node_present != -1) } {
 			    #Remove the node id from the build list
-#puts "build_NOdeList: $build_nodesList"			    
+#puts "build_NOdeList: $build_nodesList"	    
 				    set build_nodesList [lreplace $build_nodesList $node_present $node_present]
 #puts "build_nodesListAFTER: $build_nodesList"
 #puts "[llength $build_nodesList]"
@@ -4609,9 +4610,9 @@ proc Operations::DeleteTreeNode {} {
 					            set ErrCode [ocfmRetCode_code_get $catchErrCode]
 					            if { $ErrCode != 0 } {
 					        	    if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
-					        	        tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
+					        	        #tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]" -title Error -icon error -parent .
 							    } else {
-							        tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
+							        #tk_messageBox -message "Unknown Error" -title Error -icon error -parent .
 							    }
 							}
 					        }

@@ -275,27 +275,37 @@ proc Operations::LocateUrl {webAddress} {
 }
 
 #---------------------------------------------------------------------------------------------------
-#  Operations::OpenPdfDocu
+#  Operations::OpenDocument
 # 
-#  Arguments : -
+#  Arguments : filename	 filename of the doucment with extension
 #
 #  Results : -
 #
-#  Description : opens the document in evince
+#  Description : opens the document in appropriate tool
 #---------------------------------------------------------------------------------------------------
-proc Operations::OpenPdfDocu {} {
+proc Operations::OpenDocument { filename } {
 	global tcl_platform
 	global rootDir
 	
-    set helpStatus [tsv::get application helpStatus]
-    if {$helpStatus == 1} {
-        #already displayed
-    } else {
-        #launch the help
-        thread::send [tsv::get application helpHtml] "launchHelpTool"
-    }
-}
+	set fullPath [file join $rootDir $filename]
+	if {![file isfile $fullPath] } {
+	    set msg "The file $filename is missing cannot open the document.\n 1. Search in the installation directory for the document.\n 2. Visit http://sourceforge.net/projects/openconf/ to download the file "
+	    tk_messageBox -message $msg -title Info -icon error
+	    Console::DisplayErrMsg $msg error
+	    return
+	}
 
+	if {$tcl_platform(platform)=="unix"} {
+	    set ext [file extension $filename]
+	    if {[string compare $ext ".pdf"]} {
+		evince $rootDir/$filename &
+	    } else if {[string compare $ext ".txt"]} {
+		gedit $rootDir/$filename &
+	    }
+	} elseif {$tcl_platform(platform)=="windows"} {
+	    eval exec [auto_execok start] $filename &
+	}
+}
 #---------------------------------------------------------------------------------------------------
 #  Operations::centerW
 # 
@@ -781,22 +791,22 @@ proc Operations::BasicFrames { } {
     Operations::Sleep 1000
     # Menu description
     set descmenu {
-	    "&File" {} {} 0 {           
+	"&File" {} {} 0 {           
             {command "New &Project..." {} "New Project" {Ctrl n}  -command { Operations::InitiateNewProject } }
-            {command "Open Project..." {}  "Open Project" {Ctrl o} -command { Operations::OpenProjectWindow } }
-            {command "Save Project" {noFile}  "Save Project" {Ctrl s} -command Operations::Saveproject}
+            {command "&Open Project..." {}  "Open Project" {Ctrl o} -command { Operations::OpenProjectWindow } }
+            {command "&Save Project" {noFile}  "Save Project" {Ctrl s} -command Operations::Saveproject}
             {command "Save Project as..." {noFile}  "Save Project as" {} -command ChildWindows::SaveProjectAsWindow }
-            {command "Close Project" {}  "Close Project" {} -command Operations::InitiateCloseProject }
+            {command "&Close Project" {}  "Close Project" {} -command Operations::InitiateCloseProject }
             {separator}
             {command "E&xit" {}  "Exit openCONFIGURATOR" {Alt x} -command Operations::exit_app}
         }
         "&Project" {} {} 0 {
-            {command "Build Project    F7" {noFile} "Generate CDC and XAP" {} -command Operations::BuildProject }
-            {command "Clean Project" {noFile} "Clean" {} -command Operations::CleanProject }
+            {command "&Build Project    F7" {noFile} "Generate CDC and XAP" {} -command Operations::BuildProject }
+            {command "&Clean Project" {noFile} "Clean" {} -command Operations::CleanProject }
             {separator}
-                    {command "Transfer         F6" {noFile} "Transfer CDC and XAP" {} -command Operations::Transfer }
-                    {separator}
-            {command "Project Settings..." {}  "Project Settings" {} -command ChildWindows::ProjectSettingWindow }
+            {command "&Transfer         F6" {noFile} "Transfer CDC and XAP" {} -command Operations::Transfer }
+            {separator}
+            {command "Project &Settings..." {}  "Project Settings" {} -command ChildWindows::ProjectSettingWindow }
         }
         "&View" all options 0 {
             {radiobutton "Simple View" {tag_SimpleView} "Simple View Mode" {}
@@ -828,9 +838,12 @@ proc Operations::BasicFrames { } {
             }
         }
         "&Help" {} {} 0 {
-            {command "How to" {noFile} "How to Manual    F1" {} -command "Operations::OpenPdfDocu" }
-            {separator}
-            {command "About" {} "About" {F1} -command Operations::about }
+	   {command "&Getting Started" {noFile} "Quick start guide" {} -command "Operations::OpenDocument QuickStartGuide.pdf" }
+	   {command "User &Manual       F1" {noFile} "User manual    F1" {} -command "Operations::OpenDocument UserManual.pdf" }
+	   {separator}
+	   {command "&Online Support" {noFile} "Online Support" {} -command "Operations::LocateUrl http://sourceforge.net/p/openconf/discussion/" }
+	   {separator}
+	   {command "&About" {} "About" {F1} -command Operations::about }
         }
     }
 
@@ -843,7 +856,7 @@ proc Operations::BasicFrames { } {
     #shortcut keys for project
     bind . <Key-F7> "Operations::BuildProject"
     # short cut key for help
-    bind . <Key-F1> "Operations::OpenPdfDocu"
+    bind . <Key-F1> "Operations::OpenDocument UserManual.pdf"
      #to prevent BuildProject called
     bind . <Control-Key-F7> "" 
     bind . <Control-Key-f> { FindSpace::FindDynWindow }

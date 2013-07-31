@@ -4343,7 +4343,7 @@ proc Operations::BuildProject {} {
             tk_messageBox -message "$msg" -icon warning -title "Warning" -parent .
             return
         } elseif {$errCycleTimeFlag == 1} {
-            set result [tk_messageBox -message "$msg\nDo you want to copy the default value 50000 Âµs" -type yesno -icon info -title "Information" -parent .]
+            set result [tk_messageBox -message "$msg\nDo you want to copy the default value 50000 µs" -type yesno -icon info -title "Information" -parent .]
             switch -- $result {
 			    yes {
 				#API for SetBasicIndexAttributes

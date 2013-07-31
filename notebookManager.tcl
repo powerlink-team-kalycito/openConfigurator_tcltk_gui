@@ -561,7 +561,7 @@ proc NoteBookManager::create_table {nbpath choice} {
         #invalid choice
         return
     }
-
+    #puts "scrollWin:$scrollWin st: $st"
     $scrollWin setwidget $st
     pack $st -fill both -expand true
     $st configure -height 4 -width 40 -stretch all	
@@ -1867,7 +1867,7 @@ proc NoteBookManager::StartEditCombo {tablePath rowIndex columnIndex text} {
 		    #node id should be = 0 for a CN TPDO
 	    } else {
 		    
-		    puts "nodeTypeVal:$nodeTypeVal  pdoType:$pdoType"
+		    #puts "nodeTypeVal:$nodeTypeVal  pdoType:$pdoType"
 		    foreach tempnodeId $nodeIdList {
 			set hexnodeid 0x[string toupper [format %x $tempnodeId]]
 			lappend nodeIdListHex "$hexnodeid"
@@ -2744,8 +2744,8 @@ proc NoteBookManager::LimitFocusChanged {framePath entryPath} {
         set dontCompareValue 0
         set valueState [$framePath.en_value1 cget -state]
         set valueInput [$framePath.en_value1 get]
-#        puts "LimitFocusChanged UPPER_LIMIT->$UPPER_LIMIT LOWER_LIMIT->$LOWER_LIMIT"
-#        puts "LimitFocusChanged valueState->$valueState valueInput->$valueInput"
+        #puts "LimitFocusChanged UPPER_LIMIT->$UPPER_LIMIT LOWER_LIMIT->$LOWER_LIMIT"
+        #puts "LimitFocusChanged valueState->$valueState valueInput->$valueInput"
         if { $valueState != "normal" || $valueInput == "" || $valueInput == "-" || [string match -nocase "0x" $valueInput] } {
             
             set dontCompareValue 1

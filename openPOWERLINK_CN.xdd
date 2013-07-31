@@ -106,7 +106,22 @@
           <defType dataType="0009">
             <Visible_String/>
           </defType>
-          <defType dataType="0010">
+          <defType dataType="000A">
+            <Octet_String/>
+          </defType>
+          <defType dataType="000B">
+            <Unicode_String/>
+          </defType>
+          <defType dataType="000C">
+            <Time_of_Day/>
+          </defType>
+          <defType dataType="000D">
+            <Time_Diff/>
+          </defType>
+          <defType dataType="000F">
+            <Domain/>
+          </defType>
+		  <defType dataType="0010">
             <Integer24/>
           </defType>
           <defType dataType="0011">
@@ -123,21 +138,6 @@
           </defType>
           <defType dataType="0015">
             <Integer64/>
-          </defType>
-          <defType dataType="000A">
-            <Octet_String/>
-          </defType>
-          <defType dataType="000B">
-            <Unicode_String/>
-          </defType>
-          <defType dataType="000C">
-            <Time_of_Day/>
-          </defType>
-          <defType dataType="000D">
-            <Time_Diff/>
-          </defType>
-          <defType dataType="000F">
-            <Domain/>
           </defType>
           <defType dataType="0016">
             <Unsigned24/>
@@ -167,7 +167,7 @@
         <ObjectList>
           <Object index="1000" name="NMT_DeviceType_U32" objectType="7" dataType="0007" accessType="const" PDOmapping="no" defaultValue="0x00000000"/>
           <Object index="1001" name="ERR_ErrorRegister_U8" objectType="7" dataType="0005" accessType="ro" PDOmapping="optional" defaultValue="0"/>
-          <Object index="1006" name="NMT_CycleLen_U32" objectType="7" dataType="0007" accessType="rw" PDOmapping="no" defaultValue="0"/>
+          <Object index="1006" name="NMT_CycleLen_U32" objectType="7" dataType="0007" accessType="rw" PDOmapping="no" defaultValue="50000"/>
           <Object index="1008" name="NMT_ManufactDevName_VS" objectType="7" dataType="0009" accessType="const" defaultValue="openPOWERLINK device"/>
           <Object index="1009" name="NMT_ManufactHwVers_VS" objectType="7" dataType="0009" accessType="const" defaultValue="1.00"/>
           <Object index="100A" name="NMT_ManufactSwVers_VS" objectType="7" dataType="0009" accessType="const"/>
@@ -193,9 +193,9 @@
             <SubObject subIndex="06" name="InterfaceName_VSTR" objectType="7" dataType="0009" accessType="ro" PDOmapping="no" defaultValue="Interface 1"/>
             <SubObject subIndex="07" name="InterfaceOperStatus_U8" objectType="7" dataType="0005" accessType="ro" PDOmapping="no" defaultValue="1"/>
             <SubObject subIndex="08" name="InterfaceAdminState_U8" objectType="7" dataType="0005" accessType="rw" PDOmapping="no" defaultValue="1"/>
-            <SubObject subIndex="09" name="Valid_BOOL" objectType="7" dataType="0001" accessType="rw" PDOmapping="no" defaultValue="true"/>
+            <SubObject subIndex="09" name="Valid_BOOL" objectType="7" dataType="0001" accessType="rw" PDOmapping="no" defaultValue="false"/>
           </Object>
-          <Object index="1050" name="NMT_RelativeLatencyDiff_AU32" objectType="8" dataType="0007">
+          <Object index="1050" name="NMT_RelativeLatencyDiff_AU32" objectType="8">
             <SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="ro" defaultValue="254"/>
             <SubObject subIndex="01" name="RelativeLatencyDiff" objectType="7" dataType="0007" accessType="ro" defaultValue="0"/>
             <SubObject subIndex="02" name="RelativeLatencyDiff" objectType="7" dataType="0007" accessType="ro" defaultValue="0"/>
@@ -453,22 +453,22 @@
             <SubObject subIndex="FE" name="RelativeLatencyDiff" objectType="7" dataType="0007" accessType="ro" defaultValue="0"/>
           </Object>
           <Object index="1300" name="SDO_SequLayerTimeout_U32" objectType="7" PDOmapping="no" accessType="rw" dataType="0007" defaultValue="5000" />
-          <Object index="1400" name="PDO_RxCommParam_0h_REC" objectType="9">
+          <Object index="1400" name="PDO_RxCommParam_00h_REC" objectType="9">
             <SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="const" defaultValue="2" PDOmapping="no" />
             <SubObject subIndex="01" name="NodeID_U8" objectType="7" dataType="0005" accessType="rw" defaultValue="0" PDOmapping="no" />
             <SubObject subIndex="02" name="MappingVersion_U8" objectType="7" dataType="0005" accessType="rw" defaultValue="0" PDOmapping="no" />
           </Object>
-          <Object index="1401" name="PDO_RxCommParam_1h_REC" objectType="9">
+          <Object index="1401" name="PDO_RxCommParam_01h_REC" objectType="9">
             <SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="const" defaultValue="2" PDOmapping="no" />
             <SubObject subIndex="01" name="NodeID_U8" objectType="7" dataType="0005" accessType="rw" defaultValue="0" PDOmapping="no" />
             <SubObject subIndex="02" name="MappingVersion_U8" objectType="7" dataType="0005" accessType="rw" defaultValue="0" PDOmapping="no" />
           </Object>
-          <Object index="1402" name="PDO_RxCommParam_2h_REC" objectType="9">
+          <Object index="1402" name="PDO_RxCommParam_02h_REC" objectType="9">
             <SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="const" defaultValue="2" PDOmapping="no" />
             <SubObject subIndex="01" name="NodeID_U8" objectType="7" dataType="0005" accessType="rw" defaultValue="0" PDOmapping="no" />
             <SubObject subIndex="02" name="MappingVersion_U8" objectType="7" dataType="0005" accessType="rw" defaultValue="0" PDOmapping="no" />
           </Object>
-          <Object index="1600" name="PDO_RxMappParam_0h_AU64" objectType="8">
+          <Object index="1600" name="PDO_RxMappParam_00h_AU64" objectType="8">
             <SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="rw" defaultValue="0" PDOmapping="no" />
             <SubObject subIndex="01" name="ObjectMapping" objectType="7" dataType="001B" accessType="rw" PDOmapping="no" defaultValue="0"/>
             <SubObject subIndex="02" name="ObjectMapping" objectType="7" dataType="001B" accessType="rw" PDOmapping="no" defaultValue="0" />
@@ -496,7 +496,7 @@
             <SubObject subIndex="18" name="ObjectMapping" objectType="7" dataType="001B" accessType="rw" PDOmapping="no" defaultValue="0" />
             <SubObject subIndex="19" name="ObjectMapping" objectType="7" dataType="001B" accessType="rw" PDOmapping="no" defaultValue="0" />
           </Object>
-          <Object index="1601" name="PDO_RxMappParam_1h_AU64" objectType="8">
+          <Object index="1601" name="PDO_RxMappParam_01h_AU64" objectType="8">
             <SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="rw" PDOmapping="no" defaultValue="0" />
             <SubObject subIndex="01" name="ObjectMapping" objectType="7" dataType="001B" accessType="rw" PDOmapping="no" defaultValue="0" />
             <SubObject subIndex="02" name="ObjectMapping" objectType="7" dataType="001B" accessType="rw" PDOmapping="no" defaultValue="0" />
@@ -524,7 +524,7 @@
             <SubObject subIndex="18" name="ObjectMapping" objectType="7" dataType="001B" accessType="rw" PDOmapping="no" defaultValue="0" />
             <SubObject subIndex="19" name="ObjectMapping" objectType="7" dataType="001B" accessType="rw" PDOmapping="no" defaultValue="0" />
           </Object>
-          <Object index="1602" name="PDO_RxMappParam_2h_AU64" objectType="8">
+          <Object index="1602" name="PDO_RxMappParam_02h_AU64" objectType="8">
             <SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="rw" PDOmapping="no" defaultValue="0" />
             <SubObject subIndex="01" name="ObjectMapping" objectType="7" dataType="001B" accessType="rw" PDOmapping="no" defaultValue="0" />
             <SubObject subIndex="02" name="ObjectMapping" objectType="7" dataType="001B" accessType="rw" PDOmapping="no" defaultValue="0" />
@@ -552,12 +552,12 @@
             <SubObject subIndex="18" name="ObjectMapping" objectType="7" dataType="001B" accessType="rw" PDOmapping="no" defaultValue="0" />
             <SubObject subIndex="19" name="ObjectMapping" objectType="7" dataType="001B" accessType="rw" PDOmapping="no" defaultValue="0" />
           </Object>
-          <Object index="1800" name="PDO_TxCommParam_0h_REC" objectType="9">
+          <Object index="1800" name="PDO_TxCommParam_00h_REC" objectType="9">
             <SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="const" defaultValue="2" PDOmapping="no" />
             <SubObject subIndex="01" name="NodeID_U8" objectType="7" dataType="0005" accessType="rw" defaultValue="0" PDOmapping="no" />
             <SubObject subIndex="02" name="MappingVersion_U8" objectType="7" dataType="0005" accessType="rw" defaultValue="0" PDOmapping="no" />
           </Object>
-          <Object index="1A00" name="PDO_TxMappParam_0h_AU64" objectType="8">
+          <Object index="1A00" name="PDO_TxMappParam_00h_AU64" objectType="8">
             <SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="rw" PDOmapping="no" defaultValue="0" />
             <SubObject subIndex="01" name="ObjectMapping" objectType="7" dataType="001B" accessType="rw" PDOmapping="no" defaultValue="0" />
             <SubObject subIndex="02" name="ObjectMapping" objectType="7" dataType="001B" accessType="rw" PDOmapping="no" defaultValue="0" />
@@ -604,9 +604,9 @@
             <SubObject subIndex="02" name="ThresholdCnt_U32" objectType="7" dataType="0007" accessType="ro" PDOmapping="no"/>
             <SubObject subIndex="03" name="Threshold_U32" objectType="7" dataType="0007" accessType="rw" PDOmapping="no" defaultValue="15"/>
           </Object>
-          <Object index="1C14" name="DLL_CNLossOfSocTolerance_U32" objectType="7" dataType="0007" accessType="rw" defaultValue="300000"/>
+          <Object index="1C14" name="DLL_CNLossOfSocTolerance_U32" objectType="7" dataType="0007" accessType="rw" defaultValue="100000"/>
           <Object index="1F81" name="NMT_NodeAssignment_AU32" objectType="8" dataType="0007" subNumber="255">
-            <SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="const" defaultValue="254"/>
+            <SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="rw" defaultValue="254"/>
             <SubObject subIndex="01" name="CNAssignment01" objectType="7" dataType="0007" accessType="rw" defaultValue="0" />
             <SubObject subIndex="02" name="CNAssignment02" objectType="7" dataType="0007" accessType="rw" defaultValue="0" />
             <SubObject subIndex="03" name="CNAssignment03" objectType="7" dataType="0007" accessType="rw" defaultValue="0" />
@@ -866,7 +866,7 @@
           <Object index="1F83" name="NMT_EPLVersion_U8" objectType="7" dataType="0005" accessType="const" PDOmapping="no" defaultValue="0x20"/>
           <Object index="1F8C" name="NMT_CurrNMTState_U8" objectType="7" dataType="0005" PDOmapping="optional" accessType="ro"/>
           <Object index="1F8D" name="NMT_PResPayloadLimitList_AU16" objectType="8" dataType="0006" subNumber="255">
-            <SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="const" defaultValue="254"/>
+            <SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="rw" defaultValue="254"/>
             <SubObject subIndex="01" name="PResPayload01" objectType="7" dataType="0006" accessType="rw" defaultValue="0"  />
             <SubObject subIndex="02" name="PResPayload02" objectType="7" dataType="0006" accessType="rw" defaultValue="0"  />
             <SubObject subIndex="03" name="PResPayload03" objectType="7" dataType="0006" accessType="rw" defaultValue="0"  />
@@ -1136,7 +1136,7 @@
             <SubObject subIndex="05" name="PResActPayloadLimit_U16" objectType="7" dataType="0006" accessType="rw" PDOmapping="no" defaultValue="36"/>
             <SubObject subIndex="06" name="ASndMaxLatency_U32" objectType="7" dataType="0007" accessType="const" PDOmapping="no" defaultValue="2000"/>
             <SubObject subIndex="07" name="MultiplCycleCnt_U8" objectType="7" dataType="0005" accessType="rw" PDOmapping="no" defaultValue="0"/>
-            <SubObject subIndex="08" name="AsyncMTUSize_U16" objectType="7" dataType="0006" accessType="rw" PDOmapping="no" defaultValue="300"/>
+            <SubObject subIndex="08" name="AsyncMTU_U16" objectType="7" dataType="0006" accessType="rw" PDOmapping="no" defaultValue="300"/>
           </Object>
           <Object index="1F99" name="NMT_CNBasicEthernetTimeout_U32" objectType="7" dataType="0007" accessType="rw" PDOmapping="no" defaultValue="5000000"/>
           <Object index="1F9E" name="NMT_ResetCmd_U8" objectType="7" dataType="0005" accessType="rw" PDOmapping="no" defaultValue="255"/>
@@ -1163,7 +1163,7 @@
           NMTNetHostNameSet="false"
           PDORPDOChannels="3"
           PDORPDOChannelObjects="25"
-          PDORPDOOverallObjects="25"
+          PDORPDOOverallObjects="75"
           PDOSelfReceipt="false"
           PDOTPDOChannelObjects="26"
           PDOTPDOOverallObjects="26"

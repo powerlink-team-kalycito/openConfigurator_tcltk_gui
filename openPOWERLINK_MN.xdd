@@ -106,7 +106,22 @@
           <defType dataType="0009">
             <Visible_String/>
           </defType>
-          <defType dataType="0010">
+          <defType dataType="000A">
+            <Octet_String/>
+          </defType>
+          <defType dataType="000B">
+            <Unicode_String/>
+          </defType>
+          <defType dataType="000C">
+            <Time_of_Day/>
+          </defType>
+          <defType dataType="000D">
+            <Time_Diff/>
+          </defType>
+          <defType dataType="000F">
+            <Domain/>
+          </defType>
+		  <defType dataType="0010">
             <Integer24/>
           </defType>
           <defType dataType="0011">
@@ -123,21 +138,6 @@
           </defType>
           <defType dataType="0015">
             <Integer64/>
-          </defType>
-          <defType dataType="000A">
-            <Octet_String/>
-          </defType>
-          <defType dataType="000B">
-            <Unicode_String/>
-          </defType>
-          <defType dataType="000C">
-            <Time_of_Day/>
-          </defType>
-          <defType dataType="000D">
-            <Time_Diff/>
-          </defType>
-          <defType dataType="000F">
-            <Domain/>
           </defType>
           <defType dataType="0016">
             <Unsigned24/>
@@ -195,7 +195,7 @@
             <SubObject subIndex="08" name="InterfaceAdminState_U8" objectType="7" dataType="0005" accessType="rw" PDOmapping="no" defaultValue="1"/>
             <SubObject subIndex="09" name="Valid_BOOL" objectType="7" dataType="0001" accessType="rw" PDOmapping="no" defaultValue="true"/>
           </Object>
-          <Object index="1050" name="NMT_RelativeLatencyDiff_AU32" objectType="8" dataType="0007">
+          <Object index="1050" name="NMT_RelativeLatencyDiff_AU32" objectType="8">
             <SubObject subIndex="00" name="NumberOfEntries" objectType="7" dataType="0005" accessType="ro" defaultValue="254"/>
             <SubObject subIndex="01" name="RelativeLatencyDiff" objectType="7" dataType="0007" accessType="ro" defaultValue="0"/>
             <SubObject subIndex="02" name="RelativeLatencyDiff" objectType="7" dataType="0007" accessType="ro" defaultValue="0"/>

@@ -3,16 +3,16 @@
 #
 #  NAME:     notebookManager.tcl
 #
-#  PURPOSE:  Creates the windows (tablelist, console, tabs, tree) 
+#  PURPOSE:  Creates the windows (tablelist, console, tabs, tree)
 #
 #  AUTHOR:   Kalycito Infotech Pvt Ltd
 #
 #  Copyright :(c) Kalycito Infotech Private Limited
 #
 #***************************************************************************************************
-#  COPYRIGHT NOTICE: 
+#  COPYRIGHT NOTICE:
 #
-#  Project:      openCONFIGURATOR 
+#  Project:      openCONFIGURATOR
 #
 #  License:
 #
@@ -27,7 +27,7 @@
 #       notice, this list of conditions and the following disclaimer in the
 #       documentation and/or other materials provided with the distribution.
 #
-#    3. Neither the name of Kalycito Infotech Private Limited nor the names of 
+#    3. Neither the name of Kalycito Infotech Private Limited nor the names of
 #       its contributors may be used to endorse or promote products derived
 #       from this software without prior written permission. For written
 #       permission, please contact info@kalycito.com.
@@ -57,7 +57,7 @@
 #***************************************************************************************************
 #
 #  REVISION HISTORY:
-#  
+#
 ####################################################################################################
 
 
@@ -73,13 +73,13 @@ namespace eval NoteBookManager {
 
 #---------------------------------------------------------------------------------------------------
 #  NoteBookManager::create_tab
-# 
+#
 #  Arguments : nbpath  - frame path to create
 #              choice  - choice for index or subindex to create frame
-# 
-#  Results : outerFrame - Basic frame 
+#
+#  Results : outerFrame - Basic frame
 #            tabInnerf0 - frame containing widgets describing the object (index id, Object name, subindex id )
-#            tabInnerf1 - frame containing widgets describing properties of object	
+#            tabInnerf1 - frame containing widgets describing properties of object
 #
 #  Description : Creates the GUI for Index and subindex
 #---------------------------------------------------------------------------------------------------
@@ -103,7 +103,7 @@ proc NoteBookManager::create_tab { nbpath choice } {
     set nbname "page$_pageCounter"
 
     set outerFrame [frame $nbpath.$nbname -relief raised -borderwidth 1 ]
-    set frame [frame $outerFrame.frame -relief flat -borderwidth 10  ] 
+    set frame [frame $outerFrame.frame -relief flat -borderwidth 10  ]
     pack $frame -expand yes -fill both
 
     set scrollWin [ScrolledWindow $frame.scrollWin]
@@ -120,27 +120,27 @@ proc NoteBookManager::create_tab { nbpath choice } {
     set tabInnerf1 [$tabTitlef1 getframe]
     set tabInnerf0_1 [frame $tabInnerf0.frame1 ]
 
-    label $tabInnerf0.la_idx     -text "Index  " 
-    label $tabInnerf0.la_empty1 -text "" 
-    label $tabInnerf0.la_empty2 -text "" 
-    label $tabInnerf0.la_nam     -text "Name           " 
+    label $tabInnerf0.la_idx     -text "Index  "
+    label $tabInnerf0.la_empty1 -text ""
+    label $tabInnerf0.la_empty2 -text ""
+    label $tabInnerf0.la_nam     -text "Name           "
     label $tabInnerf0.la_empty3 -text ""
     label $tabInnerf0_1.la_generate -text ""
-    label $tabInnerf1.la_obj     -text "Object Type" 
-    label $tabInnerf1.la_empty4 -text "" 
-    label $tabInnerf1.la_data    -text "Data Type"  
-    label $tabInnerf1.la_empty5 -text "" 
-    label $tabInnerf1.la_access  -text "Access Type"  
-    label $tabInnerf1.la_empty6 -text "" 
-    label $tabInnerf1.la_value   -text "Value" 
-    label $tabInnerf1.la_default -text "Default Value" 
-    label $tabInnerf1.la_upper   -text "Upper Limit" 
-    label $tabInnerf1.la_lower   -text "Lower Limit" 
-    label $tabInnerf1.la_pdo   -text "PDO Mapping" 
+    label $tabInnerf1.la_obj     -text "Object Type"
+    label $tabInnerf1.la_empty4 -text ""
+    label $tabInnerf1.la_data    -text "Data Type"
+    label $tabInnerf1.la_empty5 -text ""
+    label $tabInnerf1.la_access  -text "Access Type"
+    label $tabInnerf1.la_empty6 -text ""
+    label $tabInnerf1.la_value   -text "Value"
+    label $tabInnerf1.la_default -text "Default Value"
+    label $tabInnerf1.la_upper   -text "Upper Limit"
+    label $tabInnerf1.la_lower   -text "Lower Limit"
+    label $tabInnerf1.la_pdo   -text "PDO Mapping"
 
     entry $tabInnerf0.en_idx1 -state disabled -width 20
     entry $tabInnerf0.en_nam1 -width 20 -textvariable tmpNam$_pageCounter -relief ridge -justify center -bg white -width 30 -validate key -vcmd "Validation::IsValidStr %P"
-    entry $tabInnerf1.en_obj1 -state disabled -width 20  
+    entry $tabInnerf1.en_obj1 -state disabled -width 20
     entry $tabInnerf1.en_data1 -state disabled -width 20
     entry $tabInnerf1.en_access1 -state disabled -width 20
     entry $tabInnerf1.en_upper1 -state disabled -width 20
@@ -151,18 +151,18 @@ proc NoteBookManager::create_tab { nbpath choice } {
     entry $tabInnerf1.en_default1 -state disabled -width 20
     entry $tabInnerf1.en_value1 -width 20 -textvariable tmpValue$_pageCounter  -relief ridge -bg white
     bind $tabInnerf1.en_value1 <FocusOut> "NoteBookManager::ValueFocusChanged $tabInnerf1 $tabInnerf1.en_value1"
-	    
+
     if {"$tcl_platform(platform)" == "windows"} {
         set comboWidth 17
     } else {
         set comboWidth 18
     }
-	    	
+
     set dataCoList [list BIT BOOLEAN INTEGER8 INTEGER16 INTEGER24 INTEGER32 INTEGER40 INTEGER48 INTEGER56 INTEGER64 \
                     UNSIGNED8 UNSIGNED16 UNSIGNED24 UNSIGNED32 UNSIGNED40 UNSIGNED48 UNSIGNED56 UNSIGNED64 REAL32 REAL64 MAC_ADDRESS IP_ADDRESS OCTET_STRING]
     ComboBox $tabInnerf1.co_data1 -values $dataCoList -editable no -textvariable co_data -width $comboWidth
     set objCoList [list DEFTYPE DEFSTRUCT VAR ARRAY RECORD]
-    ComboBox $tabInnerf1.co_obj1 -values $objCoList -editable no -textvariable co_obj -modifycmd "NoteBookManager::ChangeValidation $tabInnerf0 $tabInnerf1 $tabInnerf1.co_obj1" -width $comboWidth 
+    ComboBox $tabInnerf1.co_obj1 -values $objCoList -editable no -textvariable co_obj -modifycmd "NoteBookManager::ChangeValidation $tabInnerf0 $tabInnerf1 $tabInnerf1.co_obj1" -width $comboWidth
     set accessCoList [list const ro wo rw]
     ComboBox $tabInnerf1.co_access1 -values $accessCoList -editable no -textvariable co_access -modifycmd "NoteBookManager::ChangeValidation $tabInnerf0 $tabInnerf1 $tabInnerf1.co_access1" -width $comboWidth
     set pdoColist [list NO DEFAULT OPTIONAL RPDO TPDO]
@@ -185,21 +185,21 @@ proc NoteBookManager::create_tab { nbpath choice } {
     grid config $tabInnerf0.la_empty2 -row 3 -column 0 -columnspan 2
 
     grid config $tabInnerf1.la_data -row 0 -column 0 -sticky w
-    grid config $tabInnerf1.co_data1 -row 0 -column 1 -padx 5 
-    grid remove $tabInnerf1.co_data1    
+    grid config $tabInnerf1.co_data1 -row 0 -column 1 -padx 5
+    grid remove $tabInnerf1.co_data1
     grid config $tabInnerf1.en_data1 -row 0 -column 1 -padx 5
 
     grid config $tabInnerf1.la_upper -row 0 -column 2 -sticky w
     grid config $tabInnerf1.en_upper1 -row 0 -column 3 -padx 5
 
     grid config $tabInnerf1.la_access -row 0 -column 4 -sticky w
-    grid config $tabInnerf1.co_access1 -row 0 -column 5 -padx 5 
+    grid config $tabInnerf1.co_access1 -row 0 -column 5 -padx 5
     grid remove $tabInnerf1.co_access1
-    grid config $tabInnerf1.en_access1 -row 0 -column 5 -padx 5 
+    grid config $tabInnerf1.en_access1 -row 0 -column 5 -padx 5
 
     grid config $tabInnerf1.la_empty4 -row 1 -column 0 -columnspan 2
 
-    grid config $tabInnerf1.la_obj -row 2 -column 0 -sticky w 
+    grid config $tabInnerf1.la_obj -row 2 -column 0 -sticky w
     grid config $tabInnerf1.co_obj1 -row 2 -column 1 -padx 5
     grid remove $tabInnerf1.co_obj1
     grid config $tabInnerf1.en_obj1 -row 2 -column 1 -padx 5
@@ -215,11 +215,11 @@ proc NoteBookManager::create_tab { nbpath choice } {
     grid config $tabInnerf1.la_empty5 -row 3 -column 0 -columnspan 2
 
     grid config $tabInnerf1.la_value -row 4 -column 0 -sticky w
-    grid config $tabInnerf1.en_value1 -row 4 -column 1 -padx 5 
+    grid config $tabInnerf1.en_value1 -row 4 -column 1 -padx 5
 
     grid config $frame1 -row 4 -column 3 -padx 5 -columnspan 2 -sticky w
     grid config $tabInnerf1.la_default -row 4 -column 4 -sticky w
-    grid config $tabInnerf1.en_default1 -row 4 -column 5 -padx 5 
+    grid config $tabInnerf1.en_default1 -row 4 -column 5 -padx 5
     grid config $tabInnerf1.la_empty6 -row 5 -column 0 -columnspan 2
 
     grid config $ra_dec -row 0 -column 0 -sticky w
@@ -227,40 +227,40 @@ proc NoteBookManager::create_tab { nbpath choice } {
     grid remove $ra_dec
     grid remove $ra_hex
     if {$choice == "index"} {
-        $tabTitlef0 configure -text "Index" 
-        $tabTitlef1 configure -text "Properties" 
+        $tabTitlef0 configure -text "Index"
+        $tabTitlef1 configure -text "Properties"
         grid config $tabInnerf0.la_idx -row 0 -column 0 -sticky w
         grid config $tabInnerf0.en_idx1 -row 0 -column 1 -sticky w -padx 0
-        grid config $tabInnerf0.la_nam -row 2 -column 0 -sticky w 
+        grid config $tabInnerf0.la_nam -row 2 -column 0 -sticky w
         grid config $tabInnerf0.en_nam1 -row 2 -column 1  -sticky w -columnspan 1
-        
+
         grid config $tabInnerf0_1 -row 4 -column 0 -columnspan 2 -sticky w
-        grid config $tabInnerf0_1.la_generate -row 0 -column 0 -sticky w 
+        grid config $tabInnerf0_1.la_generate -row 0 -column 0 -sticky w
         grid config $tabInnerf0_1.ch_gen -row 0 -column 1 -sticky e -padx 5
         grid config $tabInnerf0.la_empty3 -row 5 -column 0 -columnspan 2
         bind $tabInnerf0_1.la_generate <1> "$tabInnerf0_1.ch_gen toggle ; Validation::SetPromptFlag"
         $tabInnerf0_1.la_generate configure -text "Include Index in CDC generation"
     } elseif { $choice == "subindex" } {
-        $tabTitlef0 configure -text "Sub Index" 
-        $tabTitlef1 configure -text "Properties" 
+        $tabTitlef0 configure -text "Sub Index"
+        $tabTitlef1 configure -text "Properties"
 
-        label $tabInnerf0.la_sidx -text "Sub Index  "  
+        label $tabInnerf0.la_sidx -text "Sub Index  "
         entry $tabInnerf0.en_sidx1 -state disabled -width 20
 
-        grid config $tabInnerf0.la_sidx -row 2 -column 0 -sticky w 
+        grid config $tabInnerf0.la_sidx -row 2 -column 0 -sticky w
         grid config $tabInnerf0.en_sidx1 -row 2 -column 1 -padx 5
-        grid config $tabInnerf0.la_nam -row 2 -column 2 -sticky w 
+        grid config $tabInnerf0.la_nam -row 2 -column 2 -sticky w
         grid config $tabInnerf0.en_nam1 -row 2 -column 3  -sticky e -columnspan 1
-        
+
         grid config $tabInnerf0_1 -row 4 -column 0 -columnspan 2 -sticky w
-        grid config $tabInnerf0_1.la_generate -row 0 -column 0 -sticky w 
+        grid config $tabInnerf0_1.la_generate -row 0 -column 0 -sticky w
         grid config $tabInnerf0_1.ch_gen -row 0 -column 1 -sticky e -padx 5
         grid config $tabInnerf0.la_empty3 -row 5 -column 0 -columnspan 2
         bind $tabInnerf0_1.la_generate <1> "$tabInnerf0_1.ch_gen toggle ; Validation::SetPromptFlag"
         $tabInnerf0_1.la_generate configure -text "Include Subindex in CDC generation"
     }
 
-    set fram [frame $frame.f1]  
+    set fram [frame $frame.f1]
     label $fram.la_empty -text "  " -height 1
     if { $choice == "index" } {
         set indexSaveBtn [ button $fram.bt_sav -text " Save " -width 8 ]
@@ -280,7 +280,7 @@ proc NoteBookManager::create_tab { nbpath choice } {
 
 #---------------------------------------------------------------------------------------------------
 #  NoteBookManager::create_nodeFrame
-# 
+#
 #  Arguments : nbpath  - frame path to create
 #              choice  - choice for pdo to create frame
 #
@@ -292,7 +292,7 @@ proc NoteBookManager::create_tab { nbpath choice } {
 proc NoteBookManager::create_nodeFrame {nbpath choice} {
     variable _pageCounter
     incr _pageCounter
-    
+
     global ra_statType$_pageCounter
     global ra_nodeDataType
     global tmpNodeName$_pageCounter
@@ -304,11 +304,11 @@ proc NoteBookManager::create_nodeFrame {nbpath choice} {
     global co_cnNodeList$_pageCounter
     global ch_advanced
     global spCycleNoList$_pageCounter
-    
+
     set nbname "page$_pageCounter"
 
     set outerFrame [frame $nbpath.$nbname -relief raised -borderwidth 1 ]
-    set frame [frame $outerFrame.frame -relief flat -borderwidth 10  ] 
+    set frame [frame $outerFrame.frame -relief flat -borderwidth 10  ]
     pack $frame -expand yes -fill both
 
     set scrollWin [ScrolledWindow $frame.scrollWin]
@@ -326,7 +326,7 @@ proc NoteBookManager::create_nodeFrame {nbpath choice} {
     set tabInnerf1 [$tabTitlef1 getframe]
     set tabInnerf0_1 [frame $tabInnerf0.frame1 ]
     set cycleFrame [frame $tabInnerf0.cycleframe ]
-	
+
     label $tabInnerf0.la_nodeName     -text "Node name"
     label $tabInnerf0.la_empty1       -text ""
     label $tabInnerf0.la_align1	      -text ""
@@ -350,10 +350,10 @@ proc NoteBookManager::create_nodeFrame {nbpath choice} {
     label $tabInnerf1.la_advOption4   -text ""
     label $tabInnerf1.la_empty8       -text ""
     label $tabInnerf1.la_advOptionUnit4 -text ""
-    
+
     entry $tabInnerf0.en_nodeName -width 20 -textvariable tmpNodeName$_pageCounter -relief ridge -justify center -bg white -validate key -vcmd "Validation::IsValidStr %P"
-    entry $tabInnerf0.en_nodeNo   -width 20 -textvariable tmpNodeNo$_pageCounter -relief ridge -justify center -bg white 
-    entry $tabInnerf0.cycleframe.en_time     -width 20 -textvariable tmpNodeTime$_pageCounter -relief ridge -justify center -bg white  
+    entry $tabInnerf0.en_nodeNo   -width 20 -textvariable tmpNodeNo$_pageCounter -relief ridge -justify center -bg white
+    entry $tabInnerf0.cycleframe.en_time     -width 20 -textvariable tmpNodeTime$_pageCounter -relief ridge -justify center -bg white
     entry $tabInnerf1.en_advOption1 -state disabled -width 20
     entry $tabInnerf1.en_advOption2 -state disabled -width 20
     entry $tabInnerf1.en_advOption3 -state disabled -width 20
@@ -384,16 +384,16 @@ proc NoteBookManager::create_nodeFrame {nbpath choice} {
     grid config $tabInnerf0.cycleframe.en_time      -row 0 -column 0 -sticky w -padx 5
 	grid config $tabInnerf0.cycleframe.la_ms      -row 0 -column 1 -sticky w
     grid config $tabInnerf0.la_empty3    -row 5 -column 1
-    grid config $frame1                  -row 6 -column 2 -padx 5 
-    
+    grid config $frame1                  -row 6 -column 2 -padx 5
+
     #grid config $ra_dec -row 0 -column 0 -sticky w
     #grid config $ra_hex -row 0 -column 1 -sticky w
 
-    
+
     if { $choice == "mn" } {
         $tabInnerf0.la_time  configure -text "Cycle Time"
-	
-        $tabInnerf0.tabTitlef1 configure -text "Advanced" 
+
+        $tabInnerf0.tabTitlef1 configure -text "Advanced"
         $tabInnerf0.en_nodeNo configure -state disabled
 	$tabInnerf1.la_advOption4 configure  -text "Loss of SoC Tolerance"
 	$tabInnerf1.la_advOptionUnit4 configure -text "µs"
@@ -402,7 +402,7 @@ proc NoteBookManager::create_nodeFrame {nbpath choice} {
         $tabInnerf1.la_advOption2 configure -text "Asynchronous Timeout"
         $tabInnerf1.la_advOptionUnit2 configure -text "ns"
         $tabInnerf1.la_advOption3 configure -text "Multiplexing prescaler"
-	
+
 	grid config $tabInnerf1.la_advOption4 -row 0 -column 1 -sticky w
 	grid config $tabInnerf1.en_advOption4 -row 0 -column 2 -padx 5
 	grid config $tabInnerf1.la_advOptionUnit4 -row 0 -column 3 -sticky w
@@ -419,7 +419,7 @@ proc NoteBookManager::create_nodeFrame {nbpath choice} {
         grid config $tabInnerf1.en_advOption3 -row 6 -column 2 -padx 5
         grid config $tabInnerf1.la_advOptionUnit3 -row 6 -column 3 -sticky w
         grid config $tabInnerf1.la_empty6     -row 7 -column 1
-	
+
         #$ra_dec configure -command "NoteBookManager::ConvertMNDec $tabInnerf0 $tabInnerf1"
         #$ra_hex configure -command "NoteBookManager::ConvertMNHex $tabInnerf0 $tabInnerf1"
     } elseif { $choice == "cn" } {
@@ -432,20 +432,20 @@ proc NoteBookManager::create_nodeFrame {nbpath choice} {
         spinbox $tabInnerf0.sp_nodeNo -state normal -textvariable co_cnNodeList$_pageCounter \
             -validate key -vcmd "Validation::CheckCnNodeNumber %P" -bg white \
             -from 1 -to 239 -increment 1 -justify center -width $spinWidth
-        
+
         grid forget $tabInnerf0.en_nodeNo
         grid config $tabInnerf0.sp_nodeNo    -row 2 -column 2 -sticky w -padx 5
         $tabInnerf0.la_time  configure -text "PollResponse Timeout"
         #1#grid config $tabInnerf0.la_ms      -row 4 -column 3 -sticky w
-        $tabInnerf0.tabTitlef1 configure -text "Type of station" 
-	
+        $tabInnerf0.tabTitlef1 configure -text "Type of station"
+
         set tabTitlef2 [TitleFrame $tabInnerf1.tabTitlef2 -text "Advanced" ]
         set tabInnerf2 [$tabTitlef2 getframe]
         set ch_adv [checkbutton $tabInnerf2.ch_adv -onvalue 1 -offvalue 0 -command "NoteBookManager::forceCycleChecked $tabInnerf2 ch_advanced" -variable ch_advanced -text "Force Cycle"]
         spinbox $tabInnerf2.sp_cycleNo -state normal -textvariable spCycleNoList$_pageCounter \
             -bg white -width $spinWidth \
             -from 1 -to 239 -increment 1 -justify center
-        
+
         grid config $ra_StNormal          -row 0 -column 0 -sticky w -padx 5
         grid config $tabInnerf1.la_empty4 -row 1 -column 0
         grid config $ra_StChain           -row 2 -column 0 -sticky w -padx 5
@@ -454,10 +454,10 @@ proc NoteBookManager::create_nodeFrame {nbpath choice} {
         #grid config $tabInnerf1.la_empty6 -row 5 -column 0 -columnspan 2
         grid config $tabTitlef2           -row 5 -column 0 -sticky e -columnspan 2 -padx 20;# -ipadx 10
         grid config $tabInnerf1.la_empty7 -row 7 -column 0
-        
+
         grid config $ch_adv                -row 0 -column 0
-        grid config $tabInnerf2.sp_cycleNo -row 0 -column 1 
-        
+        grid config $tabInnerf2.sp_cycleNo -row 0 -column 1
+
 	#$ra_dec configure -command "NoteBookManager::ConvertCNDec $tabInnerf0 $tabInnerf1"
     #    $ra_hex configure -command "NoteBookManager::ConvertCNHex $tabInnerf0 $tabInnerf1"
         $ra_StNormal configure -command "NoteBookManager::StationRadioChanged $tabInnerf2 StNormal"
@@ -465,8 +465,8 @@ proc NoteBookManager::create_nodeFrame {nbpath choice} {
         $ra_StChain configure -command "NoteBookManager::StationRadioChanged $tabInnerf2 StChain"
     }
     grid config $tabTitlef1 -row 8 -column 1 -columnspan 2 -sticky ew
-    
-    set fram [frame $frame.f1]  
+
+    set fram [frame $frame.f1]
     label $fram.la_empty -text "  " -height 1
     if { $choice == "mn" } {
         set mnPropSaveBtn [ button $fram.bt_sav -text " Save " -width 8 -command ""]
@@ -482,13 +482,13 @@ proc NoteBookManager::create_nodeFrame {nbpath choice} {
     grid config $fram.la_empty1 -row 1 -column 1 -sticky s
     grid config $fram.bt_dis -row 1 -column 2 -sticky s
     pack $fram -side bottom
-    
+
     return $resultList
 }
 
 #---------------------------------------------------------------------------------------------------
 #  NoteBookManager::create_table
-# 
+#
 #  Arguments : nbpath  - frame path to create
 #              choice  - choice for pdo to create frame
 #
@@ -504,7 +504,7 @@ proc NoteBookManager::create_table {nbpath choice} {
     global tableSaveBtn
 
     set nbname "page$_pageCounter"
-    set outerFrame [frame $nbpath.$nbname -relief raised -borderwidth 1 ] 
+    set outerFrame [frame $nbpath.$nbname -relief raised -borderwidth 1 ]
     set frmPath [frame $outerFrame.frmPath -relief flat -borderwidth 10  ]
     pack $frmPath -expand yes -fill both
 
@@ -529,9 +529,9 @@ proc NoteBookManager::create_table {nbpath choice} {
                 -showseparators 1 -spacing 10 -font custom1 \
                 -editstartcommand NoteBookManager::StartEdit -editendcommand NoteBookManager::EndEdit ]
 
-            $st columnconfigure 0 -editable no 
+            $st columnconfigure 0 -editable no
             $st columnconfigure 1 -editable no
-            $st columnconfigure 2 -editable yes -editwindow entry	
+            $st columnconfigure 2 -editable yes -editwindow entry
             $st columnconfigure 3 -editable yes -editwindow entry
             $st columnconfigure 4 -editable yes -editwindow entry
             $st columnconfigure 5 -editable yes -editwindow entry
@@ -551,12 +551,12 @@ proc NoteBookManager::create_table {nbpath choice} {
                 -editstartcommand NoteBookManager::StartEditCombo \
 		-editendcommand NoteBookManager::EndEdit]
 
-            $st columnconfigure 0 -editable no 
+            $st columnconfigure 0 -editable no
             $st columnconfigure 1 -editable no -editwindow ComboBox
             $st columnconfigure 2 -editable no -editwindow ComboBox
             $st columnconfigure 3 -editable no -editwindow ComboBox
             $st columnconfigure 4 -editable no -editwindow ComboBox
-            $st columnconfigure 5 -editable no 
+            $st columnconfigure 5 -editable no
     } else {
         #invalid choice
         return
@@ -564,10 +564,10 @@ proc NoteBookManager::create_table {nbpath choice} {
     #puts "scrollWin:$scrollWin st: $st"
     $scrollWin setwidget $st
     pack $st -fill both -expand true
-    $st configure -height 4 -width 40 -stretch all	
+    $st configure -height 4 -width 40 -stretch all
 
-    set fram [ frame $frmPath.f1 ]  
-    label $fram.la_empty -text "  " -height 1 
+    set fram [ frame $frmPath.f1 ]
+    label $fram.la_empty -text "  " -height 1
     set tableSaveBtn [ button $fram.bt_sav -text " Save " -width 8 -command "NoteBookManager::SaveTable $st" ]
     label $fram.la_empty1 -text "  "
     button $fram.bt_dis -text "Discard" -width 8 -command "NoteBookManager::DiscardTable $st"
@@ -582,7 +582,7 @@ proc NoteBookManager::create_table {nbpath choice} {
 
 #---------------------------------------------------------------------------------------------------
 #  NoteBookManager::create_infoWindow
-# 
+#
 #  Arguments : nbpath  - path of the notebook
 #              tabname - title for the created tab
 #              choice  - choice to create Information, Error and Warning windows
@@ -613,7 +613,7 @@ proc NoteBookManager::create_infoWindow {nbpath tabname choice} {
         set window $errWindow
         lappend errWindow $nbpath $nbname
         $nbpath itemconfigure $nbname -image [Bitmap::get error_small]
-    } elseif {$choice == 3} {    
+    } elseif {$choice == 3} {
         set warWindow [Console::InitWarnWindow $scrollWin]
         set window $warWindow
         lappend warWindow $nbpath $nbname
@@ -627,7 +627,7 @@ proc NoteBookManager::create_infoWindow {nbpath tabname choice} {
     ScrolledWindow::setwidget $scrollWin $window
     pack $scrollWin -fill both -expand yes
 
-    #raised the window after creating it 
+    #raised the window after creating it
     $nbpath raise $nbname
 
     return $frmPath
@@ -635,7 +635,7 @@ proc NoteBookManager::create_infoWindow {nbpath tabname choice} {
 
 #---------------------------------------------------------------------------------------------------
 #  NoteBookManager::create_treeBrowserWindow
-# 
+#
 #  Arguments : nbpath  - path of the notebook
 #
 #  Results : path of the inserted frame in notebook
@@ -657,7 +657,7 @@ proc NoteBookManager::create_treeBrowserWindow {nbpath } {
         -bg white  \
         -deltay 15 \
         -padx 15 \
-        -dropenabled 0 -dragenabled 0 -relief ridge 
+        -dropenabled 0 -dragenabled 0 -relief ridge
     ]
     $scrollWin setwidget $treeBrowser
     set treePath $treeBrowser
@@ -677,8 +677,8 @@ proc NoteBookManager::create_treeBrowserWindow {nbpath } {
 
 #---------------------------------------------------------------------------------------------------
 #  NoteBookManager::ConvertDec
-# 
-#  Arguments : framePath - path of the frame containing value and default entry widget 
+#
+#  Arguments : framePath - path of the frame containing value and default entry widget
 #
 #  Results : -
 #
@@ -690,7 +690,7 @@ proc NoteBookManager::ConvertDec {framePath0 framePath1} {
     global nodeSelect
     global UPPER_LIMIT
     global LOWER_LIMIT
-    
+
     if { $lastConv != "dec"} {
         set lastConv dec
         set schRes [lsearch $userPrefList [list $nodeSelect *]]
@@ -722,13 +722,13 @@ proc NoteBookManager::ConvertDec {framePath0 framePath1} {
         $framePath1.en_default1 configure -validate none -state normal
         NoteBookManager::InsertDecimal $framePath1.en_default1 $dataType
         $framePath1.en_default1 configure -validate key -vcmd "Validation::IsDec %P $framePath1.en_default1 %d %i $dataType" -state $state
-	
+
         set state [$framePath1.en_lower1 cget -state]
         $framePath1.en_lower1 configure -validate none -state normal
         NoteBookManager::InsertDecimal $framePath1.en_lower1 $dataType
         set LOWER_LIMIT [$framePath1.en_lower1 get]
         $framePath1.en_lower1 configure -validate key -vcmd "Validation::IsDec %P $framePath1.en_lower1 %d %i $dataType" -state $state
-        
+
         set state [$framePath1.en_upper1 cget -state]
         $framePath1.en_upper1 configure -validate none -state normal
         NoteBookManager::InsertDecimal $framePath1.en_upper1 $dataType
@@ -741,8 +741,8 @@ proc NoteBookManager::ConvertDec {framePath0 framePath1} {
 
 #---------------------------------------------------------------------------------------------------
 #  NoteBookManager::InsertDecimal
-# 
-#  Arguments : entryPath - path of the entry widget 
+#
+#  Arguments : entryPath - path of the entry widget
 #
 #  Results : -
 #
@@ -753,7 +753,7 @@ proc NoteBookManager::InsertDecimal {entryPath dataType} {
     if { [string match -nocase "0x*" $entryValue] } {
     	set entryValue [string range $entryValue 2 end]
     }
-   
+
     $entryPath delete 0 end
     set entryValue [lindex [Validation::InputToDec $entryValue $dataType] 0]
     $entryPath insert 0 $entryValue
@@ -761,8 +761,8 @@ proc NoteBookManager::InsertDecimal {entryPath dataType} {
 
 #---------------------------------------------------------------------------------------------------
 #  NoteBookManager::ConvertHex
-# 
-#  Arguments : framePath - path containing the value and default entry widget 
+#
+#  Arguments : framePath - path containing the value and default entry widget
 #
 #  Results : -
 #
@@ -774,7 +774,7 @@ proc NoteBookManager::ConvertHex {framePath0 framePath1} {
     global nodeSelect
     global UPPER_LIMIT
     global LOWER_LIMIT
-    
+
     if { $lastConv != "hex"} {
         set lastConv hex
         set schRes [lsearch $userPrefList [list $nodeSelect *]]
@@ -811,7 +811,7 @@ proc NoteBookManager::ConvertHex {framePath0 framePath1} {
         NoteBookManager::InsertHex $framePath1.en_lower1 $dataType
         set LOWER_LIMIT [$framePath1.en_lower1 get]
         $framePath1.en_lower1 configure -validate key -vcmd "Validation::IsHex %P %s $framePath1.en_lower1 %d %i $dataType" -state $state
-        
+
         set state [$framePath1.en_upper1 cget -state]
         $framePath1.en_upper1 configure -validate none -state normal
         NoteBookManager::InsertHex $framePath1.en_upper1 $dataType
@@ -824,8 +824,8 @@ proc NoteBookManager::ConvertHex {framePath0 framePath1} {
 
 #---------------------------------------------------------------------------------------------------
 #  NoteBookManager::InsertHex
-# 
-#  Arguments : entryPath - path of the entry widget 
+#
+#  Arguments : entryPath - path of the entry widget
 #
 #  Results : -
 #
@@ -847,8 +847,8 @@ proc NoteBookManager::InsertHex {entryPath dataType} {
 
 ##---------------------------------------------------------------------------------------------------
 ##  NoteBookManager::ConvertMNDec
-## 
-##  Arguments : framePath0 - path of the frame containing value and default entry widget 
+##
+##  Arguments : framePath0 - path of the frame containing value and default entry widget
 ##
 ##  Results : -
 ##
@@ -868,7 +868,7 @@ proc NoteBookManager::InsertHex {entryPath dataType} {
 #        } else {
 #            set userPrefList [lreplace $userPrefList $schRes $schRes [list $nodeSelect dec] ]
 #        }
-#        
+#
 #        set schDataRes [lsearch $MNDatalist [list cycleTimeDatatype *]]
 #        if {$schDataRes  != -1 } {
 #            set dataType [lindex [lindex $MNDatalist $schDataRes] 1]
@@ -886,7 +886,7 @@ proc NoteBookManager::InsertHex {entryPath dataType} {
 #            NoteBookManager::InsertDecimal $framePath1.en_advOption1 $dataType
 #            $framePath1.en_advOption1 configure -validate key -vcmd "Validation::IsDec %P $framePath1.en_advOption1 %d %i $dataType" -state $state
 #        }
-#        
+#
 #        set schDataRes [lsearch $MNDatalist [list asynTimeoutDatatype *]]
 #        if {$schDataRes  != -1 } {
 #            set dataType [lindex [lindex $MNDatalist $schDataRes] 1]
@@ -911,8 +911,8 @@ proc NoteBookManager::InsertHex {entryPath dataType} {
 #
 ##---------------------------------------------------------------------------------------------------
 ##  NoteBookManager::ConvertMNHex
-## 
-##  Arguments : framePath - path containing the value and default entry widget 
+##
+##  Arguments : framePath - path containing the value and default entry widget
 ##
 ##  Results : -
 ##
@@ -950,7 +950,7 @@ proc NoteBookManager::InsertHex {entryPath dataType} {
 #            NoteBookManager::InsertHex $framePath1.en_advOption1 $dataType
 #            $framePath1.en_advOption1 configure -validate key -vcmd "Validation::IsHex %P %s $framePath1.en_advOption1 %d %i $dataType" -state $state
 #        }
-#        
+#
 #        set schDataRes [lsearch $MNDatalist [list asynTimeoutDatatype *]]
 #        if {$schDataRes  != -1 } {
 #            set dataType [lindex [lindex $MNDatalist $schDataRes] 1]
@@ -975,8 +975,8 @@ proc NoteBookManager::InsertHex {entryPath dataType} {
 #
 ##---------------------------------------------------------------------------------------------------
 ##  NoteBookManager::ConvertCNDec
-## 
-##  Arguments : framePath0 - path of the frame containing value and default entry widget 
+##
+##  Arguments : framePath0 - path of the frame containing value and default entry widget
 ##
 ##  Results : -
 ##
@@ -996,7 +996,7 @@ proc NoteBookManager::InsertHex {entryPath dataType} {
 #        } else {
 #            set userPrefList [lreplace $userPrefList $schRes $schRes [list $nodeSelect dec] ]
 #        }
-#        
+#
 #        set schDataRes [lsearch $CNDatalist [list presponseCycleTimeDatatype *]]
 #        if {$schDataRes  != -1 } {
 #            set dataType [lindex [lindex $CNDatalist $schDataRes] 1]
@@ -1012,8 +1012,8 @@ proc NoteBookManager::InsertHex {entryPath dataType} {
 #
 ##---------------------------------------------------------------------------------------------------
 ##  NoteBookManager::ConvertCNHex
-## 
-##  Arguments : framePath - path containing the value and default entry widget 
+##
+##  Arguments : framePath - path containing the value and default entry widget
 ##
 ##  Results : -
 ##
@@ -1049,7 +1049,7 @@ proc NoteBookManager::InsertHex {entryPath dataType} {
 
 #---------------------------------------------------------------------------------------------------
 #  NoteBookManager::AppendZero
-# 
+#
 #  Arguments : input     - string to be append with zero
 #              reqLength - length upto zero needs to be appended
 #  Results : -
@@ -1065,9 +1065,9 @@ proc NoteBookManager::AppendZero {input reqLength} {
 
 #---------------------------------------------------------------------------------------------------
 #  NoteBookManager::CountLeadZero
-# 
-#  Arguments : input - string 
-#	   
+#
+#  Arguments : input - string
+#
 #  Results : loopCount - number of leading zeros in input
 #
 #  Description : Count the leading zeros of the input
@@ -1081,16 +1081,16 @@ proc NoteBookManager::CountLeadZero {input} {
         }
     }
     return $loopCount
-    
+
 }
 
 #---------------------------------------------------------------------------------------------------
 #  NoteBookManager::SaveValue
-# 
+#
 #  Arguments : frame0 - frame containing the widgets describing the object (index id, Object name, subindex id )
-#              frame1 - frame containing the widgets describing properties of object	
-#	   
-#  Results :  - 
+#              frame1 - frame containing the widgets describing properties of object
+#
+#  Results :  -
 #
 #  Description : save the entered value for index and subindex
 #---------------------------------------------------------------------------------------------------
@@ -1098,13 +1098,13 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
     global nodeSelect
     global nodeIdList
     global treePath
-    global savedValueList 
+    global savedValueList
     global userPrefList
     global lastConv
     global status_save
     global LOWER_LIMIT
     global UPPER_LIMIT
-    
+
     #reloadView will call the Opertions::Singleclicknode so as when for index
     #2000 and above is saved the datatype validation will take effect
     set reloadView 0
@@ -1137,7 +1137,7 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
             #must be some other node this condition should never reach
             return
     }
-	
+
     set tmpVar0 [$frame0.en_nam1 cget -textvariable]
     global $tmpVar0
     set newName [subst $[subst $tmpVar0]]
@@ -1147,24 +1147,24 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
         Validation::ResetPromptFlag
         return
     }
-    
+
     if { [expr 0x$indexId > 0x1fff] } {
 	set lastFocus [focus]
 	if { $lastFocus == "$frame1.en_lower1" || $lastFocus == "$frame1.en_upper1" } {
-	    #event generate $lastFocus <FocusOut> 
+	    #event generate $lastFocus <FocusOut>
 	    #this is the function binded to both the upper limit and lower limit entry boxes
 	    NoteBookManager::LimitFocusChanged $frame1 $lastFocus
 	}
-	
+
     }
-    
+
     set state [$frame1.en_value1 cget -state]
     $frame1.en_value1 configure -state normal
     set tmpVar1 [$frame1.en_value1 cget -textvariable]
-    global $tmpVar1	
+    global $tmpVar1
     set value [string toupper [subst $[subst $tmpVar1]] ]
     $frame1.en_value1 configure -state $state
-    
+
     if { [expr 0x$indexId > 0x1fff] } {
         set objectType [NoteBookManager::GetComboValue $frame1.co_obj1]
         if { $objectType == "" } {
@@ -1173,7 +1173,7 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
             return
         }
     }
-    
+
     if { [expr 0x$indexId > 0x1fff] && ( $objectType == "VAR" ) } {
         set dataType [NoteBookManager::GetComboValue $frame1.co_data1]
         set accessType [NoteBookManager::GetComboValue $frame1.co_access1]
@@ -1184,7 +1184,7 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
         set lowerLimit [$frame1.en_lower1 get]
         if {[string match -nocase "INTEGER*" $dataType] || [string match -nocase "UNSIGNED*" $dataType] || [string match -nocase "BOOLEAN" $dataType] || [string match -nocase "REAL*" $dataType]} {
             if {[string match -nocase "0x" $upperLimit]} {
-                set upperLimit [] 
+                set upperLimit []
             }
             if {[string match -nocase "0x" $lowerLimit]} {
                 set lowerLimit []
@@ -1203,20 +1203,20 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
         set default [NoteBookManager::GetEntryValue $frame1.en_default1]
         if {[string match -nocase "INTEGER*" $dataType] || [string match -nocase "UNSIGNED*" $dataType] || [string match -nocase "BOOLEAN" $dataType] || [string match -nocase "REAL*" $dataType]} {
             if {[string match -nocase "0x" $upperLimit]} {
-                set upperLimit [] 
+                set upperLimit []
             }
             if {[string match -nocase "0x" $lowerLimit]} {
                 set lowerLimit []
             }
         }
-        
+
         set accessType [NoteBookManager::GetEntryValue $frame1.en_access1]
     } else {
         #objects less than 2000 only need name and value access type needed for validation
+	#set pdoType [NoteBookManager::GetEntryValue $frame1.en_pdo1]
         set accessType [NoteBookManager::GetEntryValue $frame1.en_access1]
         set dataType [NoteBookManager::GetEntryValue $frame1.en_data1]
     }
-    
     #if { [info exists lowerLimit] } {
     #    if { $lowerLimit != "-" } {
     #        set LOWER_LIMIT $lowerLimit
@@ -1228,7 +1228,7 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
     #    }
     #}
     set tempValidateValue $value
-    
+
     if { [string match -nocase "INTEGER*" $dataType] || [string match -nocase "UNSIGNED*" $dataType] || [string match -nocase "BOOLEAN" $dataType ] } {
         #need to convert
         set radioSel [$frame1.frame1.ra_dec cget -variable]
@@ -1271,7 +1271,7 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
         if { [string match -nocase "0x" $value] } {
             set value ""
         } else {
-            #continue    
+            #continue
         }
     } elseif { $dataType == "IP_ADDRESS" } {
         set result [$frame1.en_value1 validate]
@@ -1309,7 +1309,7 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
         }
     } else {
         #value and datatype is not empty continue
-        
+
     }
     if {[expr 0x$indexId > 0x1fff] } {
 	set limitResult [Validation::validateValueandLimit $tempValidateValue $lowerLimit $upperLimit]
@@ -1322,10 +1322,11 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
     }
     set chkGen [$frame0.frame1.ch_gen cget -variable]
     global $chkGen
-    
+
     if {[string match "*SubIndexValue*" $nodeSelect]} {
         #if { ([expr 0x$indexId > 0x1fff]) && ( ($objectType == "ARRAY") || ($objectType == "VAR") ) } {}
         if { ([expr 0x$indexId > 0x1fff]) } {
+	#puts "$nodeId $nodeType $indexId $subIndexId $value $newName $accessType $dataType $pdoType $default $upperLimit $lowerLimit $objectType"
             set catchErrCode [SetAllSubIndexAttributes $nodeId $nodeType $indexId $subIndexId $value $newName $accessType $dataType $pdoType $default $upperLimit $lowerLimit $objectType [subst $[subst $chkGen]] ]
             set reloadView 1
         } else {
@@ -1355,11 +1356,11 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
             #}
         }
     } elseif {[string match "*IndexValue*" $nodeSelect]} {
-        
+
         #if { [expr 0x$indexId > 0x1fff] && (($objectType == "ARRAY") || ($objectType == "VAR")) } {}
         if { [expr 0x$indexId > 0x1fff] } {
             # if the index is greater than 1fff and the object type is not ARRAY or RECORD the delete all subobjects if present
-            #puts "llength $treePath nodes $nodeSelect ------>[llength [$treePath nodes $nodeSelect] ]" 
+            #puts "llength $treePath nodes $nodeSelect ------>[llength [$treePath nodes $nodeSelect] ]"
             if { [expr 0x$indexId > 0x1fff] && (($objectType != "ARRAY") && ($objectType != "RECORD")) && ([llength [$treePath nodes $nodeSelect] ] > 0) } {
                 #puts "entered index save checking indexId->$indexId objectType->$objectType nodeSelect->$nodeSelect"
                 set result [tk_messageBox -message "Only the Object Type ARRAY or RECORD can have subindexes.\nThe subindexes of [string toupper $indexId] will be deleted.\nDo you want to continue?" -type okcancel -icon question -title "Question" -parent .]
@@ -1417,7 +1418,7 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
 
     #value for Index or SubIndex is edited need to change
     set status_save 1
-    Validation::ResetPromptFlag	
+    Validation::ResetPromptFlag
     set newName [append newName $oldName]
     $treePath itemconfigure $nodeSelect -text $newName
     if { [lsearch $savedValueList $nodeSelect] == -1 } {
@@ -1437,10 +1438,10 @@ proc NoteBookManager::SaveValue { frame0 frame1 {objectType ""} } {
 
 #---------------------------------------------------------------------------------------------------
 #  NoteBookManager::DiscardValue
-# 
+#
 #  Arguments : frame0 - frame containing widgets describing the object (index id, Object name, subindex id )
-#	           frame1 - frame containing widgets describing properties of object	
-#	   
+#	           frame1 - frame containing widgets describing properties of object
+#
 #  Results : -
 #
 #  Description : Discards the entered values and displays last saved values
@@ -1461,11 +1462,11 @@ proc NoteBookManager::DiscardValue {frame0 frame1} {
 
 #---------------------------------------------------------------------------------------------------
 #  NoteBookManager::SaveMNValue
-# 
+#
 #  Arguments : frame0 - frame containing the widgets describing the object (index id, Object name, subindex id )
-#              frame1 - frame containing the widgets describing properties of object	
-#	   
-#  Results :  - 
+#              frame1 - frame containing the widgets describing properties of object
+#
+#  Results :  -
 #
 #  Description : save the entered value for MN property window
 #---------------------------------------------------------------------------------------------------
@@ -1473,12 +1474,12 @@ proc NoteBookManager::SaveMNValue {nodePos frame0 frame1} {
     global nodeSelect
     global nodeIdList
     global treePath
-    global savedValueList 
+    global savedValueList
     global userPrefList
     global lastConv
     global status_save
     global MNDatalist
-    
+
 
     #gets the nodeId and Type of selected node
     set result [Operations::GetNodeIdType $nodeSelect]
@@ -1490,7 +1491,7 @@ proc NoteBookManager::SaveMNValue {nodePos frame0 frame1} {
 			Validation::ResetPromptFlag
             return
     }
-	
+
     set newNodeName [$frame0.en_nodeName get]
     set stationType 0
     set catchErrCode [UpdateNodeParams $nodeId $nodeId $nodeType $newNodeName $stationType "" 0 ""]
@@ -1507,31 +1508,31 @@ proc NoteBookManager::SaveMNValue {nodePos frame0 frame1} {
     set status_save 1
     #reconfiguring the tree
     $treePath itemconfigure $nodeSelect -text "$newNodeName\($nodeId\)"
-    
+
     #set radioSel [$frame0.formatframe1.ra_dec cget -variable]
     #global $radioSel
     #set radioSel [subst $[subst $radioSel]]
-    
+
     set MNDatatypeObjectPathList [list \
         [list cycleTimeDatatype $Operations::CYCLE_TIME_OBJ $frame0.cycleframe.en_time] \
 	[list lossSoCToleranceDatatype $Operations::LOSS_SOC_TOLERANCE $frame1.en_advOption4] \
         [list asynMTUSizeDatatype $Operations::ASYNC_MTU_SIZE_OBJ $frame1.en_advOption1] \
         [list asynTimeoutDatatype $Operations::ASYNC_TIMEOUT_OBJ $frame1.en_advOption2] \
         [list multiPrescalerDatatype $Operations::MULTI_PRESCAL_OBJ $frame1.en_advOption3] ]
-    
+
     set dispMsg 0
     foreach tempDatatype $MNDatalist {
         set schDataRes [lsearch $MNDatatypeObjectPathList [list [lindex $tempDatatype 0] * *]]
         if {$schDataRes  != -1 } {
             set dataType [lindex $tempDatatype 1]
             set entryPath [lindex [lindex $MNDatatypeObjectPathList $schDataRes] 2]
-            
+
             # if entry is disabled no need to save it
             set entryState [$entryPath cget -state]
             if { $entryState != "normal" } {
                 continue
             }
-            
+
             set objectList [lindex [lindex $MNDatatypeObjectPathList $schDataRes] 1]
             set value [$entryPath get]
             set result [Validation::CheckDatatypeValue $entryPath $dataType "dec" $value]
@@ -1598,11 +1599,11 @@ proc NoteBookManager::SaveMNValue {nodePos frame0 frame1} {
 
 #---------------------------------------------------------------------------------------------------
 #  NoteBookManager::SaveCNValue
-# 
+#
 #  Arguments : frame0 - frame containing the widgets describing the object (index id, Object name, subindex id )
-#              frame1 - frame containing the widgets describing properties of object	
-#	   
-#  Results :  - 
+#              frame1 - frame containing the widgets describing properties of object
+#
+#  Results :  -
 #
 #  Description : save the entered value for MN property window
 #---------------------------------------------------------------------------------------------------
@@ -1610,14 +1611,14 @@ proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 frame2 
     global nodeSelect
     global nodeIdList
     global treePath
-    global savedValueList 
+    global savedValueList
     global userPrefList
     global lastConv
     global status_save
     global CNDatalist
     global cnPropSaveBtn
 
-    	
+
     #save node name and node number
     set newNodeId [$frame0.sp_nodeNo get]
     set newNodeId [string trim $newNodeId]
@@ -1636,7 +1637,7 @@ proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 frame2 
             return
         }
     }
-    
+
     #validate whether the entered cycle reponse time is greater tha 1F98 03 value
     set validateResult [$frame0.cycleframe.en_time validate]
     switch -- $validateResult {
@@ -1668,10 +1669,10 @@ proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 frame2 
 					1 {
 						#continue
 					}
-				}		          
- 
+				}
+
         }
-	
+
     }
     set newNodeName [$frame0.en_nodeName get]
     set stationType [NoteBookManager::RetStationEnumValue]
@@ -1699,20 +1700,20 @@ proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 frame2 
             return
         }
     }
-    
+
     #set radioSel [$frame0.formatframe1.ra_dec cget -variable]
     #global $radioSel
     #set radioSel [subst $[subst $radioSel]]
-    
+
     set CNDatatypeObjectPathList [list \
         [list presponseCycleTimeDatatype $Operations::PRES_TIMEOUT_OBJ $frame0.cycleframe.en_time] ]
-    
+
     foreach tempDatatype $CNDatalist {
         set schDataRes [lsearch $CNDatatypeObjectPathList [list [lindex $tempDatatype 0] * *]]
         if {$schDataRes  != -1 } {
             set dataType [lindex $tempDatatype 1]
             set entryPath [lindex [lindex $CNDatatypeObjectPathList $schDataRes] 2]
-            
+
             # if entry is disabled no need to save it
             set entryState [$entryPath cget -state]
             if { $entryState != "normal" } {
@@ -1734,7 +1735,7 @@ proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 frame2 
             } else {
                 set validValue ""
             }
-            
+
         }
     }
 
@@ -1765,14 +1766,14 @@ proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 frame2 
     set mnNodeType 0
     set mnNodeId 240
     thread::send [tsv::get application importProgress] "StartProgress"
-    if { [ catch { set result [WrapperInteractions::Import $ObdTreeNode $mnNodeType $mnNodeId] } ] } {   
+    if { [ catch { set result [WrapperInteractions::Import $ObdTreeNode $mnNodeType $mnNodeId] } ] } {
         # error has occured
         thread::send  [tsv::set application importProgress] "StopProgress"
         Operations::CloseProject
         return 0
     }
     thread::send  [tsv::set application importProgress] "StopProgress"
-    
+
     #save is success reconfigure tree, cnSaveButton and nodeIdlist
     set schDataRes [lsearch $nodeIdList $nodeId]
     set nodeIdList [lreplace $nodeIdList $schDataRes $schDataRes $newNodeId]
@@ -1789,12 +1790,12 @@ proc NoteBookManager::SaveCNValue {nodePos nodeId nodeType frame0 frame1 frame2 
 
 #---------------------------------------------------------------------------------------------------
 #  NoteBookManager::StartEdit
-# 
+#
 #  Arguments : tablePath   - path of the tablelist widget
 #	           rowIndex    - row of the edited cell
 #			   columnIndex - column of the edited cell
 #			   text        - entered value
-#	   
+#
 #  Results : text - to be displayed in tablelist
 #
 #  Description : to validate the entered value
@@ -1805,7 +1806,7 @@ proc NoteBookManager::StartEdit {tablePath rowIndex columnIndex text} {
 			1 {
                 $win configure -invalidcommand bell -validate key  -validatecommand "Validation::IsTableHex %P %s %d %i 2 $tablePath $rowIndex $columnIndex $win"
             }
-            2 {	
+            2 {
                 $win configure -invalidcommand bell -validate key  -validatecommand "Validation::IsTableHex %P %s %d %i 4 $tablePath $rowIndex $columnIndex $win"
             }
             3 {
@@ -1824,7 +1825,7 @@ proc NoteBookManager::StartEdit {tablePath rowIndex columnIndex text} {
 
 #---------------------------------------------------------------------------------------------------
 #  NoteBookManager::StartEditCombo
-# 
+#
 #  Arguments :	tablePath   - path of the tablelist widget
 #		rowIndex    - row of the edited cell
 #		columnIndex - column of the edited cell
@@ -1846,12 +1847,12 @@ proc NoteBookManager::StartEditCombo {tablePath rowIndex columnIndex text} {
     set sidxVal [$tablePath cellcget $rowIndex,3 -text]
     set lengthVal [$tablePath cellcget $rowIndex,4 -text]
     set offsetVal [$tablePath cellcget $rowIndex,5 -text]
-    
+
     set selectedNode [$treePath selection get]
     set pdoType ""
     set pdoType "[$treePath itemcget $selectedNode -text ]"
     #puts "$pdoType"
-    
+
     set result [Operations::GetNodeIdType $selectedNode]
     set nodeidVal [lindex $result 0]
     set nodeTypeVal [lindex $result 1]
@@ -1866,7 +1867,7 @@ proc NoteBookManager::StartEditCombo {tablePath rowIndex columnIndex text} {
 	    if { $nodeTypeVal == 1 && [string match -nocase "TPDO*" $pdoType] } {
 		    #node id should be = 0 for a CN TPDO
 	    } else {
-		    
+
 		    #puts "nodeTypeVal:$nodeTypeVal  pdoType:$pdoType"
 		    foreach tempnodeId $nodeIdList {
 			set hexnodeid 0x[string toupper [format %x $tempnodeId]]
@@ -1912,12 +1913,12 @@ proc NoteBookManager::StartEditCombo {tablePath rowIndex columnIndex text} {
 
 #---------------------------------------------------------------------------------------------------
 #  NoteBookManager::EndEdit
-# 
+#
 #  Arguments : tablePath   - path of the tablelist widget
 #	           rowIndex    - row of the edited cell
 #			   columnIndex - column of the edited cell
 #			   text        - entered value
-#	   
+#
 #  Results : text - to be displayed in tablelist
 #
 #  Description : to validate the entered value when focus leave the cell
@@ -1971,14 +1972,14 @@ proc NoteBookManager::EndEdit {tablePath rowIndex columnIndex text} {
     } else {
         return 0x$text
     }
-    
+
 }
 
 #---------------------------------------------------------------------------------------------------
 #  NoteBookManager::SaveTable
-# 
+#
 #  Arguments : tableWid - path of the tablelist widget
-#	   
+#
 #  Results : -
 #
 #  Description : to validate and save the validated values in tablelist widget
@@ -1988,12 +1989,12 @@ proc NoteBookManager::SaveTable {tableWid} {
     global treePath
     global status_save
     global populatedPDOList
-    global populatedCommParamList 
+    global populatedCommParamList
 
     set result [$tableWid finishediting]
     if {$result == 0} {
         Validation::ResetPromptFlag
-        return 
+        return
     } else {
     }
     # should save entered values to corresponding subindex
@@ -2002,7 +2003,7 @@ proc NoteBookManager::SaveTable {tableWid} {
     set nodeType [lindex $result 1]
     set rowCount 0
     set flag 0
-    
+
     set nodePos [new_intp]
     set ExistfFlag [new_boolp]
     set catchErrCode [IfNodeExists $nodeId $nodeType $nodePos $ExistfFlag]
@@ -2010,7 +2011,7 @@ proc NoteBookManager::SaveTable {tableWid} {
     set ExistfFlag [boolp_value $ExistfFlag]
     set ErrCode [ocfmRetCode_code_get $catchErrCode]
     if { $ErrCode == 0 && $ExistfFlag == 1 } {
-	    #the node exist continue 
+	    #the node exist continue
     } else {
         if { [ string is ascii [ocfmRetCode_errorString_get $catchErrCode] ] } {
 	    tk_messageBox -message "[ocfmRetCode_errorString_get $catchErrCode]\nValues not saved" -parent . -title Error -icon error
@@ -2030,11 +2031,11 @@ proc NoteBookManager::SaveTable {tableWid} {
             if {[string match "00" $subIndexId]} {
 		SetBasicSubIndexAttributes $nodeId $nodeType $indexId $subIndexId "0x0" "NumberOfEntries" 1
             } else {
-                set name [string range [$treePath itemcget $childSubIndex -text] 0 end-6] 
-                set offset [string range [$tableWid cellcget $rowCount,5 -text] 2 end] 
-                set length [string range [$tableWid cellcget $rowCount,4 -text] 2 end] 
+                set name [string range [$treePath itemcget $childSubIndex -text] 0 end-6]
+                set offset [string range [$tableWid cellcget $rowCount,5 -text] 2 end]
+                set length [string range [$tableWid cellcget $rowCount,4 -text] 2 end]
                 set reserved 00
-                set index [string range [$tableWid cellcget $rowCount,2 -text] 2 end] 
+                set index [string range [$tableWid cellcget $rowCount,2 -text] 2 end]
                 set subindex [string range [$tableWid cellcget $rowCount,3 -text] 2 end]
                 set value $length$offset$reserved$subindex$index
                 #0x is appended when saving value to indicate it is a hexa decimal number
@@ -2045,16 +2046,16 @@ proc NoteBookManager::SaveTable {tableWid} {
                 } else {
                     set value 0x$value
                 }
-                set indexPos [new_intp] 
-                set subIndexPos [new_intp] 
+                set indexPos [new_intp]
+                set subIndexPos [new_intp]
                 set catchErrCode [IfSubIndexExists $nodeId $nodeType $indexId $subIndexId $subIndexPos $indexPos]
                 if { [ocfmRetCode_code_get $catchErrCode] == 0 } {
-                    set indexPos [intp_value $indexPos] 
+                    set indexPos [intp_value $indexPos]
                     set subIndexPos [intp_value $subIndexPos]
                     #to get include subindex in cdc generation
                     set tempIndexProp [GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos 9 ]
 		    set ErrCode [ocfmRetCode_code_get [lindex $tempIndexProp 0]]
-		    if {$ErrCode == 0} {	
+		    if {$ErrCode == 0} {
 			    set incFlag [lindex $tempIndexProp 1]
 		    } else {
 			    set incFlag 0
@@ -2070,7 +2071,7 @@ proc NoteBookManager::SaveTable {tableWid} {
             }
         }
     }
-	
+
 	#saving the nodeid to communication parameter subindex 01
 	foreach childIndex $populatedCommParamList {
 		set treeNode [lindex $childIndex 1]
@@ -2080,14 +2081,14 @@ proc NoteBookManager::SaveTable {tableWid} {
         set indexId [string range [$treePath itemcget $treeNode -text] end-4 end-1]
         foreach childSubIndex [$treePath nodes $treeNode] {
             set subIndexId [string range [$treePath itemcget $childSubIndex -text] end-2 end-1]
-			set name [string range [$treePath itemcget $childSubIndex -text] 0 end-6] 
+			set name [string range [$treePath itemcget $childSubIndex -text] 0 end-6]
 			set rowCount [lindex [lindex $childIndex 2] 0]
             if { [string match "01" $subIndexId] } {
 				#
 				if { $rowCount == ""} {
 					break
 				}
-                set enteredNodeId [string range [$tableWid cellcget $rowCount,1 -text] 2 end] 
+                set enteredNodeId [string range [$tableWid cellcget $rowCount,1 -text] 2 end]
                 set value $enteredNodeId
                 #0x is appended when saving value to indicate it is a hexa decimal number
                 if { ([string length $value] < 1) || ([string length $value] > 2) } {
@@ -2096,16 +2097,16 @@ proc NoteBookManager::SaveTable {tableWid} {
                 } else {
                     set value 0x$value
                 }
-                set indexPos [new_intp] 
-                set subIndexPos [new_intp] 
+                set indexPos [new_intp]
+                set subIndexPos [new_intp]
                 set catchErrCode [IfSubIndexExists $nodeId $nodeType $indexId $subIndexId $subIndexPos $indexPos]
                 if { [ocfmRetCode_code_get $catchErrCode] == 0 } {
-                    set indexPos [intp_value $indexPos] 
+                    set indexPos [intp_value $indexPos]
                     set subIndexPos [intp_value $subIndexPos]
                     #to get include subindex in cdc generation
                     set tempIndexProp [GetSubIndexAttributesbyPositions $nodePos $indexPos $subIndexPos 9 ]
 		    set ErrCode [ocfmRetCode_code_get [lindex $tempIndexProp 0]]
-		    if {$ErrCode == 0} {	
+		    if {$ErrCode == 0} {
 			    set incFlag [lindex $tempIndexProp 1]
 		    } else {
 			    set incFlag 0
@@ -2123,7 +2124,7 @@ proc NoteBookManager::SaveTable {tableWid} {
         Console::DisplayInfo "Only the PDO mapping table entries that are completely filled(Offset, Length, Index and Sub Index) are saved"
     }
 
-    #PDO entries value is changed need to save 
+    #PDO entries value is changed need to save
     set status_save 1
     #set populatedPDOList ""
     Validation::ResetPromptFlag
@@ -2131,9 +2132,9 @@ proc NoteBookManager::SaveTable {tableWid} {
 
 #---------------------------------------------------------------------------------------------------
 #  NoteBookManager::DiscardTable
-# 
+#
 #  Arguments : tableWid  - path of the tablelist widget
-#	   
+#
 #  Results : -
 #
 #  Description : Discards the entered values and displays last saved values
@@ -2149,9 +2150,9 @@ proc NoteBookManager::DiscardTable {tableWid} {
 
 #---------------------------------------------------------------------------------------------------
 #  NoteBookManager::GetComboValue
-# 
+#
 #  Arguments : comboPath - path of the Combobox widget
-#	   
+#
 #  Results : selected value
 #
 #  Description : gets the selected index and returns the corresponding value
@@ -2167,15 +2168,15 @@ proc NoteBookManager::GetComboValue {comboPath} {
     set valueList [$comboPath cget -values]
     $comboPath configure -state $comboState
     return [lindex $valueList $value]
-    
+
 }
 
 #---------------------------------------------------------------------------------------------------
 #  NoteBookManager::SetComboValue
-# 
+#
 #  Arguments : comboPath  - path of the Combobox widget
 #              value      - value to set into the Combobox widget
-#	   
+#
 #  Results : selected value
 #
 #  Description : gets the selected value and sets the value into the Combobox widget
@@ -2196,10 +2197,10 @@ proc NoteBookManager::SetComboValue {comboPath value} {
 
 #---------------------------------------------------------------------------------------------------
 #  NoteBookManager::ChangeValidation
-# 
+#
 #  Arguments : comboPath  - path of the Combobox widget
 #              value      - value to set into the Combobox widget
-#	   
+#
 #  Results : selected value
 #
 #  Description : gets the selected value and sets the value into the Combobox widget
@@ -2211,14 +2212,14 @@ proc NoteBookManager::ChangeValidation {framePath0 framePath comboPath {objectTy
     global chkPrompt
     global UPPER_LIMIT
     global LOWER_LIMIT
-    
+
     set chkPrompt 1
     if {[string match "*.co_data1" $comboPath]} {
         set value [$comboPath getvalue]
         set valueList [$comboPath cget -values]
         set dataType [lindex $valueList $value]
         set stdDataType [string toupper $dataType]
-        
+
         #grid $framePath.frame1.ra_dec
         #grid $framePath.frame1.ra_hex
         #$framePath.frame1.ra_hex select
@@ -2226,12 +2227,12 @@ proc NoteBookManager::ChangeValidation {framePath0 framePath comboPath {objectTy
         #
         ##delete the the node in userpreference list else create problem in conversion
         #set userPrefList [Operations::DeleteList $userPrefList $nodeSelect 1]
-        
+
         global lastConv
-    
+
         grid $framePath.frame1.ra_dec
         grid $framePath.frame1.ra_hex
-        
+
         $framePath.en_value1 configure -validate none
         #$framePath.en_value1 delete 0 end
         $framePath.en_upper1 configure -validate none
@@ -2240,7 +2241,7 @@ proc NoteBookManager::ChangeValidation {framePath0 framePath comboPath {objectTy
         $framePath.en_lower1 delete 0 end
         if { $lastConv == "dec" } {
             $framePath.en_value1 configure -validate key -vcmd "Validation::IsDec %P $framePath.en_value1 %d %i $dataType"
-        } elseif { $lastConv == "hex"} {   
+        } elseif { $lastConv == "hex"} {
             $framePath.en_value1 configure -validate key -vcmd "Validation::IsHex %P %s $framePath.en_value1 %d %i $dataType"
             $framePath.en_value1 insert 0 0x
         } else {
@@ -2248,7 +2249,7 @@ proc NoteBookManager::ChangeValidation {framePath0 framePath comboPath {objectTy
             $framePath.frame1.ra_hex select
             set lastConv "hex"
         }
-        
+
         #$framePath.en_value1 configure -validate none
         #$framePath.en_value1 delete 0 end
         #$framePath.en_value1 insert 0 0x
@@ -2259,9 +2260,9 @@ proc NoteBookManager::ChangeValidation {framePath0 framePath comboPath {objectTy
         $framePath.en_lower1 configure -validate none
         $framePath.en_lower1 delete 0 end
         set LOWER_LIMIT ""
-        
+
         if { $objectType == "VAR" || $objectType == ""} {
-            #upper and lower limit are editable only when object type is VAR and if 
+            #upper and lower limit are editable only when object type is VAR and if
             #index is greater than 1FFF. the combo box appears only for index greater than 1fff
             $framePath.en_upper1 configure -validate none -state normal
             $framePath.en_upper1 delete 0 end
@@ -2314,7 +2315,7 @@ proc NoteBookManager::ChangeValidation {framePath0 framePath comboPath {objectTy
             UNSIGNED32 {
             }
             INTEGER40 {
-            }   
+            }
             UNSIGNED40 {
             }
             INTEGER48 {
@@ -2399,7 +2400,7 @@ proc NoteBookManager::ChangeValidation {framePath0 framePath comboPath {objectTy
         set selObjectType [string toupper $selObjectType]
         #reconfigure the modifycmd of data combobox with object type
         $framePath.co_data1 configure -modifycmd "NoteBookManager::ChangeValidation $framePath0 $framePath $framePath.co_data1 $selObjectType"
-       
+
         switch -- $selObjectType {
             VAR {
                 grid remove $framePath.en_data1
@@ -2407,14 +2408,14 @@ proc NoteBookManager::ChangeValidation {framePath0 framePath comboPath {objectTy
 
                 grid remove $framePath.en_access1
                 grid $framePath.co_access1
-            
+
                 grid remove $framePath.en_pdo1
                 grid $framePath.co_pdo1
-                
+
                 set objectDatatype [NoteBookManager::GetComboValue $framePath.co_data1]
                 #setting the datatype to last saved and changing the validation based on it
                 NoteBookManager::ChangeEntryValidationForDatatype $framePath $framePath.en_value1 $objectDatatype
-                
+
                 #enable the entry boxes upper and lower limit
                 $framePath.en_upper1 configure -state normal
                 $framePath.en_lower1 configure -state normal
@@ -2423,17 +2424,17 @@ proc NoteBookManager::ChangeValidation {framePath0 framePath comboPath {objectTy
             ARRAY {
                 grid remove $framePath.en_data1
                 grid $framePath.co_data1
-                
+
                 grid $framePath.en_access1
                 grid remove $framePath.co_access1
-                
+
                 grid $framePath.en_pdo1
                 grid remove $framePath.co_pdo1
-                
+
                 set objectDatatype [NoteBookManager::GetComboValue $framePath.co_data1]
                 #setting the datatype to last saved and changing the validation based on it
                 NoteBookManager::ChangeEntryValidationForDatatype $framePath $framePath.en_value1 $objectDatatype
-                
+
                 #disable the entry boxes upper and lower limit
                 $framePath.en_upper1 configure -state disabled
                 $framePath.en_lower1 configure -state disabled
@@ -2443,10 +2444,10 @@ proc NoteBookManager::ChangeValidation {framePath0 framePath comboPath {objectTy
             default {
                 grid $framePath.en_data1
                 grid remove $framePath.co_data1
-                
+
                 grid $framePath.en_access1
                 grid remove $framePath.co_access1
-                
+
                 grid $framePath.en_pdo1
                 grid remove $framePath.co_pdo1
                 set objectDatatype [NoteBookManager::GetEntryValue $framePath.en_data1]
@@ -2459,7 +2460,7 @@ proc NoteBookManager::ChangeValidation {framePath0 framePath comboPath {objectTy
                 $framePath.en_value1 configure -state disabled
             }
         }
-        
+
     } elseif {[string match "*.co_access1" $comboPath]} {
         set value [$comboPath getvalue]
         set valueList [$comboPath cget -values]
@@ -2478,7 +2479,7 @@ proc NoteBookManager::ChangeValidation {framePath0 framePath comboPath {objectTy
                 $framePath0.frame1.ch_gen configure -state normal
             }
         }
-        
+
     }
     focus -force $framePath.en_value1
     return
@@ -2486,19 +2487,19 @@ proc NoteBookManager::ChangeValidation {framePath0 framePath comboPath {objectTy
 
 proc NoteBookManager::ChangeEntryValidationForDatatype {framePath entryPath dataType } {
     global lastConv
-    
+
     grid $framePath.frame1.ra_dec
     grid $framePath.frame1.ra_hex
     if { $lastConv == "dec" } {
         $entryPath configure -validate key -vcmd "Validation::IsDec %P $entryPath %d %i $dataType"
-    } elseif { $lastConv == "hex"} {   
+    } elseif { $lastConv == "hex"} {
         $entryPath configure -validate key -vcmd "Validation::IsHex %P %s $entryPath %d %i $dataType"
     } else {
         $entryPath configure -validate key -vcmd "Validation::IsHex %P %s $entryPath %d %i $dataType"
         $framePath.frame1.ra_hex select
         set lastConv "hex"
     }
-    
+
     set stdDataType [string toupper $dataType]
     switch -- $stdDataType {
         BIT {
@@ -2526,7 +2527,7 @@ proc NoteBookManager::ChangeEntryValidationForDatatype {framePath entryPath data
         UNSIGNED32 {
         }
         INTEGER40 {
-        }   
+        }
         UNSIGNED40 {
         }
         INTEGER48 {
@@ -2587,9 +2588,9 @@ proc NoteBookManager::ChangeEntryValidationForDatatype {framePath entryPath data
 
 #---------------------------------------------------------------------------------------------------
 #  NoteBookManager::GetEntryValue
-# 
+#
 #  Arguments : entryPath - path of the entry box widget
-#	   
+#
 #  Results : selected value
 #
 #  Description : gets the value entered in entry widget
@@ -2599,14 +2600,14 @@ proc NoteBookManager::GetEntryValue {entryPath} {
     set entryValue [$entryPath get]
     $entryPath configure -state $entryState
     return $entryValue
-    
+
 }
 
 #---------------------------------------------------------------------------------------------------
 #  NoteBookManager::GetEntryValue
-# 
+#
 #  Arguments : entryPath - path of the entry box widget
-#	   
+#
 #  Results : selected value
 #
 #  Description : gets the value entered in entry widget
@@ -2621,10 +2622,10 @@ proc NoteBookManager::SetEntryValue {entryPath insertValue} {
 
 #---------------------------------------------------------------------------------------------------
 #  NoteBookManager::GenerateCnNodeList
-# 
+#
 #  Arguments : comboPath  - path of the Combobox widget
 #              value      - value to set into the Combobox widget
-#	   
+#
 #  Results : selected value
 #
 #  Description : gets the selected value and sets the value into the Combobox widget
@@ -2639,10 +2640,10 @@ proc NoteBookManager::GenerateCnNodeList {} {
 
 #---------------------------------------------------------------------------------------------------
 #  NoteBookManager::StationRadioChanged
-# 
+#
 #  Arguments : framePath   - path of frame containing the check button
 #              radioVal   - varaible of the radio buttons
-#	   
+#
 #  Results : -
 #
 #  Description : enables or disasbles the spinbox based on the check button selection
@@ -2669,16 +2670,16 @@ proc NoteBookManager::StationRadioChanged {framePath radioVal } {
     	$framePath.ch_adv configure -state disabled
     	$framePath.sp_cycleNo configure  -state disabled
     } else {
-    
+
     }
 }
 
 #---------------------------------------------------------------------------------------------------
 #  NoteBookManager::forceCycleChecked
-# 
+#
 #  Arguments : framePath   - path of frame containing the check button
 #              check_var   - varaible of the check box
-#	   
+#
 #  Results : -
 #
 #  Description : enables or disasbles the spinbox based on the check button selection
@@ -2696,9 +2697,9 @@ proc NoteBookManager::forceCycleChecked { framePath check_var } {
 
 #---------------------------------------------------------------------------------------------------
 #  NoteBookManager::RetStationEnumValue
-# 
+#
 #  Arguments : -
-#	   
+#
 #  Results : -
 #
 #  Description : enables or disasbles the spinbox based on the check button selection
@@ -2708,12 +2709,12 @@ proc NoteBookManager::RetStationEnumValue {  } {
     set radioButtonFrame [lindex $f4 2]
     set ra_StNormal $radioButtonFrame.ra_StNormal
     set radioVar [$ra_StNormal cget -variable]
-    
+
     global $radioVar
     set radioVal [subst $[subst $radioVar]]
-    
+
     switch -- $radioVal {
-        StNormal {			 
+        StNormal {
             set returnVal 0
         }
         StMulti {
@@ -2723,15 +2724,15 @@ proc NoteBookManager::RetStationEnumValue {  } {
             set returnVal 2
         }
     }
-        
+
     return $returnVal
 }
 
 #---------------------------------------------------------------------------------------------------
 #  NoteBookManager::LimitFocusChanged
-# 
+#
 #  Arguments : -
-#	   
+#
 #  Results : -
 #
 #  Description : based on the entry path it validates value with upper limit or lower limit
@@ -2740,18 +2741,18 @@ proc NoteBookManager::LimitFocusChanged {framePath entryPath} {
     catch {
         global UPPER_LIMIT
         global LOWER_LIMIT
-    
+
         set dontCompareValue 0
         set valueState [$framePath.en_value1 cget -state]
         set valueInput [$framePath.en_value1 get]
         #puts "LimitFocusChanged UPPER_LIMIT->$UPPER_LIMIT LOWER_LIMIT->$LOWER_LIMIT"
         #puts "LimitFocusChanged valueState->$valueState valueInput->$valueInput"
         if { $valueState != "normal" || $valueInput == "" || $valueInput == "-" || [string match -nocase "0x" $valueInput] } {
-            
+
             set dontCompareValue 1
             #puts "LimitFocusChanged dontCompareValue->$dontCompareValue"
         }
-        
+
         set msg ""
         if {[string match "*.en_lower1" $entryPath]} {
             set lowervalueState [$framePath.en_lower1 cget -state]
